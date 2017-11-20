@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-# File: hed.py
-# Author: Yuxin Wu <ppwwyyxxc@gmail.com>
+# File: deeplabv2.py
+# Author: Tao Hu <taohu620@gmail.com>
 
 import cv2
 import tensorflow as tf
