@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-<<<<<<< HEAD
-# File: cifar10-resnet-mixup.py
-=======
 # File: cifar10-preact18-mixup.py
->>>>>>> d53066026ca358ab4f50caad7fcc9c92bd7a0337
 # Author: Tao Hu <taohu620@gmail.com>
 
 import numpy as np
@@ -22,17 +18,6 @@ import tensorflow as tf
 from tensorflow.contrib.layers import variance_scaling_initializer
 
 """
-<<<<<<< HEAD
-This implementation uses different architecture of PreAct in:
-https://github.com/kuangliu/pytorch-cifar
-
-I can reproduce the results on one TitanX for
-about 3.7% val error after 156k steps
-This model uses the whole training set instead of a train-val split.
-
-To train:
-    ./cifar10-preact18-mixup.py --gpu 0
-=======
 This implementation uses the architecture of PreAct in:
 https://github.com/kuangliu/pytorch-cifar
 This is different from the one in cifar10-resnet.py
@@ -46,34 +31,16 @@ Using 2x learning schedule, it can further improve to 4.7% and 3.2%.
 Usage:
 ./cifar10-preact18-mixup.py  # train without mixup
 ./cifar10-preact18-mixup.py --mixup	 # with mixup
->>>>>>> d53066026ca358ab4f50caad7fcc9c92bd7a0337
 """
 
 BATCH_SIZE = 128
 CLASS_NUM = 10
 
 
-<<<<<<< HEAD
-
-class Model(ModelDesc):
-
-    def __init__(self):
-        super(Model, self).__init__()
-        self.num_blocks = [2,2,2,2]
-        self.num_classes = CLASS_NUM
-        self.in_planes = 64
-
-    def _get_inputs(self):
-        return [InputDesc(tf.float32, [None, 32, 32, 3], 'input'),
-                InputDesc(tf.float32, [None,CLASS_NUM], 'label')]
-
-
-=======
 class Model(ModelDesc):
     def _get_inputs(self):
         return [InputDesc(tf.float32, [None, 32, 32, 3], 'input'),
                 InputDesc(tf.float32, [None, CLASS_NUM], 'label')]
->>>>>>> d53066026ca358ab4f50caad7fcc9c92bd7a0337
 
     def _build_graph(self, inputs):
         image, label = inputs
@@ -82,17 +49,6 @@ class Model(ModelDesc):
         image = tf.transpose(image, [0, 3, 1, 2])
 
         def preactblock(input, name, in_planes, planes, stride=1):
-<<<<<<< HEAD
-            with tf.variable_scope(name) as scope:
-                input2 = BNReLU(input)
-                if stride != 1 or in_planes != planes:
-                    shortcut = Conv2D('conv1', input2, planes, kernel_shape=1, stride=stride, use_bias=False, nl=tf.identity)
-                else:
-                    shortcut = input
-                input2 = Conv2D('conv2', input2, planes, kernel_shape=3, stride=stride, use_bias=False,  nl=BNReLU)
-                input2 = Conv2D('conv3', input2, planes, kernel_shape=3, stride=1, use_bias=False)
-
-=======
             with tf.variable_scope(name):
                 input2 = BNReLU(input)
                 if stride != 1 or in_planes != planes:
@@ -103,42 +59,22 @@ class Model(ModelDesc):
                 input2 = Conv2D('conv1', input2, planes, kernel_shape=3, stride=1, use_bias=False, nl=BNReLU)
                 input2 = Conv2D('conv2', input2, planes, kernel_shape=3, stride=stride, use_bias=False, nl=BNReLU)
                 input2 = Conv2D('conv3', input2, planes, kernel_shape=3, stride=1, use_bias=False, nl=tf.identity)
->>>>>>> d53066026ca358ab4f50caad7fcc9c92bd7a0337
                 input2 += shortcut
             return input2
 
         def _make_layer(input, planes, num_blocks, current_plane, stride, name):
-<<<<<<< HEAD
-            strides = [stride] + [1] * (num_blocks - 1) # first block stride = stride, the latter block stride = 1
-=======
             strides = [stride] + [1] * (num_blocks - 1)  # first block stride = stride, the latter block stride = 1
->>>>>>> d53066026ca358ab4f50caad7fcc9c92bd7a0337
             for index, stride in enumerate(strides):
                 input = preactblock(input, "{}.{}".format(name, index), current_plane, planes, stride)
                 current_plane = planes
             return input, current_plane
 
-<<<<<<< HEAD
-
-=======
->>>>>>> d53066026ca358ab4f50caad7fcc9c92bd7a0337
         with argscope([Conv2D, AvgPooling, BatchNorm, GlobalAvgPooling], data_format='NCHW'), \
                 argscope(Conv2D, nl=tf.identity, use_bias=False, kernel_shape=3,
                          W_init=variance_scaling_initializer(mode='FAN_OUT')):
 
             l = Conv2D('conv0', image, 64, kernel_shape=3, stride=1, use_bias=False)
 
-<<<<<<< HEAD
-            current_plane = self.in_planes
-            l, current_plane = _make_layer( l, 64, self.num_blocks[0], current_plane, stride=1,  name="res1")
-            l, current_plane = _make_layer( l, 128, self.num_blocks[1], current_plane, stride=2, name="res2")
-            l, current_plane = _make_layer( l, 256, self.num_blocks[2], current_plane, stride=2, name="res3")
-            l, current_plane = _make_layer( l, 512, self.num_blocks[3], current_plane, stride=2, name="res4")
-            l = GlobalAvgPooling('gap', l)
-
-        logits = FullyConnected('linear', l, out_dim=CLASS_NUM, nl=tf.identity)
-        prob = tf.nn.softmax(logits, name='output')
-=======
             current_plane = 64
             l, current_plane = _make_layer(l, 64, 2, current_plane, stride=1, name="res1")
             l, current_plane = _make_layer(l, 128, 2, current_plane, stride=2, name="res2")
@@ -147,7 +83,6 @@ class Model(ModelDesc):
             l = GlobalAvgPooling('gap', l)
 
         logits = FullyConnected('linear', l, out_dim=CLASS_NUM, nl=tf.identity)
->>>>>>> d53066026ca358ab4f50caad7fcc9c92bd7a0337
 
         cost = tf.losses.softmax_cross_entropy(onehot_labels=label, logits=logits)
         cost = tf.reduce_mean(cost, name='cross_entropy_loss')
@@ -172,11 +107,7 @@ class Model(ModelDesc):
         return opt
 
 
-<<<<<<< HEAD
-def get_data(train_or_test, alpha):
-=======
 def get_data(train_or_test, isMixup, alpha):
->>>>>>> d53066026ca358ab4f50caad7fcc9c92bd7a0337
     isTrain = train_or_test == 'train'
     ds = dataset.Cifar10(train_or_test)
     pp_mean = ds.get_per_pixel_mean()
@@ -193,29 +124,6 @@ def get_data(train_or_test, isMixup, alpha):
         ]
     ds = AugmentImageComponent(ds, augmentors)
 
-<<<<<<< HEAD
-    def mixup(ds):
-        images = ds[0]
-        labels = ds[1]
-        one_hot_labels = np.eye(CLASS_NUM)[labels]  # one hot coding
-        if not isTrain:
-            return [images, one_hot_labels]
-
-        weight = np.random.beta(alpha, alpha, BATCH_SIZE)
-        x_weight = weight.reshape(BATCH_SIZE, 1, 1, 1)
-        y_weight = weight.reshape(BATCH_SIZE, 1)
-        x1 = images[:BATCH_SIZE]
-        x2 = images[BATCH_SIZE:]
-        x = x1 * x_weight + x2 * (1 - x_weight)
-        y1 = one_hot_labels[:BATCH_SIZE]
-        y2 = one_hot_labels[BATCH_SIZE:]
-        y = y1 * y_weight + y2 * (1 - y_weight)
-        return [x, y]
-        return ds
-
-    ds = BatchData(ds, 2*BATCH_SIZE, remainder=not isTrain)
-    ds = MapData(ds, mixup)
-=======
     if isMixup:
         batch = 2 * BATCH_SIZE
     else:
@@ -239,7 +147,6 @@ def get_data(train_or_test, isMixup, alpha):
         return [x, y]
 
     ds = MapData(ds, f)
->>>>>>> d53066026ca358ab4f50caad7fcc9c92bd7a0337
 
     if isTrain:
         ds = PrefetchData(ds, 3, 2)
@@ -250,19 +157,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu', help='comma separated list of GPU(s) to use.')
     parser.add_argument('--load', help='load model')
-<<<<<<< HEAD
-    parser.add_argument('--alpha', default= 1, type=float, help='alpha in mixup')
-    args = parser.parse_args()
-
-
-    if args.gpu:
-        os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
-
-    logger.auto_set_dir()
-
-    dataset_train = get_data('train', args.alpha)
-    dataset_test = get_data('test', args.alpha)
-=======
     parser.add_argument('--mixup', help='enable mixup', action='store_true')
     parser.add_argument('--alpha', default=1, type=float, help='alpha in mixup')
     args = parser.parse_args()
@@ -280,7 +174,6 @@ if __name__ == '__main__':
     # because mixup utilize two data to generate one data, so the learning rate schedule are doubled.
     if args.mixup:
         steps_per_epoch *= 2
->>>>>>> d53066026ca358ab4f50caad7fcc9c92bd7a0337
 
     config = TrainConfig(
         model=Model(),
@@ -290,16 +183,10 @@ if __name__ == '__main__':
             InferenceRunner(dataset_test,
                             [ScalarStats('cost'), ClassificationError('wrong_vector')]),
             ScheduledHyperParamSetter('learning_rate',
-<<<<<<< HEAD
-                                      [(1, 0.1), (200, 0.01), (300, 0.001)])
-        ],
-        max_epoch=400,
-=======
                                       [(1, 0.1), (100, 0.01), (150, 0.001)])
         ],
         max_epoch=200,
         steps_per_epoch=steps_per_epoch,
->>>>>>> d53066026ca358ab4f50caad7fcc9c92bd7a0337
         session_init=SaverRestore(args.load) if args.load else None
     )
     nr_gpu = max(get_nr_gpu(), 1)
