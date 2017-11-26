@@ -10,6 +10,7 @@ from ..tfutils.sesscreate import NewSessionCreator
 
 from ..utils import logger
 from ..utils.argtools import map_arg
+from ..utils.develop import HIDE_DOC
 from ..tfutils import get_global_step_var
 from ..tfutils.distributed import get_distributed_session_creator
 from ..tfutils.tower import TowerContext
@@ -144,8 +145,6 @@ class DistributedTrainerReplicated(SingleCostTrainer):
         Args:
             gpus (list[int]): list of GPU ids.
             server (tf.train.Server): the server with ps and workers.
-                The job_name must be 'worker' because 'ps' job doesn't need to
-                build any graph.
         """
         self.server = server
         self.job_name = server.server_def.job_name
@@ -196,6 +195,7 @@ class DistributedTrainerReplicated(SingleCostTrainer):
             callbacks.append(cb)
         return callbacks
 
+    @HIDE_DOC
     def initialize(self, session_creator, session_init):
         if not isinstance(session_creator, NewSessionCreator) or \
                 session_creator.user_provided_config:
@@ -212,9 +212,28 @@ class DistributedTrainerReplicated(SingleCostTrainer):
 
 class HorovodTrainer(SingleCostTrainer):
     """
-    Horovod trainer, currently support multi-GPU training.
+    Horovod trainer, support multi-GPU and distributed training.
 
-    It will use the first k GPUs in CUDA_VISIBLE_DEVICES.
+    To use for multi-GPU training:
+
+        CUDA_VISIBLE_DEVICES=0,1,2,3 mpirun -np 4 --output-filename mylog python train.py
+
+    To use for distributed training:
+
+        /path/to/mpirun -np 8 -H server1:4,server2:4  \
+            -bind-to none -map-by slot \
+            --output-filename mylog  -x LD_LIBRARY_PATH -x CUDA_VISIBLE_DEVICES=0,1,2,3 \
+            python train.py
+
+    Note:
+        1. If using all GPUs, you can always skip the `CUDA_VISIBLE_DEVICES` option.
+
+        2. About performance, horovod is expected to be slightly
+           slower than native tensorflow on multi-GPU training, but faster in distributed training.
+
+        3. Due to the use of MPI, training is less informative (no progress bar).
+           It's recommended to use other multi-GPU trainers for single-node
+           experiments, and scale to multi nodes by horovod.
     """
     def __init__(self):
         hvd.init()
@@ -229,13 +248,15 @@ class HorovodTrainer(SingleCostTrainer):
             opt = get_opt_fn()
             opt = hvd.DistributedOptimizer(opt)
             self.train_op = opt.apply_gradients(grads, name='min_op')
+        with tf.name_scope('horovod_broadcast'):
+            op = hvd.broadcast_global_variables(0)
         cb = RunOp(
-            tf.identity(hvd.broadcast_global_variables(0), name='horovod_broadcast_global_variables'),
-            run_before=True,
+            op, run_before=True,
             run_as_trigger=False, verbose=True)
         cb.chief_only = False
         return [cb]
 
+    @HIDE_DOC
     def initialize(self, session_creator, session_init):
         if not isinstance(session_creator, NewSessionCreator):
             raise ValueError(
@@ -248,5 +269,8 @@ class HorovodTrainer(SingleCostTrainer):
 from ..utils.develop import create_dummy_class   # noqa
 try:
     import horovod.tensorflow as hvd
-except Exception:   # could be other than ImportError, e.g. NCCL not found
+except ImportError:
+    HorovodTrainer = create_dummy_class('HovorodTrainer', 'horovod')    # noqa
+except Exception:      # could be other than ImportError, e.g. NCCL not found
+    print("Horovod is installed but cannot be imported.")
     HorovodTrainer = create_dummy_class('HovorodTrainer', 'horovod')    # noqa

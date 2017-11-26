@@ -24,13 +24,14 @@ os.environ['TENSORPACK_DOC_BUILDING'] = '1'
 ON_RTD = (os.environ.get('READTHEDOCS') == 'True')
 
 
-MOCK_MODULES = ['scipy', 'tabulate',
-                'sklearn.datasets', 'sklearn',
-                'scipy.misc', 'h5py', 'nltk',
-                'cv2', 'scipy.io', 'dill', 'zmq', 'subprocess32', 'lmdb',
-                'tornado.concurrent', 'tornado',
+MOCK_MODULES = ['tabulate', 'h5py',
+                'cv2', 'zmq', 'subprocess32', 'lmdb',
+                'sklearn', 'sklearn.datasets',
+                'scipy', 'scipy.misc', 'scipy.io',
+                'tornado', 'tornado.concurrent',
+                'horovod', 'horovod.tensorflow',
                 'msgpack', 'msgpack_numpy',
-                'gym', 'functools32']
+                'functools32']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.Mock(name=mod_name)
 sys.modules['cv2'].__version__ = '3.2.1'    # fake version
@@ -353,18 +354,21 @@ def process_signature(app, what, name, obj, options, signature,
     return signature, return_annotation
 
 def autodoc_skip_member(app, what, name, obj, skip, options):
+    # we hide something deliberately
+    if getattr(obj, '__HIDE_SPHINX_DOC__', False):
+        return True
+    if name == '__init__':
+        if obj.__doc__ and skip:
+            # include_init_with_doc doesn't work well for decorated init
+            # https://github.com/sphinx-doc/sphinx/issues/4258
+            return False
+    # hide deprecated stuff
     if name in [
         'MultiGPUTrainerBase',
-        'FeedfreeInferenceRunner',
-        'replace_get_variable',
-        'remap_get_variable',
-        'freeze_get_variable',
-        'predictor_factory',
         'get_predictors',
         'RandomCropAroundBox',
         'GaussianDeform',
         'dump_chkpt_vars',
-        'VisualQA',
         'DumpTensor',
         'StagingInputWrapper',
         'StepTensorPrinter',
