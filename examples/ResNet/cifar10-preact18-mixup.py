@@ -18,17 +18,19 @@ import tensorflow as tf
 from tensorflow.contrib.layers import variance_scaling_initializer
 
 """
-This implementation uses different architecture of PreAct in:
+This implementation uses the architecture of PreAct in:
 https://github.com/kuangliu/pytorch-cifar
+This is different from the one in cifar10-resnet.py
 
-I can reproduce the results on one TitanX Pascal for
-    4.7% val error in preact18
-    3.2% val error in preact18_mixup
-This model uses the whole training set instead of a train-val split.
+Results:
+Validation error with the original 100-150-200 schedule:
+no mixup - 5.0%; mixup(alpha=1) - 3.8%
 
+Using 2x learning schedule, it can further improve to 4.7% and 3.2%.
+
+Usage:
 ./cifar10-preact18-mixup.py  # train without mixup
 ./cifar10-preact18-mixup.py --mixup	 # with mixup
-
 """
 
 BATCH_SIZE = 128
@@ -36,12 +38,6 @@ CLASS_NUM = 10
 
 
 class Model(ModelDesc):
-    def __init__(self):
-        super(Model, self).__init__()
-        self.num_blocks = [2, 2, 2, 2]
-        self.num_classes = CLASS_NUM
-        self.in_planes = 64
-
     def _get_inputs(self):
         return [InputDesc(tf.float32, [None, 32, 32, 3], 'input'),
                 InputDesc(tf.float32, [None, CLASS_NUM], 'label')]
@@ -79,11 +75,11 @@ class Model(ModelDesc):
 
             l = Conv2D('conv0', image, 64, kernel_shape=3, stride=1, use_bias=False)
 
-            current_plane = self.in_planes
-            l, current_plane = _make_layer(l, 64, self.num_blocks[0], current_plane, stride=1, name="res1")
-            l, current_plane = _make_layer(l, 128, self.num_blocks[1], current_plane, stride=2, name="res2")
-            l, current_plane = _make_layer(l, 256, self.num_blocks[2], current_plane, stride=2, name="res3")
-            l, current_plane = _make_layer(l, 512, self.num_blocks[3], current_plane, stride=2, name="res4")
+            current_plane = 64
+            l, current_plane = _make_layer(l, 64, 2, current_plane, stride=1, name="res1")
+            l, current_plane = _make_layer(l, 128, 2, current_plane, stride=2, name="res2")
+            l, current_plane = _make_layer(l, 256, 2, current_plane, stride=2, name="res3")
+            l, current_plane = _make_layer(l, 512, 2, current_plane, stride=2, name="res4")
             l = GlobalAvgPooling('gap', l)
 
         logits = FullyConnected('linear', l, out_dim=CLASS_NUM, nl=tf.identity)
@@ -129,38 +125,28 @@ def get_data(train_or_test, isMixup, alpha):
     ds = AugmentImageComponent(ds, augmentors)
 
     if isMixup:
-        def mixup(ds):
-            images = ds[0]
-            labels = ds[1]
-            one_hot_labels = np.eye(CLASS_NUM)[labels]  # one hot coding
-            if not isTrain:
-                return [images, one_hot_labels]
-
-            weight = np.random.beta(alpha, alpha, BATCH_SIZE)
-            x_weight = weight.reshape(BATCH_SIZE, 1, 1, 1)
-            y_weight = weight.reshape(BATCH_SIZE, 1)
-            x1 = images[:BATCH_SIZE]
-            x2 = images[BATCH_SIZE:]
-            x = x1 * x_weight + x2 * (1 - x_weight)
-            y1 = one_hot_labels[:BATCH_SIZE]
-            y2 = one_hot_labels[BATCH_SIZE:]
-            y = y1 * y_weight + y2 * (1 - y_weight)
-            return [x, y]
-            return ds
-
-        ds = BatchData(ds, 2 * BATCH_SIZE, remainder=not isTrain)
+        batch = 2 * BATCH_SIZE
     else:
-        def mixup(ds):  # if is original preact, we only process one hot coding
-            images = ds[0]
-            labels = ds[1]
-            one_hot_labels = np.eye(CLASS_NUM)[labels]  # one hot coding
-            if not isTrain:
-                return [images, one_hot_labels]
+        batch = BATCH_SIZE
+    ds = BatchData(ds, batch, remainder=not isTrain)
+
+    def f(ds):
+        images, labels = ds
+        one_hot_labels = np.eye(CLASS_NUM)[labels]  # one hot coding
+        if not isTrain or not isMixup:
             return [images, one_hot_labels]
 
-        ds = BatchData(ds, BATCH_SIZE, remainder=not isTrain)
+        # mixup:
+        weight = np.random.beta(alpha, alpha, BATCH_SIZE)
+        x_weight = weight.reshape(BATCH_SIZE, 1, 1, 1)
+        y_weight = weight.reshape(BATCH_SIZE, 1)
+        x1, x2 = np.split(images, 2, axis=0)
+        x = x1 * x_weight + x2 * (1 - x_weight)
+        y1, y2 = np.split(one_hot_labels, 2, axis=0)
+        y = y1 * y_weight + y2 * (1 - y_weight)
+        return [x, y]
 
-    ds = MapData(ds, mixup)
+    ds = MapData(ds, f)
 
     if isTrain:
         ds = PrefetchData(ds, 3, 2)
@@ -178,39 +164,30 @@ if __name__ == '__main__':
     if args.gpu:
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 
-    logger.auto_set_dir()
+    logger.set_logger_dir(
+        os.path.join('train_log/cifar10-preact18-{}mixup'.format('' if args.mixup else 'no')))
 
     dataset_train = get_data('train', args.mixup, args.alpha)
     dataset_test = get_data('test', args.mixup, args.alpha)
 
-    if not args.mixup:
-        config = TrainConfig(
-            model=Model(),
-            dataflow=dataset_train,
-            callbacks=[
-                ModelSaver(),
-                InferenceRunner(dataset_test,
-                                [ScalarStats('cost'), ClassificationError('wrong_vector')]),
-                ScheduledHyperParamSetter('learning_rate',
-                                          [(1, 0.1), (200, 0.01), (300, 0.001)])
-            ],
-            max_epoch=400,
-            session_init=SaverRestore(args.load) if args.load else None
-        )
-    else:
-        # because mixup utilize two data to generate one data, so the learning rate schedule are doubled.
-        config = TrainConfig(
-            model=Model(),
-            dataflow=dataset_train,
-            callbacks=[
-                ModelSaver(),
-                InferenceRunner(dataset_test,
-                                [ScalarStats('cost'), ClassificationError('wrong_vector')]),
-                ScheduledHyperParamSetter('learning_rate',
-                                          [(1, 0.1), (400, 0.01), (600, 0.001)])
-            ],
-            max_epoch=800,
-            session_init=SaverRestore(args.load) if args.load else None
-        )
+    steps_per_epoch = dataset_train.size()
+    # because mixup utilize two data to generate one data, so the learning rate schedule are doubled.
+    if args.mixup:
+        steps_per_epoch *= 2
+
+    config = TrainConfig(
+        model=Model(),
+        dataflow=dataset_train,
+        callbacks=[
+            ModelSaver(),
+            InferenceRunner(dataset_test,
+                            [ScalarStats('cost'), ClassificationError('wrong_vector')]),
+            ScheduledHyperParamSetter('learning_rate',
+                                      [(1, 0.1), (100, 0.01), (150, 0.001)])
+        ],
+        max_epoch=200,
+        steps_per_epoch=steps_per_epoch,
+        session_init=SaverRestore(args.load) if args.load else None
+    )
     nr_gpu = max(get_nr_gpu(), 1)
     launch_train_with_config(config, SyncMultiGPUTrainerParameterServer(nr_gpu))
