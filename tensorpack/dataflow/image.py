@@ -169,7 +169,7 @@ class AugmentImageComponents(MapData):
 
     """
 
-    def __init__(self, ds, augmentors, index=(0, 1), coords_index=(), copy=True, catch_exceptions=False):
+    def __init__(self, ds, augmentors, index=(0, 1), coords_index=(), copy=True, catch_exceptions=False, is_segmentation = False):
         """
         Args:
             ds (DataFlow): input DataFlow.
@@ -178,10 +178,11 @@ class AugmentImageComponents(MapData):
             coords_index: tuple of indices of the coordinates components.
             copy, catch_exceptions: same as in :class:`AugmentImageComponent`
         """
+        self.is_segmentation = is_segmentation
         if isinstance(augmentors, AugmentorList):
             self.augs = augmentors
         else:
-            self.augs = AugmentorList(augmentors)
+            self.augs = AugmentorList(augmentors, self.is_segmentation)
         self.ds = ds
 
         exception_handler = ExceptionHandler(catch_exceptions)
@@ -195,7 +196,10 @@ class AugmentImageComponents(MapData):
                 im, prms = self.augs._augment_return_params(im)
                 dp[major_image] = im
                 for idx in index[1:]:
-                    dp[idx] = self.augs._augment(copy_func(dp[idx]), prms)
+                    if self.is_segmentation:
+                        dp[idx] = self.augs._augment(copy_func(dp[idx]), prms, extra_dict = {"is_label": True})
+                    else:
+                        dp[idx] = self.augs._augment(copy_func(dp[idx]), prms)
                 for idx in coords_index:
                     coords = copy_func(dp[idx])
                     _valid_coords(coords)
@@ -207,6 +211,8 @@ class AugmentImageComponents(MapData):
     def reset_state(self):
         self.ds.reset_state()
         self.augs.reset_state()
+
+
 
 
 try:

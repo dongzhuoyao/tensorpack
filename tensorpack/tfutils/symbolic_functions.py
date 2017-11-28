@@ -94,6 +94,26 @@ def class_balanced_sigmoid_cross_entropy(logits, label, name='cross_entropy_loss
         zero = tf.equal(count_pos, 0.0)
     return tf.where(zero, 0.0, cost, name=name)
 
+def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
+    """
+    This function accepts logits rather than predictions, and is more numerically stable than
+    :func:`class_balanced_cross_entropy`.
+    """
+    with tf.name_scope('softmax_cross_entropy_with_ignore_label'):
+        #tf.assert_equal(logits.shape[1], label.shape[1])  # shape assert
+        #TODO need assert here
+        raw_prediction = tf.reshape(logits, [-1, class_num])
+        label = tf.reshape(label,[-1,])
+        #label_onehot = tf.one_hot(label, depth=class_num)
+        indices = tf.squeeze(tf.where(tf.less_equal(label, class_num - 1)), axis=1)
+        #raw_gt = tf.reshape(label_onehot, [-1, class_num])
+
+        gt = tf.gather(label, indices)
+        prediction = tf.gather(raw_prediction, indices)
+
+        # Pixel-wise softmax loss.
+        loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=prediction, labels=gt)
+    return loss
 
 def print_stat(x, message=None):
     """ A simple print Op that might be easier to use than :meth:`tf.Print`.

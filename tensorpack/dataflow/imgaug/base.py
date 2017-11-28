@@ -124,12 +124,13 @@ class AugmentorList(ImageAugmentor):
     Augment by a list of augmentors
     """
 
-    def __init__(self, augmentors):
+    def __init__(self, augmentors, is_segmentation = False):
         """
         Args:
             augmentors (list): list of :class:`ImageAugmentor` instance to be applied.
         """
         self.augs = augmentors
+        self.is_segmentation = is_segmentation
         super(AugmentorList, self).__init__()
 
     def _get_augment_params(self, img):
@@ -145,10 +146,13 @@ class AugmentorList(ImageAugmentor):
             prms.append(prm)
         return img, prms
 
-    def _augment(self, img, param):
+    def _augment(self, img, param, extra_dict = {}):
         assert img.ndim in [2, 3], img.ndim
         for aug, prm in zip(self.augs, param):
-            img = aug._augment(img, prm)
+            if self.is_segmentation:
+                img = aug._augment(img, prm, extra_dict)
+            else:
+                img = aug._augment(img, prm)
         return img
 
     def _augment_coords(self, coords, param):

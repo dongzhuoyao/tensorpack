@@ -10,8 +10,28 @@ from ...utils import logger
 from ...utils.argtools import shape2d
 from .transform import ResizeTransform, TransformAugmentorBase
 
-__all__ = ['Flip', 'Resize', 'RandomResize', 'ResizeShortestEdge', 'Transpose']
+__all__ = ['Flip', 'Resize', 'RandomResize', 'ResizeShortestEdge', 'Transpose', 'ReduceMean']
 
+
+
+
+class ReduceMean(ImageAugmentor):
+    """
+    ReduceMean
+    """
+    def __init__(self):
+        super(ReduceMean, self).__init__()
+        self._init(locals())
+
+    def _augment(self, img, param):
+        ret = img - np.array([104, 116, 122])
+        return ret
+
+    #def _augment_coords(self, coords, param):
+    #    return NotImplementedError
+
+    #def reset_state(self):
+    #    pass
 
 class Flip(ImageAugmentor):
     """
@@ -166,6 +186,9 @@ class RandomResize(TransformAugmentorBase):
                         return ResizeTransform(h, w, h, w, self.interp)
                     continue
             return ResizeTransform(h, w, destY, destX, self.interp)
+
+
+
 
 
 class Transpose(ImageAugmentor):

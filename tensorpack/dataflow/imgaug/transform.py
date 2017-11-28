@@ -21,8 +21,8 @@ class TransformAugmentorBase(ImageAugmentor):
     return a :class:`ImageTransform` instance, and it will use
     this instance to augment both image and coordinates.
     """
-    def _augment(self, img, t):
-        return t.apply_image(img)
+    def _augment(self, img, t, extra_dict = {}):
+        return t.apply_image(img, extra_dict)
 
     def _augment_coords(self, coords, t):
         return t.apply_coords(coords)
@@ -59,11 +59,17 @@ class ResizeTransform(ImageTransform):
     def __init__(self, h, w, newh, neww, interp):
         self._init(locals())
 
-    def apply_image(self, img):
+    def apply_image(self, img, extra_dict = {}):
         assert img.shape[:2] == (self.h, self.w)
-        ret = cv2.resize(
-            img, (self.neww, self.newh),
-            interpolation=self.interp)
+        if extra_dict.has_key("is_label") and extra_dict["is_label"] == True:
+            ret = cv2.resize(
+                img, (self.neww, self.newh),
+                interpolation=cv2.INTER_NEAREST)
+        else:
+            ret = cv2.resize(
+                img, (self.neww, self.newh),
+                interpolation=self.interp)
+
         if img.ndim == 3 and ret.ndim == 2:
             ret = ret[:, :, np.newaxis]
         return ret

@@ -23,6 +23,7 @@ from tensorpack.tfutils import optimizer
 from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 import tensorpack.tfutils.symbolic_functions as symbf
 from tqdm import tqdm
+from tensorpack.dataflow.imgaug.misc import ReduceMean
 
 from imagenet_utils import (
     fbresnet_augmentor, get_imagenet_dataflow, ImageNetModel,
@@ -135,7 +136,7 @@ class Model(ModelDesc):
             return get_logits(image)
 
         image, label, mask = inputs
-        image = image - tf.constant([104, 116, 122], dtype='float32')
+        #image = image - tf.constant([104, 116, 122], dtype='float32')
         label = tf.identity(label, name="label")
         mask = tf.identity(mask, name="label")
 
@@ -207,17 +208,29 @@ def get_data(name, data_dir, meta_dir, batch_size):
             return img[crop_start_h:crop_start_h + CROP_SIZE, crop_start_w:crop_start_w + CROP_SIZE]
 
 
+
     if isTrain:
         shape_aug = [
-            #imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
-            #                    aspect_ratio_thres=0.15), #notice the y label nearest label
-            RandomCropWithPadding(),
-            #imgaug.Flip(horiz=True),
+            imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
+                                aspect_ratio_thres=0.15),
         ]
     else:
         shape_aug = []
         pass
-    ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False)
+    ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False, is_segmentation = True)
+
+    if isTrain:
+        shape_aug = [
+        RandomCropWithPadding(),
+        imgaug.Flip(horiz=True),
+        ]
+    else:
+        shape_aug = []
+
+    ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False, is_segmentation=False)
+
+    shape_aug = [ReduceMean()]
+    ds = AugmentImageComponent(ds, shape_aug)
 
 
     def f(ds):
@@ -283,7 +296,7 @@ def view_data(data_dir, meta_dir, batch_size):
 def get_config(data_dir, meta_dir, batch_size):
     logger.auto_set_dir()
     dataset_train = get_data('train', data_dir, meta_dir, batch_size)
-    steps_per_epoch = dataset_train.size() * 4
+    steps_per_epoch = dataset_train.size() * 8
     dataset_val = get_data('val', data_dir, meta_dir, batch_size)
 
     return TrainConfig(
