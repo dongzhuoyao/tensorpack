@@ -89,6 +89,7 @@ def get_config(model, fake=False):
             ScheduledHyperParamSetter('learning_rate',
                                       [(30, 1e-2), (60, 1e-3), (85, 1e-4), (95, 1e-5), (105, 1e-6)]),
             HumanHyperParamSetter('learning_rate'),
+            ProgressBar(["l2_regularize_loss", "xentropy-loss", "wd_cost"])  # uncomment it to debug for every step
         ]
         infs = [ClassificationError('wrong-top1', 'val-error-top1'),
                 ClassificationError('wrong-top5', 'val-error-top5')]
