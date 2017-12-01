@@ -183,10 +183,17 @@ def get_data(name, data_dir, meta_dir, batch_size):
             return img[crop_start_h:crop_start_h + CROP_SIZE, crop_start_w:crop_start_w + CROP_SIZE]
 
 
+    if isTrain:#special augmentation
+        shape_aug = [imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
+                            aspect_ratio_thres=0.15)]
+    else:
+        shape_aug = []
+
+    ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False, is_segmentation=True)
+
+
     if isTrain:
         shape_aug = [
-            imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
-                                aspect_ratio_thres=0.15),
             RandomCropWithPadding(),
             imgaug.Flip(horiz=True),
         ]

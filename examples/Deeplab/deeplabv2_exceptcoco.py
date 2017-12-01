@@ -153,6 +153,7 @@ def get_data(name, data_dir, meta_dir, batch_size):
         pass
     ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False, is_segmentation = True)
 
+
     if isTrain:
         shape_aug = [
         RandomCropWithPadding(),
