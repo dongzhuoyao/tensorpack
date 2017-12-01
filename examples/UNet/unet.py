@@ -19,7 +19,8 @@ from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.tfutils import optimizer
 from tensorpack.tfutils.summary import *
 
-initial_lr = 2.5e-4
+
+IGNORE_LABEL = 255
 
 class Model(ModelDesc):
     def __init__(self,class_num):
@@ -85,8 +86,6 @@ class Model(ModelDesc):
         pred = tf.to_int32(pred)
         costs = []
 
-        accuracy = symbf.accuracy_with_ignore_label(tf.reshape(final_map,[-1,self.class_num]), tf.reshape(edgemap,[-1]),class_num=self.class_num)
-
         label = tf.reshape(edgemap4d, [-1])
         pred = tf.reshape(pred,[-1])
 
@@ -112,7 +111,7 @@ class Model(ModelDesc):
             add_moving_summary(costs + [self.cost])
 
     def _get_optimizer(self):
-        lr = tf.get_variable('learning_rate', initializer=initial_lr, trainable=False)
+        lr = tf.get_variable('learning_rate', initializer=2.5e-4, trainable=False)
         opt = tf.train.AdamOptimizer(lr, epsilon=1e-3)
         return optimizer.apply_grad_processors(
             opt, [gradproc.ScaleGradient(
@@ -121,41 +120,85 @@ class Model(ModelDesc):
 
 def get_data(data_dir,meta_dir,name,batch_size=-1,crop_size=-1):
     isTrain = name == 'train'
-    ds = dataset.PascalVOC(data_dir,meta_dir,name, shuffle=True)
+    ds = dataset.PascalVOC12(data_dir,meta_dir,name, shuffle=True)
+
+
+    class RandomCropWithPadding(imgaug.ImageAugmentor):
+        def _get_augment_params(self, img):
+            self.h0 = img.shape[0]
+            self.w0 = img.shape[1]
+
+            if CROP_SIZE > self.h0:
+                top = (CROP_SIZE - self.h0) / 2
+                bottom = (CROP_SIZE - self.h0) - top
+            else:
+                top = 0
+                bottom = 0
+
+            if CROP_SIZE > self.w0:
+                left = (CROP_SIZE - self.w0) / 2
+                right = (CROP_SIZE - self.w0) - left
+            else:
+                left = 0
+                right = 0
+            new_shape = (top + bottom + self.h0, left + right + self.w0)
+            diffh = new_shape[0] - CROP_SIZE
+            assert diffh >= 0
+            crop_start_h = 0 if diffh == 0 else self.rng.randint(diffh)
+            diffw = new_shape[1] - CROP_SIZE
+            assert diffw >= 0
+            crop_start_w = 0 if diffw == 0 else self.rng.randint(diffw)
+            return (top, bottom, left, right, crop_start_h, crop_start_w)
+
+        def _augment(self, img, param):
+            top, bottom, left, right, crop_start_h, crop_start_w = param
+            img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=IGNORE_LABEL)
+            assert crop_start_h + CROP_SIZE <= img.shape[0], crop_start_w + CROP_SIZE <= img.shape[1]
+            return img[crop_start_h:crop_start_h + CROP_SIZE, crop_start_w:crop_start_w + CROP_SIZE]
 
 
     if isTrain:
         shape_aug = [
             imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
                                 aspect_ratio_thres=0.15),
-            imgaug.RandomCropWithPadding((crop_size,crop_size))
-            #imgaug.RotationAndCropValid(90),
-            #imgaug.Flip(horiz=True),
-            #imgaug.Flip(vert=True)
         ]
     else:
-        #shape_aug = [imgaug.Padding((crop_size,crop_size))]
-        shape_aug = [imgaug.Resize((crop_size, crop_size), interp = cv2.INTER_NEAREST)]
-    ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False)
+        shape_aug = []
+        pass
+    ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False, is_segmentation = True)
 
 
     if isTrain:
+        shape_aug = [
+        RandomCropWithPadding(),
+        imgaug.Flip(horiz=True)]
+
+    ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False, is_segmentation=False)
+
+    def f(ds):
+        return ds
+    if isTrain:
         ds = BatchData(ds, batch_size)
+        ds = MapData(ds, f)
         ds = PrefetchDataZMQ(ds, 1)
     else:
         ds = BatchData(ds, 1)
     return ds
 
 
-def view_data(data_dir,meta_dir,batch_size,crop_size):
-    ds = RepeatedData(get_data(data_dir,meta_dir,'train',batch_size,crop_size), -1)
+
+
+def view_data(data_dir, meta_dir, batch_size):
+    ds = RepeatedData(get_data('train',data_dir, meta_dir, batch_size), -1)
     ds.reset_state()
     for ims, labels in ds.get_data():
         for im, label in zip(ims, labels):
-            cv2.imshow("image", im / 255.0)
-            cv2.imshow("label", visualize_label(label))
-            cv2.waitKey()
-
+            #aa = visualize_label(label)
+            #pass
+            cv2.imshow("im", im / 255.0)
+            cv2.imshow("raw-label", label)
+            cv2.imshow("color-label", visualize_label(label))
+            cv2.waitKey(0)
 
 def get_config(data_dir,meta_dir,batch_size,crop_size, val_crop_size, class_num):
     logger.auto_set_dir()
@@ -169,13 +212,78 @@ def get_config(data_dir,meta_dir,batch_size,crop_size, val_crop_size, class_num)
             ModelSaver(max_to_keep = -1),
             ScheduledHyperParamSetter('learning_rate', [(30, 1.25e-4), (50, 6.25e-5)]),
             HumanHyperParamSetter('learning_rate'),
-            InferenceRunner(dataset_val,
-                            [MIoUStats('trimmed_predict', 'trimmed_edgemap4d'), ScalarStats('accuracy')])
+            #InferenceRunner(dataset_val,
+            #                [ScalarStats('accuracy')]),
+            ProgressBar(["cross_entropy_loss", "regularization_loss", "total_cost"]),  # uncomment it to debug for every step
+            PeriodicTrigger(CalculateMIoU(class_num), every_k_epochs=1),
         ],
         model=Model(class_num),
         steps_per_epoch=steps_per_epoch,
         max_epoch=100,
     )
+
+
+
+def proceed_validation(args, is_save = True, is_densecrf = False):
+    import cv2
+    ds = dataset.PascalVOC12(args.data_dir, args.meta_dir, "val")
+    ds = BatchData(ds, 1)
+
+    pred_config = PredictConfig(
+        model=Model(),
+        session_init=get_model_loader(args.load),
+        input_names=['image'],
+        output_names=['predict_prob'])
+    predictor = OfflinePredictor(pred_config)
+
+    i = 0
+    stat = MIoUStatistics(CLASS_NUM)
+    logger.info("start validation....")
+    for image, label in tqdm(ds.get_data()):
+        label = np.squeeze(label)
+        image = np.squeeze(image)
+        prediction = predict_scaler(image, predictor, scales=[0.9, 1, 1.1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
+        prediction = np.argmax(prediction, axis=2)
+        stat.feed(prediction, label)
+
+        if is_save:
+            cv2.imwrite("result/{}.png".format(i), np.concatenate((image, visualize_label(label), visualize_label(prediction)), axis=1))
+
+        i += 1
+
+    logger.info("mIoU: {}".format(stat.mIoU))
+    logger.info("mean_accuracy: {}".format(stat.mean_accuracy))
+    logger.info("accuracy: {}".format(stat.accuracy))
+
+
+class CalculateMIoU(Callback):
+    def __init__(self, nb_class):
+        self.nb_class = nb_class
+
+    def _setup_graph(self):
+        self.pred = self.trainer.get_predictor(
+            ['image'], ['predict_prob'])
+
+    def _before_train(self):
+        pass
+
+    def _trigger(self):
+        global args
+        self.val_ds = get_data('val', args.data_dir, args.meta_dir, args.batch_size)
+        self.val_ds.reset_state()
+
+        self.stat = MIoUStatistics(self.nb_class)
+
+        for image, label in tqdm(self.val_ds.get_data()):
+            label = np.squeeze(label)
+            image = np.squeeze(image)
+            prediction = predict_slider(image, self.pred, self.nb_class, tile_size=CROP_SIZE)
+            prediction = np.argmax(prediction, axis=2)
+            self.stat.feed(prediction, label)
+
+        self.trainer.monitors.put_scalar("mIoU", self.stat.mIoU)
+        self.trainer.monitors.put_scalar("mean_accuracy", self.stat.mean_accuracy)
+        self.trainer.monitors.put_scalar("accuracy", self.stat.accuracy)
 
 
 def run(model_path, image_path, output, val_crop_size, class_num):
@@ -229,13 +337,13 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', help='comma separated list of GPU(s) to use.')
-    parser.add_argument('--data_dir', help='dataset dir')
-    parser.add_argument('--meta_dir', help='meta dir')
+    parser.add_argument('--gpu', default="3", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--data_dir', default="/data_a/dataset/ningbo3539/", help='dataset dir')
+    parser.add_argument('--meta_dir', default="ningbo", help='meta dir')
     parser.add_argument('--class_num', type=int, default=2)
-    parser.add_argument('--batch_size', default=10, type=int, help='batch size')
+    parser.add_argument('--batch_size', default=40, type=int, help='batch size')
     parser.add_argument('--crop_size', default=256, type=int, help='crop size')
-    parser.add_argument('--val_crop_size', default=512, type=int, help='crop size')
+    parser.add_argument('--val_crop_size', default=256, type=int, help='crop size')
     parser.add_argument('--load', help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
@@ -244,6 +352,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.gpu:
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
+
+    CROP_SIZE = args.crop_size
 
     if args.view:
         view_data(args.data_dir,args.meta_dir,args.batch_size,args.crop_size)
@@ -255,5 +365,6 @@ if __name__ == '__main__':
         config = get_config(args.data_dir,args.meta_dir,args.batch_size,args.crop_size,args.val_crop_size,args.class_num)
         if args.load:
             config.session_init = get_model_loader(args.load)
-        config.nr_tower = max(get_nr_gpu(), 1)
-        SyncMultiGPUTrainer(config).train()
+        launch_train_with_config(
+            config,
+            SyncMultiGPUTrainer(max(get_nr_gpu(), 1)))

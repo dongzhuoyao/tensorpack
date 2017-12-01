@@ -206,7 +206,7 @@ def get_data(name, data_dir, meta_dir, batch_size):
 
 
     def f(ds):
-        pass#just for debugging
+        return ds#just for debugging
 
     if isTrain:
         ds = MapData(ds, f)
