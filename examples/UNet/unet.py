@@ -18,7 +18,8 @@ from tensorpack.dataflow import dataset
 from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.tfutils import optimizer
 from tensorpack.tfutils.summary import *
-
+from tensorpack.utils.stats import MIoUStatistics
+from tensorpack.utils.segmentation import predict_slider, visualize_label, predict_scaler
 
 IGNORE_LABEL = 255
 
@@ -189,7 +190,7 @@ def get_data(data_dir,meta_dir,name,batch_size=-1,crop_size=-1):
 
 
 def view_data(data_dir, meta_dir, batch_size):
-    ds = RepeatedData(get_data('train',data_dir, meta_dir, batch_size), -1)
+    ds = RepeatedData(get_data(data_dir, meta_dir, 'train', batch_size), -1)
     ds.reset_state()
     for ims, labels in ds.get_data():
         for im, label in zip(ims, labels):
@@ -269,7 +270,7 @@ class CalculateMIoU(Callback):
 
     def _trigger(self):
         global args
-        self.val_ds = get_data('val', args.data_dir, args.meta_dir, args.batch_size)
+        self.val_ds = get_data( args.data_dir, args.meta_dir, 'val', args.batch_size)
         self.val_ds.reset_state()
 
         self.stat = MIoUStatistics(self.nb_class)
