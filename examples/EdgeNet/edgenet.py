@@ -136,7 +136,6 @@ def get_data(data_dir,meta_dir,edge_dir,name,batch_size=-1,crop_size=-1):
 
     if isTrain:
         shape_aug = [
-
             #imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
             #                    aspect_ratio_thres=0.15),
             #imgaug.RandomCropWithPadding((crop_size, crop_size))
