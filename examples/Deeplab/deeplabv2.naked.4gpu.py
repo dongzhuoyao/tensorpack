@@ -349,7 +349,7 @@ if __name__ == '__main__':
     parser.add_argument('--load', help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
-    parser.add_argument('--batch_size', type=int, default = 10, help='batch_size')
+    parser.add_argument('--batch_size', type=int, default = 28, help='batch_size, if multi-gpu, the batch size is sum of all GPUs')
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     parser.add_argument('--validation', action='store_true', help='validate model on validation images')
     args = parser.parse_args()
