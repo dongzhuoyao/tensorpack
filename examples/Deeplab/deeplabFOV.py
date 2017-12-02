@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-# File: hed.py
-# Author: Yuxin Wu <ppwwyyxxc@gmail.com>
+# File: deeplabFOV.py
+# Author: Tao Hu <taohu620@gmail.com>
 
 import cv2
 import tensorflow as tf
@@ -86,36 +86,11 @@ class Model(ModelDesc):
 
                 return predict
 
-        def resnet101(image):
-            mode = 'resnet'
-            depth = 101
-            basicblock = preresnet_basicblock if mode == 'preact' else resnet_basicblock
-            bottleneck = {
-                'resnet': resnet_bottleneck_deeplab,
-                'preact': preresnet_bottleneck,
-                'se': se_resnet_bottleneck}[mode]
-            num_blocks, block_func = {
-                18: ([2, 2, 2, 2], basicblock),
-                34: ([3, 4, 6, 3], basicblock),
-                50: ([3, 4, 6, 3], bottleneck),
-                101: ([3, 4, 23, 3], bottleneck),
-                152: ([3, 8, 36, 3], bottleneck)
-            }[depth]
-
-            def get_logits(image):
-                with argscope([Conv2D, MaxPooling, GlobalAvgPooling, BatchNorm], data_format="NHWC"):
-                    return resnet_backbone(
-                        image, num_blocks,
-                        preresnet_group if mode == 'preact' else resnet_group, block_func)
-
-            return get_logits(image)
-
         image, label = inputs
         image = image - tf.constant([104, 116, 122], dtype='float32')
         label = tf.identity(label, name="label")
 
         predict = vgg16(image)
-        #predict = resnet101(image)
 
         costs = []
         prob = tf.identity(predict, name='prob')
@@ -141,7 +116,7 @@ class Model(ModelDesc):
             add_moving_summary(costs + [self.cost])
 
     def _get_optimizer(self):
-        lr = tf.get_variable('learning_rate', initializer=1e-3, trainable=False)
+        lr = tf.get_variable('learning_rate', initializer=2.5e-4, trainable=False)
         opt = tf.train.AdamOptimizer(lr, epsilon=1e-3)
         return optimizer.apply_grad_processors(
             opt, [gradproc.ScaleGradient(
@@ -228,7 +203,7 @@ def get_config(data_dir, meta_dir, batch_size):
         dataflow=dataset_train,
         callbacks=[
             ModelSaver(),
-            ScheduledHyperParamSetter('learning_rate', [(2, 5e-4), (4, 2.5e-5), (6, 1e-5)]),
+            ScheduledHyperParamSetter('learning_rate', [(2, 1.25e-4), (4, 5e-5), (6, 2.5e-5)]),
             HumanHyperParamSetter('learning_rate'),
             PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=1),
             ProgressBar(["cross_entropy_loss","cost","wd_cost"])#uncomment it to debug for every step
@@ -240,27 +215,7 @@ def get_config(data_dir, meta_dir, batch_size):
 
 
 def run(model_path, image_path, output):
-    pred_config = PredictConfig(
-        model=Model(),
-        session_init=get_model_loader(model_path),
-        input_names=['image'],
-        output_names=['output' + str(k) for k in range(1, 7)])
-    predictor = OfflinePredictor(pred_config)
-    im = cv2.imread(image_path)
-    assert im is not None
-    im = cv2.resize(
-        im, (im.shape[1] // 16 * 16, im.shape[0] // 16 * 16)
-    )[None, :, :, :].astype('float32')
-    outputs = predictor(im)
-    if output is None:
-        for k in range(6):
-            pred = outputs[k][0]
-            cv2.imwrite("out{}.png".format(
-                '-fused' if k == 5 else str(k + 1)), pred * 255)
-    else:
-        pred = outputs[5][0]
-        cv2.imwrite(output, pred * 255)
-
+    return #TODO
 
 class CalculateMIoU(Callback):
     def __init__(self, nb_class):
