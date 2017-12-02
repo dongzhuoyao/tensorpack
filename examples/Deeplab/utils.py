@@ -232,3 +232,5 @@ def evaluation(predict_list, label_list, nb_classes, ignore = 255):
     duration = time() - start_time
     print('{} mins used to calculate IOU.\n'.format(duration/60.0))
 
+
+

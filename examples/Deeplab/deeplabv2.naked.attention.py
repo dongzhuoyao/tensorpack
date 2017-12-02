@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-# File: hed.py
-# Author: Yuxin Wu <ppwwyyxxc@gmail.com>
+# File: deeplabv2.py
+# Author: Tao Hu <taohu620@gmail.com>
 
 import cv2
 import tensorflow as tf
@@ -188,6 +188,7 @@ def get_data(name, data_dir, meta_dir, batch_size):
                             aspect_ratio_thres=0.15)]
     else:
         shape_aug = []
+
     ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False, is_segmentation=True)
 
 
@@ -198,15 +199,11 @@ def get_data(name, data_dir, meta_dir, batch_size):
         ]
     else:
         shape_aug = []
+        pass
     ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False)
 
 
-
-    def f(ds):
-        return ds#just for debugging
-
     if isTrain:
-        ds = MapData(ds, f)
         ds = BatchData(ds, batch_size)
         ds = PrefetchDataZMQ(ds, 1)
     else:
@@ -249,7 +246,26 @@ def get_config(data_dir, meta_dir, batch_size):
 
 
 def run(model_path, image_path, output):
-    pass #TODO
+    pred_config = PredictConfig(
+        model=Model(),
+        session_init=get_model_loader(model_path),
+        input_names=['image'],
+        output_names=['output' + str(k) for k in range(1, 7)])
+    predictor = OfflinePredictor(pred_config)
+    im = cv2.imread(image_path)
+    assert im is not None
+    im = cv2.resize(
+        im, (im.shape[1] // 16 * 16, im.shape[0] // 16 * 16)
+    )[None, :, :, :].astype('float32')
+    outputs = predictor(im)
+    if output is None:
+        for k in range(6):
+            pred = outputs[k][0]
+            cv2.imwrite("out{}.png".format(
+                '-fused' if k == 5 else str(k + 1)), pred * 255)
+    else:
+        pred = outputs[5][0]
+        cv2.imwrite(output, pred * 255)
 
 def proceed_validation(args, is_save = True, is_densecrf = False):
     import cv2
@@ -327,7 +343,7 @@ if __name__ == '__main__':
     parser.add_argument('--load', help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
-    parser.add_argument('--batch_size', type=int, default = 28, help='batch_size, if multi-gpu, the batch size is sum of all GPU batches')
+    parser.add_argument('--batch_size', type=int, default = 10, help='batch_size')
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     parser.add_argument('--validation', action='store_true', help='validate model on validation images')
     args = parser.parse_args()
