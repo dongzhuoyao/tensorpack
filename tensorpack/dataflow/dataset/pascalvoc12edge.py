@@ -12,7 +12,7 @@ from ..base import RNGDataFlow
 __all__ = ['PascalVOC12Edge']
 
 
-class PascalVOC12(RNGDataFlow):
+class PascalVOC12Edge(RNGDataFlow):
     def __init__(self, dir, meta_dir, name,
                  shuffle=None, dir_structure=None):
 

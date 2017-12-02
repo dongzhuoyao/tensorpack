@@ -169,7 +169,7 @@ class AugmentImageComponents(MapData):
 
     """
 
-    def __init__(self, ds, augmentors, index=(0, 1), coords_index=(), copy=True, catch_exceptions=False, is_segmentation = False):
+    def __init__(self, ds, augmentors, index=(0, 1), coords_index=(), copy=True, catch_exceptions=False):
         """
         Args:
             ds (DataFlow): input DataFlow.
@@ -178,11 +178,10 @@ class AugmentImageComponents(MapData):
             coords_index: tuple of indices of the coordinates components.
             copy, catch_exceptions: same as in :class:`AugmentImageComponent`
         """
-        self.is_segmentation = is_segmentation
         if isinstance(augmentors, AugmentorList):
             self.augs = augmentors
         else:
-            self.augs = AugmentorList(augmentors, self.is_segmentation)
+            self.augs = AugmentorList(augmentors)
         self.ds = ds
 
         exception_handler = ExceptionHandler(catch_exceptions)
@@ -193,13 +192,10 @@ class AugmentImageComponents(MapData):
             with exception_handler.catch():
                 major_image = index[0]  # image to be used to get params. TODO better design?
                 im = copy_func(dp[major_image])
-                im, prms = self.augs._augment_return_params(im)
+                im, prms = self.augs._augment_return_params(im, 0)
                 dp[major_image] = im
                 for idx in index[1:]:
-                    if self.is_segmentation and idx == 1:
-                        dp[idx] = self.augs._augment(copy_func(dp[idx]), prms, extra_dict = {"is_label": True})
-                    else:
-                        dp[idx] = self.augs._augment(copy_func(dp[idx]), prms)
+                        dp[idx] = self.augs._augment(copy_func(dp[idx]), prms, idx)
                 for idx in coords_index:
                     coords = copy_func(dp[idx])
                     _valid_coords(coords)

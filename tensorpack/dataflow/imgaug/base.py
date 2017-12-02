@@ -44,12 +44,12 @@ class Augmentor(object):
         """
         return self._augment_return_params(d)
 
-    def _augment_return_params(self, d):
+    def _augment_return_params(self, d, id):
         """
         Augment the image and return both image and params
         """
-        prms = self._get_augment_params(d)
-        return (self._augment(d, prms), prms)
+        prms = self._get_augment_params(d, id)
+        return (self._augment(d, prms, id), prms)
 
     @abstractmethod
     def _augment(self, d, param):
@@ -58,7 +58,7 @@ class Augmentor(object):
         The augmentor is allowed to modify data in-place.
         """
 
-    def _get_augment_params(self, d):
+    def _get_augment_params(self, d, id):
         """
         Get the augmentor parameters.
         """
@@ -124,35 +124,31 @@ class AugmentorList(ImageAugmentor):
     Augment by a list of augmentors
     """
 
-    def __init__(self, augmentors, is_segmentation = False):
+    def __init__(self, augmentors):
         """
         Args:
             augmentors (list): list of :class:`ImageAugmentor` instance to be applied.
         """
         self.augs = augmentors
-        self.is_segmentation = is_segmentation
         super(AugmentorList, self).__init__()
 
     def _get_augment_params(self, img):
         # the next augmentor requires the previous one to finish
         raise RuntimeError("Cannot simply get all parameters of a AugmentorList without running the augmentation!")
 
-    def _augment_return_params(self, img):
+    def _augment_return_params(self, img, id):
         assert img.ndim in [2, 3], img.ndim
 
         prms = []
         for a in self.augs:
-            img, prm = a._augment_return_params(img)
+            img, prm = a._augment_return_params(img, id)
             prms.append(prm)
         return img, prms
 
-    def _augment(self, img, param, extra_dict = {}):
+    def _augment(self, img, param, id):
         assert img.ndim in [2, 3], img.ndim
         for aug, prm in zip(self.augs, param):
-            if self.is_segmentation:
-                img = aug._augment(img, prm, extra_dict)
-            else:
-                img = aug._augment(img, prm)
+            img = aug._augment(img, prm, id)
         return img
 
     def _augment_coords(self, coords, param):

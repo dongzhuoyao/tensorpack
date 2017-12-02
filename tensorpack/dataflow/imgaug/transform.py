@@ -59,9 +59,9 @@ class ResizeTransform(ImageTransform):
     def __init__(self, h, w, newh, neww, interp):
         self._init(locals())
 
-    def apply_image(self, img, extra_dict = {}):
+    def apply_image(self, img, id):
         assert img.shape[:2] == (self.h, self.w)
-        if extra_dict.has_key("is_label") and extra_dict["is_label"] == True:
+        if id == 1:
             ret = cv2.resize(
                 img, (self.neww, self.newh),
                 interpolation=cv2.INTER_NEAREST)

@@ -23,7 +23,7 @@ import tensorpack.tfutils.symbolic_functions as symbf
 from tqdm import tqdm
 
 
-from resnet_model import (
+from resnet_model_edge import (
     preresnet_group, preresnet_basicblock, preresnet_bottleneck,
     resnet_group, resnet_basicblock, resnet_bottleneck_deeplab, se_resnet_bottleneck,
     resnet_backbone)
@@ -42,47 +42,7 @@ class Model(ModelDesc):
                 InputDesc(tf.float32, [None, CROP_SIZE, CROP_SIZE], 'edge')]
 
     def _build_graph(self, inputs):
-        def vgg16(input):
-            with argscope(Conv2D, kernel_shape=3, nl=tf.nn.relu):
-                def aspp_branch(input, rate):
-                    input = AtrousConv2D('aspp{}_conv0'.format(rate), input, 1024, kernel_shape=3, rate=6)
-                    input = Dropout('aspp{}_dropout0'.format(rate), input, 0.5)
-                    input = Conv2D('aspp{}_conv1'.format(rate), input, 1024)
-                    input = Dropout('aspp{}_dropout1'.format(rate), input, 0.5)
-                    input = Conv2D('aspp{}_conv2'.format(rate), input, CLASS_NUM, nl=tf.identity)
-                    return input
-
-                l = Conv2D('conv1_1', image, 64)
-                l = Conv2D('conv1_2', l, 64)
-                l = MaxPooling('pool1', l, shape=3, stride=2)
-                # 112
-                l = Conv2D('conv2_1', l, 128)
-                l = Conv2D('conv2_2', l, 128)
-                l = MaxPooling('pool2', l, shape=3, stride=2)
-                # 56
-                l = Conv2D('conv3_1', l, 256)
-                l = Conv2D('conv3_2', l, 256)
-                l = Conv2D('conv3_3', l, 256)
-                l = MaxPooling('pool3', l, shape=3, stride=2)
-                # 28
-                l = Conv2D('conv4_1', l, 512)
-                l = Conv2D('conv4_2', l, 512)
-                l = Conv2D('conv4_3', l, 512)
-                l = MaxPooling('pool4', l, shape=3, stride=1)  # original VGG16 pooling is 2, here is 1
-                # 28
-                l = AtrousConv2D('conv5_1', l, 512, kernel_shape=3, rate=2)
-                l = AtrousConv2D('conv5_2', l, 512, kernel_shape=3, rate=2)
-                l = AtrousConv2D('conv5_3', l, 512, kernel_shape=3, rate=2)
-                l = MaxPooling('pool5', l, shape=3, stride=1)
-                # 28
-                dilation6 = aspp_branch(l, rate=6)
-                dilation12 = aspp_branch(l, rate=12)
-                dilation18 = aspp_branch(l, rate=18)
-                dilation24 = aspp_branch(l, rate=24)
-                predict = dilation6 + dilation12 + dilation18 + dilation24
-                return predict
-
-        def resnet101(image):
+        def resnet101(image, label, edge):
             mode = 'resnet'
             depth = 101
             basicblock = preresnet_basicblock if mode == 'preact' else resnet_basicblock
@@ -102,7 +62,7 @@ class Model(ModelDesc):
                 with argscope([Conv2D, MaxPooling, GlobalAvgPooling, BatchNorm], data_format="NHWC"):
                     return resnet_backbone(
                         image, num_blocks,
-                        preresnet_group if mode == 'preact' else resnet_group, block_func, ASPP = False)
+                        preresnet_group if mode == 'preact' else resnet_group, block_func,  label, edge,  ASPP = False)
 
             return get_logits(image)
 
@@ -111,7 +71,7 @@ class Model(ModelDesc):
         label = tf.identity(label, name="label")
 
         #predict = vgg16(image)
-        predict = resnet101(image)
+        predict = resnet101(image, label, edge)
 
         costs = []
         prob = tf.nn.softmax(predict, name='prob')
@@ -149,7 +109,7 @@ def get_data(name, data_dir, meta_dir, batch_size):
     ds = dataset.PascalVOC12Edge(data_dir, meta_dir, name, shuffle=True)
 
     class RandomCropWithPadding(imgaug.ImageAugmentor):
-        def _get_augment_params(self, img):
+        def _get_augment_params(self, img, id):
             self.h0 = img.shape[0]
             self.w0 = img.shape[1]
 
@@ -175,25 +135,31 @@ def get_data(name, data_dir, meta_dir, batch_size):
             crop_start_w = 0 if diffw == 0 else self.rng.randint(diffw)
             return (top, bottom, left, right, crop_start_h, crop_start_w)
 
-        def _augment(self, img, param):
+        def _augment(self, img, param, id):
             top, bottom, left, right, crop_start_h, crop_start_w = param
-            img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=IGNORE_LABEL)
+            if id <= 1:
+                il = IGNORE_LABEL
+            else:
+                il = 0
+
+            img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=il)
+
             assert crop_start_h + CROP_SIZE <= img.shape[0], crop_start_w + CROP_SIZE <= img.shape[1]
             return img[crop_start_h:crop_start_h + CROP_SIZE, crop_start_w:crop_start_w + CROP_SIZE]
 
 
     if isTrain:#special augmentation
         shape_aug = [imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
-                            aspect_ratio_thres=0.15)]
+                            aspect_ratio_thres=0.15),
+                     RandomCropWithPadding()]
     else:
         shape_aug = []
 
-    ds = AugmentImageComponents(ds, shape_aug, (0, 1, 2), copy=False, is_segmentation=True)
+    ds = AugmentImageComponents(ds, shape_aug, (0, 1, 2), copy=False)
 
 
     if isTrain:
         shape_aug = [
-            RandomCropWithPadding(),
             imgaug.Flip(horiz=True),
         ]
     else:
@@ -201,8 +167,10 @@ def get_data(name, data_dir, meta_dir, batch_size):
         pass
     ds = AugmentImageComponents(ds, shape_aug, (0, 1, 2), copy=False)
 
-
+    def f(ds):
+        return ds
     if isTrain:
+        ds = MapData(ds, f)
         ds = BatchData(ds, batch_size)
         ds = PrefetchDataZMQ(ds, 1)
     else:
@@ -336,7 +304,7 @@ class CalculateMIoU(Callback):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="0", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--data_dir', default="/data_a/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012",
                         help='dataset dir')
     parser.add_argument('--meta_dir', default="pascalvoc12", help='meta dir')
