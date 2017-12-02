@@ -196,7 +196,7 @@ class AugmentImageComponents(MapData):
                 im, prms = self.augs._augment_return_params(im)
                 dp[major_image] = im
                 for idx in index[1:]:
-                    if self.is_segmentation:
+                    if self.is_segmentation and idx == 1:
                         dp[idx] = self.augs._augment(copy_func(dp[idx]), prms, extra_dict = {"is_label": True})
                     else:
                         dp[idx] = self.augs._augment(copy_func(dp[idx]), prms)

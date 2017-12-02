@@ -22,9 +22,7 @@ from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 import tensorpack.tfutils.symbolic_functions as symbf
 from tqdm import tqdm
 
-from imagenet_utils import (
-    fbresnet_augmentor, get_imagenet_dataflow, ImageNetModel,
-    eval_on_ILSVRC12)
+
 from resnet_model import (
     preresnet_group, preresnet_basicblock, preresnet_bottleneck,
     resnet_group, resnet_basicblock, resnet_bottleneck_deeplab, se_resnet_bottleneck,
@@ -40,7 +38,8 @@ class Model(ModelDesc):
     def _get_inputs(self):
         ## Set static shape so that tensorflow knows shape at compile time.
         return [InputDesc(tf.float32, [None, CROP_SIZE, CROP_SIZE, 3], 'image'),
-                InputDesc(tf.int32, [None, CROP_SIZE, CROP_SIZE], 'edgemap')]
+                InputDesc(tf.int32, [None, CROP_SIZE, CROP_SIZE], 'gt'),
+                InputDesc(tf.float32, [None, CROP_SIZE, CROP_SIZE], 'edge')]
 
     def _build_graph(self, inputs):
         def vgg16(input):
@@ -107,7 +106,7 @@ class Model(ModelDesc):
 
             return get_logits(image)
 
-        image, label = inputs
+        image, label, edge = inputs
         image = image - tf.constant([104, 116, 122], dtype='float32')
         label = tf.identity(label, name="label")
 
@@ -147,7 +146,7 @@ class Model(ModelDesc):
 
 def get_data(name, data_dir, meta_dir, batch_size):
     isTrain = name == 'train'
-    ds = dataset.PascalVOC12(data_dir, meta_dir, name, shuffle=True)
+    ds = dataset.PascalVOC12Edge(data_dir, meta_dir, name, shuffle=True)
 
     class RandomCropWithPadding(imgaug.ImageAugmentor):
         def _get_augment_params(self, img):
@@ -189,7 +188,7 @@ def get_data(name, data_dir, meta_dir, batch_size):
     else:
         shape_aug = []
 
-    ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False, is_segmentation=True)
+    ds = AugmentImageComponents(ds, shape_aug, (0, 1, 2), copy=False, is_segmentation=True)
 
 
     if isTrain:
@@ -200,7 +199,7 @@ def get_data(name, data_dir, meta_dir, batch_size):
     else:
         shape_aug = []
         pass
-    ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False)
+    ds = AugmentImageComponents(ds, shape_aug, (0, 1, 2), copy=False)
 
 
     if isTrain:
@@ -214,13 +213,14 @@ def get_data(name, data_dir, meta_dir, batch_size):
 def view_data(data_dir, meta_dir, batch_size):
     ds = RepeatedData(get_data('train',data_dir, meta_dir, batch_size), -1)
     ds.reset_state()
-    for ims, labels in ds.get_data():
-        for im, label in zip(ims, labels):
+    for ims, labels, edges in ds.get_data():
+        for im, label, edge in zip(ims, labels, edges):
             #aa = visualize_label(label)
             #pass
             cv2.imshow("im", im / 255.0)
             cv2.imshow("raw-label", label)
             cv2.imshow("color-label", visualize_label(label))
+            cv2.imshow("edge", edge*255)
             cv2.waitKey(0)
 
 
@@ -269,7 +269,7 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = True, is_densecrf = False):
     import cv2
-    ds = dataset.PascalVOC12(args.data_dir, args.meta_dir, "val")
+    ds = dataset.PascalVOC12Edge(args.data_dir, args.meta_dir, "val")
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(

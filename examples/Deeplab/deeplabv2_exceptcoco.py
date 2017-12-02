@@ -40,7 +40,7 @@ class Model(ModelDesc):
     def _get_inputs(self):
         ## Set static shape so that tensorflow knows shape at compile time.
         return [InputDesc(tf.float32, [None, CROP_SIZE, CROP_SIZE, 3], 'image'),
-                InputDesc(tf.int32, [None, CROP_SIZE, CROP_SIZE], 'edgemap')]
+                InputDesc(tf.int32, [None, CROP_SIZE, CROP_SIZE], 'gt')]
 
     def _build_graph(self, inputs):
 
