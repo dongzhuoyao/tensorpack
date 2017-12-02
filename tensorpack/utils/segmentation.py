@@ -47,7 +47,7 @@ def pad_image(img, target_size):
 def visualize_label(label):
     """Color classes a good distance away from each other."""
     h, w = label.shape
-    img_color = np.zeros((h, w, 3))
+    img_color = np.zeros((h, w, 3)).astype('uint8')
     for i in range(0,21):
         img_color[label == i] = label_colours[i]
     return img_color

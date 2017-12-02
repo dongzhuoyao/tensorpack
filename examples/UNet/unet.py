@@ -305,7 +305,7 @@ def run(model_path, image_path, output, val_crop_size, class_num):
     else:
             cv2.imwrite(output, pred)
 
-def proceed_validation(args, is_save = False, is_densecrf = False):
+def proceed_validation(args, is_save = True, is_densecrf = False):
     import cv2
     ds = dataset.PascalVOC12(args.data_dir, args.meta_dir, "val")
     ds = BatchData(ds, 1)
@@ -324,11 +324,13 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
         label = np.squeeze(label)
         image = np.squeeze(image)
         prediction = predict_scaler(image, predictor, scales=[1], classes=args.class_num, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
-        prediction = np.argmax(prediction, axis=2)
+        prediction = np.argmax(prediction, axis=2).astype('uint8')
         stat.feed(prediction, label)
 
         if is_save:
-            cv2.imwrite("result/{}.png".format(i), np.concatenate((image, visualize_label(label), visualize_label(prediction)), axis=1))
+            edge = cv2.Canny(visualize_label(prediction), 100, 200)
+            edge = np.stack((edge, edge, edge), axis=2)
+            cv2.imwrite("result/{}.png".format(i), np.concatenate((image, visualize_label(label), visualize_label(prediction), edge), axis=1))
 
         i += 1
 
