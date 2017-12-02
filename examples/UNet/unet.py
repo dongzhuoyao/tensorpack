@@ -20,6 +20,7 @@ from tensorpack.tfutils import optimizer
 from tensorpack.tfutils.summary import *
 from tensorpack.utils.stats import MIoUStatistics
 from tensorpack.utils.segmentation import predict_slider, visualize_label, predict_scaler
+from tensorpack.utils import logger
 
 IGNORE_LABEL = 255
 
@@ -211,7 +212,7 @@ def get_config(data_dir,meta_dir,batch_size,crop_size, val_crop_size, class_num)
         dataflow=dataset_train,
         callbacks=[
             ModelSaver(max_to_keep = -1),
-            ScheduledHyperParamSetter('learning_rate', [(30, 1.25e-4), (50, 6.25e-5)]),
+            ScheduledHyperParamSetter('learning_rate', [(5, 1.25e-4), (8, 6.25e-5)]),
             HumanHyperParamSetter('learning_rate'),
             #InferenceRunner(dataset_val,
             #                [ScalarStats('accuracy')]),
@@ -220,7 +221,7 @@ def get_config(data_dir,meta_dir,batch_size,crop_size, val_crop_size, class_num)
         ],
         model=Model(class_num),
         steps_per_epoch=steps_per_epoch,
-        max_epoch=100,
+        max_epoch=12,
     )
 
 
@@ -306,7 +307,7 @@ def run(model_path, image_path, output, val_crop_size, class_num):
 
 def proceed_validation(args, is_save = False, is_densecrf = False):
     import cv2
-    ds = dataset.PascalVOC(args.data_dir, args.meta_dir, "val")
+    ds = dataset.PascalVOC12(args.data_dir, args.meta_dir, "val")
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
@@ -317,23 +318,23 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
     predictor = OfflinePredictor(pred_config)
 
     i = 0
-    pre_img_list = []
-    label_img_list = []
+    stat = MIoUStatistics(args.class_num)
+    logger.info("start validation....")
     for image, label in tqdm(ds.get_data()):
-        image = image[0]  # single image inference
-        label = label[0]
-        outputs = predict_sliding(image, predictor, args.class_num, (args.val_crop_size, args.val_crop_size),is_densecrf)
-        pre = np.argmax(outputs, axis=2)
+        label = np.squeeze(label)
+        image = np.squeeze(image)
+        prediction = predict_scaler(image, predictor, scales=[1], classes=args.class_num, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
+        prediction = np.argmax(prediction, axis=2)
+        stat.feed(prediction, label)
 
-        pre_img_list.append(pre)
-        label_img_list.append(label)
         if is_save:
-            cv2.imwrite("result/{}-img.png".format(i),image)
-            cv2.imwrite("result/{}-label.png".format(i), label)
-            cv2.imwrite("result/{}-predict.png".format(i), pre)
+            cv2.imwrite("result/{}.png".format(i), np.concatenate((image, visualize_label(label), visualize_label(prediction)), axis=1))
 
         i += 1
-    evaluation(pre_img_list, label_img_list, nb_classes= 2)
+
+    logger.info("mIoU: {}".format(stat.mIoU))
+    logger.info("mean_accuracy: {}".format(stat.mean_accuracy))
+    logger.info("accuracy: {}".format(stat.accuracy))
 
 
 if __name__ == '__main__':
@@ -342,7 +343,7 @@ if __name__ == '__main__':
     parser.add_argument('--data_dir', default="/data_a/dataset/ningbo3539/", help='dataset dir')
     parser.add_argument('--meta_dir', default="ningbo", help='meta dir')
     parser.add_argument('--class_num', type=int, default=2)
-    parser.add_argument('--batch_size', default=40, type=int, help='batch size')
+    parser.add_argument('--batch_size', default=24, type=int, help='batch size')
     parser.add_argument('--crop_size', default=256, type=int, help='crop size')
     parser.add_argument('--val_crop_size', default=256, type=int, help='crop size')
     parser.add_argument('--load', help='load model')
