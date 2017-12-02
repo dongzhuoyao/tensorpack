@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-# File: hed.py
-# Author: Yuxin Wu <ppwwyyxxc@gmail.com>
+# File: deeplabv2.py
+# Author: Tao Hu <taohu620@gmail.com>
 
 import cv2
 import tensorflow as tf
@@ -22,9 +22,6 @@ from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 import tensorpack.tfutils.symbolic_functions as symbf
 from tqdm import tqdm
 
-from imagenet_utils import (
-    fbresnet_augmentor, get_imagenet_dataflow, ImageNetModel,
-    eval_on_ILSVRC12)
 from resnet_model import (
     preresnet_group, preresnet_basicblock, preresnet_bottleneck,
     resnet_group, resnet_basicblock, resnet_bottleneck_deeplab, se_resnet_bottleneck,
@@ -43,46 +40,6 @@ class Model(ModelDesc):
                 InputDesc(tf.int32, [None, CROP_SIZE, CROP_SIZE], 'edgemap')]
 
     def _build_graph(self, inputs):
-        def vgg16(input):
-            with argscope(Conv2D, kernel_shape=3, nl=tf.nn.relu):
-                def aspp_branch(input, rate):
-                    input = AtrousConv2D('aspp{}_conv0'.format(rate), input, 1024, kernel_shape=3, rate=6)
-                    input = Dropout('aspp{}_dropout0'.format(rate), input, 0.5)
-                    input = Conv2D('aspp{}_conv1'.format(rate), input, 1024)
-                    input = Dropout('aspp{}_dropout1'.format(rate), input, 0.5)
-                    input = Conv2D('aspp{}_conv2'.format(rate), input, CLASS_NUM, nl=tf.identity)
-                    return input
-
-                l = Conv2D('conv1_1', image, 64)
-                l = Conv2D('conv1_2', l, 64)
-                l = MaxPooling('pool1', l, shape=3, stride=2)
-                # 112
-                l = Conv2D('conv2_1', l, 128)
-                l = Conv2D('conv2_2', l, 128)
-                l = MaxPooling('pool2', l, shape=3, stride=2)
-                # 56
-                l = Conv2D('conv3_1', l, 256)
-                l = Conv2D('conv3_2', l, 256)
-                l = Conv2D('conv3_3', l, 256)
-                l = MaxPooling('pool3', l, shape=3, stride=2)
-                # 28
-                l = Conv2D('conv4_1', l, 512)
-                l = Conv2D('conv4_2', l, 512)
-                l = Conv2D('conv4_3', l, 512)
-                l = MaxPooling('pool4', l, shape=3, stride=1)  # original VGG16 pooling is 2, here is 1
-                # 28
-                l = AtrousConv2D('conv5_1', l, 512, kernel_shape=3, rate=2)
-                l = AtrousConv2D('conv5_2', l, 512, kernel_shape=3, rate=2)
-                l = AtrousConv2D('conv5_3', l, 512, kernel_shape=3, rate=2)
-                l = MaxPooling('pool5', l, shape=3, stride=1)
-                # 28
-                dilation6 = aspp_branch(l, rate=6)
-                dilation12 = aspp_branch(l, rate=12)
-                dilation18 = aspp_branch(l, rate=18)
-                dilation24 = aspp_branch(l, rate=24)
-                predict = dilation6 + dilation12 + dilation18 + dilation24
-                return predict
-
         def resnet101(image):
             mode = 'resnet'
             depth = 101
@@ -111,15 +68,12 @@ class Model(ModelDesc):
         image = image - tf.constant([104, 116, 122], dtype='float32')
         label = tf.identity(label, name="label")
 
-        #predict = vgg16(image)
         predict = resnet101(image)
 
         costs = []
         prob = tf.nn.softmax(predict, name='prob')
 
         label4d = tf.expand_dims(label, 3, name='label4d')
-        new_size = prob.get_shape()[1:3]
-        #label_resized = tf.image.resize_nearest_neighbor(label4d, new_size)
 
         cost = symbf.softmax_cross_entropy_with_ignore_label(logits=predict, label=label4d,
                                                              class_num=CLASS_NUM)
@@ -324,7 +278,7 @@ if __name__ == '__main__':
     parser.add_argument('--data_dir', default="/data_a/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012",
                         help='dataset dir')
     parser.add_argument('--meta_dir', default="pascalvoc12", help='meta dir')
-    parser.add_argument('--load', help='load model')
+    parser.add_argument('--load', default="resnet101.npz", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
     parser.add_argument('--batch_size', type=int, default = 28, help='batch_size, if multi-gpu, the batch size is sum of all GPU batches')
