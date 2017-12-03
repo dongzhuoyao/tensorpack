@@ -17,6 +17,7 @@ from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.utils.segmentation import predict_slider, visualize_label, predict_scaler
 from tensorpack.utils.stats import MIoUStatistics
 from tensorpack.utils import logger
+from tensorpack.dataflow.imgaug.misc import RandomCropWithPadding
 from tensorpack.tfutils import optimizer
 from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 import tensorpack.tfutils.symbolic_functions as symbf
@@ -149,57 +150,16 @@ def get_data(name, data_dir, meta_dir, batch_size):
     isTrain = name == 'train'
     ds = dataset.PascalVOC12(data_dir, meta_dir, name, shuffle=True)
 
-    class RandomCropWithPadding(imgaug.ImageAugmentor):
-        def _get_augment_params(self, img):
-            self.h0 = img.shape[0]
-            self.w0 = img.shape[1]
-
-            if CROP_SIZE > self.h0:
-                top = (CROP_SIZE - self.h0) / 2
-                bottom = (CROP_SIZE - self.h0) - top
-            else:
-                top = 0
-                bottom = 0
-
-            if CROP_SIZE > self.w0:
-                left = (CROP_SIZE - self.w0) / 2
-                right = (CROP_SIZE - self.w0) - left
-            else:
-                left = 0
-                right = 0
-            new_shape = (top + bottom + self.h0, left + right + self.w0)
-            diffh = new_shape[0] - CROP_SIZE
-            assert diffh >= 0
-            crop_start_h = 0 if diffh == 0 else self.rng.randint(diffh)
-            diffw = new_shape[1] - CROP_SIZE
-            assert diffw >= 0
-            crop_start_w = 0 if diffw == 0 else self.rng.randint(diffw)
-            return (top, bottom, left, right, crop_start_h, crop_start_w)
-
-        def _augment(self, img, param):
-            top, bottom, left, right, crop_start_h, crop_start_w = param
-            img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=IGNORE_LABEL)
-            assert crop_start_h + CROP_SIZE <= img.shape[0], crop_start_w + CROP_SIZE <= img.shape[1]
-            return img[crop_start_h:crop_start_h + CROP_SIZE, crop_start_w:crop_start_w + CROP_SIZE]
-
 
     if isTrain:#special augmentation
         shape_aug = [imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
-                            aspect_ratio_thres=0.15)]
+                            aspect_ratio_thres=0.15),
+                     RandomCropWithPadding(CROP_SIZE,IGNORE_LABEL),
+                     imgaug.Flip(horiz=True),
+                     ]
     else:
         shape_aug = []
 
-    ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False, is_segmentation=True)
-
-
-    if isTrain:
-        shape_aug = [
-            RandomCropWithPadding(),
-            imgaug.Flip(horiz=True),
-        ]
-    else:
-        shape_aug = []
-        pass
     ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False)
 
 
