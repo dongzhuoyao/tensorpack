@@ -51,12 +51,11 @@ class PascalVOC12Edge(RNGDataFlow):
             flabel = os.path.join(self.dir,flabel)
             fname = cv2.imread(fname, cv2.IMREAD_COLOR)
             flabel = cv2.imread(flabel, cv2.IMREAD_GRAYSCALE)
-            if self.name == "train":
-                edge = cv2.Canny(fname, 100, 200).astype("float32") / 255
-                edge = cv2.GaussianBlur(edge, (5, 5), 0)
-                yield [fname, flabel, edge]
-            else:
-                yield [fname, flabel]
+
+            edge = cv2.Canny(fname, 100, 200).astype("float32") / 255
+            edge = cv2.GaussianBlur(edge, (5, 5), 0)
+            yield [fname, flabel, edge]
+
 
 
 

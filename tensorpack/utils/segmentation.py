@@ -41,8 +41,21 @@ def pad_image(img, target_size):
     """Pad an image up to the target size."""
     rows_missing = max(target_size[0] - img.shape[0], 0)
     cols_missing = max(target_size[1] - img.shape[1], 0)
+    try:
+        padded_img = np.pad(img, ((0, rows_missing), (0, cols_missing), (0, 0)), 'constant')
+    except  Exception,e:
+        print str(e)
+        pass
+    return padded_img, [0,target_size[0]-rows_missing,0,target_size[1] - cols_missing]
+
+
+def pad_edge(img, target_size):
+    """Pad an image up to the target size."""
+    rows_missing = max(target_size[0] - img.shape[0], 0)
+    cols_missing = max(target_size[1] - img.shape[1], 0)
     padded_img = np.pad(img, ((0, rows_missing), (0, cols_missing), (0, 0)), 'constant')
-    return padded_img,[0,target_size[0]-rows_missing,0,target_size[1] - cols_missing]
+    return padded_img, [0,target_size[0]-rows_missing,0,target_size[1] - cols_missing]
+
 
 def visualize_label(label):
     """Color classes a good distance away from each other."""
@@ -100,6 +113,67 @@ def predict_scaler(full_image, predictor, scales, classes, tile_size, is_densecr
     if is_densecrf:
         full_probs = dense_crf(full_probs)
     return full_probs
+
+
+
+def edge_predict_slider(full_image, edge, predictor, classes, tile_size):
+    """slider is responsible for generate slide window,
+    the window image may be smaller than the original image(if the original image is smaller than tile_size),
+     so we need to padding.
+     here we should notice that the network input is fixed.
+     before send the image into the network, we should do some padding"""
+    tile_size = (tile_size, tile_size)
+    overlap = 1/3
+    stride = ceil(tile_size[0] * (1 - overlap))
+    tile_rows = int(ceil((full_image.shape[0] - tile_size[0]) / stride) + 1)  # strided convolution formula
+    tile_cols = int(ceil((full_image.shape[1] - tile_size[1]) / stride) + 1)
+    full_probs = np.zeros((full_image.shape[0], full_image.shape[1], classes))
+    count_predictions = np.zeros((full_image.shape[0], full_image.shape[1], classes))
+    tile_counter = 0
+    for row in range(tile_rows):
+        for col in range(tile_cols):
+            x1 = int(col * stride)
+            y1 = int(row * stride)
+            x2 = min(x1 + tile_size[1], full_image.shape[1])
+            y2 = min(y1 + tile_size[0], full_image.shape[0])
+            x1 = max(int(x2 - tile_size[1]), 0)  # for portrait images the x1 underflows sometimes
+            y1 = max(int(y2 - tile_size[0]), 0)  # for very few rows y1 underflows
+            img = full_image[y1:y2, x1:x2]
+            ed = edge[y1:y2, x1:x2]
+
+            padded_img, padding_index = pad_image(img, tile_size) #only happen in validation or test when the original image size is already smaller than tile_size
+            padded_ed, padding_ed_index = pad_image(ed, tile_size)
+
+            tile_counter += 1
+            padded_img = padded_img[None, :, :, :].astype('float32') # extend one dimension
+            padded_ed = np.squeeze(padded_ed)
+            padded_ed = padded_ed[None, :, :].astype('float32')  # extend one dimension
+
+            padded_prediction = predictor(padded_img, padded_ed)[0][0]
+            prediction_no_padding = padded_prediction[padding_index[0]:padding_index[1],padding_index[2]:padding_index[3],:]
+            count_predictions[y1:y2, x1:x2] += 1
+            full_probs[y1:y2, x1:x2] += prediction_no_padding  # accumulate the predictions also in the overlapping regions
+
+    # average the predictions in the overlapping regions
+    full_probs /= count_predictions
+    return full_probs
+
+
+def edge_predict_scaler(full_image, edge, predictor, scales, classes, tile_size, is_densecrf):
+    """scaler is only respnsible for generate multi scale input for slider"""
+    full_probs = np.zeros((full_image.shape[0], full_image.shape[1], classes))
+    h_ori, w_ori = full_image.shape[:2]
+    for scale in scales:
+        scaled_img = cv2.resize(full_image, (int(scale*w_ori), int(scale*h_ori)))
+        scaled_edge = cv2.resize(edge, (int(scale * w_ori), int(scale * h_ori)))#resize on single channel will make extra dim disappear!!!
+        scaled_probs = edge_predict_slider(scaled_img, scaled_edge[:,:,None], predictor, classes, tile_size)
+        probs = cv2.resize(scaled_probs, (w_ori,h_ori))
+        full_probs += probs
+    full_probs /= len(scales)
+    if is_densecrf:
+        full_probs = dense_crf(full_probs)
+    return full_probs
+
 
 def dense_crf(probs, img=None, n_iters=10,
               sxy_gaussian=(1, 1), compat_gaussian=4,

@@ -14,7 +14,7 @@ os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
 from tensorpack import *
 from tensorpack.dataflow import dataset
 from tensorpack.utils.gpu import get_nr_gpu
-from tensorpack.utils.segmentation import predict_slider, visualize_label, predict_scaler
+from tensorpack.utils.segmentation import predict_slider, visualize_label, predict_scaler, edge_predict_scaler
 from tensorpack.utils.stats import MIoUStatistics
 from tensorpack.utils import logger
 from tensorpack.tfutils import optimizer
@@ -269,7 +269,7 @@ class CalculateMIoU(Callback):
 
     def _setup_graph(self):
         self.pred = self.trainer.get_predictor(
-            ['image'], ['prob'])
+            ['image','edge'], ['prob'])
 
     def _before_train(self):
         pass
@@ -281,10 +281,12 @@ class CalculateMIoU(Callback):
 
         self.stat = MIoUStatistics(self.nb_class)
 
-        for image, label in tqdm(self.val_ds.get_data()):
+        for image, label, edge in tqdm(self.val_ds.get_data()):
             label = np.squeeze(label)
             image = np.squeeze(image)
-            prediction = predict_scaler(image, self.pred, scales=[0.9, 1, 1.1], classes=CLASS_NUM, tile_size=CROP_SIZE,
+            edge = np.squeeze(edge)
+            edge=edge[:,:,None]
+            prediction = edge_predict_scaler(image, edge, self.pred, scales=[0.9, 1, 1.1], classes=CLASS_NUM, tile_size=CROP_SIZE,
                            is_densecrf=False)
             prediction = np.argmax(prediction, axis=2)
             self.stat.feed(prediction, label)
