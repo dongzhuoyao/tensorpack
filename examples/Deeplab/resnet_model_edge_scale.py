@@ -135,21 +135,28 @@ def resnet_backbone(image, num_blocks, group_func, block_func,  label, edge, ASP
         current_edge = tf.image.resize_bilinear(edge, l.shape[1:3])
         current_edge  = tf.tile(current_edge, [1, 1, 1, 256])
         #l = tf.multiply(current_edge, l)
-        l = current_edge + l
+        scale_init = tf.constant_initializer(1)
+
+        scale = tf.get_variable('scale_group0', [1,1,1,256], initializer=scale_init)
+        l = current_edge + l*scale
 
         l = group_func(l, 'group1', block_func, 128, num_blocks[1], 2, dilation=1, stride_first=True)
 
         current_edge = tf.image.resize_bilinear(edge, l.shape[1:3])
         current_edge = tf.tile(current_edge, [1, 1, 1, 512])
         #l = tf.multiply(current_edge, l)
-        l = current_edge + l
+
+        scale = tf.get_variable('scale_group1', [1,1,1,512], initializer=scale_init)
+        l = current_edge + l * scale
 
         l = group_func(l, 'group2', block_func, 256, num_blocks[2], 2, dilation=2, stride_first=True)
 
         current_edge = tf.image.resize_bilinear(edge, l.shape[1:3])
         current_edge = tf.tile(current_edge, [1, 1, 1, 1024])
         #l = tf.multiply(current_edge, l)
-        l = current_edge + l
+
+        scale = tf.get_variable('scale_group2', [1,1,1,1024], initializer=scale_init)
+        l = current_edge + l * scale
 
         resnet_head = group_func(l, 'group3', block_func, 512, num_blocks[3], 1, dilation=4, stride_first=False)
 

@@ -73,6 +73,8 @@ class Model(ModelDesc):
             b1 = branch('branch1', l, 1)
             l = MaxPooling('pool1', l, 2)
 
+
+
             l = Conv2D('conv2_1', l, 128)
             l = Conv2D('conv2_2', l, 128)
             b2 = branch('branch2', l, 2)
