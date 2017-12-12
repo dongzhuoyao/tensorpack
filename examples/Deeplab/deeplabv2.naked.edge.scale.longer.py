@@ -149,7 +149,7 @@ def view_data(data_dir, meta_dir, batch_size):
 def get_config(data_dir, meta_dir, batch_size):
     logger.auto_set_dir()
     dataset_train = get_data('train', data_dir, meta_dir, batch_size)
-    steps_per_epoch = dataset_train.size() * 8
+    steps_per_epoch = dataset_train.size() * 12
     dataset_val = get_data('val', data_dir, meta_dir, batch_size)
 
     return TrainConfig(

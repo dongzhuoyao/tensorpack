@@ -33,12 +33,13 @@ class Augmentor(object):
         """
         Perform augmentation on the data.
         """
-        d, params = self._augment_return_params(d)
+        d, params = self._augment_return_params(d, id=0)
         return d
+
+
 
     def augment_return_params(self, d):
         """
-
             augmented data
             augmentaion params
         """
@@ -63,6 +64,7 @@ class Augmentor(object):
         Get the augmentor parameters.
         """
         return None
+
 
     def _rand_range(self, low=1.0, high=None, size=None):
         """

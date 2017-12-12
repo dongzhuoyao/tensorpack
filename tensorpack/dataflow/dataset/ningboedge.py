@@ -45,14 +45,17 @@ class NingboEdge(RNGDataFlow):
         idxs = np.arange(len(self.imglist))
         if self.shuffle:
             self.rng.shuffle(idxs)
-
         for k in idxs:
             fname, flabel = self.imglist[k]
-            fname_path = os.path.join(self.dir, fname)
-            fedgemap_path = os.path.join(self.edge_dir,flabel)
-            fname = cv2.imread(fname_path, cv2.IMREAD_COLOR)
-            fedgemap = cv2.imread(fedgemap_path, cv2.IMREAD_GRAYSCALE)
-            yield [fname,fedgemap]
+            fname = os.path.join(self.dir, fname)
+            flabel = os.path.join(self.dir,flabel)
+            fname = cv2.imread(fname, cv2.IMREAD_COLOR)
+            flabel = cv2.imread(flabel, cv2.IMREAD_GRAYSCALE)
+
+            edge = cv2.Canny(fname, 100, 200).astype("float32") / 255
+            edge = cv2.GaussianBlur(edge, (5, 5), 0)
+            yield [fname, flabel, edge]
+
 
 
 
