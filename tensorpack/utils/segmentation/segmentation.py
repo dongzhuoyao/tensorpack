@@ -9,6 +9,8 @@ import cv2,colorsys
 import matplotlib.pyplot as plt
 import pydensecrf.densecrf as dcrf
 import os, sys
+from ...utils import logger
+
 sys.path.append( os.path.normpath( os.path.join( os.path.dirname( __file__ ) , ' build/temp.linux-x86_64-2.7 ' ) ) )
 
 __all__ = ['update_confusion_matrix', 'predict_slider']
