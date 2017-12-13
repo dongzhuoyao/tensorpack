@@ -250,11 +250,6 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
                                     to_size(outputs[4][0]),
                                     to_size(outputs[5][0])),
                                    axis=1))
-        #for k in range(6):
-        #        pred = outputs[k][0]
-        #        cv2.imwrite("result/out{}-{}.png".format(i,
-        #            '-fused' if k == 5 else str(k + 1)), pred * 255)
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
