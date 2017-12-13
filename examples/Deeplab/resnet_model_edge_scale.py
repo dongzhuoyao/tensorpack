@@ -122,7 +122,7 @@ def resnet_group(l, name, block_func, features, count, stride, dilation, stride_
     return l
 
 
-def resnet_backbone(image, num_blocks, group_func, block_func,  label, edge, ASPP = False):
+def resnet_backbone(image, num_blocks, group_func, block_func,  label, edge, class_num, ASPP = False):
     with argscope(Conv2D, nl=tf.identity, use_bias=False,
                   W_init=variance_scaling_initializer(mode='FAN_OUT')):
 
@@ -161,7 +161,7 @@ def resnet_backbone(image, num_blocks, group_func, block_func,  label, edge, ASP
         resnet_head = group_func(l, 'group3', block_func, 512, num_blocks[3], 1, dilation=4, stride_first=False)
 
     def aspp_branch(input, rate):
-        input = AtrousConv2D('aspp{}_conv'.format(rate), input, 21, kernel_shape=3, rate=rate)
+        input = AtrousConv2D('aspp{}_conv'.format(rate), input, class_num, kernel_shape=3, rate=rate)
         return input
     if ASPP:
         output = aspp_branch(resnet_head , 6) +aspp_branch(resnet_head, 12) +aspp_branch(resnet_head, 18)+aspp_branch(resnet_head, 24)
