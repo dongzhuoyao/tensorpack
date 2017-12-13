@@ -14,7 +14,7 @@ os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
 from tensorpack import *
 from tensorpack.dataflow import dataset
 from tensorpack.utils.gpu import get_nr_gpu
-from tensorpack.utils.segmentation import predict_slider, visualize_label, predict_scaler, edge_predict_scaler
+from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler, edge_predict_scaler
 from tensorpack.utils.stats import MIoUStatistics
 from tensorpack.dataflow.imgaug.misc import RandomCropWithPadding
 from tensorpack.utils import logger
@@ -219,6 +219,7 @@ def proceed_validation(args, is_save = True, is_densecrf = False):
     logger.info("mIoU: {}".format(stat.mIoU))
     logger.info("mean_accuracy: {}".format(stat.mean_accuracy))
     logger.info("accuracy: {}".format(stat.accuracy))
+    stat.print_confusion_matrix()
 
 
 
@@ -255,6 +256,7 @@ class CalculateMIoU(Callback):
         self.trainer.monitors.put_scalar("mIoU", self.stat.mIoU)
         self.trainer.monitors.put_scalar("mean_accuracy", self.stat.mean_accuracy)
         self.trainer.monitors.put_scalar("accuracy", self.stat.accuracy)
+        self.stat.print_confusion_matrix()
 
 
 

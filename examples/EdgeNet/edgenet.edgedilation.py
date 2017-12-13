@@ -132,9 +132,9 @@ class Model(ModelDesc):
                 [('convfcweight.*', 0.1), ('conv5_.*', 5)])])
 
 
-def get_data(data_dir,meta_dir,edge_dir,name,batch_size=-1,crop_size=-1):
+def get_data(data_dir,meta_dir,name,batch_size=-1,crop_size=-1):
     isTrain = name == 'train'
-    ds = dataset.NingboEdge(data_dir, meta_dir, edge_dir, name, shuffle=True)
+    ds = dataset.Ningbo(data_dir, meta_dir, name, shuffle=True)
 
     if isTrain:
         shape_aug = [
@@ -162,8 +162,8 @@ def get_data(data_dir,meta_dir,edge_dir,name,batch_size=-1,crop_size=-1):
     return ds
 
 
-def view_data(data_dir,meta_dir,batch_size,crop_size, edge_dir):
-    ds = RepeatedData(get_data(data_dir,meta_dir, edge_dir, 'train',batch_size,crop_size), -1)
+def view_data(data_dir,meta_dir,batch_size,crop_size):
+    ds = RepeatedData(get_data(data_dir,meta_dir, 'train',batch_size,crop_size), -1)
     ds.reset_state()
     for ims, labels in ds.get_data():
         for im, label in zip(ims, labels):
@@ -172,11 +172,11 @@ def view_data(data_dir,meta_dir,batch_size,crop_size, edge_dir):
             cv2.waitKey()
 
 
-def get_config(data_dir,meta_dir,batch_size,crop_size, val_crop_size, class_num, edge_dir):
+def get_config(data_dir,meta_dir,batch_size,crop_size, val_crop_size, class_num):
     logger.auto_set_dir()
-    dataset_train = get_data(data_dir,meta_dir,edge_dir,'train',batch_size,crop_size)
+    dataset_train = get_data(data_dir,meta_dir,'train',batch_size,crop_size)
     steps_per_epoch = dataset_train.size()*10
-    dataset_val = get_data(data_dir,meta_dir,edge_dir,'val',batch_size, val_crop_size)
+    dataset_val = get_data(data_dir,meta_dir,'val',batch_size, val_crop_size)
 
     return TrainConfig(
         dataflow=dataset_train,
@@ -219,7 +219,7 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = False, is_densecrf = False):
     import cv2
-    ds = dataset.NingboEdge(args.data_dir, args.meta_dir, args.edge_dir, "val")
+    ds = dataset.Ningbo(args.data_dir, args.meta_dir,"val")
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
@@ -255,9 +255,9 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu', default="3", help='comma separated list of GPU(s) to use.')
-    parser.add_argument('--data_dir',default="/data_a/dataset/ningbo3539", help='dataset dir')
+    parser.add_argument('--data_dir',default="/data_a/dataset/ningbo3539_edge_gt_new", help='dataset dir')
     parser.add_argument('--meta_dir', default="ningbo", help='meta dir')
-    parser.add_argument('--edge_dir', default="/data_a/dataset/ningbo3539_edge_gt_new",  help='edge dir')
+    #parser.add_argument('--edge_dir', default="/data_a/dataset/ningbo3539_edge_gt_new",  help='edge dir')
     parser.add_argument('--class_num', type=int, default=2)
     parser.add_argument('--batch_size', default=1, type=int, help='batch size')
     parser.add_argument('--crop_size', default=256, type=int, help='crop size')
@@ -272,13 +272,13 @@ if __name__ == '__main__':
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 
     if args.view:
-        view_data(args.data_dir,args.meta_dir,args.batch_size,args.crop_size, args.edge_dir)
+        view_data(args.data_dir,args.meta_dir,args.batch_size,args.crop_size)
     elif args.run:
         run(args.load, args.run, args.output, args.val_crop_size, args.class_num)
     elif args.validation:
         proceed_validation(args)
     else:
-        config = get_config(args.data_dir,args.meta_dir,args.batch_size,args.crop_size,args.val_crop_size,args.class_num, args.edge_dir)
+        config = get_config(args.data_dir,args.meta_dir,args.batch_size,args.crop_size,args.val_crop_size,args.class_num)
         if args.load:
             config.session_init = get_model_loader(args.load)
         config.nr_tower = max(get_nr_gpu(), 1)

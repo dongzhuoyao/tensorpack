@@ -15,7 +15,7 @@ model-*
 checkpoint
 *.json
 *.prototxt
-*.txt
+
 
 # my personal stuff
 snippet

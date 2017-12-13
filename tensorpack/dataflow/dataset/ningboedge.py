@@ -17,7 +17,6 @@ class NingboEdge(RNGDataFlow):
                  shuffle=None, dir_structure=None):
 
         assert name in ['train', 'val'], name
-        assert os.path.isdir(dir), dir
         self.dir = dir
         self.edge_dir = edge_dir
         self.name = name
@@ -52,8 +51,8 @@ class NingboEdge(RNGDataFlow):
             fname = cv2.imread(fname, cv2.IMREAD_COLOR)
             flabel = cv2.imread(flabel, cv2.IMREAD_GRAYSCALE)
 
-            edge = cv2.Canny(fname, 100, 200).astype("float32") / 255
-            edge = cv2.GaussianBlur(edge, (5, 5), 0)
+            edge = os.path.join(self.edge_dir, flabel)
+            edge = cv2.imread(edge, cv2.IMREAD_GRAYSCALE)
             yield [fname, flabel, edge]
 
 

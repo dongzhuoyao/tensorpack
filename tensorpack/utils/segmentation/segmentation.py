@@ -8,6 +8,8 @@ from math import ceil
 import cv2,colorsys
 import matplotlib.pyplot as plt
 import pydensecrf.densecrf as dcrf
+import os, sys
+sys.path.append( os.path.normpath( os.path.join( os.path.dirname( __file__ ) , ' build/temp.linux-x86_64-2.7 ' ) ) )
 
 __all__ = ['update_confusion_matrix', 'predict_slider']
 
@@ -23,19 +25,37 @@ label_colours = [(0,0,0)
                 ,(0,64,0),(128,64,0),(0,192,0),(128,192,0),(0,64,128)]
                 # 16=potted plant, 17=sheep, 18=sofa, 19=train, 20=tv/monitor
 
+# C Support
+# Enable the cython support for faster evaluation
+# Only tested for Ubuntu 64bit OS
+CSUPPORT = True
+# Check if C-Support is available for better performance
+if CSUPPORT:
+    try:
+        import addToConfusionMatrix
+    except:
+        CSUPPORT = False
+
+
 def update_confusion_matrix(pred, label, conf_m, nb_classes, ignore = 255):
-    flat_pred = np.ravel(pred)
-    flat_label = np.ravel(label)
+    if (CSUPPORT):
+        # using cython
+        conf_m = addToConfusionMatrix.cEvaluatePair(pred.astype(np.uint8), label.astype(np.uint8), conf_m, nb_classes)
+        return conf_m
+    else:
+        logger.warn("confusion matrix c extension not found, this calculation will be very slow")
+        flat_pred = np.ravel(pred)
+        flat_label = np.ravel(label)
 
-    for p, l in zip(flat_pred, flat_label):
-        if l == ignore:
-            continue
-        if l < nb_classes and p < nb_classes:
-            conf_m[l, p] += 1
-        else:
-            raise
+        for p, l in zip(flat_pred, flat_label):
+            if l == ignore:
+                continue
+            if l < nb_classes and p < nb_classes:
+                conf_m[l, p] += 1
+            else:
+                raise
+        return conf_m
 
-    return conf_m
 
 def pad_image(img, target_size):
     """Pad an image up to the target size."""

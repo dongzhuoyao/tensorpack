@@ -9,16 +9,15 @@ import cv2
 from ...utils import logger
 from ..base import RNGDataFlow
 
-__all__ = ['Cityscapes']
+__all__ = ['Ningbo']
 
 
-class Cityscapes(RNGDataFlow):
-    def __init__(self, meta_dir, name,
+class Ningbo(RNGDataFlow):
+    def __init__(self, dir, meta_dir, name,
                  shuffle=None, dir_structure=None):
 
         assert name in ['train', 'val'], name
-        assert os.path.isdir(meta_dir), meta_dir
-        self.reset_state()
+        self.dir = dir
         self.name = name
 
         if shuffle is None:
@@ -35,7 +34,7 @@ class Cityscapes(RNGDataFlow):
             self.imglist.append(line.strip("\n").split(" "))
         f.close()
 
-        #self.imglist = self.imglist[:40]
+        #self.imglist = self.imglist[:80]
 
     def size(self):
         return len(self.imglist)
@@ -46,9 +45,13 @@ class Cityscapes(RNGDataFlow):
             self.rng.shuffle(idxs)
         for k in idxs:
             fname, flabel = self.imglist[k]
+            fname = os.path.join(self.dir, fname)
+            flabel = os.path.join(self.dir,flabel)
             fname = cv2.imread(fname, cv2.IMREAD_COLOR)
             flabel = cv2.imread(flabel, cv2.IMREAD_GRAYSCALE)
             yield [fname, flabel]
+
+
 
 
 
