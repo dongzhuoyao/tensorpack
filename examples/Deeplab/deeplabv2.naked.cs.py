@@ -14,7 +14,7 @@ os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
 from tensorpack import *
 from tensorpack.dataflow import dataset
 from tensorpack.utils.gpu import get_nr_gpu
-from tensorpack.utils.segmentation import predict_slider, visualize_label, predict_scaler
+from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler
 from tensorpack.utils.stats import MIoUStatistics
 from tensorpack.utils import logger
 from tensorpack.dataflow.imgaug.misc import RandomCropWithPadding
@@ -32,7 +32,7 @@ from resnet_model import (
     resnet_backbone)
 
 
-CLASS_NUM = 21
+CLASS_NUM = 19
 CROP_SIZE = 321
 IGNORE_LABEL = 255
 
@@ -293,6 +293,7 @@ class CalculateMIoU(Callback):
         self.trainer.monitors.put_scalar("mIoU", self.stat.mIoU)
         self.trainer.monitors.put_scalar("mean_accuracy", self.stat.mean_accuracy)
         self.trainer.monitors.put_scalar("accuracy", self.stat.accuracy)
+        self.stat.print_confusion_matrix()
 
 
 

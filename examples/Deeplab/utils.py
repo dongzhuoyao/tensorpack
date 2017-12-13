@@ -2,7 +2,7 @@ from PIL import Image
 import numpy as np
 import tensorflow as tf
 from math import ceil
-import cv2,colorsys
+import cv2,colorsys,os
 import matplotlib.pyplot as plt
 from time import time
 n_classes = 21
@@ -198,39 +198,29 @@ def to_color(category):
     v = (category-1)*(137.5/360)
     return colorsys.hsv_to_rgb(v, 1, 1)
 
-def evaluation(predict_list, label_list, nb_classes, ignore = 255):
-    start_time = time()
-    conf_m = np.zeros((nb_classes, nb_classes), dtype=float)
 
-    total = 0
-    from tqdm import tqdm
-    for pred, label in tqdm(zip(predict_list, label_list)):
-        total += 1
-        flat_pred = np.ravel(pred)
-        flat_label = np.ravel(label)
 
-        for p, l in zip(flat_pred, flat_label):
-            if l == ignore:
-                continue
-            if l < nb_classes and p < nb_classes:
-                conf_m[l, p] += 1
-            else:
-                print('Invalid entry encountered, skipping! Label: ', l,
-                      ' Prediction: ', p, ' Img_num: ', total)
-    I = np.diag(conf_m)
-    U = np.sum(conf_m, axis=0) + np.sum(conf_m, axis=1) - I
-    IOU = I/U
-    meanIOU = np.mean(IOU)
+def generate_trimap():
 
-    print("Confusion Matrix:")
-    print(conf_m)
-    print('IOU: ')
-    print(IOU)
-    print('meanIOU: %f' % meanIOU)
-    print('pixel acc: %f' % (np.sum(np.diag(conf_m)) / np.sum(conf_m)))
-    print('mean pixel acc: %f' % np.mean(np.diag(conf_m) / np.sum(conf_m,axis=1)))
-    duration = time() - start_time
-    print('{} mins used to calculate IOU.\n'.format(duration/60.0))
+    pascal_dir = "/data_a/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012"
+    meta_txt = "pascalvoc12"
+    from tensorpack.utils.fs import mkdir_p
+    trimap_dir = os.path.join(pascal_dir,"trimap{}".format(4))
+    mkdir_p(trimap_dir)
+    mkdir_p(os.path.join(trimap_dir,"train"))
+    mkdir_p(os.path.join(trimap_dir, "val"))
 
+    f = open(os.path.join(meta_txt,"train.txt"))
+    lines = f.readlines()
+    for idx,l in enumerate(lines):
+        l = l.strip("\n")
+        img_dir, label_dir = l.split(" ")
+        img = cv2.imread(os.path.join(pascal_dir,img_dir))
+        label = cv2.imread(os.path.join(pascal_dir,label_dir))
+        edge = cv2.Canny(label, 100, 200).astype("float32") / 255
+        cv2.imwrite("{}.jpg".format(idx),edge)
+        pass
+
+generate_trimap()
 
 
