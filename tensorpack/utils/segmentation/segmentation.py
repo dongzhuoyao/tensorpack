@@ -11,7 +11,7 @@ import pydensecrf.densecrf as dcrf
 import os, sys
 from ...utils import logger
 
-sys.path.append( os.path.normpath( os.path.join( os.path.dirname( __file__ ) , ' build/temp.linux-x86_64-2.7 ' ) ) )
+sys.path.append( os.path.normpath( os.path.join( os.path.dirname( __file__ ) , 'build/lib.linux-x86_64-2.7/tensorpack/utils/segmentation' ) ) )
 
 __all__ = ['update_confusion_matrix', 'predict_slider']
 

@@ -30,7 +30,7 @@ from resnet_model_edge_scale import (
     resnet_backbone)
 
 
-CLASS_NUM = 21
+CLASS_NUM = 19
 CROP_SIZE = 321
 IGNORE_LABEL = 255
 

@@ -202,10 +202,10 @@ def to_color(category):
 
 def generate_trimap():
 
-    pascal_dir = "/data_a/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012"
+    main_img_dir = "/data_a/dataset/cityscapes"
     meta_txt = "pascalvoc12"
     from tensorpack.utils.fs import mkdir_p
-    trimap_dir = os.path.join(pascal_dir,"trimap{}".format(4))
+    trimap_dir = os.path.join(main_img_dir,"trimap{}".format(4))
     mkdir_p(trimap_dir)
     mkdir_p(os.path.join(trimap_dir,"train"))
     mkdir_p(os.path.join(trimap_dir, "val"))
@@ -215,8 +215,8 @@ def generate_trimap():
     for idx,l in enumerate(lines):
         l = l.strip("\n")
         img_dir, label_dir = l.split(" ")
-        img = cv2.imread(os.path.join(pascal_dir,img_dir))
-        label = cv2.imread(os.path.join(pascal_dir,label_dir))
+        img = cv2.imread(os.path.join(main_img_dir,img_dir))
+        label = cv2.imread(os.path.join(main_img_dir,label_dir))
         edge = cv2.Canny(label, 100, 200).astype("float32") / 255
         cv2.imwrite("{}.jpg".format(idx),edge)
         pass
