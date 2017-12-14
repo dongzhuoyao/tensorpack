@@ -229,6 +229,7 @@ class RandomCropWithPadding(ImageAugmentor):
         self.crop_size = crop_size
         if isinstance(crop_size,int):
             self.crop_size = (crop_size,crop_size)
+
         self.ignore_label = ignore_label
         self._init()
 

@@ -133,7 +133,6 @@ def resnet_backbone(image, num_blocks, group_func, block_func, class_num, ASPP =
                   .apply(group_func, 'group2', block_func, 256, num_blocks[2], 2, dilation=2, stride_first=True)
                   .apply(group_func, 'group3', block_func, 512, num_blocks[3], 1, dilation=4, stride_first=False)())
 
-
     def aspp_branch(input, rate):
         input = AtrousConv2D('aspp{}_conv'.format(rate), input, class_num, kernel_shape=3, rate=rate)
         return input

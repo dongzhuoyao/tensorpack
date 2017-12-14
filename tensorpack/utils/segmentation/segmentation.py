@@ -95,12 +95,8 @@ def visualize_label(label):
     return img_color
 
 def predict_slider(full_image, predictor, classes, tile_size):
-    """slider is responsible for generate slide window,
-    the window image may be smaller than the original image(if the original image is smaller than tile_size),
-     so we need to padding.
-     here we should notice that the network input is fixed.
-     before send the image into the network, we should do some padding"""
-    tile_size = (tile_size, tile_size)
+    if isinstance(tile_size, int):
+        tile_size = (tile_size, tile_size)
     overlap = 1/3
     stride = ceil(tile_size[0] * (1 - overlap))
     tile_rows = int(ceil((full_image.shape[0] - tile_size[0]) / stride) + 1)  # strided convolution formula

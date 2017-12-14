@@ -145,7 +145,7 @@ class Model(ModelDesc):
 
 def get_data(name, data_dir, meta_dir, batch_size):
     isTrain = name == 'train'
-    ds = dataset.PascalVOC12Trimap(data_dir, meta_dir, name, shuffle=True)
+    ds = dataset.PascalVOC12(data_dir, meta_dir, name, shuffle=True)
 
 
     if isTrain:#special augmentation
@@ -224,7 +224,7 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = True, is_densecrf = False):
     import cv2
-    ds = dataset.PascalVOC12Trimap(args.data_dir, args.meta_dir, "val")
+    ds = dataset.PascalVOC12(args.data_dir, args.meta_dir, "val")
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
