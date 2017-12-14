@@ -13,7 +13,8 @@ cdef extern from "addToConfusionMatrix_impl.c":
                                const unsigned int   f_width_i       ,
                                const unsigned int   f_height_i      ,
                                unsigned long long*  f_confMatrix_p  ,
-                               const unsigned int   f_confMatDim_i  )
+                               const unsigned int   f_confMatDim_i,
+							   const unsigned char class_num_uchar)
 
 
 cdef tonumpyarray(unsigned long long* data, unsigned long long size):
@@ -24,7 +25,7 @@ cdef tonumpyarray(unsigned long long* data, unsigned long long size):
 def cEvaluatePair( np.ndarray[np.uint8_t , ndim=2] predictionArr   ,
                    np.ndarray[np.uint8_t , ndim=2] groundTruthArr  ,
                    np.ndarray[np.uint64_t, ndim=2] confMatrix      ,
-                   evalLabels                                    ):
+                   class_num                                    ):
 	cdef np.ndarray[np.uint8_t    , ndim=2, mode="c"] predictionArr_c
 	cdef np.ndarray[np.uint8_t    , ndim=2, mode="c"] groundTruthArr_c
 	cdef np.ndarray[np.ulonglong_t, ndim=2, mode="c"] confMatrix_c
@@ -36,8 +37,8 @@ def cEvaluatePair( np.ndarray[np.uint8_t , ndim=2] predictionArr   ,
 	cdef np.uint32_t height_ui     = predictionArr.shape[1]
 	cdef np.uint32_t width_ui      = predictionArr.shape[0]
 	cdef np.uint32_t confMatDim_ui = confMatrix.shape[0]
-
-	addToConfusionMatrix(&predictionArr_c[0,0], &groundTruthArr_c[0,0], height_ui, width_ui, &confMatrix_c[0,0], confMatDim_ui)
+	cdef int class_num_uchar = class_num
+	addToConfusionMatrix(&predictionArr_c[0,0], &groundTruthArr_c[0,0], height_ui, width_ui, &confMatrix_c[0,0], confMatDim_ui, class_num_uchar)
 
 	confMatrix = np.ascontiguousarray(tonumpyarray(&confMatrix_c[0,0], confMatDim_ui))
 

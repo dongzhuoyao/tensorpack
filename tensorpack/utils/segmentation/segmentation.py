@@ -37,6 +37,7 @@ if CSUPPORT:
         import addToConfusionMatrix
     except:
         CSUPPORT = False
+CSUPPORT = False
 
 
 def update_confusion_matrix(pred, label, conf_m, nb_classes, ignore = 255):
