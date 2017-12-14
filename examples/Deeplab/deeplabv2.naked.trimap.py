@@ -104,7 +104,7 @@ class Model(ModelDesc):
                 with argscope([Conv2D, MaxPooling, GlobalAvgPooling, BatchNorm], data_format="NHWC"):
                     return resnet_backbone(
                         image, num_blocks,
-                        preresnet_group if mode == 'preact' else resnet_group, block_func, ASPP = False)
+                        preresnet_group if mode == 'preact' else resnet_group, block_func,CLASS_NUM, ASPP = False)
 
             return get_logits(image)
 
@@ -148,7 +148,7 @@ class Model(ModelDesc):
 
 def get_data(name, data_dir, meta_dir, batch_size):
     isTrain = name == 'train'
-    ds = dataset.PascalVOC12(data_dir, meta_dir, name, shuffle=True)
+    ds = dataset.PascalVOC12Trimap(data_dir, meta_dir, name, shuffle=True)
 
 
     if isTrain:#special augmentation
@@ -176,8 +176,6 @@ def view_data(data_dir, meta_dir, batch_size):
     ds.reset_state()
     for ims, labels in ds.get_data():
         for im, label in zip(ims, labels):
-            #aa = visualize_label(label)
-            #pass
             cv2.imshow("im", im / 255.0)
             cv2.imshow("raw-label", label)
             cv2.imshow("color-label", visualize_label(label))
@@ -229,7 +227,7 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = True, is_densecrf = False):
     import cv2
-    ds = dataset.PascalVOC12(args.data_dir, args.meta_dir, "val")
+    ds = dataset.PascalVOC12Trimap(args.data_dir, args.meta_dir, "val")
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(

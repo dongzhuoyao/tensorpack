@@ -28,7 +28,7 @@ class PascalVOC12Trimap(RNGDataFlow):
         self.imglist = []
 
         if name == 'train':
-            f = open(os.path.join(meta_dir,"train_aug.txt"),"r")
+            f = open(os.path.join(meta_dir,"train_aug_trimap1.txt"),"r")
         else:
             f = open(os.path.join(meta_dir, "val.txt"), "r")
 

@@ -27,6 +27,8 @@ label_colours = [(0,0,0)
                 ,(0,64,0),(128,64,0),(0,192,0),(128,192,0),(0,64,128)]
                 # 16=potted plant, 17=sheep, 18=sofa, 19=train, 20=tv/monitor
 
+ignore_color = (255,255,255)
+
 # C Support
 # Enable the cython support for faster evaluation
 # Only tested for Ubuntu 64bit OS
@@ -39,6 +41,9 @@ if CSUPPORT:
         CSUPPORT = False
 CSUPPORT = False
 
+if not CSUPPORT:
+    logger.warn("confusion matrix c extension not found, this calculation will be very slow")
+
 
 def update_confusion_matrix(pred, label, conf_m, nb_classes, ignore = 255):
     if (CSUPPORT):
@@ -46,7 +51,6 @@ def update_confusion_matrix(pred, label, conf_m, nb_classes, ignore = 255):
         conf_m = addToConfusionMatrix.cEvaluatePair(pred.astype(np.uint8), label.astype(np.uint8), conf_m, nb_classes)
         return conf_m
     else:
-        logger.warn("confusion matrix c extension not found, this calculation will be very slow")
         flat_pred = np.ravel(pred)
         flat_label = np.ravel(label)
 
@@ -86,6 +90,8 @@ def visualize_label(label):
     img_color = np.zeros((h, w, 3)).astype('uint8')
     for i in range(0,21):
         img_color[label == i] = label_colours[i]
+
+    img_color[label==255] = ignore_color#highlight ignore label
     return img_color
 
 def predict_slider(full_image, predictor, classes, tile_size):
