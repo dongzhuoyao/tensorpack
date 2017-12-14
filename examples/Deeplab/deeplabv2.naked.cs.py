@@ -231,7 +231,7 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = True, is_densecrf = False):
     import cv2
-    ds = dataset.PascalVOC12(args.meta_dir, "val")
+    ds = dataset.Cityscapes(args.meta_dir, "val")
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
@@ -299,7 +299,7 @@ class CalculateMIoU(Callback):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="2", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="3", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--meta_dir', default="cityscapes", help='meta dir')
     parser.add_argument('--load', default="resnet101.npz", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')

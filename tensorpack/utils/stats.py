@@ -217,17 +217,19 @@ class MIoUStatistics(object):
     def mIoU(self):
         I = np.diag(self._confusion_matrix)
         U = np.sum(self._confusion_matrix, axis=0) + np.sum(self._confusion_matrix, axis=1) - I
-        IOU = I / U
+        assert np.min(U) > 0,"sample number is too small.."
+        IOU = I*1.0 / U
         meanIOU = np.mean(IOU)
         return meanIOU
 
     @property
     def accuracy(self):
-        return np.sum(np.diag(self._confusion_matrix)) / np.sum(self._confusion_matrix)
+        return np.sum(np.diag(self._confusion_matrix))*1.0 / np.sum(self._confusion_matrix)
 
     @property
     def mean_accuracy(self):
-        return np.mean(np.diag(self._confusion_matrix) / np.sum(self._confusion_matrix, axis=1))
+        assert np.min(np.sum(self._confusion_matrix, axis=1)) > 0, "sample number is too small.."
+        return np.mean(np.diag(self._confusion_matrix)*1.0 / np.sum(self._confusion_matrix, axis=1))
 
 
     def print_confusion_matrix(self):

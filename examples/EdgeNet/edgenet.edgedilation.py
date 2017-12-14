@@ -257,15 +257,14 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="2", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="1", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--data_dir',default="/data_a/dataset/ningbo3539_edge_gt_new", help='dataset dir')
     parser.add_argument('--meta_dir', default="ningbo", help='meta dir')
-    #parser.add_argument('--edge_dir', default="/data_a/dataset/ningbo3539_edge_gt_new",  help='edge dir')
+    parser.add_argument('--load', default="HED_pretrained_bsds.npy", help='load model')
     parser.add_argument('--class_num', type=int, default=2)
     parser.add_argument('--batch_size', default=1, type=int, help='batch size')
     parser.add_argument('--crop_size', default=256, type=int, help='crop size')
     parser.add_argument('--val_crop_size', default=512, type=int, help='crop size')
-    parser.add_argument('--load', help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
     parser.add_argument('--validation', action='store_true', help='validate model on validation images')

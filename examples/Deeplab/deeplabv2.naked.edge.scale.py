@@ -14,7 +14,7 @@ os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
 from tensorpack import *
 from tensorpack.dataflow import dataset
 from tensorpack.utils.gpu import get_nr_gpu
-from tensorpack.utils.segmentation import predict_slider, visualize_label, predict_scaler, edge_predict_scaler
+from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler, edge_predict_scaler
 from tensorpack.utils.stats import MIoUStatistics
 from tensorpack.dataflow.imgaug.misc import RandomCropWithPadding
 from tensorpack.utils import logger

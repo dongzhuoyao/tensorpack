@@ -218,7 +218,8 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = False, is_densecrf = False):
     import cv2
-    ds = dataset.NingboEdge(args.data_dir, args.meta_dir, args.edge_dir, "val")
+    name = "train"
+    ds = dataset.NingboEdge(args.data_dir, args.meta_dir, args.edge_dir,name )
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
@@ -227,6 +228,11 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
         input_names=['image'],
         output_names=['output' + str(k) for k in range(1, 7)])
     predictor = OfflinePredictor(pred_config)
+
+
+    from tensorpack.utils.fs import mkdir_p
+    result_dir = os.path.join("validation_result_in_{}".format(name))
+    mkdir_p(result_dir)
 
     from tqdm import tqdm
     i =0
@@ -240,7 +246,7 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
         outputs = predictor(image)
         label = label[0]
         label = label[:,:,None]
-        cv2.imwrite("result/out{}.png".format(i),
+        cv2.imwrite(os.path.join(result_dir,"out{}.png".format(i)),
                     np.concatenate((image[0],
                                     to_size(label),
                                     to_size(outputs[0][0]),
@@ -257,11 +263,11 @@ if __name__ == '__main__':
     parser.add_argument('--data_dir',default="/data_a/dataset/ningbo3539", help='dataset dir')
     parser.add_argument('--meta_dir', default="ningbo", help='meta dir')
     parser.add_argument('--edge_dir', default="/data_a/dataset/ningbo3539_edge_gt",  help='edge dir')
+    parser.add_argument('--load', default="HED_pretrained_bsds.npy", help='load model')
     parser.add_argument('--class_num', type=int, default=2)
     parser.add_argument('--batch_size', default=1, type=int, help='batch size')
     parser.add_argument('--crop_size', default=256, type=int, help='crop size')
     parser.add_argument('--val_crop_size', default=512, type=int, help='crop size')
-    parser.add_argument('--load', help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
     parser.add_argument('--validation', action='store_true', help='validate model on validation images')
