@@ -17,6 +17,8 @@ from tensorpack.tfutils import optimizer
 from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 from utils import *
 
+from tensorflow.python import debug as tf_debug
+
 crop_size = 256
 BATCH_SIZE = 10
 
@@ -186,7 +188,8 @@ def get_config(data_dir,meta_dir,batch_size,crop_size, val_crop_size, class_num)
             HumanHyperParamSetter('learning_rate'),
             InferenceRunner(dataset_val,
                             BinaryClassificationStats('prediction', 'edgemap4d')),
-            #ProgressBar(["cost", "wd_cost"])  # uncomment it to debug for every step
+            #HookToCallback(tf_debug.LocalCLIDebugHook())
+            ProgressBar(["cost",'wd_cost'])  # uncomment it to debug for every step
         ],
         model=Model(),
         steps_per_epoch=steps_per_epoch,
@@ -254,7 +257,7 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="3", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="2", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--data_dir',default="/data_a/dataset/ningbo3539_edge_gt_new", help='dataset dir')
     parser.add_argument('--meta_dir', default="ningbo", help='meta dir')
     #parser.add_argument('--edge_dir', default="/data_a/dataset/ningbo3539_edge_gt_new",  help='edge dir')
@@ -278,8 +281,10 @@ if __name__ == '__main__':
     elif args.validation:
         proceed_validation(args)
     else:
-        config = get_config(args.data_dir,args.meta_dir,args.batch_size,args.crop_size,args.val_crop_size,args.class_num)
+        config = get_config(args.data_dir, args.meta_dir, args.batch_size, args.crop_size, args.val_crop_size,
+                            args.class_num)
         if args.load:
             config.session_init = get_model_loader(args.load)
-        config.nr_tower = max(get_nr_gpu(), 1)
-        SyncMultiGPUTrainer(config).train()
+        launch_train_with_config(
+            config,
+            SyncMultiGPUTrainer(max(get_nr_gpu(), 1)))

@@ -200,26 +200,55 @@ def to_color(category):
 
 
 
-def generate_trimap():
+def is_edge(x,y, data):
+    w,h=data.shape
+    for d_x in [-1,0,1]:
+        for d_y in [-1,0,1]:
+            if x + d_x >= w or x+d_x <0:
+                continue
+            if y + d_y >= h or y+d_y < 0:
+                continue
+            if data[x + d_x, y + d_y] != data[x,y]:
+                return True
+    return False
+
+
+def generate_trimap(rador = 1):
 
     main_img_dir = "/data_a/dataset/cityscapes"
-    meta_txt = "pascalvoc12"
+    meta_txt = "cityscapes"
     from tensorpack.utils.fs import mkdir_p
-    trimap_dir = os.path.join(main_img_dir,"trimap{}".format(4))
+    trimap_dir = os.path.join(main_img_dir,"trimap_gt{}".format(rador))
     mkdir_p(trimap_dir)
-    mkdir_p(os.path.join(trimap_dir,"train"))
-    mkdir_p(os.path.join(trimap_dir, "val"))
-
+    #mkdir_p(os.path.join(trimap_dir,"train"))
+    #mkdir_p(os.path.join(trimap_dir, "val"))
     f = open(os.path.join(meta_txt,"train.txt"))
+    result_f = open(os.path.join(meta_txt, "train_tripmap{}.txt".format(rador)),"w")
     lines = f.readlines()
-    for idx,l in enumerate(lines):
+    from tqdm import tqdm
+    for l in tqdm(lines):
         l = l.strip("\n")
         img_dir, label_dir = l.split(" ")
-        img = cv2.imread(os.path.join(main_img_dir,img_dir))
-        label = cv2.imread(os.path.join(main_img_dir,label_dir))
-        edge = cv2.Canny(label, 100, 200).astype("float32") / 255
-        cv2.imwrite("{}.jpg".format(idx),edge)
-        pass
+        img = cv2.imread(img_dir)
+        label = cv2.imread(label_dir,0)
+        origin_label = label.copy()
+        basename = os.path.basename(label_dir)
+        #edge = cv2.Canny(label, 100, 200).astype("float32")
+        #xs,ys = np.where(edge==255)
+        w,h = label.shape
+        for x in range(w):
+            for y in range(h):
+                if is_edge(x,y,label):
+                    origin_label[x-rador:x+rador,y-rador:y+rador] = 255
+
+
+        tripmap_name = os.path.join(trimap_dir,basename)
+        cv2.imwrite(tripmap_name, origin_label)
+
+
+        result_f.write("{} {}\n".format(img_dir,tripmap_name))
+    f.close()
+    result_f.close()
 
 generate_trimap()
 

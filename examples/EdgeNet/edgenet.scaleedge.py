@@ -285,5 +285,6 @@ if __name__ == '__main__':
         config = get_config(args.data_dir,args.meta_dir,args.batch_size,args.crop_size,args.val_crop_size,args.class_num, args.edge_dir)
         if args.load:
             config.session_init = get_model_loader(args.load)
-        config.nr_tower = max(get_nr_gpu(), 1)
-        SyncMultiGPUTrainer(config).train()
+        launch_train_with_config(
+            config,
+            SyncMultiGPUTrainer(max(get_nr_gpu(), 1)))
