@@ -17,5 +17,6 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,MSF,1GPU,bs8,edgescale) | 69.66%
 
 Arch | Val mIoU
 ------------ | -------------
+Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,321X321) | 63.6
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs1,full) | --
 
