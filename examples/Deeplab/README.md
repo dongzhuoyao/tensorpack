@@ -1,11 +1,8 @@
 
 ## DeepLab
 
-Deeplabv2-resnet101(no multi-branch,no ASPP): validation mIoU: 73.65%
 
-
-
-First Header | Second Header
+Arch | Val mIoU
 ------------ | -------------
-Content from cell 1 | Content from cell 2
-Content in the first column | Content in the second column
+Deeplabv2-resnet101(no multi-branch,no ASPP) | 73.65%
+
