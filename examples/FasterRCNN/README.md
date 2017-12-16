@@ -4,7 +4,7 @@ Faster-RCNN / Mask-RCNN (without FPN) on COCO.
 
 ## Dependencies
 + Python 3; TensorFlow >= 1.4.0
-+ Install [pycocotools](https://github.com/pdollar/coco/tree/master/PythonAPI/pycocotools), OpenCV.
++ [pycocotools](https://github.com/pdollar/coco/tree/master/PythonAPI/pycocotools), OpenCV.
 + Pre-trained [ResNet model](https://goo.gl/6XjK9V) from tensorpack model zoo.
 + COCO data. It assumes the following directory structure:
 ```
@@ -24,8 +24,8 @@ DIR/
 
 
 ## Usage
-Change config:
-1. Set `BASEDIR` in `config.py` to `/path/to/DIR` as described above.
+Change config in `config.py`:
+1. Set `BASEDIR` to `/path/to/DIR` as described above.
 2. Set `MODE_MASK` to switch Faster-RCNN or Mask-RCNN.
 
 Train:
@@ -41,7 +41,7 @@ Predict on an image (and show output in a window):
 ```
 
 Evaluate the performance of a model and save to json.
-(A pretrained model can be downloaded in [model zoo](http://models.tensorpack.com/FasterRCNN):
+(Pretrained models can be downloaded in [model zoo](http://models.tensorpack.com/FasterRCNN):
 ```
 ./train.py --evaluate output.json --load /path/to/model
 ```
@@ -54,11 +54,13 @@ MaskRCNN results contain both bbox and segm mAP.
 |Backbone | `FASTRCNN_BATCH` | resolution | mAP (bbox/segm) | Time |
 | - | - | - | - | - |
 | Res50 | 64 | (600, 1024) | 33.0 | 22h on 8 P100 |
-| Res50 | 256 | (600, 1024) | 34.4 | 49h on 8 TitanX |
+| Res50 | 256 | (600, 1024) | 34.4 | 49h on 8 M40 |
 | Res50 | 512 | (800, 1333) | 35.6 | 55h on 8 P100|
-| Res50 | 512 | (800, 1333) | 36.9/32.3 | 59h on 8 P100|
+| Res50 | 256 | (800, 1333) | 36.9/32.3 | 39h on 8 P100|
+| Res101 | 512 | (800, 1333) | 40.1/34.4 | 70h on 8 P100|
 
-Note that these models are trained with a longer learning schedule than the paper.
+Note that these models are trained with a larger ROI batch size than the paper,
+and get about 1mAP better performance.
 
 ## Notes
 

@@ -5,34 +5,22 @@
 
 import argparse
 import tensorflow as tf
-import imp
 
-from tensorpack import TowerContext, logger, PlaceholderInput
+from tensorpack import logger
 from tensorpack.tfutils import varmanip, get_model_loader
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--config', help='config file')
-parser.add_argument('--meta', help='metagraph file')
-parser.add_argument(dest='model')
-parser.add_argument(dest='output')
-args = parser.parse_args()
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description='Keep only TRAINABLE and MODEL variables in a checkpoint.')
+    parser.add_argument('--meta', help='metagraph file', required=True)
+    parser.add_argument(dest='input', help='input model file, has to be a TF checkpoint')
+    parser.add_argument(dest='output', help='output model file, can be npy/npz or TF checkpoint')
+    args = parser.parse_args()
 
-assert args.config or args.meta, "Either config or metagraph must be present!"
-
-with tf.Graph().as_default() as G:
-    if args.config:
-        logger.warn("Using a config script is not reliable. Please use metagraph.")
-        MODEL = imp.load_source('config_script', args.config).Model
-        M = MODEL()
-        with TowerContext('', is_training=False):
-            input = PlaceholderInput()
-            input.setup(M.get_inputs_desc())
-            M.build_graph(*input.get_input_tensors())
-    else:
-        tf.train.import_meta_graph(args.meta)
+    tf.train.import_meta_graph(args.meta)
 
     # loading...
-    init = get_model_loader(args.model)
+    init = get_model_loader(args.input)
     sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
     sess.run(tf.global_variables_initializer())
     sess.run(tf.local_variables_initializer())

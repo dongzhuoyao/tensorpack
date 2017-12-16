@@ -54,7 +54,7 @@ class SimpleTrainer(SingleCostTrainer):
         return []
 
 
-# Only works for type check
+# Only exists for type check & back-compatibility
 class QueueInputTrainer(SimpleTrainer):
     def _setup_graph(self, input, get_cost_fn, get_opt_fn):
         assert isinstance(input, QueueInput)
@@ -65,6 +65,11 @@ class SyncMultiGPUTrainerParameterServer(SingleCostTrainer):
 
     __doc__ = SyncMultiGPUParameterServerBuilder.__doc__
 
+    devices = None
+    """
+    List of GPU ids.
+    """
+
     @map_arg(gpus=_int_to_range)
     def __init__(self, gpus, ps_device='gpu'):
         """
@@ -72,6 +77,7 @@ class SyncMultiGPUTrainerParameterServer(SingleCostTrainer):
             gpus ([int]): list of GPU ids.
             ps_device: either 'gpu' or 'cpu', where variables are stored.  Setting to 'cpu' might help when #gpu>=4
         """
+        self.devices = gpus
         self._builder = SyncMultiGPUParameterServerBuilder(gpus, ps_device)
         super(SyncMultiGPUTrainerParameterServer, self).__init__()
 
@@ -96,6 +102,11 @@ class AsyncMultiGPUTrainer(SingleCostTrainer):
 
     __doc__ = AsyncMultiGPUBuilder.__doc__
 
+    devices = None
+    """
+    List of GPU ids.
+    """
+
     @map_arg(gpus=_int_to_range)
     def __init__(self, gpus, scale_gradient=True):
         """
@@ -103,6 +114,7 @@ class AsyncMultiGPUTrainer(SingleCostTrainer):
             gpus ([int]): list of GPU ids.
             scale_gradient (bool): if True, will scale each gradient by ``1.0/nr_gpu``.
         """
+        self.devices = gpus
         self._builder = AsyncMultiGPUBuilder(gpus, scale_gradient)
         super(AsyncMultiGPUTrainer, self).__init__()
 
@@ -116,12 +128,18 @@ class SyncMultiGPUTrainerReplicated(SingleCostTrainer):
 
     __doc__ = SyncMultiGPUReplicatedBuilder.__doc__
 
+    devices = None
+    """
+    List of GPU ids.
+    """
+
     @map_arg(gpus=_int_to_range)
     def __init__(self, gpus):
         """
         Args:
             gpus ([int]): list of GPU ids.
         """
+        self.devices = gpus
         self._builder = SyncMultiGPUReplicatedBuilder(gpus)
         super(SyncMultiGPUTrainerReplicated, self).__init__()
 
@@ -139,6 +157,11 @@ class DistributedTrainerReplicated(SingleCostTrainer):
 
     __doc__ = DistributedReplicatedBuilder.__doc__
 
+    devices = None
+    """
+    List of GPU ids.
+    """
+
     @map_arg(gpus=_int_to_range)
     def __init__(self, gpus, server):
         """
@@ -146,6 +169,7 @@ class DistributedTrainerReplicated(SingleCostTrainer):
             gpus (list[int]): list of GPU ids.
             server (tf.train.Server): the server with ps and workers.
         """
+        self.devices = gpus
         self.server = server
         self.job_name = server.server_def.job_name
         assert self.job_name in ['ps', 'worker'], self.job_name
@@ -157,6 +181,7 @@ class DistributedTrainerReplicated(SingleCostTrainer):
         else:
             self.is_chief = False
         logger.info("Distributed training on cluster:\n" + str(server.server_def.cluster))
+        super(DistributedTrainerReplicated, self).__init__()
 
     def _setup_input(self, inputs_desc, input):
         if self.job_name == 'ps':
@@ -164,7 +189,7 @@ class DistributedTrainerReplicated(SingleCostTrainer):
             logger.info("Running ps {}".format(self.server.server_def.task_index))
             logger.info("Kill me with 'kill {}'".format(os.getpid()))
             self.server.join()  # this function will never return tensorflow#4713
-            raise RuntimeError("This is a bug in tensorpack. Server.join() for ps should never return!")
+            raise RuntimeError("This is a bug. Server.join() for ps should never return!")
 
         with override_to_local_variable():
             get_global_step_var()  # gs should be local
@@ -203,7 +228,7 @@ class DistributedTrainerReplicated(SingleCostTrainer):
                 "You are not allowed to set session_creator or session_config for distributed training! "
                 "To use a custom session config, pass it to tf.train.Server.")
         super(DistributedTrainerReplicated, self).initialize(
-            get_distributed_session_creator(), session_init)
+            get_distributed_session_creator(self.server), session_init)
 
     @property
     def _main_tower_vs_name(self):

@@ -13,7 +13,7 @@ import numpy as np
 import json
 import tensorflow as tf
 
-os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
+
 from tensorpack import *
 from tensorpack.tfutils.summary import add_moving_summary
 from tensorpack.tfutils import optimizer
@@ -38,7 +38,7 @@ from viz import (
     draw_predictions, draw_final_outputs)
 from common import print_config
 from eval import (
-    eval_on_dataflow, detect_one_image, print_evaluation_scores)
+    eval_on_dataflow, detect_one_image, print_evaluation_scores, DetectionResult)
 import config
 
 
@@ -142,12 +142,12 @@ class Model(ModelDesc):
             fg_inds_wrt_sample = tf.reshape(tf.where(rcnn_labels > 0), [-1])   # fg inds w.r.t all samples
             fg_sampled_boxes = tf.gather(rcnn_sampled_boxes, fg_inds_wrt_sample)
 
-            # TODO move to models
             with tf.name_scope('fg_sample_patch_viz'):
                 fg_sampled_patches = crop_and_resize(
                     image, fg_sampled_boxes,
                     tf.zeros_like(fg_inds_wrt_sample, dtype=tf.int32), 300)
                 fg_sampled_patches = tf.transpose(fg_sampled_patches, [0, 2, 3, 1])
+                fg_sampled_patches = tf.reverse(fg_sampled_patches, axis=[-1])  # BGR->RGB
                 tf.summary.image('viz', fg_sampled_patches, max_outputs=30)
 
             matched_gt_boxes = tf.gather(gt_boxes, fg_inds_wrt_gt)
@@ -262,7 +262,9 @@ def visualize(model_path, nr_visualize=50, output_dir='output'):
             # draw the scores for the above proposals
             score_viz = draw_predictions(img, rpn_boxes[good_proposals_ind], all_probs[good_proposals_ind])
 
-            results = [DetectionResult(*args) for args in zip(final_labels, final_boxes, final_probs)]
+            results = [DetectionResult(*args) for args in
+                       zip(final_boxes, final_probs, final_labels,
+                           [None] * len(final_labels))]
             final_viz = draw_final_outputs(img, results)
 
             viz = tpviz.stack_patches([
@@ -365,7 +367,7 @@ if __name__ == '__main__':
             model=Model(),
             data=QueueInput(get_train_dataflow(add_mask=config.MODE_MASK)),
             callbacks=[
-                PeriodicTrigger(ModelSaver(), every_k_epochs=5),
+                ModelSaver(max_to_keep=10, keep_checkpoint_every_n_hours=1),
                 # linear warmup
                 ScheduledHyperParamSetter(
                     'learning_rate',

@@ -7,6 +7,7 @@ import six
 from abc import abstractmethod, ABCMeta
 
 from ..utils.argtools import call_only_once, memoized
+from ..utils.develop import deprecated
 from ..graph_builder.predict import SimplePredictBuilder
 from ..input_source import PlaceholderInput
 from ..predict.base import OnlinePredictor
@@ -25,22 +26,33 @@ class TowerTrainer(Trainer):
 
     This is required by some features that replicates the model
     automatically, e.g. creating a predictor.
+
+    To use features of :class:`TowerTrainer`, set `tower_func` and use it to build the graph.
+    Note that `tower_func` can only be set once per instance.
     """
 
-    tower_func = None
-    """
-    A :class:`TowerFuncWrapper` instance.
-    A callable which takes some input tensors and builds one replicate of the model.
-    """
+    _tower_func = None
 
     @call_only_once
-    def set_tower_func(self, tower_func):
-        """
-        Args:
-            tower_func (TowerFuncWrapper)
-        """
+    def _set_tower_func(self, tower_func):
         assert isinstance(tower_func, TowerFuncWrapper), tower_func
-        self.tower_func = tower_func
+        self._tower_func = tower_func
+
+    @deprecated("Just use tower_func = xxx instead!")
+    def set_tower_func(self, tower_func):
+        self._set_tower_func(tower_func)
+
+    @property
+    def tower_func(self):
+        """
+        A :class:`TowerFuncWrapper` instance.
+        A callable which takes some input tensors and builds one replicate of the model.
+        """
+        return self._tower_func
+
+    @tower_func.setter
+    def tower_func(self, val):
+        self._set_tower_func(val)
 
     @property
     def inputs_desc(self):
@@ -56,6 +68,8 @@ class TowerTrainer(Trainer):
         Returns:
             a :class:`TowerTensorHandles` object, to
             access the tower handles by either indices or names.
+
+        It is accessbile only after the graph is set up.
         """
         return self.tower_func.towers
 
@@ -121,23 +135,19 @@ class SingleCostTrainer(TowerTrainer):
                 optimizer. Will only be called once.
 
         Note:
-            1. `get_cost_fn` will always be called under a :class:`TowerContext`.
-               which will contain information about reuse,
-               training/inference, scope name, etc.
-            2. `get_cost_fn` might get called multiple times for data-parallel training or inference.
-            3. To respect variable reuse, use `tf.get_variable` instead of
-               `tf.Variable` in `get_cost_fn`.
+            `get_cost_fn` will be the tower function.
+            It must follows the
+            `rules of tower function.
+            <http://tensorpack.readthedocs.io/en/latest/tutorial/trainer.html#tower-trainer>`_.
         """
         get_cost_fn = TowerFuncWrapper(get_cost_fn, inputs_desc)
         get_opt_fn = memoized(get_opt_fn)
-        self.set_tower_func(get_cost_fn)
+        self.tower_func = get_cost_fn
 
         # TODO setup may want to register monitor as well??
         input_callbacks = self._setup_input(inputs_desc, input)
         train_callbacks = self._setup_graph(input, get_cost_fn, get_opt_fn)
-        internal_callbacks = input_callbacks + train_callbacks
-        for cb in internal_callbacks:
-            self.register_callback(cb)
+        self.register_callback(input_callbacks + train_callbacks)
 
     @abstractmethod
     def _setup_graph(self, input, get_cost_fn, get_opt_fn):

@@ -4,10 +4,12 @@
 # Author: Yuxin Wu <ppwwyyxxc@gmail.com>
 
 import time
+import tqdm
+
 from collections import deque
 from .base import DataFlow, DataFlowReentrantGuard
 from ..utils import logger
-from ..utils.utils import get_tqdm
+from ..utils.utils import get_tqdm_kwargs
 from ..utils.serialize import dumps, loads
 try:
     import zmq
@@ -18,21 +20,28 @@ else:
     __all__ = ['send_dataflow_zmq', 'RemoteDataZMQ']
 
 
-def send_dataflow_zmq(df, addr, hwm=50, print_interval=100, format=None):
+def send_dataflow_zmq(df, addr, hwm=50, format=None):
     """
     Run DataFlow and send data to a ZMQ socket addr.
-    It will dump and send each datapoint to this addr with a PUSH socket.
+    It will __connect__ to this addr,
+    serialize and send each datapoint to this addr with a PUSH socket.
     This function never returns unless an error is encountered.
 
     Args:
         df (DataFlow): Will infinitely loop over the DataFlow.
-        addr: a ZMQ socket addr.
+        addr: a ZMQ socket endpoint.
         hwm (int): ZMQ high-water mark (buffer size)
+        format (str): The serialization format.
+             Default format would use :mod:`tensorpack.utils.serialize` (i.e. msgpack).
+             An alternate format is 'zmq_op'.
     """
-    # format (str): The serialization format. ZMQ Op is still not publicly usable now
-    #     Default format would use :mod:`tensorpack.utils.serialize`.
-    # dump_fn = dumps if format is None else dumps_for_tfop
-    dump_fn = dumps
+    assert format in [None, 'zmq_op']
+    if format is None:
+        dump_fn = dumps
+    else:
+        from ..user_ops.zmq_recv import dumps_zmq_op
+        dump_fn = dumps_zmq_op
+
     ctx = zmq.Context()
     socket = ctx.socket(zmq.PUSH)
     socket.set_hwm(hwm)
@@ -40,16 +49,25 @@ def send_dataflow_zmq(df, addr, hwm=50, print_interval=100, format=None):
     try:
         df.reset_state()
         logger.info("Serving data to {} ...".format(addr))
-        q = deque(maxlen=print_interval)
-        with get_tqdm(total=0) as pbar:
-            while True:
+        INTERVAL = 200
+        q = deque(maxlen=INTERVAL)
+
+        try:
+            total = df.size()
+        except NotImplementedError:
+            total = 0
+        tqdm_args = get_tqdm_kwargs(leave=True)
+        tqdm_args['bar_format'] = tqdm_args['bar_format'] + "{postfix}"
+        while True:
+            with tqdm.trange(total, **tqdm_args) as pbar:
                 for dp in df.get_data():
                     start = time.time()
                     socket.send(dump_fn(dp), copy=False)
                     q.append(time.time() - start)
                     pbar.update(1)
-                    if pbar.n % print_interval == 0:
-                        pbar.write("Avg send time @{}: {}".format(pbar.n, sum(q) / len(q)))
+                    if pbar.n % INTERVAL == 0:
+                        avg = "{:.3f}".format(sum(q) / len(q))
+                        pbar.set_postfix({'AvgSendLat': avg})
     finally:
         socket.setsockopt(zmq.LINGER, 0)
         socket.close()
