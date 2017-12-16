@@ -10,6 +10,7 @@ from ..tfutils.sesscreate import NewSessionCreator
 
 from ..utils import logger
 from ..utils.argtools import map_arg
+from ..utils.develop import HIDE_DOC
 from ..tfutils import get_global_step_var
 from ..tfutils.distributed import get_distributed_session_creator
 from ..tfutils.tower import TowerContext
@@ -53,7 +54,7 @@ class SimpleTrainer(SingleCostTrainer):
         return []
 
 
-# Only works for type check
+# Only exists for type check & back-compatibility
 class QueueInputTrainer(SimpleTrainer):
     def _setup_graph(self, input, get_cost_fn, get_opt_fn):
         assert isinstance(input, QueueInput)
@@ -64,6 +65,11 @@ class SyncMultiGPUTrainerParameterServer(SingleCostTrainer):
 
     __doc__ = SyncMultiGPUParameterServerBuilder.__doc__
 
+    devices = None
+    """
+    List of GPU ids.
+    """
+
     @map_arg(gpus=_int_to_range)
     def __init__(self, gpus, ps_device='gpu'):
         """
@@ -71,6 +77,7 @@ class SyncMultiGPUTrainerParameterServer(SingleCostTrainer):
             gpus ([int]): list of GPU ids.
             ps_device: either 'gpu' or 'cpu', where variables are stored.  Setting to 'cpu' might help when #gpu>=4
         """
+        self.devices = gpus
         self._builder = SyncMultiGPUParameterServerBuilder(gpus, ps_device)
         super(SyncMultiGPUTrainerParameterServer, self).__init__()
 
@@ -95,6 +102,11 @@ class AsyncMultiGPUTrainer(SingleCostTrainer):
 
     __doc__ = AsyncMultiGPUBuilder.__doc__
 
+    devices = None
+    """
+    List of GPU ids.
+    """
+
     @map_arg(gpus=_int_to_range)
     def __init__(self, gpus, scale_gradient=True):
         """
@@ -102,6 +114,7 @@ class AsyncMultiGPUTrainer(SingleCostTrainer):
             gpus ([int]): list of GPU ids.
             scale_gradient (bool): if True, will scale each gradient by ``1.0/nr_gpu``.
         """
+        self.devices = gpus
         self._builder = AsyncMultiGPUBuilder(gpus, scale_gradient)
         super(AsyncMultiGPUTrainer, self).__init__()
 
@@ -115,12 +128,18 @@ class SyncMultiGPUTrainerReplicated(SingleCostTrainer):
 
     __doc__ = SyncMultiGPUReplicatedBuilder.__doc__
 
+    devices = None
+    """
+    List of GPU ids.
+    """
+
     @map_arg(gpus=_int_to_range)
     def __init__(self, gpus):
         """
         Args:
             gpus ([int]): list of GPU ids.
         """
+        self.devices = gpus
         self._builder = SyncMultiGPUReplicatedBuilder(gpus)
         super(SyncMultiGPUTrainerReplicated, self).__init__()
 
@@ -138,15 +157,19 @@ class DistributedTrainerReplicated(SingleCostTrainer):
 
     __doc__ = DistributedReplicatedBuilder.__doc__
 
+    devices = None
+    """
+    List of GPU ids.
+    """
+
     @map_arg(gpus=_int_to_range)
     def __init__(self, gpus, server):
         """
         Args:
             gpus (list[int]): list of GPU ids.
             server (tf.train.Server): the server with ps and workers.
-                The job_name must be 'worker' because 'ps' job doesn't need to
-                build any graph.
         """
+        self.devices = gpus
         self.server = server
         self.job_name = server.server_def.job_name
         assert self.job_name in ['ps', 'worker'], self.job_name
@@ -158,6 +181,7 @@ class DistributedTrainerReplicated(SingleCostTrainer):
         else:
             self.is_chief = False
         logger.info("Distributed training on cluster:\n" + str(server.server_def.cluster))
+        super(DistributedTrainerReplicated, self).__init__()
 
     def _setup_input(self, inputs_desc, input):
         if self.job_name == 'ps':
@@ -165,7 +189,7 @@ class DistributedTrainerReplicated(SingleCostTrainer):
             logger.info("Running ps {}".format(self.server.server_def.task_index))
             logger.info("Kill me with 'kill {}'".format(os.getpid()))
             self.server.join()  # this function will never return tensorflow#4713
-            raise RuntimeError("This is a bug in tensorpack. Server.join() for ps should never return!")
+            raise RuntimeError("This is a bug. Server.join() for ps should never return!")
 
         with override_to_local_variable():
             get_global_step_var()  # gs should be local
@@ -196,6 +220,7 @@ class DistributedTrainerReplicated(SingleCostTrainer):
             callbacks.append(cb)
         return callbacks
 
+    @HIDE_DOC
     def initialize(self, session_creator, session_init):
         if not isinstance(session_creator, NewSessionCreator) or \
                 session_creator.user_provided_config:
@@ -203,7 +228,7 @@ class DistributedTrainerReplicated(SingleCostTrainer):
                 "You are not allowed to set session_creator or session_config for distributed training! "
                 "To use a custom session config, pass it to tf.train.Server.")
         super(DistributedTrainerReplicated, self).initialize(
-            get_distributed_session_creator(), session_init)
+            get_distributed_session_creator(self.server), session_init)
 
     @property
     def _main_tower_vs_name(self):
@@ -212,9 +237,28 @@ class DistributedTrainerReplicated(SingleCostTrainer):
 
 class HorovodTrainer(SingleCostTrainer):
     """
-    Horovod trainer, currently support multi-GPU training.
+    Horovod trainer, support multi-GPU and distributed training.
 
-    It will use the first k GPUs in CUDA_VISIBLE_DEVICES.
+    To use for multi-GPU training:
+
+        CUDA_VISIBLE_DEVICES=0,1,2,3 mpirun -np 4 --output-filename mylog python train.py
+
+    To use for distributed training:
+
+        /path/to/mpirun -np 8 -H server1:4,server2:4  \
+            -bind-to none -map-by slot \
+            --output-filename mylog  -x LD_LIBRARY_PATH -x CUDA_VISIBLE_DEVICES=0,1,2,3 \
+            python train.py
+
+    Note:
+        1. If using all GPUs, you can always skip the `CUDA_VISIBLE_DEVICES` option.
+
+        2. About performance, horovod is expected to be slightly
+           slower than native tensorflow on multi-GPU training, but faster in distributed training.
+
+        3. Due to the use of MPI, training is less informative (no progress bar).
+           It's recommended to use other multi-GPU trainers for single-node
+           experiments, and scale to multi nodes by horovod.
     """
     def __init__(self):
         hvd.init()
@@ -229,13 +273,15 @@ class HorovodTrainer(SingleCostTrainer):
             opt = get_opt_fn()
             opt = hvd.DistributedOptimizer(opt)
             self.train_op = opt.apply_gradients(grads, name='min_op')
+        with tf.name_scope('horovod_broadcast'):
+            op = hvd.broadcast_global_variables(0)
         cb = RunOp(
-            tf.identity(hvd.broadcast_global_variables(0), name='horovod_broadcast_global_variables'),
-            run_before=True,
+            op, run_before=True,
             run_as_trigger=False, verbose=True)
         cb.chief_only = False
         return [cb]
 
+    @HIDE_DOC
     def initialize(self, session_creator, session_init):
         if not isinstance(session_creator, NewSessionCreator):
             raise ValueError(
@@ -248,5 +294,8 @@ class HorovodTrainer(SingleCostTrainer):
 from ..utils.develop import create_dummy_class   # noqa
 try:
     import horovod.tensorflow as hvd
-except Exception:   # could be other than ImportError, e.g. NCCL not found
+except ImportError:
+    HorovodTrainer = create_dummy_class('HovorodTrainer', 'horovod')    # noqa
+except Exception:      # could be other than ImportError, e.g. NCCL not found
+    print("Horovod is installed but cannot be imported.")
     HorovodTrainer = create_dummy_class('HovorodTrainer', 'horovod')    # noqa

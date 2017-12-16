@@ -13,7 +13,7 @@ import tensorflow as tf
 import six
 from six.moves import queue
 
-os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
+
 from tensorpack import *
 from tensorpack.utils.concurrency import ensure_proc_terminate, start_proc_mask_signal
 from tensorpack.utils.serialize import dumps
@@ -139,9 +139,8 @@ class Model(ModelDesc):
 
 
 class MySimulatorMaster(SimulatorMaster, Callback):
-    def __init__(self, pipe_c2s, pipe_s2c, model, gpus):
+    def __init__(self, pipe_c2s, pipe_s2c, gpus):
         super(MySimulatorMaster, self).__init__(pipe_c2s, pipe_s2c)
-        self.M = model
         self.queue = queue.Queue(maxsize=BATCH_SIZE * 8 * 2)
         self._gpus = gpus
 
@@ -158,32 +157,42 @@ class MySimulatorMaster(SimulatorMaster, Callback):
     def _before_train(self):
         self.async_predictor.start()
 
-    def _on_state(self, state, ident):
+    def _on_state(self, state, client):
+        """
+        Launch forward prediction for the new state given by some client.
+        """
         def cb(outputs):
             try:
                 distrib, value = outputs.result()
             except CancelledError:
-                logger.info("Client {} cancelled.".format(ident))
+                logger.info("Client {} cancelled.".format(client.ident))
                 return
             assert np.all(np.isfinite(distrib)), distrib
             action = np.random.choice(len(distrib), p=distrib)
-            client = self.clients[ident]
             client.memory.append(TransitionExperience(
                 state, action, reward=None, value=value, prob=distrib[action]))
-            self.send_queue.put([ident, dumps(action)])
+            self.send_queue.put([client.ident, dumps(action)])
         self.async_predictor.put_task([state], cb)
 
-    def _on_episode_over(self, ident):
-        self._parse_memory(0, ident, True)
+    def _process_msg(self, client, state, reward, isOver):
+        """
+        Process a message sent from some client.
+        """
+        # in the first message, only state is valid,
+        # reward&isOver should be discarded
+        if len(client.memory) > 0:
+            client.memory[-1].reward = reward
+            if isOver:
+                # should clear client's memory and put to queue
+                self._parse_memory(0, client, True)
+            else:
+                if len(client.memory) == LOCAL_TIME_MAX + 1:
+                    R = client.memory[-1].value
+                    self._parse_memory(R, client, False)
+        # feed state and return action
+        self._on_state(state, client)
 
-    def _on_datapoint(self, ident):
-        client = self.clients[ident]
-        if len(client.memory) == LOCAL_TIME_MAX + 1:
-            R = client.memory[-1].value
-            self._parse_memory(R, ident, False)
-
-    def _parse_memory(self, init_r, ident, isOver):
-        client = self.clients[ident]
+    def _parse_memory(self, init_r, client, isOver):
         mem = client.memory
         if not isOver:
             last = mem[-1]
@@ -201,7 +210,11 @@ class MySimulatorMaster(SimulatorMaster, Callback):
             client.memory = []
 
 
-def get_config():
+def train():
+    dirname = os.path.join('train_log', 'train-atari-{}'.format(ENV_NAME))
+    logger.set_logger_dir(dirname)
+
+    # assign GPUs for training & inference
     nr_gpu = get_nr_gpu()
     global PREDICTOR_THREAD
     if nr_gpu > 0:
@@ -228,11 +241,10 @@ def get_config():
     ensure_proc_terminate(procs)
     start_proc_mask_signal(procs)
 
-    M = Model()
-    master = MySimulatorMaster(namec2s, names2c, M, predict_tower)
+    master = MySimulatorMaster(namec2s, names2c, predict_tower)
     dataflow = BatchData(DataFromQueue(master.queue), BATCH_SIZE)
-    return TrainConfig(
-        model=M,
+    config = TrainConfig(
+        model=Model(),
         dataflow=dataflow,
         callbacks=[
             ModelSaver(),
@@ -249,9 +261,11 @@ def get_config():
         session_creator=sesscreate.NewSessionCreator(
             config=get_default_sess_config(0.5)),
         steps_per_epoch=STEPS_PER_EPOCH,
+        session_init=get_model_loader(args.load) if args.load else None,
         max_epoch=1000,
-        tower=train_tower
     )
+    trainer = SimpleTrainer() if config.nr_tower == 1 else AsyncMultiGPUTrainer(train_tower)
+    launch_train_with_config(config, trainer)
 
 
 if __name__ == '__main__':
@@ -291,11 +305,4 @@ if __name__ == '__main__':
                 pred, args.episode)
             # gym.upload(args.output, api_key='xxx')
     else:
-        dirname = os.path.join('train_log', 'train-atari-{}'.format(ENV_NAME))
-        logger.set_logger_dir(dirname)
-
-        config = get_config()
-        if args.load:
-            config.session_init = get_model_loader(args.load)
-        trainer = SimpleTrainer() if config.nr_tower == 1 else AsyncMultiGPUTrainer(config.tower)
-        launch_train_with_config(config, trainer)
+        train()

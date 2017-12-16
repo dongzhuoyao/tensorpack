@@ -9,6 +9,7 @@ from six.moves import zip
 from ..utils import logger
 from ..utils.argtools import call_only_once
 from ..utils.naming import TRAIN_TOWER_FREEZE_KEYS, PREDICT_TOWER_FREEZE_KEYS
+from ..utils.develop import HIDE_DOC
 from .collection import CollectionGuard
 from .common import get_tf_version_number, get_op_or_tensor_by_name, get_op_tensor_name
 
@@ -123,8 +124,9 @@ class TowerContext(object):
         global _CurrentTowerContext
         assert _CurrentTowerContext is None, "Cannot nest TowerContext!"
         _CurrentTowerContext = self
-        curr_vs = tf.get_variable_scope()
-        assert curr_vs.name == '', "Cannot nest TowerContext with an existing variable scope!"
+        if self.is_training:
+            curr_vs = tf.get_variable_scope()
+            assert curr_vs.name == '', "In training, cannot nest TowerContext with an existing variable scope!"
 
         self._ctxs = self._get_scopes()
         self._ctxs.append(self._collection_guard)
@@ -261,11 +263,8 @@ class TowerTensorHandle(object):
     inputs/outputs created in each tower.
     """
 
-    # TODO hide it from doc
+    @HIDE_DOC
     def __init__(self, ctx, input, output, inputs_desc=None):
-        """
-        Don't use it because you never need to create the handle by yourself.
-        """
         self._ctx = ctx
 
         self._extra_tensor_names = {}

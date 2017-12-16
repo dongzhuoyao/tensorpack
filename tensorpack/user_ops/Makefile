@@ -1,7 +1,8 @@
 # $File: Makefile
-# $Date: Tue Oct 31 11:44:27 2017 +0800
+# $Date: Thu Dec 14 18:03:41 2017 -0800
 
 OBJ_DIR = obj
+PYTHON = python
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
@@ -15,18 +16,21 @@ OPTFLAGS ?= -O3 -march=native
 #OPTFLAGS ?= -g3 -fsanitize=address,undefined -O2 -lasan
 #OPTFLAGS ?= -g3 -fsanitize=leak -O2 -lubsan
 
+# libraries: TF preceeds others, so g++ looks for protobuf among TF headers
+ifneq ($(MAKECMDGOALS), clean)
+TF_CXXFLAGS ?= $(shell $(PYTHON) -c 'import tensorflow as tf; print(" ".join(tf.sysconfig.get_compile_flags()))')
+TF_LDFLAGS ?= $(shell $(PYTHON) -c 'import tensorflow as tf; print(" ".join(tf.sysconfig.get_link_flags()))')
+endif
+CXXFLAGS += $(TF_CXXFLAGS)
+LDFLAGS += $(TF_LDFLAGS)
+
 # extra packages from pkg-config
 LIBS = libzmq
-INCLUDE_DIR += $(shell pkg-config --cflags $(LIBS))
+CXXFLAGS += $(shell pkg-config --cflags $(LIBS))
 LDFLAGS += $(shell pkg-config $(LIBS) --libs)
 
-CXXFLAGS += $(INCLUDE_DIR)
-CXXFLAGS += -Wall -Wextra
+CXXFLAGS += -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare
 CXXFLAGS += $(DEFINES) -std=c++11 $(OPTFLAGS) -fPIC
-
-# TODO https://github.com/tensorflow/tensorflow/issues/1569
-# You may need to disable this flag if you compile tensorflow yourself with gcc>=5
-CXXFLAGS += -D_GLIBCXX_USE_CXX11_ABI=0
 
 LDFLAGS += $(OPTFLAGS)
 LDFLAGS += -shared -fPIC
@@ -40,8 +44,8 @@ ccSOURCES = $(shell find $(SRCDIRS) -name "*.cc" | sed 's/^\.\///g')
 OBJS = $(addprefix $(OBJ_DIR)/,$(ccSOURCES:.cc=.o))
 DEPFILES = $(OBJS:.o=.d)
 
-# TODO what about mac?
-SO = $(ccSOURCES:.cc=.so)
+EXT_SUFFIX ?= $(shell $(PYTHON) -c 'import sysconfig; print(sysconfig.get_config_var("EXT_SUFFIX"))')
+SO = zmq_recv_op$(EXT_SUFFIX)
 
 .PHONY: all clean
 
@@ -51,7 +55,7 @@ ifneq ($(MAKECMDGOALS), clean)
 sinclude $(DEPFILES)
 endif
 
-%.so: $(OBJ_DIR)/%.o
+%$(EXT_SUFFIX): $(OBJ_DIR)/%.o
 	@echo "Linking $@ ..."
 	@$(CXX) $^ -o $@ $(LDFLAGS)
 	@echo "done."

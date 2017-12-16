@@ -9,7 +9,7 @@ import tensorflow as tf
 import os
 import argparse
 
-os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
+
 from tensorpack import *
 from tensorpack.utils import viz
 from tensorpack.tfutils.scope_utils import auto_reuse_variable_scope, under_name_scope
@@ -25,7 +25,7 @@ To train:
 To visualize:
     ./InfoGAN-mnist.py --sample --load path/to/model
 
-A pretrained model is at https://drive.google.com/open?id=0B9IPQTvr2BBkLUF2M0RXU1NYSkE
+A pretrained model is at http://models.tensorpack.com/GAN/
 """
 
 BATCH = 128

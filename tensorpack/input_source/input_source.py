@@ -24,17 +24,17 @@ from ..utils.develop import log_deprecated
 from ..callbacks.base import Callback, CallbackFactory
 from ..callbacks.graph import RunOp
 
-__all__ = ['PlaceholderInput', 'FeedInput',
-           'FeedfreeInput',
+__all__ = ['PlaceholderInput', 'FeedInput', 'FeedfreeInput',
            'QueueInput', 'BatchQueueInput',
            'DummyConstantInput', 'TensorInput',
-           'TFDatasetInput',
-           'StagingInputWrapper',
-           'StagingInput']
+           'ZMQInput', 'TFDatasetInput',
+           'StagingInputWrapper', 'StagingInput']
 
 
 def _get_reset_callback(df):
-    return CallbackFactory(setup_graph=lambda _: df.reset_state())
+    ret = CallbackFactory(setup_graph=lambda _: df.reset_state())
+    ret.chief_only = False
+    return ret
 
 
 class PlaceholderInput(InputSource):
@@ -183,6 +183,7 @@ class QueueInput(FeedfreeInput):
         self.queue = queue
         self.ds = ds
         self._inf_ds = RepeatedData(ds, -1)
+        self._started = False
 
     def _size(self):
         return self.ds.size()
@@ -202,21 +203,24 @@ class QueueInput(FeedfreeInput):
             self._dequeue_op = self.queue.dequeue(name='dequeue_for_reset')
 
     def _reset_state(self):
-        self.thread.pause()     # pause enqueue
+        if self._started:   # do not try to clear the queue if there is nothing
+            self.thread.pause()     # pause enqueue
 
-        opt = tf.RunOptions()
-        opt.timeout_in_ms = 2000   # 2s
-        sess = tf.get_default_session()
-        # dequeue until empty
-        try:
-            while True:
-                sess.run(self._dequeue_op, options=opt)
-        except tf.errors.DeadlineExceededError:
-            pass
+            opt = tf.RunOptions()
+            opt.timeout_in_ms = 2000   # 2s
+            sess = tf.get_default_session()
+            # dequeue until empty
+            try:
+                while True:
+                    sess.run(self._dequeue_op, options=opt)
+            except tf.errors.DeadlineExceededError:
+                pass
 
-        # reset dataflow, start thread
-        self.thread.reinitialize_dataflow()
-        self.thread.resume()
+            # reset dataflow, start thread
+            self.thread.reinitialize_dataflow()
+            self.thread.resume()
+        else:
+            self._started = True
 
     def _create_ema_callback(self):
         """
@@ -376,27 +380,36 @@ class DummyConstantInput(TensorInput):
 
 class ZMQInput(TensorInput):
     """
-    Not well implemented yet. Don't use.
+    Recv tensors from a ZMQ endpoint.
+    It works with :meth:`dataflow.remote.send_dataflow_zmq(format='zmq_op')`.
     """
-    def __init__(self, endpoint):
-        self._endpoint = endpoint
-
-        from tensorpack.user_ops import zmq_recv
+    def __init__(self, end_point, hwm):
+        """
+        Args:
+            end_point (str):
+            hwm (int):
+        """
+        self._end_point = end_point
+        self._hwm = int(hwm)
 
         def fn():
-            ret = zmq_recv(self._endpoint, [x.dtype for x in self.inputs_desc])
-            if isinstance(ret, tf.Tensor):
-                ret = [ret]
-            assert len(ret) == len(self.inputs_desc)
-            for qv, v in zip(ret, self.inputs_desc):
+            ret = self._zmq_recv_socket.recv()
+            assert len(ret) == len(self._desc)
+            for qv, v in zip(ret, self._desc):
                 qv.set_shape(v.shape)
             return ret
         super(ZMQInput, self).__init__(fn)
 
     def _setup(self, inputs_desc):
-        self.inputs_desc = inputs_desc
-        assert len(self.inputs_desc) > 0, \
+        assert len(inputs_desc) > 0, \
             "ZMQInput has to be used with InputDesc!"
+        self._desc = inputs_desc
+
+        from ..user_ops import zmq_recv
+        self._zmq_recv_socket = zmq_recv.ZMQSocket(
+            self._end_point,
+            [x.type for x in inputs_desc],
+            self._hwm)
 
 
 class TFDatasetInput(FeedfreeInput):
@@ -531,7 +544,15 @@ class StagingInput(FeedfreeInput):
             for idx, device in enumerate(self._devices):
                 with tf.device(device):
                     inputs = self._input.get_input_tensors()
-                    dtypes = [x.dtype for x in inputs]
+
+                    # Putting variables to stagingarea will cause trouble
+                    dtypes = []
+                    for idx in range(len(inputs)):
+                        dtype = inputs[idx].dtype
+                        if dtype.base_dtype != dtype:     # is reference type
+                            inputs[idx] = tf.identity(inputs[idx])
+                        dtypes.append(dtype.base_dtype)
+
                     stage = StagingArea(dtypes, shapes=None)
                     self._stage_ops.append(stage.put(inputs))
                     self._areas.append(stage)

@@ -14,7 +14,6 @@ from six.moves import range
 
 from ..utils import logger
 from ..utils.utils import get_tqdm_kwargs
-from ..utils.develop import deprecated
 from ..dataflow.base import DataFlow
 
 from ..input_source import (
@@ -25,7 +24,7 @@ from .base import Callback
 from .group import Callbacks
 from .inference import Inferencer
 
-__all__ = ['InferenceRunner', 'FeedfreeInferenceRunner',
+__all__ = ['InferenceRunner',
            'DataParallelInferenceRunner']
 
 
@@ -46,12 +45,12 @@ def _inference_context():
     msg = "You might need to check your input implementation."
     try:
         yield
-    except (StopIteration,
-            tf.errors.CancelledError,
-            tf.errors.OutOfRangeError):
+    except (StopIteration, tf.errors.CancelledError):
         logger.error(
             "[InferenceRunner] input stopped before reaching its size()! " + msg)
         raise
+    except tf.errors.OutOfRangeError:   # tf.data reaches an end
+        pass
 
 
 class InferenceRunnerBase(Callback):
@@ -77,9 +76,10 @@ class InferenceRunnerBase(Callback):
 
         try:
             self._size = input.size()
+            logger.info("InferenceRunner will eval {} iterations".format(input.size()))
         except NotImplementedError:
-            raise ValueError("Input used in InferenceRunner must have a size!")
-        logger.info("InferenceRunner will eval on an InputSource of size {}".format(self._size))
+            self._size = 0
+            logger.warn("InferenceRunner got an input with unknown size! It will iterate until OutOfRangeError!")
 
         self._hooks = []
 
@@ -165,11 +165,6 @@ class InferenceRunner(InferenceRunnerBase):
             inf.trigger_epoch()
 
 
-@deprecated("Just use InferenceRunner since it now accepts TensorInput!", "2017-11-11")
-def FeedfreeInferenceRunner(*args, **kwargs):
-    return InferenceRunner(*args, **kwargs)
-
-
 class DataParallelInferenceRunner(InferenceRunnerBase):
     """
     Inference with data-parallel support on multiple GPUs.
@@ -187,6 +182,7 @@ class DataParallelInferenceRunner(InferenceRunnerBase):
             input = QueueInput(input)
         assert isinstance(input, QueueInput), input
         super(DataParallelInferenceRunner, self).__init__(input, infs)
+        assert self._size > 0, "Input for DataParallelInferenceRunner must have a size!"
         self._gpus = gpus
 
     def _setup_graph(self):

@@ -6,22 +6,22 @@ import tensorflow as tf
 
 from ..input_source import (
     InputSource, FeedInput, QueueInput, StagingInput, DummyConstantInput)
+from ..utils import logger
 
-from ..trainv1.config import TrainConfig
+from .config import TrainConfig
 from .tower import SingleCostTrainer
-from .trainers import SimpleTrainer, DistributedTrainerReplicated
+from .trainers import SimpleTrainer
 
 __all__ = ['launch_train_with_config', 'apply_default_prefetch']
 
 
-def apply_default_prefetch(input_source_or_dataflow, trainer, towers):
+def apply_default_prefetch(input_source_or_dataflow, trainer):
     """
     Apply a set of default rules to make a fast :class:`InputSource`.
 
     Args:
         input_source_or_dataflow(InputSource | DataFlow):
         trainer (Trainer):
-        towers ([int]): list of GPU ids.
     """
     if not isinstance(input_source_or_dataflow, InputSource):
         # to mimic same behavior of the old trainer interface
@@ -31,13 +31,15 @@ def apply_default_prefetch(input_source_or_dataflow, trainer, towers):
             input = QueueInput(input_source_or_dataflow)
     else:
         input = input_source_or_dataflow
-    if len(towers) > 1:
-        # seem to only improve on >1 GPUs
-        assert not isinstance(trainer, SimpleTrainer)
-        assert tf.test.is_gpu_available()
+    if hasattr(trainer, 'devices'):
+        towers = trainer.devices
+        if len(towers) > 1:
+            # seem to only improve on >1 GPUs
+            assert not isinstance(trainer, SimpleTrainer)
+            assert tf.test.is_gpu_available()
 
-        if not isinstance(input, (StagingInput, DummyConstantInput)):
-            input = StagingInput(input, towers)
+            if not isinstance(input, (StagingInput, DummyConstantInput)):
+                input = StagingInput(input, towers)
     return input
 
 
@@ -75,13 +77,10 @@ def launch_train_with_config(config, trainer):
     model = config.model
     inputs_desc = model.get_inputs_desc()
     input = config.data or config.dataflow
-    input = apply_default_prefetch(input, trainer, config.tower)
-
-    if isinstance(trainer, DistributedTrainerReplicated) and \
-            config.session_config is not None:
-        raise ValueError(
-            "Cannot set session_config for distributed training! "
-            "To use a custom session config, pass it to tf.train.Server.")
+    input = apply_default_prefetch(input, trainer)
+    if config.nr_tower > 1:
+        logger.warn("With trainer v2, setting tower in TrainConfig has no effect.")
+        logger.warn("It's enough to set the tower when initializing the trainer.")
 
     trainer.setup_graph(
         inputs_desc, input,

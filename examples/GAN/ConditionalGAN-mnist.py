@@ -9,7 +9,7 @@ import os
 import cv2
 import argparse
 
-os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
+
 from tensorpack import *
 from tensorpack.utils.viz import interactive_imshow, stack_patches
 import tensorpack.tfutils.symbolic_functions as symbf
@@ -24,7 +24,7 @@ To train:
 To visualize:
     ./ConditionalGAN-mnist.py --sample --load path/to/model
 
-A pretrained model is at https://drive.google.com/open?id=0B9IPQTvr2BBkLUF2M0RXU1NYSkE
+A pretrained model is at http://models.tensorpack.com/GAN/
 """
 
 BATCH = 128

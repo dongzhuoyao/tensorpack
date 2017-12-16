@@ -1,8 +1,13 @@
 
 # Performance Tuning
 
+__We do not know why your training is slow__ (and most of the times it's not a tensorpack problem).
+Performance is different across machines and tasks.
+So you need to figure out most parts by your own.
 Here's a list of things you can do when your training is slow.
-And if you're going to open an issue about slow training, PLEASE do them and include your findings.
+
+If you're going to open an issue about slow training,
+PLEASE do them and include your findings.
 
 ## Figure out the bottleneck
 
@@ -11,29 +16,28 @@ And if you're going to open an issue about slow training, PLEASE do them and inc
 2. If you use queue-based input + dataflow, you can look for the queue size statistics in
 	 training log. Ideally the queue should be near-full (default size is 50).
  	 If the size is near-zero, data is the bottleneck.
-3. If the GPU utilization is low, it may be because of slow data, or some ops are inefficient. Also make sure GPUs are not locked in P8 state.
+3. If GPU utilization is low, it may be because of slow data, or some ops are inefficient. Also make sure GPUs are not locked in P8 state.
 
 ## Benchmark the components
 1. Use `DummyConstantInput(shapes)` as the `InputSource`.
 	so that the iterations doesn't take any data from Python side but train on a constant tensor.
 	This will help find out the slow operations you're using in the graph.
 2. Use `dataflow=FakeData(shapes, random=False)` to replace your original DataFlow by a constant DataFlow.
-	Compared to using `DummyConstantInput`, this will include the extra Python-TF overhead, which is supposed to be negligible.
+  This is almost the same as (1), i.e., it eliminates the overhead of data.
 3. If you're using a TF-based input pipeline you wrote, you can simply run it in a loop and test its speed.
 4. Use `TestDataSpeed(mydf).start()` to benchmark your DataFlow.
 
 A benchmark will give you more precise information about which part you should improve.
 
-## Improve DataFlow
+## Investigate DataFlow
 
-Understand the [Efficient DataFlow](efficient-dataflow.html) tutorial,
-so that you have an idea of what your DataFlow is doing.
+Understand the [Efficient DataFlow](efficient-dataflow.html) tutorial, so you know what your DataFlow is doing.
 
-Benchmark your DataFlow with modifications and you'll understand why it runs slow. Some examples
+Benchmark your DataFlow with modifications and you'll understand which part is the bottleneck. Some examples
 include:
 
-1. Remove everything except for the raw reader (and perhaps add some prefetching).
-2. Remove some suspicious pre-processing.
+1. Benchmark only raw reader (and perhaps add some prefetching).
+2. Gradually add some pre-processing and see how the performance changes.
 3. Change the number of parallel processes or threads.
 
 A DataFlow could be blocked by CPU/hard disk/network/IPC bandwidth. Only by benchmarking will you
@@ -46,7 +50,7 @@ know the reason and improve it accordingly, e.g.:
 	 anything (network, ZMQ pipe, Python-TF copy etc.)
 5. Use distributed data preprocessing, with `send_dataflow_zmq` and `RemoteDataZMQ`.
 
-## Improve TensorFlow
+## Investigate TensorFlow
 
 When you're sure that data is not a bottleneck (e.g. when queue is always full), you can start to
 worry about the model.
@@ -69,9 +73,8 @@ But there may be something cheap you can try:
 If you're unable to scale to multiple GPUs almost linearly:
 1. First make sure that the ResNet example can scale. Run it with `--fake` to use fake data.
 	If not, it's a bug or an environment setup problem.
-2. Then note that your model may have a different communication-computation pattern or other
-	 characteristics that affects efficiency.
+2. Then note that your model may have a different communication-computation pattern that affects efficiency.
 	 There isn't a simple answer to this.
 	 You may try a different multi-GPU trainer; the speed can vary a lot sometimes.
 
-Note that scalibility measurement always trains with the same "batch size per GPU", not the same total equivalent batch size.
+Note that scalibility is always measured by keeping "batch size per GPU" constant.

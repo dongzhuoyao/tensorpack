@@ -8,7 +8,7 @@ import numpy as np
 import os
 import argparse
 
-os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
+
 from tensorpack import *
 from tensorpack.utils.viz import stack_patches
 from tensorpack.tfutils.scope_utils import auto_reuse_variable_scope
@@ -31,7 +31,7 @@ from GAN import GANTrainer, RandomZData, GANModelDesc
 You can also train on other images (just use any directory of jpg files in
 `--data`). But you may need to change the preprocessing.
 
-A pretrained model on CelebA is at https://drive.google.com/open?id=0B9IPQTvr2BBkLUF2M0RXU1NYSkE
+A pretrained model on CelebA is at http://models.tensorpack.com/GAN/
 """
 
 # global vars

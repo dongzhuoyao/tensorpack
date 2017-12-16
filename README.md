@@ -1,6 +1,6 @@
 # tensorpack
 
-Tensorpack is a __zero-overhead__ training interface based on TensorFlow.
+Tensorpack is a training interface based on TensorFlow.
 
 [![Build Status](https://travis-ci.org/ppwwyyxx/tensorpack.svg?branch=master)](https://travis-ci.org/ppwwyyxx/tensorpack)
 [![ReadTheDoc](https://readthedocs.org/projects/tensorpack/badge/?version=latest)](http://tensorpack.readthedocs.io/en/latest/index.html)
@@ -10,7 +10,7 @@ See some [examples](examples) to learn about the framework. Everything runs on m
 
 ### Vision:
 + [Train ResNet/SE-ResNet on ImageNet](examples/ResNet)
-+ [Train Faster-RCNN on COCO object detection](examples/FasterRCNN)
++ [Train Faster-RCNN / Mask-RCNN on COCO object detection](examples/FasterRCNN)
 + [Generative Adversarial Network(GAN) variants](examples/GAN), including DCGAN, InfoGAN, Conditional GAN, WGAN, BEGAN, DiscoGAN, Image to Image, CycleGAN.
 + [DoReFa-Net: train binary / low-bitwidth CNN on ImageNet](examples/DoReFa-Net)
 + [Fully-convolutional Network for Holistically-Nested Edge Detection(HED)](examples/HED)
@@ -38,6 +38,7 @@ It's Yet Another TF wrapper, but different in:
 	  On various CNNs, it runs 1.5~1.7x faster than the equivalent Keras code.
 
 	+ Data-parallel multi-GPU/distributed training is off-the-shelf to use. It is as fast as Google's [official benchmark](https://www.tensorflow.org/performance/benchmarks).
+		You cannot beat its speed unless you're a TensorFlow expert.
 
 	+ See [tensorpack/benchmarks](https://github.com/tensorpack/benchmarks) for some benchmark scripts.
 
@@ -57,7 +58,7 @@ See [tutorials](http://tensorpack.readthedocs.io/en/latest/tutorial/index.html) 
 Dependencies:
 
 + Python 2.7 or 3
-+ TensorFlow >= 1.0.0 (>=1.1.0 for Multi-GPU)
++ TensorFlow >= 1.2.0
 + Python bindings for OpenCV (Optional, but required by a lot of features)
 ```
 pip install -U git+https://github.com/ppwwyyxx/tensorpack.git

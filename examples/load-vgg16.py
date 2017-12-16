@@ -26,6 +26,8 @@ Usage:
             PATH/TO/VGG/{VGG_ILSVRC_16_layers_deploy.prototxt,VGG_ILSVRC_16_layers.caffemodel} vgg16.npy
 
     Or download a converted caffe model from http://models.tensorpack.com/caffe/
+
+    Then, run it:
     ./load-vgg16.py --load vgg16.npy --input cat.png
 """
 
@@ -81,9 +83,7 @@ def run_test(path, input):
 
     # VGG16 requires channelwise mean substraction
     VGG_MEAN = [103.939, 116.779, 123.68]
-    im[:, :, 0] -= VGG_MEAN[2]
-    im[:, :, 1] -= VGG_MEAN[1]
-    im[:, :, 2] -= VGG_MEAN[0]
+    im -= VGG_MEAN[::-1]
 
     outputs = predict_func(im)[0]
     prob = outputs[0]

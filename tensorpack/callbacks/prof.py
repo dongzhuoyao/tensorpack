@@ -13,7 +13,7 @@ from tensorflow.python.client import timeline
 
 from .base import Callback
 from ..utils import logger
-from ..utils.concurrency import ensure_proc_terminate, subproc_call
+from ..utils.concurrency import ensure_proc_terminate, subproc_call, start_proc_mask_signal
 from ..utils.gpu import get_nr_gpu
 
 __all__ = ['GPUUtilizationTracker', 'GraphProfiler', 'PeakMemoryTracker']
@@ -59,7 +59,7 @@ class GPUUtilizationTracker(Callback):
         self._proc = mp.Process(target=self.worker, args=(
             self._evt, self._queue, self._stop_evt))
         ensure_proc_terminate(self._proc)
-        self._proc.start()
+        start_proc_mask_signal(self._proc)
 
     def _before_epoch(self):
         self._evt.set()
@@ -196,4 +196,4 @@ class PeakMemoryTracker(Callback):
     def _after_run(self, _, rv):
         results = rv.results
         for mem, dev in zip(results, self._devices):
-            self.trainer.monitors.put_scalar('PeakMemory(MB)' + dev, mem / 1e6)
+            self.trainer.monitors.put_scalar('PeakMemory(MB) ' + dev, mem / 1e6)

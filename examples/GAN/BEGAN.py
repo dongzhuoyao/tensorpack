@@ -3,9 +3,6 @@
 # File: BEGAN.py
 # Author: Yuxin Wu <ppwwyyxxc@gmail.com>
 
-import os
-
-os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
 from tensorpack import *
 from tensorpack.tfutils.summary import add_moving_summary
 from tensorpack.utils.gpu import get_nr_gpu
@@ -19,8 +16,7 @@ from GAN import GANModelDesc, GANTrainer, MultiGPUGANTrainer
 Boundary Equilibrium GAN.
 See the docstring in DCGAN.py for usage.
 
-A pretrained model on CelebA is at
-https://drive.google.com/open?id=0B5uDfUQ1JTglUmgyZV8zQmNOTVU
+A pretrained model on CelebA is at http://models.tensorpack.com/GAN/
 """
 
 
