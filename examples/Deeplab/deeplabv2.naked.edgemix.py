@@ -14,7 +14,7 @@ os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
 from tensorpack import *
 from tensorpack.dataflow import dataset
 from tensorpack.utils.gpu import get_nr_gpu
-from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler
+from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler, visualize_mixlabel
 from tensorpack.utils.stats import MIoUStatistics
 from tensorpack.utils import logger
 from tensorpack.dataflow.imgaug.misc import RandomCropWithPadding
@@ -33,54 +33,40 @@ CLASS_NUM = 21
 CROP_SIZE = 321
 IGNORE_LABEL = 255
 
+def my_softmax_cross_entropy_with_ignore_label(logits, label, class_num, mask):
+    """
+    This function accepts logits rather than predictions, and is more numerically stable than
+    :func:`class_balanced_cross_entropy`.
+    """
+    with tf.name_scope('softmax_cross_entropy_with_ignore_label'):
+        # tf.assert_equal(logits.shape[1], label.shape[1])  # shape assert
+        # TODO need assert here
+        raw_prediction = tf.reshape(logits, [-1, class_num])
+        label = tf.reshape(label, [-1, class_num])
+
+        mask = tf.reshape(mask,[-1])
+        indices = tf.squeeze(tf.where(tf.equal(mask, 1)), axis=1,name="indices_to_get") # maybe buggy
+
+        ignore_indices = tf.squeeze(tf.where(tf.equal(mask, 0)), axis=1, name="indices_to_get")
+        ignore_gt = tf.gather(label, ignore_indices)
+
+        with tf.control_dependencies([tf.assert_equal(tf.reduce_sum(ignore_gt),0)]):
+            gt = tf.gather(label, indices)
+            prediction = tf.gather(raw_prediction, indices)
+            # Pixel-wise softmax loss.
+            loss = tf.nn.softmax_cross_entropy_with_logits(logits=prediction, labels=gt)
+    return loss
+
+
 class Model(ModelDesc):
 
     def _get_inputs(self):
         ## Set static shape so that tensorflow knows shape at compile time.
         return [InputDesc(tf.float32, [None, CROP_SIZE, CROP_SIZE, 3], 'image'),
-                InputDesc(tf.int32, [None, CROP_SIZE, CROP_SIZE], 'gt')]
+                InputDesc(tf.int32, [None, CROP_SIZE, CROP_SIZE, CLASS_NUM], 'gt'),
+                InputDesc(tf.int32, [None, CROP_SIZE, CROP_SIZE], 'mask')]
 
     def _build_graph(self, inputs):
-        def vgg16(input):
-            with argscope(Conv2D, kernel_shape=3, nl=tf.nn.relu):
-                def aspp_branch(input, rate):
-                    input = AtrousConv2D('aspp{}_conv0'.format(rate), input, 1024, kernel_shape=3, rate=6)
-                    input = Dropout('aspp{}_dropout0'.format(rate), input, 0.5)
-                    input = Conv2D('aspp{}_conv1'.format(rate), input, 1024)
-                    input = Dropout('aspp{}_dropout1'.format(rate), input, 0.5)
-                    input = Conv2D('aspp{}_conv2'.format(rate), input, CLASS_NUM, nl=tf.identity)
-                    return input
-
-                l = Conv2D('conv1_1', image, 64)
-                l = Conv2D('conv1_2', l, 64)
-                l = MaxPooling('pool1', l, shape=3, stride=2)
-                # 112
-                l = Conv2D('conv2_1', l, 128)
-                l = Conv2D('conv2_2', l, 128)
-                l = MaxPooling('pool2', l, shape=3, stride=2)
-                # 56
-                l = Conv2D('conv3_1', l, 256)
-                l = Conv2D('conv3_2', l, 256)
-                l = Conv2D('conv3_3', l, 256)
-                l = MaxPooling('pool3', l, shape=3, stride=2)
-                # 28
-                l = Conv2D('conv4_1', l, 512)
-                l = Conv2D('conv4_2', l, 512)
-                l = Conv2D('conv4_3', l, 512)
-                l = MaxPooling('pool4', l, shape=3, stride=1)  # original VGG16 pooling is 2, here is 1
-                # 28
-                l = AtrousConv2D('conv5_1', l, 512, kernel_shape=3, rate=2)
-                l = AtrousConv2D('conv5_2', l, 512, kernel_shape=3, rate=2)
-                l = AtrousConv2D('conv5_3', l, 512, kernel_shape=3, rate=2)
-                l = MaxPooling('pool5', l, shape=3, stride=1)
-                # 28
-                dilation6 = aspp_branch(l, rate=6)
-                dilation12 = aspp_branch(l, rate=12)
-                dilation18 = aspp_branch(l, rate=18)
-                dilation24 = aspp_branch(l, rate=24)
-                predict = dilation6 + dilation12 + dilation18 + dilation24
-                return predict
-
         def resnet101(image):
             mode = 'resnet'
             depth = 101
@@ -105,7 +91,7 @@ class Model(ModelDesc):
 
             return get_logits(image)
 
-        image, label = inputs
+        image, label, mask = inputs
         image = image - tf.constant([104, 116, 122], dtype='float32')
         label = tf.identity(label, name="label")
 
@@ -115,12 +101,9 @@ class Model(ModelDesc):
         costs = []
         prob = tf.nn.softmax(predict, name='prob')
 
-        label4d = tf.expand_dims(label, 3, name='label4d')
-        new_size = prob.get_shape()[1:3]
-        #label_resized = tf.image.resize_nearest_neighbor(label4d, new_size)
+        cost = my_softmax_cross_entropy_with_ignore_label(logits=predict, label=label,
+                                                          class_num=CLASS_NUM, mask=mask)
 
-        cost = symbf.softmax_cross_entropy_with_ignore_label(logits=predict, label=label4d,
-                                                             class_num=CLASS_NUM)
         prediction = tf.argmax(prob, axis=-1,name="prediction")
         cost = tf.reduce_mean(cost, name='cross_entropy_loss')  # the average cross-entropy loss
         costs.append(cost)
@@ -145,7 +128,7 @@ class Model(ModelDesc):
 
 def get_data(name, data_dir, meta_dir, batch_size):
     isTrain = name == 'train'
-    ds = dataset.PascalVOC12Trimap(data_dir, meta_dir, name, shuffle=True)
+    ds = dataset.PascalVOC12(data_dir, meta_dir, name, shuffle=True)
 
 
     if isTrain:#special augmentation
@@ -157,12 +140,46 @@ def get_data(name, data_dir, meta_dir, batch_size):
     else:
         shape_aug = []
 
+
     ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False)
+    def f(ds):
+        r = 1
+        def generate_multi_hot(labels_hot,i,j):
+            i_min = max(i-r,0)
+            i_max = min(i+r+1,CROP_SIZE)
+            j_min = max(j-r,0)
+            j_max = min(j+r+1,CROP_SIZE)
+            small_block = labels_hot[:,i_min:i_max,j_min:j_max,:]
+            small_block = np.mean(small_block,axis=(1,2))
+            if len(np.where(small_block > 0)[0]) > batch_size:
+                pass
+            return small_block
+
+        images, labels = ds
+        labels_flatten = labels.flatten()
+        index255 = np.where(labels_flatten == IGNORE_LABEL)
+        labels_flatten[index255] = 0 #fake value
+
+        labels_hot = np.eye(CLASS_NUM)[labels_flatten]
+        labels_hot[index255, :] = 0 #remove ignore data
+
+        labels_hot = np.resize(labels_hot,(labels.shape[0],CROP_SIZE,CROP_SIZE,CLASS_NUM))
+        labels_result = np.zeros((labels.shape[0],CROP_SIZE,CROP_SIZE,CLASS_NUM))
+        for i in range(CROP_SIZE):
+            for j in range(CROP_SIZE):
+                labels_result[:, i, j, :] = generate_multi_hot(labels_hot, i, j)
+
+
+        mask = np.ones((batch_size, CROP_SIZE, CROP_SIZE), dtype=np.int8)
+        labels_result[np.unravel_index(index255, (batch_size, CROP_SIZE, CROP_SIZE))] = 0 # reassure zero
+        mask[np.unravel_index(index255, (batch_size, CROP_SIZE, CROP_SIZE))] = 0
+        return [images, labels_result, mask]
 
 
     if isTrain:
         ds = BatchData(ds, batch_size)
-        ds = PrefetchDataZMQ(ds, 1)
+        ds = MapData(ds, f)
+        ds = PrefetchDataZMQ(ds, 3)
     else:
         ds = BatchData(ds, 1)
     return ds
@@ -171,11 +188,12 @@ def get_data(name, data_dir, meta_dir, batch_size):
 def view_data(data_dir, meta_dir, batch_size):
     ds = RepeatedData(get_data('train',data_dir, meta_dir, batch_size), -1)
     ds.reset_state()
-    for ims, labels in ds.get_data():
-        for im, label in zip(ims, labels):
+    for ims, labels,masks in ds.get_data():
+        for im, label,mask in zip(ims, labels,masks):
+
+            #cv2.imshow("raw-label", label)
+            cv2.imshow("color-label", visualize_mixlabel(label,mask))
             cv2.imshow("im", im / 255.0)
-            cv2.imshow("raw-trimap-label", label)
-            cv2.imshow("color-trimap-label", visualize_label(label))
             cv2.waitKey(0)
 
 
@@ -224,7 +242,7 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = True, is_densecrf = False):
     import cv2
-    ds = dataset.PascalVOC12Trimap(args.data_dir, args.meta_dir, "val")
+    ds = dataset.PascalVOC12(args.data_dir, args.meta_dir, "val")
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(

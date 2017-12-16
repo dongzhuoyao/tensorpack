@@ -28,6 +28,7 @@ label_colours = [(0,0,0)
                 # 16=potted plant, 17=sheep, 18=sofa, 19=train, 20=tv/monitor
 
 ignore_color = (255,255,255)
+fuzzy_color = (64,0,128)
 
 # C Support
 # Enable the cython support for faster evaluation
@@ -93,6 +94,33 @@ def visualize_label(label):
 
     img_color[label==255] = ignore_color#highlight ignore label
     return img_color
+
+
+def visualize_mixlabel(label,mask):#H,W,C
+    """Color classes a good distance away from each other."""
+    h, w, c = label.shape
+    img_color = np.zeros((h, w, 3)).astype('uint8')
+    for i in range(h):
+        for j in range(w):
+            aa = 0
+            bb=0
+            cc=0
+            if len(np.where(label[i,j]>0)[0]) >1:
+                img_color[i,j] = fuzzy_color
+                continue
+
+            for k in range(c):
+                if label[i, j, k] > 0:
+                    aa += label[i, j, k]*label_colours[k][0]
+                    bb + label[i, j, k]*label_colours[k][1]
+                    cc += label[i, j, k]*label_colours[k][2]
+
+            img_color[i,j] = [aa,bb,cc]
+
+
+    img_color[mask==0] = ignore_color#highlight ignore label
+    return img_color
+
 
 def predict_slider(full_image, predictor, classes, tile_size):
     if isinstance(tile_size, int):
