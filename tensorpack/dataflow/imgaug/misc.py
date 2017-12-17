@@ -150,7 +150,7 @@ class RandomResize(TransformAugmentorBase):
         assert is_float(xrange) == is_float(yrange), "xrange and yrange has different type!"
         self._is_scale = is_float(xrange)
 
-    def _get_augment_params(self, img, id):
+    def _get_augment_params(self, img, id=0):
         cnt = 0
         h, w = img.shape[:2]
 
@@ -233,7 +233,7 @@ class RandomCropWithPadding(ImageAugmentor):
         self.ignore_label = ignore_label
         self._init()
 
-    def _get_augment_params(self, img, id):
+    def _get_augment_params(self, img, id = 0):
         self.h0 = img.shape[0]
         self.w0 = img.shape[1]
 
@@ -259,7 +259,7 @@ class RandomCropWithPadding(ImageAugmentor):
         crop_start_w = 0 if diffw == 0 else self.rng.randint(diffw)
         return (top, bottom, left, right, crop_start_h, crop_start_w)
 
-    def _augment(self, img, param, id):
+    def _augment(self, img, param, id = 0):
         top, bottom, left, right, crop_start_h, crop_start_w = param
         if id <= 1:
             il = self.ignore_label

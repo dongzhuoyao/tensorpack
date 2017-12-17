@@ -24,7 +24,7 @@ import tensorpack.tfutils.symbolic_functions as symbf
 from tqdm import tqdm
 
 
-from resnet_model_edge_scale import (
+from resnet_model_edge_conv3 import (
     preresnet_group, preresnet_basicblock, preresnet_bottleneck,
     resnet_group, resnet_basicblock, resnet_bottleneck_deeplab, se_resnet_bottleneck,
     resnet_backbone)
@@ -63,7 +63,7 @@ class Model(ModelDesc):
                 with argscope([Conv2D, MaxPooling, GlobalAvgPooling, BatchNorm], data_format="NHWC"):
                     return resnet_backbone(
                         image, num_blocks,
-                        preresnet_group if mode == 'preact' else resnet_group, block_func,  label, edge,  ASPP = False)
+                        preresnet_group if mode == 'preact' else resnet_group, block_func,  label, edge, CLASS_NUM, ASPP = False)
 
             return get_logits(image)
 
@@ -102,7 +102,7 @@ class Model(ModelDesc):
         opt = tf.train.AdamOptimizer(lr, epsilon=2.5e-4)
         return optimizer.apply_grad_processors(
             opt, [gradproc.ScaleGradient(
-                [('scale.*', 10),('aspp.*_conv/W', 10),('aspp.*_conv/b',20)])])
+                [('edge_.*', 10),('aspp.*_conv/W', 10),('aspp.*_conv/b',20)])])
 
 
 def get_data(name, data_dir, meta_dir, batch_size):
@@ -149,7 +149,7 @@ def view_data(data_dir, meta_dir, batch_size):
 def get_config(data_dir, meta_dir, batch_size):
     logger.auto_set_dir()
     dataset_train = get_data('train', data_dir, meta_dir, batch_size)
-    steps_per_epoch = dataset_train.size() * 12
+    steps_per_epoch = dataset_train.size() * 8
     dataset_val = get_data('val', data_dir, meta_dir, batch_size)
 
     return TrainConfig(
@@ -219,6 +219,7 @@ def proceed_validation(args, is_save = True, is_densecrf = False):
     logger.info("mIoU: {}".format(stat.mIoU))
     logger.info("mean_accuracy: {}".format(stat.mean_accuracy))
     logger.info("accuracy: {}".format(stat.accuracy))
+    stat.print_confusion_matrix()
 
 
 
@@ -255,6 +256,7 @@ class CalculateMIoU(Callback):
         self.trainer.monitors.put_scalar("mIoU", self.stat.mIoU)
         self.trainer.monitors.put_scalar("mean_accuracy", self.stat.mean_accuracy)
         self.trainer.monitors.put_scalar("accuracy", self.stat.accuracy)
+        self.stat.print_confusion_matrix()
 
 
 

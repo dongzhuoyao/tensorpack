@@ -290,6 +290,7 @@ def predict(pred_func, input_file):
     img = cv2.imread(input_file, cv2.IMREAD_COLOR)
     results = detect_one_image(img, pred_func)
     final = draw_final_outputs(img, results)
+    cv2.imwrite("result.jpg", final)
     viz = np.concatenate((img, final), axis=1)
     tpviz.interactive_imshow(viz)
 
@@ -322,13 +323,13 @@ class EvalCallback(Callback):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', help='comma separated list of GPU(s) to use.')
-    parser.add_argument('--load', help='load model')
+    parser.add_argument('--gpu', default="1", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--load', default="COCO-ResNet101-MaskRCNN.npz", help='load model')
     parser.add_argument('--logdir', help='logdir', default='train_log/fastrcnn')
-    parser.add_argument('--datadir', help='override config.BASEDIR')
+    parser.add_argument('--datadir', default="/data_a/dataset/coco" ,help='override config.BASEDIR')
     parser.add_argument('--visualize', action='store_true')
     parser.add_argument('--evaluate', help='path to the output json eval file')
-    parser.add_argument('--predict', help='path to the input image file')
+    parser.add_argument('--predict', default="sengnv.jpg", help='path to the input image file')
     args = parser.parse_args()
     if args.datadir:
         config.BASEDIR = args.datadir

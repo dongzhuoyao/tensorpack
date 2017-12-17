@@ -45,7 +45,7 @@ class Augmentor(object):
         """
         return self._augment_return_params(d)
 
-    def _augment_return_params(self, d, id):
+    def _augment_return_params(self, d, id=0):
         """
         Augment the image and return both image and params
         """
@@ -59,7 +59,7 @@ class Augmentor(object):
         The augmentor is allowed to modify data in-place.
         """
 
-    def _get_augment_params(self, d, id):
+    def _get_augment_params(self, d, id=0):
         """
         Get the augmentor parameters.
         """
