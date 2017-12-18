@@ -14,7 +14,7 @@ from ..tfutils.gradproc import ScaleGradient
 
 from .utils import (
     LeastLoadedDeviceSetter, override_to_local_variable,
-    allreduce_grads, average_grads_with_colocation)
+    allreduce_grads, average_grads)
 
 
 __all__ = ['GraphBuilder',
@@ -106,18 +106,16 @@ class SyncMultiGPUParameterServerBuilder(DataParallelBuilder):
     shared variable scope. It synchronoizes the gradients computed
     from each tower, averages them and applies to the shared variables.
 
-    See https://www.tensorflow.org/performance/benchmarks for details.
+    It is an equivalent of ``--variable_update=parameter_server`` in
+    `tensorflow/benchmarks <https://github.com/tensorflow/benchmarks>`_.
     """
-    def __init__(self, towers, ps_device=None):
+    def __init__(self, towers, ps_device):
         """
         Args:
             towers(list[int]): list of GPU id
             ps_device (str): either 'gpu' or 'cpu', where variables are stored.
-                Setting to 'cpu' might help when #gpu>=4
         """
         super(SyncMultiGPUParameterServerBuilder, self).__init__(towers)
-        if ps_device is None:
-            ps_device = 'cpu' if len(towers) >= 4 else 'gpu'
         assert ps_device in ['cpu', 'gpu']
         self.ps_device = ps_device
 
@@ -145,7 +143,7 @@ class SyncMultiGPUParameterServerBuilder(DataParallelBuilder):
         # self.train_op = tf.group(*ops)
         # return
 
-        grads = average_grads_with_colocation(grad_list)
+        grads = average_grads(grad_list, colocation=True)
         # grads = grad_list[0]
 
         opt = get_opt_fn()
@@ -164,7 +162,8 @@ class SyncMultiGPUReplicatedBuilder(DataParallelBuilder):
     It will build one tower on each GPU under its own variable scope.
     Each gradient update is averaged across or GPUs through NCCL.
 
-    See https://www.tensorflow.org/performance/benchmarks for details.
+    It is an equivalent of ``--variable_update=replicated`` in
+    `tensorflow/benchmarks <https://github.com/tensorflow/benchmarks>`_.
     """
 
     def build(self, get_grad_fn, get_opt_fn):
