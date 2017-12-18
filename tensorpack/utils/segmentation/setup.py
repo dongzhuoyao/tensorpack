@@ -1,21 +1,18 @@
-#!/usr/bin/python
-#
-# Enable cython support for eval scripts
-# Run as
-# setup.py build_ext --inplace
-#
-# WARNING: Only tested for Ubuntu 64bit OS.
+# Author: Tao Hu <taohu620@gmail.com>
 
-try:
-    from distutils.core import setup
-    from Cython.Build import cythonize
-except:
-    print("Unable to setup. Please use pip to install: cython")
-    print("sudo pip install cython")
-import os
+# setup.py
+from distutils.core import setup, Extension
+from Cython.Build import cythonize
 import numpy
+setup(ext_modules = cythonize(Extension(
+    'fastUpdateConfusionMatrix',
+    sources=['fastUpdateConfusionMatrix.pyx'],
+    language='c',
+    include_dirs=[numpy.get_include()],
+    library_dirs=[],
+    libraries=[],
+    extra_compile_args=[],
+    extra_link_args=[]
+)))
 
-os.environ["CC"]  = "g++"
-os.environ["CXX"] = "g++"
-
-setup(ext_modules = cythonize("addToConfusionMatrix.pyx"),include_dirs=[numpy.get_include()])
+#python setup.py build_ext --inplace

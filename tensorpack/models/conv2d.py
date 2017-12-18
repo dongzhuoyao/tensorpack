@@ -8,7 +8,7 @@ from .common import layer_register, VariableHolder, rename_get_variable
 from ..utils.argtools import shape2d, shape4d
 from ..utils.develop import log_deprecated
 
-__all__ = ['Conv2D', 'Deconv2D', 'AtrousConv2D']
+__all__ = ['Conv2D', 'Deconv2D', 'AtrousConv2D', 'Conv2DFixed']
 
 
 @layer_register(log_shape=True)
@@ -77,6 +77,73 @@ def Conv2D(x, out_channel, kernel_shape,
     if use_bias:
         ret.variables.b = b
     return ret
+
+
+@layer_register(log_shape=True)
+def Conv2DFixed(x, out_channel, kernel_shape=3,
+           padding='SAME', stride=1,
+                W_constant=None, b_init=None,
+           nl=tf.identity, split=1, use_bias=False,
+           data_format='NHWC'):
+    """
+    2D convolution on 4D inputs.
+
+    Args:
+        x (tf.Tensor): a 4D tensor.
+            Must have known number of channels, but can have other unknown dimensions.
+        out_channel (int): number of output channel.
+        kernel_shape: (h, w) tuple or a int.
+        stride: (h, w) tuple or a int.
+        padding (str): 'valid' or 'same'. Case insensitive.
+        split (int): Split channels as used in Alexnet. Defaults to 1 (no split).
+        W_init: initializer for W. Defaults to `variance_scaling_initializer`.
+        b_init: initializer for b. Defaults to zero.
+        nl: a nonlinearity function.
+        use_bias (bool): whether to use bias.
+
+    Returns:
+        tf.Tensor named ``output`` with attribute `variables`.
+
+    Variable Names:
+
+    * ``W``: weights
+    * ``b``: bias
+    """
+    split = out_channel #important for realise channelwise conv
+
+    in_shape = x.get_shape().as_list()
+    channel_axis = 3 if data_format == 'NHWC' else 1
+    in_channel = in_shape[channel_axis]
+    assert in_channel is not None, "[Conv2D] Input cannot have unknown channel!"
+    assert in_channel % split == 0
+    assert out_channel % split == 0
+
+    kernel_shape = shape2d(kernel_shape)
+    padding = padding.upper()
+    filter_shape = kernel_shape + [in_channel / split, out_channel]
+    stride = shape4d(stride, data_format=data_format)
+
+
+    W = tf.identity(W_constant,'W')
+
+    if use_bias:
+        b = tf.get_variable('b', [out_channel], initializer=b_init)
+
+    if split == 1:
+        conv = tf.nn.conv2d(x, W, stride, padding, data_format=data_format)
+    else:
+        inputs = tf.split(x, split, channel_axis)
+        kernels = tf.split(W, split, 3)
+        outputs = [tf.nn.conv2d(i, k, stride, padding, data_format=data_format)
+                   for i, k in zip(inputs, kernels)]
+        conv = tf.concat(outputs, channel_axis)
+
+    ret = nl(tf.nn.bias_add(conv, b, data_format=data_format) if use_bias else conv, name='output')
+    ret.variables = VariableHolder(W=W)
+    if use_bias:
+        ret.variables.b = b
+    return ret
+
 
 @layer_register(log_shape=True)
 def AtrousConv2D(x, out_channel, kernel_shape,

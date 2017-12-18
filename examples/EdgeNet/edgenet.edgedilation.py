@@ -222,7 +222,7 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = False, is_densecrf = False):
     import cv2
-    ds = dataset.Ningbo(args.data_dir, args.meta_dir,"val")
+    ds = dataset.Ningbo(args.data_dir, args.meta_dir,"val", shuffle=False)
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
@@ -233,18 +233,23 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
     predictor = OfflinePredictor(pred_config)
 
     from tqdm import tqdm
-    i =0
-    def to_size(input):
-        input[input >= 0.50] = 1
-        input[input < 0.50] = 0
-        return np.dstack((input*255,input*255,input*255))
+    from tensorpack.utils.fs import mkdir_p
+    result_dir = "result"
+    mkdir_p(result_dir)
+    i = 0
+    def to_size(inputimg):
+        return np.dstack((inputimg * 255, inputimg * 255, inputimg * 255))
+
+        inputimg[inputimg >= 0.50] = 1
+        inputimg[inputimg < 0.50] = 0
+        return np.dstack((inputimg * 255, inputimg * 255, inputimg * 255))
     for image, label in tqdm(ds.get_data()):
         i += 1
         #image = image[None, :, :, :].astype('float32')
         outputs = predictor(image)
         label = label[0]
         label = label[:,:,None]
-        cv2.imwrite("result/out{}.png".format(i),
+        cv2.imwrite(os.path.join(result_dir, "out{}.png".format(i)),
                     np.concatenate((image[0],
                                     to_size(label),
                                     to_size(outputs[0][0]),

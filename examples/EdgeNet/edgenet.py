@@ -218,7 +218,7 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = False, is_densecrf = False):
     import cv2
-    name = "train"
+    name = "val"
     ds = dataset.NingboEdge(args.data_dir, args.meta_dir, args.edge_dir,name )
     ds = BatchData(ds, 1)
 

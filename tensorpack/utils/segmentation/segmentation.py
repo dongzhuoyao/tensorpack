@@ -11,7 +11,7 @@ import pydensecrf.densecrf as dcrf
 import os, sys
 from ...utils import logger
 
-sys.path.append( os.path.normpath( os.path.join( os.path.dirname( __file__ ) , 'build/lib.linux-x86_64-2.7/tensorpack/utils/segmentation' ) ) )
+#sys.path.append( os.path.normpath( os.path.join( os.path.dirname( __file__ ) , 'build/lib.linux-x86_64-2.7/tensorpack/utils/segmentation' ) ) )
 
 __all__ = ['update_confusion_matrix', 'predict_slider']
 
@@ -37,10 +37,11 @@ CSUPPORT = True
 # Check if C-Support is available for better performance
 if CSUPPORT:
     try:
-        import addToConfusionMatrix
+        import fastUpdateConfusionMatrix
     except:
         CSUPPORT = False
-CSUPPORT = False
+
+CSUPPORT = False #force false
 
 if not CSUPPORT:
     logger.warn("confusion matrix c extension not found, this calculation will be very slow")
@@ -49,8 +50,9 @@ if not CSUPPORT:
 def update_confusion_matrix(pred, label, conf_m, nb_classes, ignore = 255):
     if (CSUPPORT):
         # using cython
-        conf_m = addToConfusionMatrix.cEvaluatePair(pred.astype(np.uint8), label.astype(np.uint8), conf_m, nb_classes)
+        conf_m = fastUpdateConfusionMatrix.fastUpdateConfusionMatrix(pred.astype(np.uint16), label.astype(np.uint16), conf_m, nb_classes, ignore)
         return conf_m
+
     else:
         flat_pred = np.ravel(pred)
         flat_label = np.ravel(label)

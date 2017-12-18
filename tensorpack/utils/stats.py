@@ -233,6 +233,8 @@ class MIoUStatistics(object):
 
 
     def print_confusion_matrix(self):
+        pass
+        """
         logger.info("confusion matrix:")
         logger.info("")
         logger.info("    " + ('-' * 98))
@@ -241,3 +243,4 @@ class MIoUStatistics(object):
             for j in range(self.nb_classes):
                 line += "  {:>7} |".format(self._confusion_matrix[i][j])
             logger.info(line)
+        """
