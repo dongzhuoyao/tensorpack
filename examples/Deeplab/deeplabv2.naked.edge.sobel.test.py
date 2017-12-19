@@ -9,7 +9,6 @@ import argparse
 from six.moves import zip
 import os
 import numpy as np
-from tensorflow.python import debug as tf_debug
 
 os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
 from tensorpack import *
@@ -25,7 +24,7 @@ import tensorpack.tfutils.symbolic_functions as symbf
 from tqdm import tqdm
 
 
-from resnet_model_edge_sobel import (
+from resnet_model_edge_sobel_test import (
     preresnet_group, preresnet_basicblock, preresnet_bottleneck,
     resnet_group, resnet_basicblock, resnet_bottleneck_deeplab, se_resnet_bottleneck,
     resnet_backbone)
@@ -160,8 +159,7 @@ def get_config(data_dir, meta_dir, batch_size):
             ScheduledHyperParamSetter('learning_rate', [(2, 1e-4), (4, 1e-5), (6, 8e-6)]),
             HumanHyperParamSetter('learning_rate'),
             PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=1),
-            ProgressBar(["cross_entropy_loss","cost","wd_cost"]),#uncomment it to debug for every step
-            HookToCallback(tf_debug.LocalCLIDebugHook())
+            ProgressBar(["cross_entropy_loss","cost","wd_cost"])#uncomment it to debug for every step
         ],
         model=Model(),
         steps_per_epoch=steps_per_epoch,
@@ -264,7 +262,7 @@ class CalculateMIoU(Callback):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="1", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="2", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--data_dir', default="/data_a/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012",
                         help='dataset dir')
     parser.add_argument('--meta_dir', default="pascalvoc12", help='meta dir')

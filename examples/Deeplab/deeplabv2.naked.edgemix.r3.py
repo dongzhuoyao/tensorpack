@@ -47,7 +47,7 @@ def my_softmax_cross_entropy_with_ignore_label(logits, label, class_num, mask):
         mask = tf.reshape(mask,[-1])
         indices = tf.squeeze(tf.where(tf.equal(mask, 1)), axis=1,name="indices_to_get") # maybe buggy
 
-        ignore_indices = tf.squeeze(tf.where(tf.equal(mask, 0)), axis=1, name="indices_to_get")
+        ignore_indices = tf.squeeze(tf.where(tf.equal(mask, 0)), axis=1, name="indices_to_get_ignore")
         ignore_gt = tf.gather(label, ignore_indices)
 
         with tf.control_dependencies([tf.assert_equal(tf.reduce_sum(ignore_gt),0)]):

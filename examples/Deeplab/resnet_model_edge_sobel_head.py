@@ -130,17 +130,20 @@ def resnet_backbone(image, num_blocks, group_func, block_func,  label, edge, cla
 
         l = Conv2D('conv0', image,  64, 7, stride=2, nl=BNReLU)
         l = MaxPooling('pool0', l,  shape=3, stride=2, padding='SAME')
-        l = group_func(l, 'group0', block_func, 64, num_blocks[0], 1, dilation=1, stride_first=False)
 
-        np_sobel_x = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]],dtype=np.float32)
-        np_sobel_y = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]],dtype=np.float32)
+        np_sobel_x = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], dtype=np.float32)
+        np_sobel_y = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]], dtype=np.float32)
         scale_init = tf.constant_initializer(1)
         current_edge = l
-        scale = tf.get_variable('edge_scale_group0', [1, 1, 1, 256], initializer=scale_init)
-        current_edge_x = Conv2DFixed("edge_x_conv_group0",current_edge, 256, W_constant=tf.constant(value=np.broadcast_to( np.resize(np_sobel_x,(3,3,1,1)),(3,3,1,256))))
-        current_edge_y = Conv2DFixed("edge_y_conv_group0", current_edge, 256, W_constant=tf.constant(value=np.broadcast_to( np.resize(np_sobel_y,(3,3,1,1)),(3,3,1,256))))
-        l = current_edge + scale*tf.square(current_edge_x*current_edge_x + current_edge_y*current_edge_y)
+        scale = tf.get_variable('edge_scale_group0', [1, 1, 1, 64], initializer=scale_init)
+        current_edge_x = Conv2DFixed("edge_x_conv_group0", current_edge, 64, W_constant=tf.constant(
+            value=np.broadcast_to(np.resize(np_sobel_x, (3, 3, 1, 1)), (3, 3, 1, 64))))
+        current_edge_y = Conv2DFixed("edge_y_conv_group0", current_edge, 64, W_constant=tf.constant(
+            value=np.broadcast_to(np.resize(np_sobel_y, (3, 3, 1, 1)), (3, 3, 1, 64))))
+        l = current_edge + scale * tf.square(current_edge_x * current_edge_x + current_edge_y * current_edge_y)
 
+
+        l = group_func(l, 'group0', block_func, 64, num_blocks[0], 1, dilation=1, stride_first=False)
         l = group_func(l, 'group1', block_func, 128, num_blocks[1], 2, dilation=1, stride_first=True)
 
         """
