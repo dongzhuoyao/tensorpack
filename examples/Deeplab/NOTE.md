@@ -21,6 +21,7 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,sobel.lr10) | 68.1
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,sobel) | 67.4%
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,sobel-res234) | non-converge
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,sobellast) | 66.3%
+Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,sobel.head) | 50.2%
 
 ### Result On Pasal VOC
 MSF on pascalvoc MSF all tild size: 321*321
