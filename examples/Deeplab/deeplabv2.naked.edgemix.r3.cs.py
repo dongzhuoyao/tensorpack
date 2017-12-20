@@ -30,7 +30,7 @@ from resnet_model import (
 
 
 CLASS_NUM = 19
-CROP_SIZE = (1024,2048)
+CROP_SIZE = (512,512)
 IGNORE_LABEL = 255
 
 def my_softmax_cross_entropy_with_ignore_label(logits, label, class_num, mask):
@@ -318,7 +318,7 @@ if __name__ == '__main__':
     parser.add_argument('--load', default="resnet101.npz", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
-    parser.add_argument('--batch_size', type=int, default = 1, help='batch_size')
+    parser.add_argument('--batch_size', type=int, default = 4, help='batch_size')
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     parser.add_argument('--validation', action='store_true', help='validate model on validation images')
     args = parser.parse_args()

@@ -204,7 +204,7 @@ def proceed_validation(args, is_save = True, is_densecrf = False):
     i = 0
     stat = MIoUStatistics(CLASS_NUM)
     logger.info("start validation....")
-    for image, label in tqdm(ds.get_data()):
+    for image, label,_ in tqdm(ds.get_data()):
         label = np.squeeze(label)
         image = np.squeeze(image)
         prediction = predict_scaler(image, predictor, scales=[0.9, 1, 1.1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)

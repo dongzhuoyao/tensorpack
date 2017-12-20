@@ -141,8 +141,8 @@ def resnet_backbone(image, num_blocks, group_func, block_func,  label, edge, cla
         current_edge_y = Conv2DFixed("edge_conv_group0", current_edge, 256, W_constant=tf.constant(value=np.broadcast_to( np.resize(np_sobel_y,(3,3,1,1)),(3,3,1,256))))
         sobel = tf.square(current_edge_x * current_edge_x + current_edge_y * current_edge_y)
         sobel = tf.sigmoid(sobel)
-        sobel = tf.
-        l = current_edge +
+
+        #l = current_edge +
         l = group_func(l, 'group1', block_func, 128, num_blocks[1], 2, dilation=1, stride_first=True)
 
         """

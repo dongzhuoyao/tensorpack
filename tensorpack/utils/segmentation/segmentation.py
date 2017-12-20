@@ -7,7 +7,7 @@ import numpy as np
 from math import ceil
 import cv2,colorsys
 import matplotlib.pyplot as plt
-import pydensecrf.densecrf as dcrf
+#import pydensecrf.densecrf as dcrf
 import os, sys
 from ...utils import logger
 
@@ -48,6 +48,20 @@ if not CSUPPORT:
 
 
 def update_confusion_matrix(pred, label, conf_m, nb_classes, ignore = 255):
+        flat_pred = np.ravel(pred)
+        flat_label = np.ravel(label)
+
+        for pre_l in range(nb_classes):
+            for lab_l in range(nb_classes):
+                pre_indexs = np.where(flat_pred==pre_l)
+                lab_indexs = np.where(flat_label==lab_l)
+                pre_indexs = set(pre_indexs[0].tolist())
+                lab_indexs = set(lab_indexs[0].tolist())
+                num = len(pre_indexs & lab_indexs)
+                conf_m[pre_l,lab_l] += num
+        return conf_m
+
+def tmp_update_confusion_matrix(pred, label, conf_m, nb_classes, ignore = 255):
     if (CSUPPORT):
         # using cython
         conf_m = fastUpdateConfusionMatrix.fastUpdateConfusionMatrix(pred.astype(np.uint16), label.astype(np.uint16), conf_m, nb_classes, ignore)
@@ -67,14 +81,37 @@ def update_confusion_matrix(pred, label, conf_m, nb_classes, ignore = 255):
         return conf_m
 
 
+def overlap_mbk(a, b):
+    a1=np.argsort(a)
+    b1=np.argsort(b)
+    # use searchsorted:
+    sort_left_a=a[a1].searchsorted(b[b1], side='left')
+    sort_right_a=a[a1].searchsorted(b[b1], side='right')
+    #
+    sort_left_b=b[b1].searchsorted(a[a1], side='left')
+    sort_right_b=b[b1].searchsorted(a[a1], side='right')
+
+
+    # # which values are in b but not in a?
+    # inds_b=(sort_right_a-sort_left_a == 0).nonzero()[0]
+    # # which values are in b but not in a?
+    # inds_a=(sort_right_b-sort_left_b == 0).nonzero()[0]
+
+    # which values of b are also in a?
+    inds_b=(sort_right_a-sort_left_a > 0).nonzero()[0]
+    # which values of a are also in b?
+    inds_a=(sort_right_b-sort_left_b > 0).nonzero()[0]
+
+    return a1[inds_a], b1[inds_b]
+
 def pad_image(img, target_size):
     """Pad an image up to the target size."""
     rows_missing = max(target_size[0] - img.shape[0], 0)
     cols_missing = max(target_size[1] - img.shape[1], 0)
     try:
         padded_img = np.pad(img, ((0, rows_missing), (0, cols_missing), (0, 0)), 'constant')
-    except  Exception,e:
-        print str(e)
+    except  Exception as e:
+        print(str(e))
         pass
     return padded_img, [0,target_size[0]-rows_missing,0,target_size[1] - cols_missing]
 
@@ -225,57 +262,12 @@ def edge_predict_scaler(full_image, edge, predictor, scales, classes, tile_size,
         probs = cv2.resize(scaled_probs, (w_ori,h_ori))
         full_probs += probs
     full_probs /= len(scales)
-    if is_densecrf:
-        full_probs = dense_crf(full_probs)
+    #if is_densecrf:
+    #    full_probs = dense_crf(full_probs)
     return full_probs
 
 
-def dense_crf(probs, img=None, n_iters=10,
-              sxy_gaussian=(1, 1), compat_gaussian=4,
-              kernel_gaussian=dcrf.DIAG_KERNEL,
-              normalisation_gaussian=dcrf.NORMALIZE_SYMMETRIC,
-              sxy_bilateral=(49, 49), compat_bilateral=5,
-              srgb_bilateral=(13, 13, 13),
-              kernel_bilateral=dcrf.DIAG_KERNEL,
-              normalisation_bilateral=dcrf.NORMALIZE_SYMMETRIC):
-    """DenseCRF over unnormalised predictions.
-       More details on the arguments at https://github.com/lucasb-eyer/pydensecrf.
 
-    Args:
-      probs: class probabilities per pixel.
-      img: if given, the pairwise bilateral potential on raw RGB values will be computed.
-      n_iters: number of iterations of MAP inference.
-      sxy_gaussian: standard deviations for the location component of the colour-independent term.
-      compat_gaussian: label compatibilities for the colour-independent term (can be a number, a 1D array, or a 2D array).
-      kernel_gaussian: kernel precision matrix for the colour-independent term (can take values CONST_KERNEL, DIAG_KERNEL, or FULL_KERNEL).
-      normalisation_gaussian: normalisation for the colour-independent term (possible values are NO_NORMALIZATION, NORMALIZE_BEFORE, NORMALIZE_AFTER, NORMALIZE_SYMMETRIC).
-      sxy_bilateral: standard deviations for the location component of the colour-dependent term.
-      compat_bilateral: label compatibilities for the colour-dependent term (can be a number, a 1D array, or a 2D array).
-      srgb_bilateral: standard deviations for the colour component of the colour-dependent term.
-      kernel_bilateral: kernel precision matrix for the colour-dependent term (can take values CONST_KERNEL, DIAG_KERNEL, or FULL_KERNEL).
-      normalisation_bilateral: normalisation for the colour-dependent term (possible values are NO_NORMALIZATION, NORMALIZE_BEFORE, NORMALIZE_AFTER, NORMALIZE_SYMMETRIC).
-
-    Returns:
-      Refined predictions after MAP inference.
-    """
-    h, w, class_num = probs.shape
-
-    probs = probs.transpose(2, 0, 1).copy(order='C')  # Need a contiguous array.
-
-    d = dcrf.DenseCRF2D(w, h, class_num)  # Define DenseCRF model.
-    U = -np.log(probs)  # Unary potential.
-    U = U.reshape((class_num, -1)).astype(np.float32)  # Needs to be flat.
-    d.setUnaryEnergy(U)
-    d.addPairwiseGaussian(sxy=sxy_gaussian, compat=compat_gaussian,
-                          kernel=kernel_gaussian, normalization=normalisation_gaussian)
-    if img is not None:
-        assert (img.shape[1:3] == (h, w)), "The image height and width must coincide with dimensions of the logits."
-        d.addPairwiseBilateral(sxy=sxy_bilateral, compat=compat_bilateral,
-                               kernel=kernel_bilateral, normalization=normalisation_bilateral,
-                               srgb=srgb_bilateral, rgbim=img[0])
-    Q = d.inference(n_iters)
-    preds = np.array(Q, dtype=np.float32).reshape((class_num, h, w)).transpose(1, 2, 0)
-    return preds
 
 
 

@@ -222,9 +222,6 @@ class Transpose(ImageAugmentor):
 
 class RandomCropWithPadding(ImageAugmentor):
     def __init__(self, crop_size, ignore_label):
-        """
-
-        """
         super(RandomCropWithPadding, self).__init__()
         self.crop_size = crop_size
         if isinstance(crop_size,int):
