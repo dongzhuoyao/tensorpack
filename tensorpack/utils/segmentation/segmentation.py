@@ -48,6 +48,22 @@ if not CSUPPORT:
 
 
 def update_confusion_matrix(pred, label, conf_m, nb_classes, ignore = 255):
+
+        ignore_index = label != ignore
+        seg_gt = label[ignore_index].astype('int32')
+        seg_pred = pred[ignore_index].astype('int32')
+        index = (seg_gt * nb_classes + seg_pred).astype('int32')
+        label_count = np.bincount(index)
+        for i_label in range(nb_classes):
+            for i_pred_label in range(nb_classes):
+                cur_index = i_label * nb_classes + i_pred_label
+                if cur_index < len(label_count):
+                    conf_m[i_label, i_pred_label] = +label_count[cur_index] #notice here, first dimension is label,second dimension is prediction.
+
+        return conf_m
+
+
+def ttt_update_confusion_matrix(pred, label, conf_m, nb_classes, ignore = 255):
         flat_pred = np.ravel(pred)
         flat_label = np.ravel(label)
 
@@ -58,7 +74,7 @@ def update_confusion_matrix(pred, label, conf_m, nb_classes, ignore = 255):
                 pre_indexs = set(pre_indexs[0].tolist())
                 lab_indexs = set(lab_indexs[0].tolist())
                 num = len(pre_indexs & lab_indexs)
-                conf_m[pre_l,lab_l] += num
+                conf_m[pre_l,lab_l] += num #wrong! should be label,predict
         return conf_m
 
 def tmp_update_confusion_matrix(pred, label, conf_m, nb_classes, ignore = 255):

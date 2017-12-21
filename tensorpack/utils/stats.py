@@ -221,6 +221,16 @@ class MIoUStatistics(object):
         IOU = I*1.0 / U
         meanIOU = np.mean(IOU)
         return meanIOU
+        """
+        pos = confusion_matrix.sum(1)
+        res = confusion_matrix.sum(0)
+        tp = np.diag(confusion_matrix)
+
+        IU_array = (tp / np.maximum(1.0, pos + res - tp))
+        mean_IU = IU_array.mean()
+
+        return {'meanIU': mean_IU, 'IU_array': IU_array}
+        """
 
     @property
     def accuracy(self):
