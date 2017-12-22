@@ -77,6 +77,7 @@ def generate_train():
     gtPath = "/data1/dataset/jpg_aerial/train/gt/"
 
     outputPath = "/data1/dataset/jpg_aerial/final"
+    """
     import shutil
     shutil.rmtree(outputPath)
     os.makedirs(os.path.join(outputPath, "images"))
@@ -86,11 +87,12 @@ def generate_train():
     split_num = 5;  # how many patch in a row/column
     cropBW(gtPath, os.path.join(outputPath, "gt"), split_num)
     cropImage(imagePath, os.path.join(outputPath, "images"), split_num)
-
+    """
     # writeTxt
-    split_and_generate_txt(imagePath, gtPath, train_data_ratio=0.9)
+    split_and_generate_txt(os.path.join(outputPath, "images"), os.path.join(outputPath, "gt"), train_data_ratio=0.9)
 
 
 if __name__ == '__main__':
 
-    generate_test()
+    #generate_test()
+    generate_train()
