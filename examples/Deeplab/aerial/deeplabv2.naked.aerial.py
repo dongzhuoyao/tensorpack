@@ -276,11 +276,11 @@ def proceed_test(args,is_densecrf = False):
     mkdir_p(result_dir)
     i = 0
     logger.info("start validation....")
-    for image in tqdm(ds.get_data()):
+    for image, name in tqdm(ds.get_data()):
         image = np.squeeze(image)
         prediction = predict_scaler(image, predictor, scales=[0.9, 1, 1.1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
         prediction = np.argmax(prediction, axis=2)
-        cv2.imwrite(os.path.join(result_dir,"{}.png".format(i)), prediction)
+        cv2.imwrite(os.path.join(result_dir,"{}.tiff".format(name)), prediction)
         i += 1
 
 

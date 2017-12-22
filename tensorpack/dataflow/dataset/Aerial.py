@@ -53,15 +53,16 @@ class Aerial(RNGDataFlow):
             self.rng.shuffle(idxs)
         if  self.name == "train" or self.name == "val":
             for k in idxs:
-                fname, flabel = self.imglist[k]
-                fname = cv2.imread(fname, cv2.IMREAD_COLOR)
+                fpath, flabel = self.imglist[k]
+                fpath = cv2.imread(fpath, cv2.IMREAD_COLOR)
                 flabel = cv2.imread(flabel, cv2.IMREAD_GRAYSCALE)
-                yield [fname, flabel]
+                yield [fpath, flabel]
         else:
             for k in idxs:
-                fname = self.imglist[k]
-                fname = cv2.imread(fname, cv2.IMREAD_COLOR)
-                yield [fname]
+                fpath = self.imglist[k]
+                fname = os.path.basename(fpath).strip(".tiff")
+                fpath = cv2.imread(fpath, cv2.IMREAD_COLOR)
+                yield [fpath,fname]
 
 if __name__ == '__main__':
     pass
