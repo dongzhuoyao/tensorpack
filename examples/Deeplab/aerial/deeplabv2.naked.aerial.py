@@ -23,17 +23,17 @@ from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 import tensorpack.tfutils.symbolic_functions as symbf
 from tqdm import tqdm
 
-from ..imagenet_utils import (
+from imagenet_utils import (
     fbresnet_augmentor, get_imagenet_dataflow, ImageNetModel,
     eval_on_ILSVRC12)
-from ..resnet_model import (
+from resnet_model import (
     preresnet_group, preresnet_basicblock, preresnet_bottleneck,
     resnet_group, resnet_basicblock, resnet_bottleneck_deeplab, se_resnet_bottleneck,
     resnet_backbone)
 
 
 CLASS_NUM = 21
-CROP_SIZE = 321
+CROP_SIZE = 512
 IGNORE_LABEL = 255
 
 class Model(ModelDesc):
@@ -146,9 +146,9 @@ class Model(ModelDesc):
                 [('aspp.*_conv/W', 10),('aspp.*_conv/b',20)])])
 
 
-def get_data(name, data_dir, meta_dir, batch_size):
+def get_data(name, meta_dir, batch_size):
     isTrain = name == 'train'
-    ds = dataset.Aerial(data_dir, meta_dir, name, shuffle=True)
+    ds = dataset.Aerial(meta_dir, name, shuffle=True)
 
 
     if isTrain:#special augmentation
@@ -171,8 +171,8 @@ def get_data(name, data_dir, meta_dir, batch_size):
     return ds
 
 
-def view_data(data_dir, meta_dir, batch_size):
-    ds = RepeatedData(get_data('train',data_dir, meta_dir, batch_size), -1)
+def view_data(meta_dir, batch_size):
+    ds = RepeatedData(get_data('train', meta_dir, batch_size), -1)
     ds.reset_state()
     for ims, labels in ds.get_data():
         for im, label in zip(ims, labels):
@@ -184,11 +184,11 @@ def view_data(data_dir, meta_dir, batch_size):
             cv2.waitKey(0)
 
 
-def get_config(data_dir, meta_dir, batch_size):
+def get_config( meta_dir, batch_size):
     logger.auto_set_dir()
-    dataset_train = get_data('train', data_dir, meta_dir, batch_size)
-    steps_per_epoch = dataset_train.size() * 8
-    dataset_val = get_data('val', data_dir, meta_dir, batch_size)
+    dataset_train = get_data('train',  meta_dir, batch_size)
+    steps_per_epoch = dataset_train.size() * 15
+    dataset_val = get_data('val', meta_dir, batch_size)
 
     return TrainConfig(
         dataflow=dataset_train,
@@ -229,7 +229,7 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = True, is_densecrf = False):
     import cv2
-    ds = dataset.Aerial(args.data_dir, args.meta_dir, "val")
+    ds = dataset.Aerial( args.meta_dir, "val")
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
@@ -275,7 +275,7 @@ class CalculateMIoU(Callback):
 
     def _trigger(self):
         global args
-        self.val_ds = get_data('val', args.data_dir, args.meta_dir, args.batch_size)
+        self.val_ds = get_data('val', args.meta_dir, args.batch_size)
         self.val_ds.reset_state()
 
         self.stat = MIoUStatistics(self.nb_class)
@@ -296,8 +296,8 @@ class CalculateMIoU(Callback):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="1", help='comma separated list of GPU(s) to use.')
-    parser.add_argument('--meta_dir', default="../aerial", help='meta dir')
+    parser.add_argument('--gpu', default="5", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--meta_dir', default="../metadata/aerial", help='meta dir')
     parser.add_argument('--load', default="../resnet101.npz", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
@@ -310,13 +310,13 @@ if __name__ == '__main__':
 
 
     if args.view:
-        view_data(args.data_dir,args.meta_dir,args.batch_size)
+        view_data(args.meta_dir,args.batch_size)
     elif args.run:
         run(args.load, args.run, args.output)
     elif args.validation:
         proceed_validation(args)
     else:
-        config = get_config(args.data_dir,args.meta_dir,args.batch_size)
+        config = get_config(args.meta_dir,args.batch_size)
         if args.load:
             config.session_init = get_model_loader(args.load)
         launch_train_with_config(

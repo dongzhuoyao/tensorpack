@@ -189,8 +189,6 @@ class RandomResize(TransformAugmentorBase):
 
 
 
-
-
 class Transpose(ImageAugmentor):
     """
     Random transpose the image
@@ -219,6 +217,7 @@ class Transpose(ImageAugmentor):
         if do:
             coords = coords[:, ::-1]
         return coords
+
 
 class RandomCropWithPadding(ImageAugmentor):
     def __init__(self, crop_size, ignore_label):
