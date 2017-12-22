@@ -390,7 +390,7 @@ class ZMQInput(TensorInput):
         self._hwm = int(hwm)
 
         def fn():
-            ret = self._zmq_recv_socket.recv()
+            ret = self._zmq_pull_socket.pull()
             assert len(ret) == len(self._desc)
             for qv, v in zip(ret, self._desc):
                 qv.set_shape(v.shape)
@@ -402,8 +402,8 @@ class ZMQInput(TensorInput):
             "ZMQInput has to be used with InputDesc!"
         self._desc = inputs_desc
 
-        from ..user_ops import zmq_recv
-        self._zmq_recv_socket = zmq_recv.ZMQSocket(
+        from ..user_ops import zmq_ops
+        self._zmq_pull_socket = zmq_ops.ZMQPullSocket(
             self._end_point,
             [x.type for x in inputs_desc],
             self._hwm)
@@ -483,12 +483,16 @@ class StagingInput(FeedfreeInput):
         A callback registered by this input source, to make sure stage/unstage
         is run at each step.
         """
-        def __init__(self, stage_op, unstage_op, nr_stage):
+        def __init__(self, input, nr_stage):
             self.nr_stage = nr_stage
-            self.stage_op = stage_op
-            self.fetches = tf.train.SessionRunArgs(
-                fetches=[stage_op, unstage_op])
+            self._input = input
             self._initialized = False
+
+        def _setup_graph(self):
+            self.stage_op = self._input._get_stage_op()
+            unstage_op = self._input._get_unstage_op()
+            self.fetches = tf.train.SessionRunArgs(
+                fetches=[self.stage_op, unstage_op])
 
         def _prefill(self):
             logger.info("Pre-filling staging area ...")
@@ -502,71 +506,60 @@ class StagingInput(FeedfreeInput):
                 self._prefill()
             return self.fetches
 
-    def __init__(self, input, towers, nr_stage=5):
+    def __init__(self, input, towers=None, nr_stage=5):
         """
         Args:
             input (FeedfreeInput):
-            towers ([int]): list of GPU ids to prefetch on.
             nr_stage: number of elements to prefetch on each GPU.
+            towers: deprecated
         """
         assert isinstance(input, FeedfreeInput), input
         self._input = input
-        if not isinstance(towers[0], int):
-            # API changed
-            log_deprecated("StagingInput(devices=)", "Use (towers=) instead!", "2018-01-31")
-            self._devices = towers
-        else:
-            self._devices = ['/gpu:{}'.format(k) for k in towers]
+        if towers is not None:
+            log_deprecated("StagingInput(towers=) has no effect! Devices are handled automatically.")
 
         self._nr_stage = nr_stage
         self._areas = []
         self._stage_ops = []
         self._unstage_ops = []
+        # self._size_ops = []
 
     def _setup(self, inputs):
         self._input.setup(inputs)
-        self._setup_staging_areas()
 
     def _get_callbacks(self):
         cbs = self._input.get_callbacks()
 
         cbs.append(
-            StagingInput.StagingCallback(
-                self._get_stage_op(), self._get_unstage_op(), self._nr_stage))
+            StagingInput.StagingCallback(self, self._nr_stage))
         return cbs
-
-    def _setup_staging_areas(self):
-        logger.info("Setting up StagingArea for GPU prefetching ...")
-        with self.cached_name_scope():
-            for idx, device in enumerate(self._devices):
-                with tf.device(device):
-                    inputs = self._input.get_input_tensors()
-
-                    # Putting variables to stagingarea will cause trouble
-                    dtypes = []
-                    for idx in range(len(inputs)):
-                        dtype = inputs[idx].dtype
-                        if dtype.base_dtype != dtype:     # is reference type
-                            inputs[idx] = tf.identity(inputs[idx])
-                        dtypes.append(dtype.base_dtype)
-
-                    stage = StagingArea(dtypes, shapes=None)
-                    self._stage_ops.append(stage.put(inputs))
-                    self._areas.append(stage)
-                    outputs = stage.get()
-                    if isinstance(outputs, tf.Tensor):  # when size=1, TF doesn't return a list
-                        outputs = [outputs]
-                    for vin, vout in zip(inputs, outputs):
-                        vout.set_shape(vin.get_shape())
-                    self._unstage_ops.append(outputs)
 
     def _size(self):
         return self._input.size()
 
     def _get_input_tensors(self):
-        ctx = get_current_tower_context()
-        ret = self._unstage_ops[ctx.index]
-        return ret
+        with self.cached_name_scope():
+            inputs = self._input.get_input_tensors()
+
+            # Putting variables to stagingarea will cause trouble
+            dtypes = []
+            for idx in range(len(inputs)):
+                dtype = inputs[idx].dtype
+                if dtype.base_dtype != dtype:     # is reference type
+                    inputs[idx] = tf.identity(inputs[idx])
+                dtypes.append(dtype.base_dtype)
+
+            stage = StagingArea(dtypes, shapes=None)
+            self._stage_ops.append(stage.put(inputs))
+            self._areas.append(stage)
+            outputs = stage.get()
+            if isinstance(outputs, tf.Tensor):  # when size=1, TF doesn't return a list
+                outputs = [outputs]
+            for vin, vout in zip(inputs, outputs):
+                vout.set_shape(vin.get_shape())
+            self._unstage_ops.append(outputs)
+            # self._size_ops.append(stage.size())
+            return outputs
 
     def _get_stage_op(self):
         with self.cached_name_scope():
@@ -576,6 +569,18 @@ class StagingInput(FeedfreeInput):
         with self.cached_name_scope():
             all_outputs = list(chain.from_iterable(self._unstage_ops))
             return tf.group(*all_outputs)
+
+    # for debugging only
+    def _create_ema_callback(self):
+        def create_ema_op():
+            with self.cached_name_scope():
+                avg_size = tf.truediv(tf.add_n(self._size_ops), len(self._size_ops), name='avg_stagingarea_size')
+                return add_moving_summary(avg_size, collection=None)[0].op
+        return RunOp(
+            create_ema_op,
+            run_before=False,
+            run_as_trigger=False,
+            run_step=True)
 
 
 StagingInputWrapper = StagingInput
