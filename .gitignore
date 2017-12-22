@@ -14,7 +14,7 @@ checkpoint
 *.json
 *.prototxt
 
-*.txt
+#*.txt
 *.tgz
 *.gz
 
