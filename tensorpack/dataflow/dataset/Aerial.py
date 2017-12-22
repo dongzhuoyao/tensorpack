@@ -16,7 +16,7 @@ class Aerial(RNGDataFlow):
     def __init__(self, meta_dir, name,
                  shuffle=None, dir_structure=None):
 
-        assert name in ['train', 'val'], name
+        assert name in ['train', 'val','test'], name
         assert os.path.isdir(meta_dir), meta_dir
         self.reset_state()
         self.name = name
@@ -28,12 +28,19 @@ class Aerial(RNGDataFlow):
 
         if name == 'train':
             f = open(os.path.join(meta_dir,"train.txt"),"r")
-        else:
+        elif name == 'val':
             f = open(os.path.join(meta_dir, "val.txt"), "r")
+        else:
+            f = open(os.path.join(meta_dir, "test.txt"), "r")
 
-        for line in f.readlines():
-            self.imglist.append(line.strip("\n").split(" "))
-        f.close()
+        if name == "train" or name == "val":
+            for line in f.readlines():
+                self.imglist.append(line.strip("\n").split(" "))
+            f.close()
+        else:
+            for line in f.readlines():
+                self.imglist.append(line.strip("\n"))
+            f.close()
 
         #self.imglist = self.imglist[:100]
 
@@ -44,13 +51,17 @@ class Aerial(RNGDataFlow):
         idxs = np.arange(len(self.imglist))
         if self.shuffle:
             self.rng.shuffle(idxs)
-        for k in idxs:
-            fname, flabel = self.imglist[k]
-            fname = cv2.imread(fname, cv2.IMREAD_COLOR)
-            flabel = cv2.imread(flabel, cv2.IMREAD_GRAYSCALE)
-            yield [fname, flabel]
-
-
+        if  self.name == "train" or self.name == "val":
+            for k in idxs:
+                fname, flabel = self.imglist[k]
+                fname = cv2.imread(fname, cv2.IMREAD_COLOR)
+                flabel = cv2.imread(flabel, cv2.IMREAD_GRAYSCALE)
+                yield [fname, flabel]
+        else:
+            for k in idxs:
+                fname = self.imglist[k]
+                fname = cv2.imread(fname, cv2.IMREAD_COLOR)
+                yield [fname]
 
 if __name__ == '__main__':
     pass

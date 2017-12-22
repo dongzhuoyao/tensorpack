@@ -259,6 +259,31 @@ def proceed_validation(args, is_save = True, is_densecrf = False):
     logger.info("accuracy: {}".format(stat.accuracy))
 
 
+def proceed_test(args,is_densecrf = False):
+    import cv2
+    ds = dataset.Aerial( args.meta_dir, "test")
+    ds = BatchData(ds, 1)
+
+    pred_config = PredictConfig(
+        model=Model(),
+        session_init=get_model_loader(args.load),
+        input_names=['image'],
+        output_names=['prob'])
+    predictor = OfflinePredictor(pred_config)
+
+    from tensorpack.utils.fs import mkdir_p
+    result_dir = "result"
+    mkdir_p(result_dir)
+    i = 0
+    logger.info("start validation....")
+    for image in tqdm(ds.get_data()):
+        image = np.squeeze(image)
+        prediction = predict_scaler(image, predictor, scales=[0.9, 1, 1.1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
+        prediction = np.argmax(prediction, axis=2)
+        cv2.imwrite(os.path.join(result_dir,"{}.png".format(i)), prediction)
+        i += 1
+
+
 
 
 
@@ -315,6 +340,8 @@ if __name__ == '__main__':
         run(args.load, args.run, args.output)
     elif args.validation:
         proceed_validation(args)
+    elif args.test:
+        proceed_test(args)
     else:
         config = get_config(args.meta_dir,args.batch_size)
         if args.load:
