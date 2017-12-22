@@ -300,7 +300,7 @@ class CalculateMIoU(Callback):
 
     def _trigger(self):
         global args
-        self.val_ds = get_data('val', args.meta_dir, args.batch_size)
+        self.val_ds = get_data('val', args.meta_dir, 1)
         self.val_ds.reset_state()
 
         self.stat = MIoUStatistics(self.nb_class)

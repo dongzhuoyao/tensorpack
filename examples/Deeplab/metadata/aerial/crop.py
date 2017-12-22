@@ -44,14 +44,14 @@ def split_and_generate_txt(imagepath, gtpath, train_data_ratio):
     #train.txt
     f = file("train.txt", "w+")
     for filename in train_pathDir:
-        child = os.path.join('%s%s %s%s\n' % (imagepath, filename, gtpath, filename))
+        child = os.path.join('{} {}\n' % (os.path.join(imagepath, filename), os.path.join(gtpath, filename)))
         f.write(child)
     f.close()
 
     # val.txt
     f = file("val.txt", "w+")
     for filename in val_pathDir:
-        child = os.path.join('%s%s %s%s\n' % (imagepath, filename, gtpath, filename))
+        child = os.path.join('{} {}\n' % (os.path.join(imagepath, filename), os.path.join(gtpath, filename)))
         f.write(child)
     f.close()
 
