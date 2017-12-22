@@ -32,7 +32,7 @@ from resnet_model import (
     resnet_backbone)
 
 
-CLASS_NUM = 21
+CLASS_NUM = 2
 CROP_SIZE = 512
 IGNORE_LABEL = 255
 
@@ -329,6 +329,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, default = 10, help='batch_size')
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     parser.add_argument('--validation', action='store_true', help='validate model on validation images')
+    parser.add_argument('--test', action='store_true', help='generate test result')
     args = parser.parse_args()
     if args.gpu:
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
