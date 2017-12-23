@@ -245,7 +245,7 @@ def proceed_validation(args, is_save = True, is_densecrf = False):
     for image, label in tqdm(ds.get_data()):
         label = np.squeeze(label)
         image = np.squeeze(image)
-        prediction = predict_scaler(image, predictor, scales=[0.9, 1, 1.1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
+        prediction = predict_scaler(image, predictor, scales=[1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
         prediction = np.argmax(prediction, axis=2)
         stat.feed(prediction, label)
 
@@ -321,7 +321,7 @@ class CalculateMIoU(Callback):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="5", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="4", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--meta_dir', default="../metadata/aerial", help='meta dir')
     parser.add_argument('--load', default="../resnet101.npz", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')

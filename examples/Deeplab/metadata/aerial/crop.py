@@ -2,38 +2,43 @@
 import os
 import cv2,os
 from tqdm import tqdm
-
+import numpy as np
 # cropRGBImage
 def cropImage(filepath, outputpath, split_num):
     print "start crop images."
     pathDir = os.listdir(filepath)
     for filename in tqdm(pathDir):
         print filename
-        child = os.path.join('%s%s' % (filepath, filename))
+        child = os.path.join(filepath, filename)
         im = cv2.imread(child)
         lx,ly,lz = im.shape
         for i in range(0,split_num):
             for j in range(0,split_num):
                 crop_im = im[i*lx/split_num:(i+1)*lx/split_num, j*ly/split_num:(j+1)*ly/split_num, :]
-                a = os.path.basename(filename).strip(".jpg")
-                cv2.imwrite(os.path.join(outputpath,"{}_patch{}_{}.jpg".format(a,i,j)), crop_im)
+                a = os.path.basename(filename).strip(".tif")
+                cv2.imwrite(os.path.join(outputpath,"{}_patch{}_{}.tif".format(a,i,j)), crop_im)
 
 # cropBWImage
 def cropBW(filepath, outputpath, split_num):
     print "start crop gt."
     pathDir = os.listdir(filepath)
     for filename in tqdm(pathDir):
-        print filename
-        child = os.path.join('%s%s' % (filepath, filename))
-        im = cv2.imread(child)
-        lx,ly,_ = im.shape
-        for i in range(0,split_num):
-            for j in range(0,split_num):
-                crop_im = im[i*lx/split_num:(i+1)*lx/split_num, j*ly/split_num:(j+1)*ly/split_num]
-                crop_im = crop_im/255
-                crop_im = crop_im[:,:,0]
-                a = os.path.basename(filename).strip(".jpg")
-                cv2.imwrite(os.path.join(outputpath, "{}_patch{}_{}.jpg".format(a, i, j)), crop_im)
+        #if "yrol-w7" in filename:
+            print filename
+            child = os.path.join(filepath, filename)
+            im = cv2.imread(child,0)
+            lx,ly = im.shape
+            for i in range(0,split_num):
+                for j in range(0,split_num):
+                    crop_im = im[i*lx/split_num:(i+1)*lx/split_num, j*ly/split_num:(j+1)*ly/split_num].astype(np.uint8)
+                    crop_im = crop_im/255
+                    #crop_im = crop_im[:,:,0]
+
+                    print np.unique(crop_im)
+                    a = os.path.basename(filename).strip(".tif")
+                    cv2.imwrite(os.path.join(outputpath, "{}_patch{}_{}.tif".format(a, i, j)), crop_im)
+                    tmp = cv2.imread(os.path.join(outputpath, "{}_patch{}_{}.tif".format(a, i, j)),0)
+                    print np.unique(tmp)
 
 
 def split_and_generate_txt(imagepath, gtpath, train_data_ratio):
@@ -44,25 +49,25 @@ def split_and_generate_txt(imagepath, gtpath, train_data_ratio):
     #train.txt
     f = file("train.txt", "w+")
     for filename in train_pathDir:
-        child = os.path.join('{} {}\n' % (os.path.join(imagepath, filename), os.path.join(gtpath, filename)))
+        child = os.path.join('{} {}\n'.format(os.path.join(imagepath, filename), os.path.join(gtpath, filename)))
         f.write(child)
     f.close()
 
     # val.txt
     f = file("val.txt", "w+")
     for filename in val_pathDir:
-        child = os.path.join('{} {}\n' % (os.path.join(imagepath, filename), os.path.join(gtpath, filename)))
+        child = os.path.join('{} {}\n'.format(os.path.join(imagepath, filename), os.path.join(gtpath, filename)))
         f.write(child)
     f.close()
 
 
 def generate_test():
-    testPath = "/data1/dataset/jpg_aerial/test/images"
+    testPath = "/data1/dataset/AerialImageDataset/test/images"
     targetPath = "/data1/dataset/jpg_aerial/final/test/"
 
     f = open("test.txt","w")
     import shutil
-    shutil.rmtree(targetPath)
+    #shutil.rmtree(targetPath)
     os.makedirs(targetPath)
     ll = os.listdir(testPath)
     for filename in tqdm(ll):
@@ -73,23 +78,27 @@ def generate_test():
     f.close()
 
 def generate_train():
-    imagePath = "/data1/dataset/jpg_aerial/train/images/"
-    gtPath = "/data1/dataset/jpg_aerial/train/gt/"
+    imagePath = "/data1/dataset/AerialImageDataset/train/images"
+    gtPath = "/data1/dataset/AerialImageDataset/train/gt"
 
     outputPath = "/data1/dataset/jpg_aerial/final"
-    """
+    target_image_path = os.path.join(outputPath, "images")
+    target_gt_path = os.path.join(outputPath, "gt")
+
+
     import shutil
     shutil.rmtree(outputPath)
-    os.makedirs(os.path.join(outputPath, "images"))
-    os.makedirs(os.path.join(outputPath, "gt"))
+    os.makedirs(target_image_path)
+    os.makedirs(target_gt_path)
 
     # crop
     split_num = 5;  # how many patch in a row/column
-    cropBW(gtPath, os.path.join(outputPath, "gt"), split_num)
-    cropImage(imagePath, os.path.join(outputPath, "images"), split_num)
-    """
+    cropBW(gtPath, target_gt_path, split_num)
+    cropImage(imagePath, target_image_path, split_num)
+
+
     # writeTxt
-    split_and_generate_txt(os.path.join(outputPath, "images"), os.path.join(outputPath, "gt"), train_data_ratio=0.9)
+    split_and_generate_txt(target_image_path, target_gt_path, train_data_ratio=0.9)
 
 
 if __name__ == '__main__':
