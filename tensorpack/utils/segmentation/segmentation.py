@@ -9,7 +9,7 @@ import cv2,colorsys
 import matplotlib.pyplot as plt
 #import pydensecrf.densecrf as dcrf
 import os, sys
-from ...utils import logger
+#from ...utils import logger
 
 #sys.path.append( os.path.normpath( os.path.join( os.path.dirname( __file__ ) , 'build/lib.linux-x86_64-2.7/tensorpack/utils/segmentation' ) ) )
 
@@ -43,11 +43,11 @@ if CSUPPORT:
 
 CSUPPORT = False #force false
 
-if not CSUPPORT:
-    logger.warn("confusion matrix c extension not found, this calculation will be very slow")
+#if not CSUPPORT:
+#    logger.warn("confusion matrix c extension not found, this calculation will be very slow")
 
 
-def update_confusion_matrix(pred, label, conf_m, nb_classes, ignore = 255):
+def oupdate_confusion_matrix(pred, label, conf_m, nb_classes, ignore = 255):
 
         ignore_index = label != ignore
         seg_gt = label[ignore_index].astype('int32')
@@ -58,13 +58,13 @@ def update_confusion_matrix(pred, label, conf_m, nb_classes, ignore = 255):
             for i_pred_label in range(nb_classes):
                 cur_index = i_label * nb_classes + i_pred_label
                 if cur_index < len(label_count):
-                    conf_m[i_label, i_pred_label] = +label_count[cur_index] #notice here, first dimension is label,second dimension is prediction.
+                    conf_m[i_label, i_pred_label] += label_count[cur_index] #notice here, first dimension is label,second dimension is prediction.
 
         return conf_m
 
 
 
-def ooo_update_confusion_matrix(pred, label, conf_m, nb_classes, ignore = 255):
+def update_confusion_matrix(pred, label, conf_m, nb_classes, ignore = 255):
     if (CSUPPORT):
         # using cython
         conf_m = fastUpdateConfusionMatrix.fastUpdateConfusionMatrix(pred.astype(np.uint16), label.astype(np.uint16), conf_m, nb_classes, ignore)
@@ -269,6 +269,13 @@ def edge_predict_scaler(full_image, edge, predictor, scales, classes, tile_size,
     #    full_probs = dense_crf(full_probs)
     return full_probs
 
+
+if __name__ == '__main__':
+    label = np.array([1,1,1,0,0,0,0])
+    pred = np.array([0,0,0,0,0,0,0])
+    cm = np.array([[0,0],[0,0]])
+    cm = update_confusion_matrix(pred,label,cm,2)
+    pass
 
 
 

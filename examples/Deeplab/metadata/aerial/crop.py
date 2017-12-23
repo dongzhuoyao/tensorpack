@@ -85,8 +85,9 @@ def preprocess(train_data_ratio=0.9):
         # copy image
         copyfile(os.path.join(src_train_imagepath, filename), os.path.join(dst_val_image, filename))
         # copy gt
-        copyfile(os.path.join(src_train_gtpath, filename), os.path.join(dst_val_gt, filename))
-
+        img_gt = cv2.imread(os.path.join(src_train_gtpath, filename),0)
+        img_gt = img_gt/255
+        cv2.imwrite(os.path.join(dst_val_gt, filename),img_gt)
         child = os.path.join('{} {}\n'.format(os.path.join(dst_val_image, filename),
                              os.path.join(dst_val_gt, filename)))
         f.write(child)
