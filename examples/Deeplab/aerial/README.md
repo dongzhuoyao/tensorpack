@@ -10,7 +10,7 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8) | 81.32,81.37,81.
 
 
 ### two mIoU evaluation method
-
+Method | Val mIoU
 ------------ | -------------
 from DCN | 81.45
 from myself | 87.24
