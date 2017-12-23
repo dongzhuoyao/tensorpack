@@ -5,7 +5,7 @@
 
 Arch | Val mIoU
 ------------ | -------------
-Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8) | 81.32,81.37,81.99,81.45%
+Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8) | 80.82, 81.32,81.37,81.99,81.45%
 
 
 
