@@ -60,9 +60,9 @@ class Aerial(RNGDataFlow):
         else:
             for k in idxs:
                 fpath = self.imglist[k]
-                fname = os.path.basename(fpath).strip(".tiff")
+                fname = os.path.basename(fpath).strip(".tif")
                 fpath = cv2.imread(fpath, cv2.IMREAD_COLOR)
-                yield [fpath,fname]
+                yield [fpath]
 
 if __name__ == '__main__':
     pass

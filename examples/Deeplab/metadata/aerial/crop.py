@@ -62,19 +62,16 @@ def split_and_generate_txt(imagepath, gtpath, train_data_ratio):
 
 
 def generate_test():
-    testPath = "/data1/dataset/AerialImageDataset/test/images"
     targetPath = "/data1/dataset/jpg_aerial/final/test/"
 
     f = open("test.txt","w")
     import shutil
     #shutil.rmtree(targetPath)
-    os.makedirs(targetPath)
-    ll = os.listdir(testPath)
+    #os.makedirs(targetPath)
+    ll = os.listdir(targetPath)
     for filename in tqdm(ll):
-        img = cv2.imread(os.path.join(testPath,filename))
-        true_name = filename.strip("_tif2jpg.jpg")
-        cv2.imwrite(os.path.join(targetPath, "{}.jpg".format(true_name)),img)
-        f.write(os.path.join(targetPath, "{}.jpg\n".format(true_name)))
+        pat = os.path.join(targetPath,filename)
+        f.write("{}\n".format(pat))
     f.close()
 
 def generate_train():
@@ -103,5 +100,5 @@ def generate_train():
 
 if __name__ == '__main__':
 
-    #generate_test()
-    generate_train()
+    generate_test()
+    #generate_train()
