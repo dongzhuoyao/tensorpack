@@ -9,7 +9,7 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8) | 80.82, 81.32,81
 
 
 
-### two mIoU evaluation method
+### two mIoU evaluation method comparision
 Method | Val mIoU
 ------------ | -------------
 from DCN | 81.45
@@ -17,7 +17,7 @@ from myself | 87.24
 
 
 
-### How Multi scale Fusion influence the result
+### How Multi scale Fusion influence the result?
 
 Arch | Val mIoU
 ------------ | -------------
