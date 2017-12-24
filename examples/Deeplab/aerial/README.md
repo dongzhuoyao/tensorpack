@@ -1,19 +1,14 @@
 
+# Experiment on [https://project.inria.fr/aerialimagelabeling/](https://project.inria.fr/aerialimagelabeling/)
 
+
+uploaded model on val result: 87.25%
 
 ### models
 
 Arch | Val mIoU
 ------------ | -------------
-Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8) | (pointwise-evalution)80.82, 81.32,81.37,81.99,81.45%
-
-
-
-### two mIoU evaluation method comparision
-Method | Val mIoU
------------- | -------------
-from DCN(classwise-evaluation) | 81.45
-from myself(pointwise-evaluation) | 87.24
+Deeplabv2-resnet101(no multi-branch,no ASPP,no MSF,1GPU,bs10) | 87.17%,acc:95.58
 
 
 
@@ -21,6 +16,7 @@ from myself(pointwise-evaluation) | 87.24
 
 Arch | Val mIoU
 ------------ | -------------
-(0.9,1,1.1) | 81.45
-1           | 81.9
+(0.8,0.9,1,1.1,1.2) | 88.27,acc:96.02
+(0.9,1,1.1) | 88.1,acc: 95.95
+1           | 87.1,acc:95.58
 
