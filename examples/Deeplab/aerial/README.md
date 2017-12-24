@@ -8,7 +8,7 @@ uploaded model on val result: 87.25%
 
 Arch | Val mIoU
 ------------ | -------------
-Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8) | 87.17%
+Deeplabv2-resnet101(no multi-branch,no ASPP,no MSF,1GPU,bs10) | 87.17%
 
 
 
