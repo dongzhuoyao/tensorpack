@@ -14,7 +14,7 @@ os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
 from tensorpack import *
 from tensorpack.dataflow import dataset
 from tensorpack.utils.gpu import get_nr_gpu
-from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler
+from tensorpack.utils.segmentation.segmentation import imwrite_grid, visualize_label, predict_scaler
 from tensorpack.utils.stats import MIoUStatistics
 from tensorpack.utils import logger
 from tensorpack.dataflow.imgaug.misc import RandomCropWithPadding
@@ -238,7 +238,9 @@ def proceed_validation(args, is_save = True, is_densecrf = False):
         input_names=['image'],
         output_names=['prob'])
     predictor = OfflinePredictor(pred_config)
-
+    from tensorpack.utils.fs import mkdir_p
+    result_dir = "result/validation_grid5"
+    mkdir_p(result_dir)
     i = 0
     stat = MIoUStatistics(CLASS_NUM)
     logger.info("start validation....")
@@ -250,8 +252,7 @@ def proceed_validation(args, is_save = True, is_densecrf = False):
         stat.feed(prediction, label)
 
         if is_save:
-            cv2.imwrite("result/{}.png".format(i), np.concatenate((image, visualize_label(label), visualize_label(prediction)), axis=1))
-
+            imwrite_grid(image,label,prediction, grid_num=5, prefix_dir=result_dir, imageId = i)
         i += 1
 
     logger.info("mIoU: {}".format(stat.mIoU))
