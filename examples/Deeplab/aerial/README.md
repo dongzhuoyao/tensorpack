@@ -1,5 +1,6 @@
 
 
+uploaded model on val result: 87.25%
 
 ### models
 
