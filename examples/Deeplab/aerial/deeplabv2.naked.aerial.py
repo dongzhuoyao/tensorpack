@@ -227,7 +227,7 @@ def run(model_path, image_path, output):
         pred = outputs[5][0]
         cv2.imwrite(output, pred * 255)
 
-def proceed_validation(args, is_save = True, is_densecrf = False):
+def proceed_validation(args, is_save = False, is_densecrf = False):
     import cv2
     ds = dataset.Aerial( args.meta_dir, "val")
     ds = BatchData(ds, 1)
