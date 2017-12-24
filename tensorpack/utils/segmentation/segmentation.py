@@ -47,7 +47,7 @@ CSUPPORT = False #force false
 #    logger.warn("confusion matrix c extension not found, this calculation will be very slow")
 
 
-def oupdate_confusion_matrix(pred, label, conf_m, nb_classes, ignore = 255):
+def update_confusion_matrix(pred, label, conf_m, nb_classes, ignore = 255):
 
         ignore_index = label != ignore
         seg_gt = label[ignore_index].astype('int32')
@@ -59,28 +59,6 @@ def oupdate_confusion_matrix(pred, label, conf_m, nb_classes, ignore = 255):
                 cur_index = i_label * nb_classes + i_pred_label
                 if cur_index < len(label_count):
                     conf_m[i_label, i_pred_label] += label_count[cur_index] #notice here, first dimension is label,second dimension is prediction.
-
-        return conf_m
-
-
-
-def update_confusion_matrix(pred, label, conf_m, nb_classes, ignore = 255):
-    if (CSUPPORT):
-        # using cython
-        conf_m = fastUpdateConfusionMatrix.fastUpdateConfusionMatrix(pred.astype(np.uint16), label.astype(np.uint16), conf_m, nb_classes, ignore)
-        return conf_m
-
-    else:
-        flat_pred = np.ravel(pred)
-        flat_label = np.ravel(label)
-
-        for p, l in zip(flat_pred, flat_label):
-            if l == ignore:
-                continue
-            if l < nb_classes and p < nb_classes:
-                conf_m[l, p] += 1
-            else:
-                raise
         return conf_m
 
 
