@@ -215,7 +215,7 @@ def run(model_path, image_path, output):
         cv2.imwrite(output, pred * 255)
 
 
-def proceed_validation(args, is_save = False, is_densecrf = False):
+def proceed_validation(args, is_save=True, is_densecrf=False):
     import cv2
     name = "val"
     ds = dataset.Aerial(args.meta_dir, name )
@@ -227,7 +227,6 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
         input_names=['image'],
         output_names=['output' + str(k) for k in range(1, 7)])
     predictor = OfflinePredictor(pred_config)
-
 
     from tensorpack.utils.fs import mkdir_p
     result_dir = os.path.join("validation_result_in_{}".format(name))

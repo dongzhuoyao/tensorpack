@@ -4,12 +4,11 @@
 
 import tensorflow as tf
 from tensorflow.contrib.layers import variance_scaling_initializer
-import numpy as np
+
 
 from tensorpack.tfutils.argscope import argscope, get_arg_scope
-from tensorpack.models import (
-    Conv2D, GlobalAvgPooling, BatchNorm, BNReLU, FullyConnected,
-    LinearWrap, AtrousConv2D, MaxPooling, Conv2DFixed)
+from tensorpack.models import (Conv2D, GlobalAvgPooling, BatchNorm, BNReLU, FullyConnected,
+    LinearWrap, AtrousConv2D, MaxPooling)
 
 
 def resnet_shortcut(l, n_out, stride, nl=tf.identity):
@@ -121,46 +120,32 @@ def resnet_group(l, name, block_func, features, count, stride, dilation, stride_
                 l = tf.nn.relu(l)
     return l
 
+def edge_conv(l,name,filter_shape):
+    W_init = tf.contrib.layers.variance_scaling_initializer()
+    W1 = tf.get_variable('{}_W1'.format(name), filter_shape, initializer=W_init)
+    W1_mask = tf.Constant([[1,1,1],[0,0,0],[1,1,1]])
+    W1 = W1*W1_mask
+    W2 = tf.get_variable('{}_W2'.format(name), filter_shape, initializer=W_init)
+    W2_mask = tf.Constant([[1, 0, 1], [1, 0, 1], [1, 0, 1]])
+    W2 = W2 * W2_mask
+
+    conv1 = tf.nn.conv2d(l,W1,strides=[1,1,1,1],padding="SAME")
+    conv2 = tf.nn.conv2d(l,W2,strides=[1,1,1,1],padding="SAME")
+
+    l = tf.sqrt(conv1*conv1 + conv2*conv2)+l
+    return l
 
 def resnet_backbone(image, num_blocks, group_func, block_func,  label, edge, class_num, ASPP = False):
     with argscope(Conv2D, nl=tf.identity, use_bias=False,
                   W_init=variance_scaling_initializer(mode='FAN_OUT')):
-
-        edge = tf.expand_dims(edge, axis=-1)
-
         l = Conv2D('conv0', image,  64, 7, stride=2, nl=BNReLU)
         l = MaxPooling('pool0', l,  shape=3, stride=2, padding='SAME')
         l = group_func(l, 'group0', block_func, 64, num_blocks[0], 1, dilation=1, stride_first=False)
-
-        np_sobel_x = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]],dtype=np.float32)
-        np_sobel_y = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]],dtype=np.float32)
-        scale_init = tf.constant_initializer(1)
-        current_edge = l
-        scale = tf.get_variable('edge_scale_group0', [1, 1, 1, 256], initializer=scale_init)
-        current_edge_x = Conv2DFixed("edge_x_conv_group0",current_edge, 256, W_constant=tf.constant(value=np.broadcast_to( np.resize(np_sobel_x,(3,3,1,1)),(3,3,1,256))))
-        current_edge_y = Conv2DFixed("edge_y_conv_group0", current_edge, 256, W_constant=tf.constant(value=np.broadcast_to( np.resize(np_sobel_y,(3,3,1,1)),(3,3,1,256))))
-        l = current_edge + scale*tf.sqrt(current_edge_x*current_edge_x + current_edge_y*current_edge_y)
-
+        l = edge_conv(l,name="edge_conv0")
         l = group_func(l, 'group1', block_func, 128, num_blocks[1], 2, dilation=1, stride_first=True)
-
-        """
-        current_edge = l
-        scale = tf.get_variable('edge_scale_group1', [1, 1, 1, 512], initializer=scale_init)
-        current_edge_x = Conv2DFixed("edge_conv_group1", current_edge, 512, W_constant=tf.constant(value=np.broadcast_to( np.resize(np_sobel_x,(3,3,1,1)),(3,3,1,512))))
-        current_edge_y = Conv2DFixed("edge_conv_group1", current_edge, 512, W_constant=tf.constant(value=np.broadcast_to( np.resize(np_sobel_y,(3,3,1,1)),(3,3,1,512))))
-        l = current_edge + scale * tf.sqrt(current_edge_x * current_edge_x + current_edge_y * current_edge_y)
-        """
-
+        l = edge_conv(l, name="edge_conv1")
         l = group_func(l, 'group2', block_func, 256, num_blocks[2], 2, dilation=2, stride_first=True)
-
-        """
-        current_edge = l
-        scale = tf.get_variable('edge_scale_group2', [1, 1, 1, 1024], initializer=scale_init)
-        current_edge_x = Conv2DFixed("edge_conv_group2", current_edge, 1024, W_constant=tf.constant(value=np.broadcast_to( np.resize(np_sobel_x,(3,3,1,1)),(3,3,1,1024))))
-        current_edge_y = Conv2DFixed("edge_conv_group2", current_edge, 1024, W_constant=tf.constant(value=np.broadcast_to( np.resize(np_sobel_y,(3,3,1,1)),(3,3,1,1024))))
-        l = current_edge + scale * tf.sqrt(current_edge_x * current_edge_x + current_edge_y * current_edge_y)
-        """
-
+        l = edge_conv(l, name="edge_conv2")
         resnet_head = group_func(l, 'group3', block_func, 512, num_blocks[3], 1, dilation=4, stride_first=False)
 
     def aspp_branch(input, rate):

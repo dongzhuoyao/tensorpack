@@ -140,7 +140,7 @@ def resnet_backbone(image, num_blocks, group_func, block_func,  label, edge, cla
         scale = tf.get_variable('edge_scale_group0', [1, 1, 1, 256], initializer=scale_init)
         current_edge_x = Conv2DFixed("edge_conv_group0",current_edge, 256, W_constant=tf.constant(value=np.broadcast_to( np.resize(np_sobel_x,(3,3,1,1)),(3,3,1,256))))
         current_edge_y = Conv2DFixed("edge_conv_group0", current_edge, 256, W_constant=tf.constant(value=np.broadcast_to( np.resize(np_sobel_y,(3,3,1,1)),(3,3,1,256))))
-        l = current_edge + scale*tf.square(current_edge_x*current_edge_x + current_edge_y*current_edge_y)
+        l = current_edge + scale*tf.sqrt(current_edge_x*current_edge_x + current_edge_y*current_edge_y)
         """
         l = group_func(l, 'group1', block_func, 128, num_blocks[1], 2, dilation=1, stride_first=True)
 
@@ -149,7 +149,7 @@ def resnet_backbone(image, num_blocks, group_func, block_func,  label, edge, cla
         scale = tf.get_variable('edge_scale_group1', [1, 1, 1, 512], initializer=scale_init)
         current_edge_x = Conv2DFixed("edge_conv_group1", current_edge, 512, W_constant=tf.constant(value=np.broadcast_to( np.resize(np_sobel_x,(3,3,1,1)),(3,3,1,512))))
         current_edge_y = Conv2DFixed("edge_conv_group1", current_edge, 512, W_constant=tf.constant(value=np.broadcast_to( np.resize(np_sobel_y,(3,3,1,1)),(3,3,1,512))))
-        l = current_edge + scale * tf.square(current_edge_x * current_edge_x + current_edge_y * current_edge_y)
+        l = current_edge + scale * tf.sqrt(current_edge_x * current_edge_x + current_edge_y * current_edge_y)
         """
 
         l = group_func(l, 'group2', block_func, 256, num_blocks[2], 2, dilation=2, stride_first=True)
@@ -159,7 +159,7 @@ def resnet_backbone(image, num_blocks, group_func, block_func,  label, edge, cla
         scale = tf.get_variable('edge_scale_group2', [1, 1, 1, 1024], initializer=scale_init)
         current_edge_x = Conv2DFixed("edge_conv_group2", current_edge, 1024, W_constant=tf.constant(value=np.broadcast_to( np.resize(np_sobel_x,(3,3,1,1)),(3,3,1,1024))))
         current_edge_y = Conv2DFixed("edge_conv_group2", current_edge, 1024, W_constant=tf.constant(value=np.broadcast_to( np.resize(np_sobel_y,(3,3,1,1)),(3,3,1,1024))))
-        l = current_edge + scale * tf.square(current_edge_x * current_edge_x + current_edge_y * current_edge_y)
+        l = current_edge + scale * tf.sqrt(current_edge_x * current_edge_x + current_edge_y * current_edge_y)
 
 
         resnet_head = group_func(l, 'group3', block_func, 512, num_blocks[3], 1, dilation=4, stride_first=False)
