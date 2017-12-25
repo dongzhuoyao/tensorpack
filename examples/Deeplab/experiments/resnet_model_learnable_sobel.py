@@ -123,10 +123,13 @@ def resnet_group(l, name, block_func, features, count, stride, dilation, stride_
 def edge_conv(l,name,filter_shape):
     W_init = tf.contrib.layers.variance_scaling_initializer()
     W1 = tf.get_variable('{}_W1'.format(name), filter_shape, initializer=W_init)
-    W1_mask = tf.Constant([[1,1,1],[0,0,0],[1,1,1]])
+    W1_mask = tf.constant([[1,1,1],[0,0,0],[1,1,1]],dtype=tf.float32)
+    W1_mask = tf.reshape(W1_mask,[3,3,1,1])
     W1 = W1*W1_mask
+
     W2 = tf.get_variable('{}_W2'.format(name), filter_shape, initializer=W_init)
-    W2_mask = tf.Constant([[1, 0, 1], [1, 0, 1], [1, 0, 1]])
+    W2_mask = tf.constant([[1, 0, 1], [1, 0, 1], [1, 0, 1]],dtype=tf.float32)
+    W2_mask = tf.reshape(W2_mask, [3, 3, 1, 1])
     W2 = W2 * W2_mask
 
     conv1 = tf.nn.conv2d(l,W1,strides=[1,1,1,1],padding="SAME")
@@ -141,11 +144,11 @@ def resnet_backbone(image, num_blocks, group_func, block_func,  label, edge, cla
         l = Conv2D('conv0', image,  64, 7, stride=2, nl=BNReLU)
         l = MaxPooling('pool0', l,  shape=3, stride=2, padding='SAME')
         l = group_func(l, 'group0', block_func, 64, num_blocks[0], 1, dilation=1, stride_first=False)
-        l = edge_conv(l,name="edge_conv0")
+        l = edge_conv(l,name="edge_conv0",filter_shape=[3,3,256,256])
         l = group_func(l, 'group1', block_func, 128, num_blocks[1], 2, dilation=1, stride_first=True)
-        l = edge_conv(l, name="edge_conv1")
+        l = edge_conv(l, name="edge_conv1",filter_shape=[3,3,512,512])
         l = group_func(l, 'group2', block_func, 256, num_blocks[2], 2, dilation=2, stride_first=True)
-        l = edge_conv(l, name="edge_conv2")
+        l = edge_conv(l, name="edge_conv2",filter_shape=[3,3,1024,1024])
         resnet_head = group_func(l, 'group3', block_func, 512, num_blocks[3], 1, dilation=4, stride_first=False)
 
     def aspp_branch(input, rate):

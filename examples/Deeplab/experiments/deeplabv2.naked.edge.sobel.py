@@ -23,6 +23,7 @@ from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 import tensorpack.tfutils.symbolic_functions as symbf
 from tqdm import tqdm
 
+from tensorflow.python import debug as tf_debugtens
 
 from resnet_model_edge_sobel import (
     preresnet_group, preresnet_basicblock, preresnet_bottleneck,
@@ -159,7 +160,8 @@ def get_config(data_dir, meta_dir, batch_size):
             ScheduledHyperParamSetter('learning_rate', [(2, 1e-4), (4, 1e-5), (6, 8e-6)]),
             HumanHyperParamSetter('learning_rate'),
             PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=1),
-            ProgressBar(["cross_entropy_loss","cost","wd_cost"])#uncomment it to debug for every step
+            ProgressBar(["cross_entropy_loss","cost","wd_cost"]),#uncomment it to debug for every step
+            #HookToCallback(tf_debug.LocalCLIDebugHook())
         ],
         model=Model(),
         steps_per_epoch=steps_per_epoch,
@@ -263,10 +265,10 @@ class CalculateMIoU(Callback):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu', default="2", help='comma separated list of GPU(s) to use.')
-    parser.add_argument('--data_dir', default="/data_a/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012",
+    parser.add_argument('--data_dir', default="/data1/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012",
                         help='dataset dir')
-    parser.add_argument('--meta_dir', default="pascalvoc12", help='meta dir')
-    parser.add_argument('--load', default="resnet101.npz", help='load model')
+    parser.add_argument('--meta_dir', default="../metadata/pascalvoc12", help='meta dir')
+    parser.add_argument('--load', default="../resnet101.npz", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
     parser.add_argument('--batch_size', type=int, default = 8, help='batch_size')
