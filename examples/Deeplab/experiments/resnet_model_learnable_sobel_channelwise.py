@@ -154,8 +154,7 @@ def edge_conv(l, name, channel_num):
               for i, k in zip(inputs, kernels2)]
     conv2 = tf.concat(output, channel_axis)
 
-
-    l = tf.sqrt(conv1*conv1 + conv2*conv2) + l
+    l = conv1*conv1 + conv2*conv2 + l
     return l
 
 def resnet_backbone(image, num_blocks, group_func, block_func,  label, edge, class_num, ASPP = False):
