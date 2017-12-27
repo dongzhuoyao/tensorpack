@@ -1,7 +1,11 @@
 
 ## DeepLab
 
-more detailed results can be seen in [NOTE.md](NOTE.md)
+more experimental results on pascalVOC can be seen in [NOTE.md](NOTE.md)
+
+
+more experimental results on RemoteSense Images can be seen in [aerial/README.md](aerial/README.md)
+
 
 ### Result On Pasal VOC
 MSF on pascalvoc MSF all tild size: 321*321
