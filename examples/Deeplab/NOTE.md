@@ -17,12 +17,15 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8) | 69.3%
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,edge) | 69.49%
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,edgescale) | 69.66%
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,edge.conv3) | 69.00%
-Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,sobel.lr10) | 68.1%
-Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,sobel) | 67.4%
+Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,sobel.lr10) | 68.1%,68.7%
+Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,sobel) | 67.4%,69.6%
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,sobel-res234) | non-converge
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,sobellast) | 66.3%
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,sobel.head) | 50.2%
-Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,learnable_sobel),258MB | --
+Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,learnable_sobel),258MB | 70%
+Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,channelwise) | 69.9%
+Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,channelwise.lr10) | 70.3%
+
 
 ### Result On Pasal VOC
 MSF on pascalvoc MSF all tild size: 321*321
