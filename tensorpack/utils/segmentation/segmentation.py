@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 import os, sys
 #from ...utils import logger
 
-#sys.path.append( os.path.normpath( os.path.join( os.path.dirname( __file__ ) , 'build/lib.linux-x86_64-2.7/tensorpack/utils/segmentation' ) ) )
 
 __all__ = ['update_confusion_matrix', 'predict_slider']
 
@@ -29,22 +28,6 @@ label_colours = [(0,0,0)
 
 ignore_color = (255,255,255)
 fuzzy_color = (64,0,128)
-
-# C Support
-# Enable the cython support for faster evaluation
-# Only tested for Ubuntu 64bit OS
-CSUPPORT = True
-# Check if C-Support is available for better performance
-if CSUPPORT:
-    try:
-        import fastUpdateConfusionMatrix
-    except:
-        CSUPPORT = False
-
-CSUPPORT = False #force false
-
-#if not CSUPPORT:
-#    logger.warn("confusion matrix c extension not found, this calculation will be very slow")
 
 
 def update_confusion_matrix(pred, label, conf_m, nb_classes, ignore = 255):

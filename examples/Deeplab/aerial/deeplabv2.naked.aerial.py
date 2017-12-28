@@ -227,9 +227,10 @@ def run(model_path, image_path, output):
         pred = outputs[5][0]
         cv2.imwrite(output, pred * 255)
 
-def proceed_validation(args, is_save = False, is_densecrf = False):
+def proceed_validation(args, is_save = True, is_densecrf = False):
     import cv2
-    ds = dataset.Aerial( args.meta_dir, "val")
+    name = "ningbo_val"
+    ds = dataset.Aerial( args.meta_dir, name)
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
@@ -239,7 +240,8 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
         output_names=['prob'])
     predictor = OfflinePredictor(pred_config)
     from tensorpack.utils.fs import mkdir_p
-    result_dir = "result/validation_grid5"
+    #result_dir = "result/validation_grid5"
+    result_dir = "ningbo_validation"
     mkdir_p(result_dir)
     i = 0
     stat = MIoUStatistics(CLASS_NUM)
@@ -252,7 +254,9 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
         stat.feed(prediction, label)
 
         if is_save:
-            imwrite_grid(image,label,prediction, grid_num=5, prefix_dir=result_dir, imageId = i)
+            cv2.imwrite(os.path.join(result_dir,"{}.png".format(i)),
+                        np.concatenate((image, visualize_label(label), visualize_label(prediction)), axis=1))
+            #imwrite_grid(image,label,prediction, grid_num=5, prefix_dir=result_dir, imageId = i)
         i += 1
 
     logger.info("mIoU: {}".format(stat.mIoU))
@@ -335,7 +339,7 @@ class CalculateMIoU(Callback):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="4", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="2", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--meta_dir', default="../metadata/aerial", help='meta dir')
     parser.add_argument('--load', default="../resnet101.npz", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')

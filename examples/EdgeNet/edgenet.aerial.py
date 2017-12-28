@@ -229,35 +229,43 @@ def proceed_validation(args, is_save=True, is_densecrf=False):
     predictor = OfflinePredictor(pred_config)
 
     from tensorpack.utils.fs import mkdir_p
-    result_dir = os.path.join("validation_result_in_{}".format(name))
+    result_dir = os.path.join("aerial_validation_result512_lisan_in_{}".format(name))
     mkdir_p(result_dir)
 
     from tqdm import tqdm
     i =0
     def to_size(input):
-        input[input >= 0.50] = 1
-        input[input < 0.50] = 0
+        #input[input >= 0.50] = 1
+        #input[input < 0.50] = 0
         return np.dstack((input*255,input*255,input*255))
-    for image, label in tqdm(ds.get_data()):
+    for images, labels in tqdm(ds.get_data()):
         i += 1
-        #image = image[None, :, :, :].astype('float32')
-        outputs = predictor(image)
-        label = label[0]
-        label = label[:,:,None]
-        cv2.imwrite(os.path.join(result_dir,"out{}.png".format(i)),
-                    np.concatenate((image[0],
-                                    to_size(label),
-                                    to_size(outputs[0][0]),
-                                    to_size(outputs[1][0]),
-                                    to_size(outputs[2][0]),
-                                    to_size(outputs[3][0]),
-                                    to_size(outputs[4][0]),
-                                    to_size(outputs[5][0])),
-                                   axis=1))
+        border = 512
+        _,h,w,_ = images.shape
+        ii_max = h/border
+        jj_max = w/border
+        for ii in range(ii_max):
+            for jj in range(jj_max):
+                image = images[:,ii*border:(ii+1)*border, jj*border:(jj+1)*border,:]
+                label = labels[:,ii*border:(ii+1)*border, jj*border:(jj+1)*border]
+                #image = image[None, :, :, :].astype('float32')
+                outputs = predictor(image)
+                label = label[0]
+                label = label[:,:,None]
+                cv2.imwrite(os.path.join(result_dir,"out{}_patch{}_{}.png".format(i,ii,jj)),
+                            np.concatenate((image[0],
+                                            to_size(label),
+                                            to_size(outputs[0][0]),
+                                            to_size(outputs[1][0]),
+                                            to_size(outputs[2][0]),
+                                            to_size(outputs[3][0]),
+                                            to_size(outputs[4][0]),
+                                            to_size(outputs[5][0])),
+                                           axis=1))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="3", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="2", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--meta_dir', default="aerial", help='meta dir')
     parser.add_argument('--load', default="HED_pretrained_bsds.npy", help='load model')
     parser.add_argument('--class_num', type=int, default=2)
