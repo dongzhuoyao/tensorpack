@@ -25,6 +25,8 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,sobel.head) | 50.2
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,learnable_sobel),258MB | 70%
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,channelwise) | 69.9%
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,channelwise.lr10) | 70.3%
+Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,deeplabv2.naked.fpn) 165.41MB | 68.3%
+
 
 
 ### Result On Pasal VOC
