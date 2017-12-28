@@ -61,7 +61,7 @@ class Model(ModelDesc):
                 with argscope([Conv2D, MaxPooling, GlobalAvgPooling, BatchNorm], data_format="NHWC"):
                     return resnet_backbone(
                         image, num_blocks,
-                        preresnet_group if mode == 'preact' else resnet_group, block_func, ASPP = False)
+                        preresnet_group if mode == 'preact' else resnet_group, block_func, ASPP = True)
 
             return get_logits(image)
 
