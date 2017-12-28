@@ -59,28 +59,6 @@ def imwrite_grid(image,label,prediction,grid_num,prefix_dir, imageId):
                                         visualize_label(label[start_i:end_i,start_j:end_j]),
                                         visualize_label(prediction[start_i:end_i,start_j:end_j]*2)), axis=1))
 
-def overlap_mbk(a, b):
-    a1=np.argsort(a)
-    b1=np.argsort(b)
-    # use searchsorted:
-    sort_left_a=a[a1].searchsorted(b[b1], side='left')
-    sort_right_a=a[a1].searchsorted(b[b1], side='right')
-    #
-    sort_left_b=b[b1].searchsorted(a[a1], side='left')
-    sort_right_b=b[b1].searchsorted(a[a1], side='right')
-
-
-    # # which values are in b but not in a?
-    # inds_b=(sort_right_a-sort_left_a == 0).nonzero()[0]
-    # # which values are in b but not in a?
-    # inds_a=(sort_right_b-sort_left_b == 0).nonzero()[0]
-
-    # which values of b are also in a?
-    inds_b=(sort_right_a-sort_left_a > 0).nonzero()[0]
-    # which values of a are also in b?
-    inds_a=(sort_right_b-sort_left_b > 0).nonzero()[0]
-
-    return a1[inds_a], b1[inds_b]
 
 def pad_image(img, target_size):
     """Pad an image up to the target size."""
