@@ -249,7 +249,7 @@ def proceed_validation(args, is_save = True, is_densecrf = False):
     for image, label in tqdm(ds.get_data()):
         label = np.squeeze(label)
         image = np.squeeze(image)
-        prediction = predict_scaler(image, predictor, scales=[1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
+        prediction = predict_scaler(image, predictor, scales=[0.9,1,1.1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
         prediction = np.argmax(prediction, axis=2)
         stat.feed(prediction, label)
 
@@ -290,7 +290,7 @@ def proceed_test(args,is_densecrf = False):
         image = next(_itr)
         name = os.path.basename(imglist[i]).strip(".tif")
         image = np.squeeze(image)
-        prediction = predict_scaler(image, predictor, scales=[1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
+        prediction = predict_scaler(image, predictor, scales=[0.9,1,1.1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
         prediction = np.argmax(prediction, axis=2)
         prediction = prediction*255 # to 0-255
         file_path = os.path.join(result_dir,"{}.tif".format(name))
@@ -326,7 +326,7 @@ class CalculateMIoU(Callback):
         for image, label in tqdm(self.val_ds.get_data()):
             label = np.squeeze(label)
             image = np.squeeze(image)
-            prediction = predict_scaler(image, self.pred, scales=[1], classes=CLASS_NUM, tile_size=CROP_SIZE,
+            prediction = predict_scaler(image, self.pred, scales=[0.9,1,1.1], classes=CLASS_NUM, tile_size=CROP_SIZE,
                            is_densecrf=False)
             prediction = np.argmax(prediction, axis=2)
             self.stat.feed(prediction, label)
