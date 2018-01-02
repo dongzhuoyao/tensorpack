@@ -334,7 +334,7 @@ class CalculateMIoU(Callback):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="0,1,2,5", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="0,1,2,3", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--meta_dir', default="../metadata/aerial", help='meta dir')
     parser.add_argument('--load', default="../resnet101.npz", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
