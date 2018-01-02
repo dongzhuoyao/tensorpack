@@ -289,7 +289,7 @@ def proceed_test(args,is_densecrf = False):
         prediction = np.argmax(prediction, axis=2)
         prediction = prediction*255 # to 0-255
         file_path = os.path.join(result_dir,"{}.tiff".format(name))
-        compressed_file_path = os.path.join(result_dir, "compressed","{}.tiff".format(name))
+        compressed_file_path = os.path.join(result_dir, "compressed","{}.tif".format(name))
         cv2.imwrite(file_path, prediction)
         command = "gdal_translate --config GDAL_PAM_ENABLED NO -co COMPRESS=CCITTFAX4 -co NBITS=1 " + file_path + " " + compressed_file_path
         print command

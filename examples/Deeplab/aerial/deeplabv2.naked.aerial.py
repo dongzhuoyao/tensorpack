@@ -293,7 +293,7 @@ def proceed_test(args,is_densecrf = False):
         prediction = predict_scaler(image, predictor, scales=[1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
         prediction = np.argmax(prediction, axis=2)
         prediction = prediction*255 # to 0-255
-        file_path = os.path.join(result_dir,"{}.tiff".format(name))
+        file_path = os.path.join(result_dir,"{}.tif".format(name))
         compressed_file_path = os.path.join(result_dir, "compressed","{}.tiff".format(name))
         cv2.imwrite(file_path, prediction)
         command = "gdal_translate --config GDAL_PAM_ENABLED NO -co COMPRESS=CCITTFAX4 -co NBITS=1 " + file_path + " " + compressed_file_path
