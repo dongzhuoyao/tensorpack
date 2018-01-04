@@ -215,12 +215,12 @@ def add_moving_summary(*args, **kwargs):
     ctx = get_current_tower_context()
     # allow ctx to be none
     if ctx is not None and not ctx.is_main_training_tower:
-        return
+        return []
 
     if not isinstance(args[0], list):
         v = args
     else:
-        log_deprecated("Call add_moving_summary with positional args instead of a list!")
+        log_deprecated("Call add_moving_summary with positional args instead of a list!", eos="2018-02-28")
         v = args[0]
     for x in v:
         assert isinstance(x, tf.Tensor), x
@@ -231,6 +231,8 @@ def add_moving_summary(*args, **kwargs):
     ema_ops = []
     for c in v:
         name = re.sub('tower[0-9]+/', '', c.op.name)
+        # TODO colocate may affect distributed setting
+        # colocate variable with compute op implies that the variable should be local_vars
         with G.colocate_with(c), tf.name_scope(None):
             if not c.dtype.is_floating:
                 c = tf.cast(c, tf.float32)

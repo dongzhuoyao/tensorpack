@@ -3,6 +3,7 @@
 # Author: Yuxin Wu <ppwwyyxx@gmail.com>
 
 from __future__ import print_function
+import weakref
 import threading
 from contextlib import contextmanager
 import multiprocessing as mp
@@ -12,6 +13,7 @@ import errno
 import uuid
 import os
 import zmq
+import atexit
 
 from .base import DataFlow, ProxyDataFlow, DataFlowTerminated, DataFlowReentrantGuard
 from ..utils.concurrency import (ensure_proc_terminate,
@@ -49,6 +51,12 @@ def _get_pipe_name(name):
     return pipename
 
 
+def del_weakref(x):
+    o = x()
+    if o is not None:
+        o.__del__()
+
+
 @contextmanager
 def _zmq_catch_error(name):
     try:
@@ -82,8 +90,7 @@ class _MultiProcessZMQDataFlow(DataFlow):
         self._reset_done = True
 
         # __del__ not guranteed to get called at exit
-        import atexit
-        atexit.register(lambda x: x.__del__(), self)
+        atexit.register(del_weakref, weakref.ref(self))
 
         self._reset_once()  # build processes
 
@@ -97,9 +104,11 @@ class _MultiProcessZMQDataFlow(DataFlow):
         if not self._reset_done:
             return
         if not self.context.closed:
+            self.socket.close(0)
             self.context.destroy(0)
         for x in self._procs:
             x.terminate()
+            x.join(5)
         try:
             print("{} successfully cleaned-up.".format(type(self).__name__))
         except Exception:
@@ -239,6 +248,9 @@ class PrefetchDataZMQ(_MultiProcessZMQDataFlow):
             # sigint could still propagate here, e.g. when nested
             except KeyboardInterrupt:
                 pass
+            finally:
+                socket.close(0)
+                context.destroy(0)
 
     def __init__(self, ds, nr_proc=1, hwm=50):
         """

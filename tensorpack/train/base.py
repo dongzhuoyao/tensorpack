@@ -21,7 +21,7 @@ from ..callbacks.steps import MaintainStepCounter
 
 from .config import TrainConfig, DEFAULT_MONITORS, DEFAULT_CALLBACKS
 
-__all__ = ['StopTraining', 'TrainConfig', 'Trainer']
+__all__ = ['StopTraining', 'Trainer']
 
 
 class StopTraining(BaseException):
@@ -93,9 +93,11 @@ class Trainer(object):
     """ Base class for a trainer.
     """
 
-    _API_VERSION = 2
-
     is_chief = True
+    """
+    Whether this process is the chief worker in distributed training.
+    Certain callbacks will only be run by chief worker.
+    """
 
     def __init__(self, config=None):
         """

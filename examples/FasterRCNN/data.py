@@ -8,13 +8,13 @@ import copy
 
 from tensorpack.utils.argtools import memoized, log_once
 from tensorpack.dataflow import (
-    MapData, imgaug, TestDataSpeed,
+    imgaug, TestDataSpeed, PrefetchDataZMQ, MultiProcessMapData,
     MapDataComponent, DataFromList)
 # import tensorpack.utils.viz as tpviz
 
 from coco import COCODetection
 from utils.generate_anchors import generate_anchors
-from utils.box_ops import get_iou_callable
+from utils.np_box_ops import iou as np_iou
 from common import (
     DataFromListOfDict, CustomResize,
     box_to_point8, point8_to_box, segmentation_to_mask)
@@ -91,10 +91,9 @@ def get_anchor_labels(anchors, gt_boxes, crowd_boxes):
             curr_inds = np.where(labels == value)[0]
         return curr_inds
 
-    bbox_iou_float = get_iou_callable()
     NA, NB = len(anchors), len(gt_boxes)
     assert NB > 0  # empty images should have been filtered already
-    box_ious = bbox_iou_float(anchors, gt_boxes)  # NA x NB
+    box_ious = np_iou(anchors, gt_boxes)  # NA x NB
     ious_argmax_per_anchor = box_ious.argmax(axis=1)  # NA,
     ious_max_per_anchor = box_ious.max(axis=1)
     ious_max_per_gt = np.amax(box_ious, axis=0, keepdims=True)  # 1xNB
@@ -113,7 +112,7 @@ def get_anchor_labels(anchors, gt_boxes, crowd_boxes):
     if crowd_boxes.size > 0:
         cand_inds = np.where(anchor_labels >= 0)[0]
         cand_anchors = anchors[cand_inds]
-        ious = bbox_iou_float(cand_anchors, crowd_boxes)
+        ious = np_iou(cand_anchors, crowd_boxes)
         overlap_with_crowd = cand_inds[ious.max(axis=1) > config.CROWD_OVERLAP_THRES]
         anchor_labels[overlap_with_crowd] = -1
 
@@ -231,7 +230,6 @@ def get_train_dataflow(add_mask=False):
 
         ret = [im, fm_labels, fm_boxes, boxes, klass]
 
-        # masks
         if add_mask:
             # augmentation will modify the polys in-place
             segmentation = copy.deepcopy(img.get('segmentation', None))
@@ -253,8 +251,7 @@ def get_train_dataflow(add_mask=False):
             # tpviz.interactive_imshow(viz)
         return ret
 
-    ds = MapData(ds, preprocess)
-    # ds = PrefetchDataZMQ(ds, 1)
+    ds = MultiProcessMapData(ds, 3, preprocess)
     return ds
 
 
@@ -268,15 +265,15 @@ def get_eval_dataflow():
         assert im is not None, fname
         return im
     ds = MapDataComponent(ds, f, 0)
-    # ds = PrefetchDataZMQ(ds, 1)
+    ds = PrefetchDataZMQ(ds, 1)
     return ds
 
 
 if __name__ == '__main__':
-    config.BASEDIR = '/home/wyx/data/coco'
+    config.BASEDIR = '/private/home/yuxinwu/data/coco'
     config.TRAIN_DATASET = ['train2014']
     from tensorpack.dataflow import PrintData
-    ds = get_train_dataflow()
+    ds = get_train_dataflow(add_mask=config.MODE_MASK)
     ds = PrintData(ds, 100)
     TestDataSpeed(ds, 50000).start()
     ds.reset_state()

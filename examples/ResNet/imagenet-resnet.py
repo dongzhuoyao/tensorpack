@@ -30,6 +30,9 @@ class Model(ImageNetModel):
     def __init__(self, depth, data_format='NCHW', mode='resnet'):
         super(Model, self).__init__(data_format)
 
+        if mode == 'se':
+            assert depth >= 50
+
         self.mode = mode
         basicblock = preresnet_basicblock if mode == 'preact' else resnet_basicblock
         bottleneck = {
@@ -91,7 +94,7 @@ def get_config(model, fake=False):
         model=model,
         dataflow=dataset_train,
         callbacks=callbacks,
-        steps_per_epoch=5000,
+        steps_per_epoch=100 if args.fake else 5000,  # 5000 ~= 1.28M / TOTAL_BATCH_SIZE
         max_epoch=110,
         nr_tower=nr_tower
     )
@@ -115,17 +118,17 @@ if __name__ == '__main__':
     if args.gpu:
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 
-    if args.mode == 'se':
-        assert args.depth >= 50
-
     model = Model(args.depth, args.data_format, args.mode)
     if args.eval:
         batch = 128    # something that can run on one gpu
         ds = get_data('val', batch)
         eval_on_ILSVRC12(model, get_model_loader(args.load), ds)
     else:
-        logger.set_logger_dir(
-            os.path.join('train_log', 'imagenet-resnet-d' + str(args.depth)))
+        if args.fake:
+            logger.set_logger_dir(os.path.join('train_log', 'tmp'), 'd')
+        else:
+            logger.set_logger_dir(
+                os.path.join('train_log', 'imagenet-resnet-d' + str(args.depth)))
 
         config = get_config(model, fake=args.fake)
         if args.load:
