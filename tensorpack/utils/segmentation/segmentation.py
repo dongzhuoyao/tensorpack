@@ -45,16 +45,16 @@ def update_confusion_matrix(pred, label, conf_m, nb_classes, ignore = 255):
         return conf_m
 
 
-def imwrite_grid(image,label,prediction,grid_num,prefix_dir, imageId):
+def imwrite_grid(image,label,prediction,border,prefix_dir, imageId):
     h,w,_ = image.shape
-    border = int(h/grid_num)
+    grid_num = h/border
     for i in range(grid_num):
         for j in range(grid_num):
             start_i = border*i
             start_j = border*j
             end_i = border*(i+1)
             end_j = border*(j+1)
-            cv2.imwrite(os.path.join(prefix_dir,"num_{}_patch_{}_{}.jpg".format(imageId,i,j)),
+            cv2.imwrite(os.path.join(prefix_dir,"out{}_patch{}_{}.png".format(imageId,i,j)),
                         np.concatenate((image[start_i:end_i,start_j:end_j],
                                         visualize_label(label[start_i:end_i,start_j:end_j]),
                                         visualize_label(prediction[start_i:end_i,start_j:end_j]*2)), axis=1))

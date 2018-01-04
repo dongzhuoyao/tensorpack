@@ -39,15 +39,8 @@ class PlaceholderInput(InputSource):
     """
     Just produce placeholders as input tensors.
     """
-    def __init__(self, prefix=''):
-        """
-        Args:
-            prefix(str): an optional prefix to add to the placeholder.
-        """
-        self._prefix = prefix
-
     def _setup(self, inputs):
-        self._all_placehdrs = [v.build_placeholder(prefix=self._prefix) for v in inputs]
+        self._all_placehdrs = [v.build_placeholder() for v in inputs]
 
     def _get_input_tensors(self):
         return self._all_placehdrs
@@ -516,7 +509,7 @@ class StagingInput(FeedfreeInput):
         assert isinstance(input, FeedfreeInput), input
         self._input = input
         if towers is not None:
-            log_deprecated("StagingInput(towers=) has no effect! Devices are handled automatically.")
+            log_deprecated("StagingInput(towers=)", "Devices are handled automatically.", "2018-03-31")
 
         self._nr_stage = nr_stage
         self._areas = []
