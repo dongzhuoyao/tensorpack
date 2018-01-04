@@ -33,7 +33,7 @@ class Augmentor(object):
         """
         Perform augmentation on the data.
         """
-        d, params = self._augment_return_params(d, id=0)
+        d, params = self._augment_return_params(d)
         return d
 
 
@@ -45,12 +45,12 @@ class Augmentor(object):
         """
         return self._augment_return_params(d)
 
-    def _augment_return_params(self, d, id=0):
+    def _augment_return_params(self, d):
         """
         Augment the image and return both image and params
         """
-        prms = self._get_augment_params(d, id)
-        return (self._augment(d, prms, id), prms)
+        prms = self._get_augment_params(d)
+        return (self._augment(d, prms), prms)
 
     @abstractmethod
     def _augment(self, d, param):
@@ -59,7 +59,7 @@ class Augmentor(object):
         The augmentor is allowed to modify data in-place.
         """
 
-    def _get_augment_params(self, d, id=0):
+    def _get_augment_params(self, d):
         """
         Get the augmentor parameters.
         """
@@ -138,19 +138,19 @@ class AugmentorList(ImageAugmentor):
         # the next augmentor requires the previous one to finish
         raise RuntimeError("Cannot simply get all parameters of a AugmentorList without running the augmentation!")
 
-    def _augment_return_params(self, img, id):
+    def _augment_return_params(self, img):
         assert img.ndim in [2, 3], img.ndim
 
         prms = []
         for a in self.augs:
-            img, prm = a._augment_return_params(img, id)
+            img, prm = a._augment_return_params(img)
             prms.append(prm)
         return img, prms
 
-    def _augment(self, img, param, id):
+    def _augment(self, img, param):
         assert img.ndim in [2, 3], img.ndim
         for aug, prm in zip(self.augs, param):
-            img = aug._augment(img, prm, id)
+            img = aug._augment(img, prm)
         return img
 
     def _augment_coords(self, coords, param):

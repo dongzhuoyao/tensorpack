@@ -55,12 +55,12 @@ class Flip(ImageAugmentor):
             raise ValueError("At least one of horiz or vert has to be True!")
         self._init(locals())
 
-    def _get_augment_params(self, img, id):
+    def _get_augment_params(self, img):
         h, w = img.shape[:2]
         do = self._rand_range() < self.prob
         return (do, h, w)
 
-    def _augment(self, img, param, id):
+    def _augment(self, img, param):
         do, _, _ = param
         if do:
             ret = cv2.flip(img, self.code)
@@ -150,7 +150,7 @@ class RandomResize(TransformAugmentorBase):
         assert is_float(xrange) == is_float(yrange), "xrange and yrange has different type!"
         self._is_scale = is_float(xrange)
 
-    def _get_augment_params(self, img, id=0):
+    def _get_augment_params(self, img):
         cnt = 0
         h, w = img.shape[:2]
 
@@ -229,7 +229,7 @@ class RandomCropWithPadding(ImageAugmentor):
         self.ignore_label = ignore_label
         self._init()
 
-    def _get_augment_params(self, img, id = 0):
+    def _get_augment_params(self, img):
         self.h0 = img.shape[0]
         self.w0 = img.shape[1]
 
