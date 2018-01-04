@@ -102,17 +102,17 @@ def get_config(model, fake=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', help='comma separated list of GPU(s) to use.')
-    parser.add_argument('--data', help='ILSVRC dataset dir')
+    parser.add_argument('--gpu', default="0,1,2,3", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--data', default="/data1/dataset/imagenet", help='ILSVRC dataset dir')
     parser.add_argument('--load', help='load model')
     parser.add_argument('--fake', help='use fakedata to test or benchmark this model', action='store_true')
     parser.add_argument('--data_format', help='specify NCHW or NHWC',
                         type=str, default='NCHW')
     parser.add_argument('-d', '--depth', help='resnet depth',
-                        type=int, default=18, choices=[18, 34, 50, 101, 152])
+                        type=int, default=101, choices=[18, 34, 50, 101, 152])
     parser.add_argument('--eval', action='store_true')
     parser.add_argument('--mode', choices=['resnet', 'preact', 'se'],
-                        help='variants of resnet to use', default='resnet')
+                        help='variants of resnet to use', default='se')
     args = parser.parse_args()
 
     if args.gpu:

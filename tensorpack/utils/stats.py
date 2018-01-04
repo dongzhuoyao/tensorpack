@@ -242,15 +242,4 @@ class MIoUStatistics(object):
         return np.mean(np.diag(self._confusion_matrix)*1.0 / np.sum(self._confusion_matrix, axis=1))
 
 
-    def print_confusion_matrix(self):
-        pass
-        """
-        logger.info("confusion matrix:")
-        logger.info("")
-        logger.info("    " + ('-' * 98))
-        for i  in range(self.nb_classes):
-            line = ""
-            for j in range(self.nb_classes):
-                line += "  {:>7} |".format(self._confusion_matrix[i][j])
-            logger.info(line)
-        """
+
