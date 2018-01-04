@@ -58,5 +58,6 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(1024x2048),1GPU,bs1,full) |
 *  Embedding human skeleton to furthur optimize human segmentation
 *  [Semantic Image Synthesis via Adversarial Learning](https://github.com/dongzhuoyao/pytorchgo/tree/master/example/SISviaAL)
 *  Reinforcement learning
+*  embed traditional method
 
 
