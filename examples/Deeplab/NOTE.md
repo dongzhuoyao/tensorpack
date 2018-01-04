@@ -51,3 +51,12 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(1024x2048),1GPU,bs1,full) |
 
 **notice:** The validation mIOU for this repo is  all achieved with multi-scale and left-right flippling.
 
+
+## Ideas
+
+*  Semi Supervised Semantic Segmentation Using Generative Adversarial Network
+*  Embedding human skeleton to furthur optimize human segmentation
+*  [Semantic Image Synthesis via Adversarial Learning](https://github.com/dongzhuoyao/pytorchgo/tree/master/example/SISviaAL)
+*  Reinforcement learning
+
+
