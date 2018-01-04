@@ -79,3 +79,20 @@ Usage:
 Results of the reference code can be reproduced.
 In one run it gives me: 5.48% without mixup; __4.17%__ with mixup (alpha=1).
 
+## IMAGENET preprocess
+
+[https://github.com/amd/OpenCL-caffe/wiki/Instructions-to-create-ImageNet-2012-data](https://github.com/amd/OpenCL-caffe/wiki/Instructions-to-create-ImageNet-2012-data)
+
+To extract training data mkdir train && mv ILSVRC2012_img_train.tar train/ && cd train
+
+tar -xvf ILSVRC2012_img_train.tar && rm -f ILSVRC2012_img_train.tar
+
+find . -name "*.tar" | while read NAME ; do mkdir -p "${NAME%.tar}"; tar -xvf "${NAME}" -C "${NAME%.tar}"; rm -f "${NAME}"; done
+
+// Make sure to check the completeness of the decompression, you should have 1,281,167 images in train folder
+
+To extract validation data
+
+cd ../ && mkdir val && mv ILSVRC2012_img_val.tar val/ && cd val && tar -xvf ILSVRC2012_img_val.tar
+
+
