@@ -23,8 +23,8 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,sobel) | 67.4%,69.
 ~~Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,sobellast)~~ | 66.3%
 ~~Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,sobel.head)~~ | 50.2%
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,learnable_sobel),258MB | 70%
-Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,channelwise),163.75MB | **69.9%**
-Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,channelwise.lr10),163.75MB | **70.3%**
+deeplabv2.naked.edge.learnable.sobel.channelwise,163.75MB | **69.9%**
+deeplabv2.naked.edge.learnable.sobel.channelwise.lr10,163.75MB | **70.3%**
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,deeplabv2.naked.fpn(lr10)) 165.41MB | 68.3%
 deeplabv2.naked.fpn.lr1,165.41MB|--|
 deeplabv2.naked.fpn.learnable.sobel.channelwise(lr10)|67.8%|
