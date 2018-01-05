@@ -24,7 +24,7 @@ import tensorpack.tfutils.symbolic_functions as symbf
 from tqdm import tqdm
 
 
-from resnet_model_fpn_learnable_sobel_channelwise_bilinear import (
+from resnet_model_fpn import (
     preresnet_group, preresnet_basicblock, preresnet_bottleneck,
     resnet_group, resnet_basicblock, resnet_bottleneck, se_resnet_bottleneck,
     resnet_backbone)
@@ -100,7 +100,7 @@ class Model(ModelDesc):
         opt = tf.train.AdamOptimizer(lr, epsilon=2.5e-4)
         return optimizer.apply_grad_processors(
             opt, [gradproc.ScaleGradient(
-                [])])
+                [('fpn.*W', 1),('fpn.*b',2)])])
 
 
 def get_data(name, data_dir, meta_dir, batch_size):
@@ -257,7 +257,7 @@ class CalculateMIoU(Callback):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="0", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="3", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--data_dir', default="/data1/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012",
                         help='dataset dir')
     parser.add_argument('--meta_dir', default="../metadata/pascalvoc12", help='meta dir')

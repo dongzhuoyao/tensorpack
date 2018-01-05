@@ -192,10 +192,10 @@ class AugmentImageComponents(MapData):
             with exception_handler.catch():
                 major_image = index[0]  # image to be used to get params. TODO better design?
                 im = copy_func(dp[major_image])
-                im, prms = self.augs._augment_return_params(im, 0)
+                im, prms = self.augs._augment_return_params(im)
                 dp[major_image] = im
                 for idx in index[1:]:
-                        dp[idx] = self.augs._augment(copy_func(dp[idx]), prms, idx)
+                        dp[idx] = self.augs._augment(copy_func(dp[idx]), prms)
                 for idx in coords_index:
                     coords = copy_func(dp[idx])
                     _valid_coords(coords)
