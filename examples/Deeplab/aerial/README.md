@@ -5,6 +5,10 @@
 uploaded model on val result: 87.25%(official:68.7)
 uploaded model on val result: 88.7%(official:--)
 
+Val mIoU | Test mIoU
+------------ | -------------
+87.25 | 68.2
+88.7 | ?
 
 ### models
 
