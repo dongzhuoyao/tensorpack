@@ -8,7 +8,7 @@ uploaded model on val result: 88.7%(official:--)
 Val mIoU | Test mIoU
 ------------ | -------------
 87.25 | 68.2
-88.7 | ?
+88.7(deeplabv2.naked.aerial.4gpu/model-35385) | ?
 
 ### models
 
