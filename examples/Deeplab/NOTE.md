@@ -29,6 +29,7 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,deeplabv2.naked.fp
 deeplabv2.naked.fpn.lr1,165.41MB|--|
 deeplabv2.naked.fpn.learnable.sobel.channelwise(lr10)|67.8%|
 deeplabv2.naked.fpn.learnable.sobel.channelwise.lr1,165.41MB|--|
+deeplabv2.naked.fpn.learnable.sobel.channelcross.lr1|--|
 deeplabv2.naked.fpn.bilinear|66.2%|
 
 
