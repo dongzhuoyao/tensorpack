@@ -3,6 +3,7 @@
 
 
 uploaded model on val result: 87.25%(official:68.7)
+uploaded model on val result: 88.7%(official:--)
 
 
 ### models
