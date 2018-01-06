@@ -31,7 +31,7 @@ deeplabv2.naked.edge.learnable.sobel.channelwise.lr10,163.75MB | **70.3%**
 Arch | Val mIoU
 ------------ | -------------
 deeplabv2.naked.fpn(lr10)) 165.41MB | 68.3%|
-deeplabv2.naked.fpn.learnable.sobel.channelwise(lr10)|67.8%|
+deeplabv2.naked.fpn.learnable.sobel.channelwise(lr10)|67.8%,new result ing|
 deeplabv2.naked.fpn.bilinear(lr10)|66.2%|
 deeplabv2.naked.fpn.lr1,165.41MB|63.4%|
 deeplabv2.naked.fpn.learnable.sobel.channelwise.lr1,165.41MB|at least 67.3%|
