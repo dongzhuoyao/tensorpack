@@ -15,6 +15,8 @@ Arch | Val mIoU
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8) | **69.3%**
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,4GPU,bs32) | 73.65%
 
+if without imgaug.RandomResize, the mIoU will be 68.4% rather than 69.3%.
+
 ### Result On Cityscapes
 
 Arch | paper mIoU |Val mIoU
