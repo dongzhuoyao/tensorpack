@@ -148,7 +148,7 @@ def Conv2DFixed(x, out_channel, kernel_shape=3,
 def AtrousConv2D(x, out_channel, kernel_shape,
            padding='SAME', rate=1,
            W_init=None, b_init=None,
-           nl=tf.identity, use_bias=True,
+           nl=tf.identity, use_bias=False,
            data_format='NHWC'):
     """
     2D AtrousConvolution on 4D inputs.

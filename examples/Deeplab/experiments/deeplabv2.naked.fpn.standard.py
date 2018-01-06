@@ -24,7 +24,7 @@ import tensorpack.tfutils.symbolic_functions as symbf
 from tqdm import tqdm
 
 
-from resnet_model_fpn_learnable_sobel_channelwise import (
+from resnet_model_fpn_standard import (
     preresnet_group, preresnet_basicblock, preresnet_bottleneck,
     resnet_group, resnet_basicblock, resnet_bottleneck, se_resnet_bottleneck,
     resnet_backbone)
@@ -186,7 +186,7 @@ def run(model_path, image_path, output):
         pred = outputs[5][0]
         cv2.imwrite(output, pred * 255)
 
-def proceed_validation(args, is_save = False, is_densecrf = False):
+def proceed_validation(args, is_save = True, is_densecrf = False):
     import cv2
     ds = dataset.PascalVOC12Edge(args.data_dir, args.meta_dir, "val")
     ds = BatchData(ds, 1)
@@ -257,7 +257,7 @@ class CalculateMIoU(Callback):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="2", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="3", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--data_dir', default="/data1/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012",
                         help='dataset dir')
     parser.add_argument('--meta_dir', default="../metadata/pascalvoc12", help='meta dir')

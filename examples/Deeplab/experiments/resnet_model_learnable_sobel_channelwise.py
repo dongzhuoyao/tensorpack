@@ -157,7 +157,7 @@ def edge_conv(l, name, channel_num):
     l = conv1*conv1 + conv2*conv2 + l
     return l
 
-def resnet_backbone(image, num_blocks, group_func, block_func,  label, edge, class_num, ASPP = False):
+def resnet_backbone(image, num_blocks, group_func, block_func,class_num, ASPP = False):
     with argscope(Conv2D, nl=tf.identity, use_bias=False,
                   W_init=variance_scaling_initializer(mode='FAN_OUT')):
         l = Conv2D('conv0', image,  64, 7, stride=2, nl=BNReLU)

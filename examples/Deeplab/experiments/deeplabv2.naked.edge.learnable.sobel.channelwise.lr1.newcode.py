@@ -16,22 +16,21 @@ from tensorpack.dataflow import dataset
 from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler
 from tensorpack.utils.stats import MIoUStatistics
-from tensorpack.dataflow.imgaug.misc import RandomCropWithPadding
 from tensorpack.utils import logger
+from tensorpack.dataflow.imgaug.misc import RandomCropWithPadding
 from tensorpack.tfutils import optimizer
 from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 import tensorpack.tfutils.symbolic_functions as symbf
 from tqdm import tqdm
 
-
-from resnet_model_fpn_learnable_sobel_channelwise import (
+from resnet_model_learnable_sobel_channelwise import (
     preresnet_group, preresnet_basicblock, preresnet_bottleneck,
-    resnet_group, resnet_basicblock, resnet_bottleneck, se_resnet_bottleneck,
+    resnet_group, resnet_basicblock, resnet_bottleneck_deeplab, se_resnet_bottleneck,
     resnet_backbone)
 
 
 CLASS_NUM = 21
-CROP_SIZE = 512
+CROP_SIZE = 321
 IGNORE_LABEL = 255
 
 class Model(ModelDesc):
@@ -42,12 +41,12 @@ class Model(ModelDesc):
                 InputDesc(tf.int32, [None, CROP_SIZE, CROP_SIZE], 'gt')]
 
     def _build_graph(self, inputs):
-        def resnet101(image, label):
+        def resnet101(image):
             mode = 'resnet'
             depth = 101
             basicblock = preresnet_basicblock if mode == 'preact' else resnet_basicblock
             bottleneck = {
-                'resnet': resnet_bottleneck,
+                'resnet': resnet_bottleneck_deeplab,
                 'preact': preresnet_bottleneck,
                 'se': se_resnet_bottleneck}[mode]
             num_blocks, block_func = {
@@ -62,7 +61,7 @@ class Model(ModelDesc):
                 with argscope([Conv2D, MaxPooling, GlobalAvgPooling, BatchNorm], data_format="NHWC"):
                     return resnet_backbone(
                         image, num_blocks,
-                        preresnet_group if mode == 'preact' else resnet_group, block_func,CLASS_NUM)
+                        preresnet_group if mode == 'preact' else resnet_group, block_func,CLASS_NUM,ASPP = False)
 
             return get_logits(image)
 
@@ -70,7 +69,7 @@ class Model(ModelDesc):
         image = image - tf.constant([104, 116, 122], dtype='float32')
         label = tf.identity(label, name="label")
 
-        predict = resnet101(image, label)
+        predict = resnet101(image)
 
         costs = []
         prob = tf.nn.softmax(predict, name='prob')
@@ -100,29 +99,27 @@ class Model(ModelDesc):
         opt = tf.train.AdamOptimizer(lr, epsilon=2.5e-4)
         return optimizer.apply_grad_processors(
             opt, [gradproc.ScaleGradient(
-                [('fpn.*W', 10),('fpn.*b',20)])])
+                [('aspp.*_conv/W', 10), ('aspp.*_conv/b', 20)])])
 
 
 def get_data(name, data_dir, meta_dir, batch_size):
     isTrain = name == 'train'
     ds = dataset.PascalVOC12(data_dir, meta_dir, name, shuffle=True)
 
-    if isTrain:
-        shape_aug = [
-           imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
-                                             aspect_ratio_thres=0.15),
-            RandomCropWithPadding(CROP_SIZE,IGNORE_LABEL),
-            imgaug.Flip(horiz=True),
-        ]
+
+    if isTrain:#special augmentation
+        shape_aug = [imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
+                            aspect_ratio_thres=0.15),
+                     RandomCropWithPadding(CROP_SIZE,IGNORE_LABEL),
+                     imgaug.Flip(horiz=True),
+                     ]
     else:
         shape_aug = []
-        pass
+
     ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False)
 
-    def f(ds):
-        return ds
+
     if isTrain:
-        ds = MapData(ds, f)
         ds = BatchData(ds, batch_size)
         ds = PrefetchDataZMQ(ds, 1)
     else:
@@ -186,9 +183,9 @@ def run(model_path, image_path, output):
         pred = outputs[5][0]
         cv2.imwrite(output, pred * 255)
 
-def proceed_validation(args, is_save = False, is_densecrf = False):
+def proceed_validation(args, is_save = True, is_densecrf = False):
     import cv2
-    ds = dataset.PascalVOC12Edge(args.data_dir, args.meta_dir, "val")
+    ds = dataset.PascalVOC12(args.data_dir, args.meta_dir, "val")
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
@@ -216,7 +213,6 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
     logger.info("mIoU: {}".format(stat.mIoU))
     logger.info("mean_accuracy: {}".format(stat.mean_accuracy))
     logger.info("accuracy: {}".format(stat.accuracy))
-    stat.print_confusion_matrix()
 
 
 
@@ -254,10 +250,9 @@ class CalculateMIoU(Callback):
 
 
 
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="2", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="0", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--data_dir', default="/data1/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012",
                         help='dataset dir')
     parser.add_argument('--meta_dir', default="../metadata/pascalvoc12", help='meta dir')

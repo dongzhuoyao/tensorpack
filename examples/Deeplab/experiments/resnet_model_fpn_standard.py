@@ -4,7 +4,7 @@
 
 import tensorflow as tf
 from tensorflow.contrib.layers import variance_scaling_initializer
-import numpy as np
+
 
 from tensorpack.tfutils.argscope import argscope, get_arg_scope
 from tensorpack.models import (
@@ -122,45 +122,6 @@ def resnet_group(l, name, block_func, features, count, stride, stride_first):
     return l
 
 
-def edge_conv(l, name, channel_num):
-    channel_axis = 3
-    W_init = tf.contrib.layers.variance_scaling_initializer()
-    W1 = tf.get_variable('{}_W1'.format(name), [3,3,channel_num,1], initializer=W_init)
-    constant1 = np.array([[1,1,1],[0,0,0],[1,1,1]])
-    constant1 = np.expand_dims(constant1, axis=-1)
-    constant1 = np.expand_dims(constant1, axis=-1)
-    constant1 = np.broadcast_to(constant1,(3,3,channel_num,1))
-    W1_mask = tf.constant(constant1,dtype=tf.float32)
-    W1 = W1*W1_mask
-
-    W2 = tf.get_variable('{}_W2'.format(name), [3,3,channel_num,1], initializer=W_init)
-    constant2 = np.array([[1, 0, 1], [1, 0, 1], [1, 0, 1]])
-    constant2 = np.expand_dims(constant2, axis=-1)
-    constant2 = np.expand_dims(constant2, axis=-1)
-    constant2 = np.broadcast_to(constant2, (3, 3, channel_num, 1))
-    W2_mask = tf.constant(constant2, dtype=tf.float32)
-
-    W2 = W2 * W2_mask
-
-
-    inputs = tf.split(l, channel_num, channel_axis)
-
-
-    kernels1 = tf.split(W1, channel_num, 2)
-    output = [tf.nn.conv2d(i, k, strides=[1, 1, 1, 1], padding="SAME")
-                   for i, k in zip(inputs, kernels1)]
-    conv1 = tf.concat(output, channel_axis)
-
-    kernels2 = tf.split(W2, channel_num, 2)
-    output = [tf.nn.conv2d(i, k, strides=[1, 1, 1, 1], padding="SAME")
-              for i, k in zip(inputs, kernels2)]
-    conv2 = tf.concat(output, channel_axis)
-
-    l = conv1*conv1 + conv2*conv2 + l
-    return l
-
-
-
 def resnet_backbone(image, num_blocks, group_func, block_func, class_num):
     with argscope(Conv2D, nl=tf.identity, use_bias=False,
                   W_init=variance_scaling_initializer(mode='FAN_OUT')):
@@ -177,22 +138,24 @@ def resnet_backbone(image, num_blocks, group_func, block_func, class_num):
     with tf.variable_scope("fpn"):
         with tf.variable_scope("res5"):
             resnet5 = resnet_basicblock(resnet5,class_num,stride=1)
-            resnet5 = edge_conv(resnet5, name="sobel", channel_num=class_num)
             resnet5_upsample = tf.image.resize_bilinear(resnet5, resnet4.shape[1:3])
+            with tf.variable_scope("after_bilinear"):
+                resnet5_upsample = resnet_basicblock(resnet5_upsample,class_num,stride=1)
         with tf.variable_scope("res4"):
             resnet4 =resnet_basicblock(resnet4,class_num,stride=1)
-            resnet4 = edge_conv(resnet4, name="sobel", channel_num=class_num)
             resnet4 = resnet4 + resnet5_upsample
             resnet4_upsample = tf.image.resize_bilinear(resnet4, resnet3.shape[1:3])
+            with tf.variable_scope("after_bilinear"):
+                resnet4_upsample = resnet_basicblock(resnet4_upsample, class_num, stride=1)
         with tf.variable_scope("res3"):
             resnet3 = resnet_basicblock(resnet3,class_num,stride=1)
-            resnet3 = edge_conv(resnet3, name="sobel", channel_num=class_num)
             resnet3 = resnet3 + resnet4_upsample
             resnet3_upsample = tf.image.resize_bilinear(resnet3, resnet2.shape[1:3])
+            with tf.variable_scope("after_bilinear"):
+                resnet3_upsample = resnet_basicblock(resnet3_upsample, class_num, stride=1)
         with tf.variable_scope("res2"):
             with tf.variable_scope("block1"):
                 resnet2 = resnet_basicblock(resnet2,class_num,stride=1)
-                resnet2 = edge_conv(resnet2, name="sobel", channel_num=class_num)
                 resnet2 = resnet2 + resnet3_upsample
                 resnet2_upsample = tf.image.resize_bilinear(resnet2, resnet1.shape[1:3])
             with tf.variable_scope("block2"):
@@ -202,4 +165,3 @@ def resnet_backbone(image, num_blocks, group_func, block_func, class_num):
                 output = resnet_basicblock(resnet2_upsample, class_num, stride=1)
 
     return output
-
