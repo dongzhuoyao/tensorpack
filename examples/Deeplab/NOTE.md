@@ -11,7 +11,7 @@ deeplabv2.naked.fpn.learnable.sobel.channelwise(lr10)|67.8%,new result ing|
 deeplabv2.naked.fpn.bilinear(lr10)|66.2%|
 ------------ | -------------
 deeplabv2.naked.fpn.lr1,165.41MB|63.4%|
-deeplabv2.naked.fpn.learnable.sobel.channelwise.lr1,165.41MB|at least 67.3%|
+deeplabv2.naked.fpn.learnable.sobel.channelwise.lr1,165.41MB|67.3%|
 deeplabv2.naked.fpn.learnable.sobel.channelcross.lr1|65.1%|
 
 ### trimap
