@@ -29,7 +29,7 @@ deeplabv2.naked.fpn(lr10)) 165.41MB | 68.3%
 deeplabv2.naked.fpn.lr1,165.41MB|63.4%|
 deeplabv2.naked.fpn.learnable.sobel.channelwise(lr10)|67.8%|
 deeplabv2.naked.fpn.learnable.sobel.channelwise.lr1,165.41MB|--|
-deeplabv2.naked.fpn.learnable.sobel.channelcross.lr1|--|
+deeplabv2.naked.fpn.learnable.sobel.channelcross.lr1|65.1%|
 deeplabv2.naked.fpn.bilinear|66.2%|
 
 
