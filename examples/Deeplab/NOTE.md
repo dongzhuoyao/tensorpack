@@ -22,7 +22,7 @@ deeplabv2.naked.fpn.learnable.sobel.channelcross.lr1|65.1%|
 
 Arch | Val mIoU
 ------------ | -------------
-deeplabv2.naked.gcn(lr10) |ready|
+deeplabv2.naked.gcn(lr10) |--|
 
 
 
