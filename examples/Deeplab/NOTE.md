@@ -6,7 +6,7 @@
 Arch | Val mIoU
 ------------ | -------------
 deeplabv2.naked.fpn.standard(lr10) |67.8%|
-deeplabv2.naked.fpnstandard.learnable.sobel.channelwise(lr10)|--|
+deeplabv2.naked.fpnstandard.learnable.sobel.channelwise(lr10)|67.8%|
 ------------ | -------------
 deeplabv2.naked.fpn(lr10)) 165.41MB | 68.3%, --(second time )|
 deeplabv2.naked.fpn.learnable.sobel.channelwise(lr10)|67.8%,66.9(second time)|
