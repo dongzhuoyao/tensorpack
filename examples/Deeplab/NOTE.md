@@ -18,6 +18,12 @@ deeplabv2.naked.fpn.learnable.sobel.channelwise.lr1,165.41MB|67.3%|
 deeplabv2.naked.fpn.learnable.sobel.channelcross.lr1|65.1%|
 
 
+### GCN
+
+Arch | Val mIoU
+------------ | -------------
+deeplabv2.naked.gcn(lr10) |ready|
+
 
 
 ### trimap
