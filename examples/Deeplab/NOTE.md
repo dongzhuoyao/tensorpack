@@ -85,5 +85,6 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(1024x2048),1GPU,bs1,full) |
 *  Reinforcement learning
 *  embed traditional method
 *  [Semantic-aware  Urban Scene Adaption](https://github.com/Peilun-Li/SG-GAN)
+* setup a few-shot segmentation dataset.
 
 
