@@ -1,6 +1,9 @@
 
 ## DeepLab
 
+**check augmentation bugs**
+
+
 ### sobel FPN
 
 Arch | Val mIoU
