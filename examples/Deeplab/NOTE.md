@@ -84,5 +84,6 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(1024x2048),1GPU,bs1,full) |
 *  [Semantic Image Synthesis via Adversarial Learning](https://github.com/dongzhuoyao/pytorchgo/tree/master/example/SISviaAL)
 *  Reinforcement learning
 *  embed traditional method
+*  [Semantic-aware  Urban Scene Adaption](https://github.com/Peilun-Li/SG-GAN)
 
 
