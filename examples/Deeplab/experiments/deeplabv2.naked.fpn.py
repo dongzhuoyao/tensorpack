@@ -30,7 +30,7 @@ from resnet_model_fpn import (
     resnet_backbone)
 
 
-CLASS_NUM = 21
+CLASS_NUM = dataset.PascalVOC12.class_num()
 CROP_SIZE = 512
 IGNORE_LABEL = 255
 

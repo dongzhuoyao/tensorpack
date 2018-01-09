@@ -23,7 +23,7 @@ from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 import tensorpack.tfutils.symbolic_functions as symbf
 from tqdm import tqdm
 
-from resnet_model_fpn import (
+from resnet_model_fpn_learnable_sobel_channelwise_1order import (
     preresnet_group, preresnet_basicblock, preresnet_bottleneck,
     resnet_group, resnet_basicblock, resnet_bottleneck_deeplab, se_resnet_bottleneck,resnet_bottleneck,
     resnet_backbone)
@@ -259,7 +259,7 @@ class CalculateMIoU(Callback):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="0", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="1", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--meta_dir', default="../metadata/cityscapes", help='meta dir')
     parser.add_argument('--load', default="../resnet101.npz", help='load model')
     #parser.add_argument('--load', default="train_log/deeplabv2.naked.cs/model-26712", help='load model')

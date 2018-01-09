@@ -42,7 +42,7 @@ class PascalVOC12(RNGDataFlow):
         return len(self.imglist)
 
     @staticmethod
-    def class_num(self):
+    def class_num():
         return 21
 
     def get_data(self):

@@ -40,6 +40,10 @@ class Cityscapes(RNGDataFlow):
     def size(self):
         return len(self.imglist)
 
+    @staticmethod
+    def class_num():
+        return 19
+
     def get_data(self):
         idxs = np.arange(len(self.imglist))
         if self.shuffle:
