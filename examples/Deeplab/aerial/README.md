@@ -26,3 +26,8 @@ Arch | Val mIoU
 (0.9,1,1.1) | 88.1,acc: 95.95
 1           | 87.1,acc:95.58
 
+
+
+### TODO
+
+ResNext101+SENet+Mixup basic model will help greatly.
