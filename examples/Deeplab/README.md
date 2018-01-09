@@ -26,6 +26,8 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(321X321),1GPU,bs8, 321*321)
 
 ### TODO
 
+* ResNext
+* WideResNet
 * GCN
 * FRRN
 * DCN
