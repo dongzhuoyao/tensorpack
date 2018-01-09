@@ -23,3 +23,9 @@ Arch | paper mIoU |Val mIoU
 ------------ | -------- | -------------
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(1024X2048),1GPU,bs1,full) | 66.6(Full Image)  | **66.52**
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(321X321),1GPU,bs8, 321*321) | -- | 63.6
+
+### TODO
+
+* GCN
+* FRRN
+* DCN

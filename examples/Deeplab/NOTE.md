@@ -1,20 +1,31 @@
 
 ## DeepLab
 
+**check augmentation bugs**
+
+
 ### sobel FPN
 
 Arch | Val mIoU
 ------------ | -------------
-deeplabv2.naked.fpn.standard(lr10) |--|
-deeplabv2.naked.fpnstandard.learnable.sobel.channelwise(lr10)|--|
+deeplabv2.naked.fpn.standard(lr10) |67.8%|
+deeplabv2.naked.fpnstandard.learnable.sobel.channelwise(lr10)|67.8%|
 ------------ | -------------
-deeplabv2.naked.fpn(lr10)) 165.41MB | 68.3%|
-deeplabv2.naked.fpn.learnable.sobel.channelwise(lr10)|67.8%,new result ing|
+deeplabv2.naked.fpn(lr10)) 165.41MB | 68.3%, 65.4%(second time )|
+deeplabv2.naked.fpn.learnable.sobel.channelwise(lr10)|67.8%,66.9(second time)|
 deeplabv2.naked.fpn.bilinear(lr10)|66.2%|
+deeplabv2.naked.fpn.learnable.sobel.channelwise.1order(lr10)| 68.2% |
 ------------ | -------------
 deeplabv2.naked.fpn.lr1,165.41MB|63.4%|
 deeplabv2.naked.fpn.learnable.sobel.channelwise.lr1,165.41MB|67.3%|
 deeplabv2.naked.fpn.learnable.sobel.channelcross.lr1|65.1%|
+
+
+### GCN
+
+Arch | Val mIoU
+------------ | -------------
+deeplabv2.naked.gcn(lr10) |66.8(buggy)|
 
 
 
@@ -42,6 +53,8 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,sobel) | 67.4%,69.
 deeplabv2.naked.edge.learnable.sobel,258MB | 70%
 deeplabv2.naked.edge.learnable.sobel.channelwise,163.75MB | **69.9%**
 deeplabv2.naked.edge.learnable.sobel.channelwise.lr10,163.75MB | **70.3%**
+deeplabv2.naked.edge.learnable.sobel.channelwise.lr1.newcode|71.1%|
+deeplabv2.naked.edge.learnable.sobel.channelwise.lr10.newcode|71.3%|
 
 
 
@@ -76,5 +89,7 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(1024x2048),1GPU,bs1,full) |
 *  [Semantic Image Synthesis via Adversarial Learning](https://github.com/dongzhuoyao/pytorchgo/tree/master/example/SISviaAL)
 *  Reinforcement learning
 *  embed traditional method
+*  [Semantic-aware  Urban Scene Adaption](https://github.com/Peilun-Li/SG-GAN)
+* setup a few-shot segmentation dataset.
 
 
