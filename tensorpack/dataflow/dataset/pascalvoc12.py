@@ -41,6 +41,10 @@ class PascalVOC12(RNGDataFlow):
     def size(self):
         return len(self.imglist)
 
+    @staticmethod
+    def class_num(self):
+        return 21
+
     def get_data(self):
         idxs = np.arange(len(self.imglist))
         if self.shuffle:
