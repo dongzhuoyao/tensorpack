@@ -53,6 +53,8 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8,sobel) | 67.4%,69.
 deeplabv2.naked.edge.learnable.sobel,258MB | 70%
 deeplabv2.naked.edge.learnable.sobel.channelwise,163.75MB | **69.9%**
 deeplabv2.naked.edge.learnable.sobel.channelwise.lr10,163.75MB | **70.3%**
+deeplabv2.naked.edge.learnable.sobel.channelwise.lr1.newcode|71.1%|
+deeplabv2.naked.edge.learnable.sobel.channelwise.lr10.newcode|71.3%|
 
 
 
