@@ -26,9 +26,9 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(321X321),1GPU,bs8, 321*321)
 
 ### TODO
 
-* ResNext on cifar10
-* SE-ResNeXt-101+Mixup(currently best basic model) on cifar10
 * WideResNet
+* ResNext on cifar10(which in details: ResNeXt-29, 8×64d with baseline wideResNet)
+* SE-ResNeXt-101+Mixup(currently best basic model) on cifar10
 * GCN
 * FRRN
 * DCN
