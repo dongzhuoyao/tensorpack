@@ -86,6 +86,23 @@ def resnet_bottleneck(l, ch_out, stride, stride_first=False):
     l = Conv2D('conv3', l, ch_out * 4, 1, nl=get_bn(zero_init=True))
     return l + resnet_shortcut(shortcut, ch_out * 4, stride, nl=get_bn(zero_init=False))
 
+def resnext_basicblock(l, ch_out, stride):
+    #https://github.com/taki0112/ResNeXt-Tensorflow
+    cardinality = 8
+    depth = 64
+    def transform_layer(input, stride, scope):
+        output = Conv2D("conv1",input, depth, 1, stride = stride,  nl=BNReLU)
+        output = Conv2D("conv2", output, depth, 3, stride = 1, nl=BNReLU)
+        return output
+
+    layers_split = [transform_layer(l,stride,scope="split{}".format(i)) for i in range(cardinality)]
+    layers_split_concat = tf.concat(layers_split, 3)
+
+    layers_split_concat = Conv2D("transition",layers_split_concat,ch_out,stride=1,nl=tf.identity)
+    layers_split_concat = BatchNorm('bn',layers_split_concat)
+
+    return layers_split_concat
+
 
 def se_resnet_bottleneck(l, ch_out, stride):
     shortcut = l

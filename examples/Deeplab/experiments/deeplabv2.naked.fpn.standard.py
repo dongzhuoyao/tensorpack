@@ -257,7 +257,7 @@ class CalculateMIoU(Callback):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="3", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="4", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--data_dir', default="/data1/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012",
                         help='dataset dir')
     parser.add_argument('--meta_dir', default="../metadata/pascalvoc12", help='meta dir')
