@@ -14,9 +14,9 @@ deeplabv2.naked.fpnstandard.learnable.sobel.channelwise(lr10)|67.8%|
 deeplabv2.naked.fpn(lr10)) 165.41MB | 68.3%, 65.4%(second time ),--(third time)|
 deeplabv2.naked.fpn.learnable.sobel.channelwise(lr10)|67.8%,66.9(second time)|
 deeplabv2.naked.fpn.bilinear(lr10)|66.2%|
-deeplabv2.naked.fpn.learnable.sobel.channelwise.1order(lr10)| 68.2%,--(second time) |
-deeplabv2.cs.naked.fpn(lr10)) 165.41MB | --|
-deeplabv2.cs.naked.fpn.learnable.sobel.channelwise.1order(lr10)| -- |
+deeplabv2.naked.fpn.learnable.sobel.channelwise.1order(lr10)| 68.2%,--(second time)|
+deeplabv2.cs.naked.fpn(lr10)) 165.41MB |--|
+deeplabv2.cs.naked.fpn.learnable.sobel.channelwise.1order(lr10)|--|
 
 ------------ | -------------
 deeplabv2.naked.fpn.lr1,165.41MB|63.4%|
