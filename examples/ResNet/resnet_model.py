@@ -103,6 +103,10 @@ def resnext_basicblock(l, ch_out, stride):
 
     return layers_split_concat
 
+def wideresnet_basicblock():
+    #https://github.com/asmith26/wide_resnets_keras/blob/master/main.py
+    #TODO
+    pass
 
 def se_resnet_bottleneck(l, ch_out, stride):
     shortcut = l
