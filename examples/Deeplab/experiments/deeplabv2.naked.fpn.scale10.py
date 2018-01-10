@@ -14,65 +14,40 @@ os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
 from tensorpack import *
 from tensorpack.dataflow import dataset
 from tensorpack.utils.gpu import get_nr_gpu
-from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler, visualize_mixlabel
+from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler
 from tensorpack.utils.stats import MIoUStatistics
-from tensorpack.utils import logger
 from tensorpack.dataflow.imgaug.misc import RandomCropWithPadding
+from tensorpack.utils import logger
 from tensorpack.tfutils import optimizer
 from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 import tensorpack.tfutils.symbolic_functions as symbf
 from tqdm import tqdm
 
-from resnet_model import (
+
+from resnet_model_fpn import (
     preresnet_group, preresnet_basicblock, preresnet_bottleneck,
-    resnet_group, resnet_basicblock, resnet_bottleneck_deeplab, se_resnet_bottleneck,
+    resnet_group, resnet_basicblock, resnet_bottleneck, se_resnet_bottleneck,
     resnet_backbone)
 
 
-CLASS_NUM = 21
-CROP_SIZE = 321
+CLASS_NUM = dataset.PascalVOC12.class_num()
+CROP_SIZE = 512
 IGNORE_LABEL = 255
-
-def my_softmax_cross_entropy_with_ignore_label(logits, label, class_num, mask):
-    """
-    This function accepts logits rather than predictions, and is more numerically stable than
-    :func:`class_balanced_cross_entropy`.
-    """
-    with tf.name_scope('softmax_cross_entropy_with_ignore_label'):
-        # tf.assert_equal(logits.shape[1], label.shape[1])  # shape assert
-        # TODO need assert here
-        raw_prediction = tf.reshape(logits, [-1, class_num])
-        label = tf.reshape(label, [-1, class_num])
-
-        mask = tf.reshape(mask,[-1])
-        indices = tf.squeeze(tf.where(tf.equal(mask, 1)), axis=1,name="indices_to_get") # maybe buggy
-
-        ignore_indices = tf.squeeze(tf.where(tf.equal(mask, 0)), axis=1, name="indices_to_get_ignore")
-        ignore_gt = tf.gather(label, ignore_indices)
-
-        with tf.control_dependencies([tf.assert_equal(tf.reduce_sum(ignore_gt),0)]):
-            gt = tf.gather(label, indices)
-            prediction = tf.gather(raw_prediction, indices)
-            # Pixel-wise softmax loss.
-            loss = tf.nn.softmax_cross_entropy_with_logits(logits=prediction, labels=gt)
-    return loss
-
 
 class Model(ModelDesc):
 
     def _get_inputs(self):
         ## Set static shape so that tensorflow knows shape at compile time.
         return [InputDesc(tf.float32, [None, CROP_SIZE, CROP_SIZE, 3], 'image'),
-                InputDesc(tf.int32, [None, CROP_SIZE, CROP_SIZE, CLASS_NUM], 'gt'),
-                InputDesc(tf.int32, [None, CROP_SIZE, CROP_SIZE], 'mask')]
+                InputDesc(tf.int32, [None, CROP_SIZE, CROP_SIZE], 'gt')]
 
     def _build_graph(self, inputs):
-        def resnet101(image):
+        def resnet101(image, label):
             mode = 'resnet'
             depth = 101
             basicblock = preresnet_basicblock if mode == 'preact' else resnet_basicblock
             bottleneck = {
-                'resnet': resnet_bottleneck_deeplab,
+                'resnet': resnet_bottleneck,
                 'preact': preresnet_bottleneck,
                 'se': se_resnet_bottleneck}[mode]
             num_blocks, block_func = {
@@ -87,23 +62,25 @@ class Model(ModelDesc):
                 with argscope([Conv2D, MaxPooling, GlobalAvgPooling, BatchNorm], data_format="NHWC"):
                     return resnet_backbone(
                         image, num_blocks,
-                        preresnet_group if mode == 'preact' else resnet_group, block_func,CLASS_NUM, ASPP = False)
+                        preresnet_group if mode == 'preact' else resnet_group, block_func,CLASS_NUM)
 
             return get_logits(image)
 
-        image, label, mask = inputs
+        image, label = inputs
         image = image - tf.constant([104, 116, 122], dtype='float32')
         label = tf.identity(label, name="label")
 
-        #predict = vgg16(image)
-        predict = resnet101(image)
+        predict = resnet101(image, label)
 
         costs = []
         prob = tf.nn.softmax(predict, name='prob')
 
-        cost = my_softmax_cross_entropy_with_ignore_label(logits=predict, label=label,
-                                                          class_num=CLASS_NUM, mask=mask)
+        label4d = tf.expand_dims(label, 3, name='label4d')
+        new_size = prob.get_shape()[1:3]
+        #label_resized = tf.image.resize_nearest_neighbor(label4d, new_size)
 
+        cost = symbf.softmax_cross_entropy_with_ignore_label(logits=predict, label=label4d,
+                                                             class_num=CLASS_NUM)
         prediction = tf.argmax(prob, axis=-1,name="prediction")
         cost = tf.reduce_mean(cost, name='cross_entropy_loss')  # the average cross-entropy loss
         costs.append(cost)
@@ -123,63 +100,31 @@ class Model(ModelDesc):
         opt = tf.train.AdamOptimizer(lr, epsilon=2.5e-4)
         return optimizer.apply_grad_processors(
             opt, [gradproc.ScaleGradient(
-                [('aspp.*_conv/W', 10),('aspp.*_conv/b',20)])])
+                [('fpn.*W', 10),('fpn.*b',20)])])
 
 
 def get_data(name, data_dir, meta_dir, batch_size):
     isTrain = name == 'train'
     ds = dataset.PascalVOC12(data_dir, meta_dir, name, shuffle=True)
 
-
-    if isTrain:#special augmentation
-        shape_aug = [imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
-                            aspect_ratio_thres=0.15),
-                     RandomCropWithPadding(CROP_SIZE,IGNORE_LABEL),
-                     imgaug.Flip(horiz=True),
-                     ]
+    if isTrain:
+        shape_aug = [
+           imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
+                                             aspect_ratio_thres=0.15),
+            RandomCropWithPadding(CROP_SIZE,IGNORE_LABEL),
+            imgaug.Flip(horiz=True),
+        ]
     else:
         shape_aug = []
-
-
+        pass
     ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False)
+
     def f(ds):
-        r = 3
-        def generate_multi_hot(labels_hot,i,j):
-            i_min = max(i-r,0)
-            i_max = min(i+r+1,CROP_SIZE)
-            j_min = max(j-r,0)
-            j_max = min(j+r+1,CROP_SIZE)
-            small_block = labels_hot[:,i_min:i_max,j_min:j_max,:]
-            small_block = np.mean(small_block,axis=(1,2))
-            if len(np.where(small_block > 0)[0]) > batch_size:
-                pass
-            return small_block
-
-        images, labels = ds
-        labels_flatten = labels.flatten()
-        index255 = np.where(labels_flatten == IGNORE_LABEL)
-        labels_flatten[index255] = 0 #fake value
-
-        labels_hot = np.eye(CLASS_NUM)[labels_flatten]
-        labels_hot[index255, :] = 0 #remove ignore data
-
-        labels_hot = np.resize(labels_hot,(labels.shape[0],CROP_SIZE,CROP_SIZE,CLASS_NUM))
-        labels_result = np.zeros((labels.shape[0],CROP_SIZE,CROP_SIZE,CLASS_NUM))
-        for i in range(CROP_SIZE):
-            for j in range(CROP_SIZE):
-                labels_result[:, i, j, :] = generate_multi_hot(labels_hot, i, j)
-
-
-        mask = np.ones((batch_size, CROP_SIZE, CROP_SIZE), dtype=np.int8)
-        labels_result[np.unravel_index(index255, (batch_size, CROP_SIZE, CROP_SIZE))] = 0 # reassure zero
-        mask[np.unravel_index(index255, (batch_size, CROP_SIZE, CROP_SIZE))] = 0
-        return [images, labels_result, mask]
-
-
+        return ds
     if isTrain:
-        ds = BatchData(ds, batch_size)
         ds = MapData(ds, f)
-        ds = PrefetchDataZMQ(ds, 3)
+        ds = BatchData(ds, batch_size)
+        ds = PrefetchDataZMQ(ds, 1)
     else:
         ds = BatchData(ds, 1)
     return ds
@@ -188,19 +133,20 @@ def get_data(name, data_dir, meta_dir, batch_size):
 def view_data(data_dir, meta_dir, batch_size):
     ds = RepeatedData(get_data('train',data_dir, meta_dir, batch_size), -1)
     ds.reset_state()
-    for ims, labels,masks in ds.get_data():
-        for im, label,mask in zip(ims, labels,masks):
-
-            #cv2.imshow("raw-label", label)
-            cv2.imshow("color-label", visualize_mixlabel(label,mask))
+    for ims, labels in ds.get_data():
+        for im, label in zip(ims, labels):
+            #aa = visualize_label(label)
+            #pass
             cv2.imshow("im", im / 255.0)
+            cv2.imshow("raw-label", label)
+            cv2.imshow("color-label", visualize_label(label))
             cv2.waitKey(0)
 
 
 def get_config(data_dir, meta_dir, batch_size):
     logger.auto_set_dir()
     dataset_train = get_data('train', data_dir, meta_dir, batch_size)
-    steps_per_epoch = dataset_train.size() * 8
+    steps_per_epoch = dataset_train.size() * 10
     dataset_val = get_data('val', data_dir, meta_dir, batch_size)
 
     return TrainConfig(
@@ -242,7 +188,7 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = True, is_densecrf = False):
     import cv2
-    ds = dataset.PascalVOC12(args.data_dir, args.meta_dir, "val")
+    ds = dataset.PascalVOC12Edge(args.data_dir, args.meta_dir, "val")
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
@@ -305,17 +251,17 @@ class CalculateMIoU(Callback):
         self.trainer.monitors.put_scalar("mIoU", self.stat.mIoU)
         self.trainer.monitors.put_scalar("mean_accuracy", self.stat.mean_accuracy)
         self.trainer.monitors.put_scalar("accuracy", self.stat.accuracy)
-        self.stat.print_confusion_matrix()
+
 
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="2", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="3", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--data_dir', default="/data2/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012",
                         help='dataset dir')
-    parser.add_argument('--meta_dir', default="pascalvoc12", help='meta dir')
-    parser.add_argument('--load', default="resnet101.npz", help='load model')
+    parser.add_argument('--meta_dir', default="../metadata/pascalvoc12", help='meta dir')
+    parser.add_argument('--load', default="../resnet101.npz", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
     parser.add_argument('--batch_size', type=int, default = 10, help='batch_size')
