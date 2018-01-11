@@ -77,7 +77,7 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,no MSF,1GPU,bs8) | 68.6%
 
 
 
-### Result On Cityscapes
+### Result On Cityscapes(offical: deeplabv2 val mIoU:71.4% with coco pretrained)
 
 Arch | Val mIoU
 ------------ | -------------
