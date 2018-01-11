@@ -97,5 +97,6 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(1024x2048),1GPU,bs1,full) |
 *  embed traditional method
 *  [Semantic-aware  Urban Scene Adaption](https://github.com/Peilun-Li/SG-GAN)
 * setup a few-shot segmentation dataset.
+* [Weakly Supervised Semantic Segmentation Based on Web Image Co-segmentation](https://ascust.github.io/WSS/)
 
 
