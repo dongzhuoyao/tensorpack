@@ -23,9 +23,6 @@ from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 import tensorpack.tfutils.symbolic_functions as symbf
 from tqdm import tqdm
 
-from imagenet_utils import (
-    fbresnet_augmentor, get_imagenet_dataflow, ImageNetModel,
-    eval_on_ILSVRC12)
 from resnet_model import (
     preresnet_group, preresnet_basicblock, preresnet_bottleneck,
     resnet_group, resnet_basicblock, resnet_bottleneck_deeplab, se_resnet_bottleneck,
@@ -33,8 +30,8 @@ from resnet_model import (
 
 
 CLASS_NUM = 19
-IMAGE_H = 1024
-IMAGE_W = 2048
+IMAGE_H = 768
+IMAGE_W = 768
 IGNORE_LABEL = 255
 
 class Model(ModelDesc):
@@ -45,46 +42,6 @@ class Model(ModelDesc):
                 InputDesc(tf.int32, [None, IMAGE_H, IMAGE_W], 'gt')]
 
     def _build_graph(self, inputs):
-        def vgg16(input):
-            with argscope(Conv2D, kernel_shape=3, nl=tf.nn.relu):
-                def aspp_branch(input, rate):
-                    input = AtrousConv2D('aspp{}_conv0'.format(rate), input, 1024, kernel_shape=3, rate=6)
-                    input = Dropout('aspp{}_dropout0'.format(rate), input, 0.5)
-                    input = Conv2D('aspp{}_conv1'.format(rate), input, 1024)
-                    input = Dropout('aspp{}_dropout1'.format(rate), input, 0.5)
-                    input = Conv2D('aspp{}_conv2'.format(rate), input, CLASS_NUM, nl=tf.identity)
-                    return input
-
-                l = Conv2D('conv1_1', image, 64)
-                l = Conv2D('conv1_2', l, 64)
-                l = MaxPooling('pool1', l, shape=3, stride=2)
-                # 112
-                l = Conv2D('conv2_1', l, 128)
-                l = Conv2D('conv2_2', l, 128)
-                l = MaxPooling('pool2', l, shape=3, stride=2)
-                # 56
-                l = Conv2D('conv3_1', l, 256)
-                l = Conv2D('conv3_2', l, 256)
-                l = Conv2D('conv3_3', l, 256)
-                l = MaxPooling('pool3', l, shape=3, stride=2)
-                # 28
-                l = Conv2D('conv4_1', l, 512)
-                l = Conv2D('conv4_2', l, 512)
-                l = Conv2D('conv4_3', l, 512)
-                l = MaxPooling('pool4', l, shape=3, stride=1)  # original VGG16 pooling is 2, here is 1
-                # 28
-                l = AtrousConv2D('conv5_1', l, 512, kernel_shape=3, rate=2)
-                l = AtrousConv2D('conv5_2', l, 512, kernel_shape=3, rate=2)
-                l = AtrousConv2D('conv5_3', l, 512, kernel_shape=3, rate=2)
-                l = MaxPooling('pool5', l, shape=3, stride=1)
-                # 28
-                dilation6 = aspp_branch(l, rate=6)
-                dilation12 = aspp_branch(l, rate=12)
-                dilation18 = aspp_branch(l, rate=18)
-                dilation24 = aspp_branch(l, rate=24)
-                predict = dilation6 + dilation12 + dilation18 + dilation24
-                return predict
-
         def resnet101(image):
             mode = 'resnet'
             depth = 101
@@ -113,7 +70,7 @@ class Model(ModelDesc):
         image = image - tf.constant([104, 116, 122], dtype='float32')
         label = tf.identity(label, name="label")
 
-        #predict = vgg16(image)
+
         predict = resnet101(image)
 
         costs = []
@@ -153,9 +110,9 @@ def get_data(name, meta_dir, batch_size):
 
 
     if isTrain:#special augmentation
-        shape_aug = [#imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
-                     #       aspect_ratio_thres=0.15),
-                     #RandomCropWithPadding((IMAGE_H,IMAGE_W),IGNORE_LABEL),
+        shape_aug = [imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
+                            aspect_ratio_thres=0.15),
+                     RandomCropWithPadding((IMAGE_H,IMAGE_W),IGNORE_LABEL),
                      imgaug.Flip(horiz=True),
                      ]
     else:
@@ -308,7 +265,7 @@ if __name__ == '__main__':
     #parser.add_argument('--load', default="train_log/deeplabv2.naked.cs/model-26712", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
-    parser.add_argument('--batch_size', type=int, default = 4, help='batch_size')
+    parser.add_argument('--batch_size', type=int, default = 12, help='batch_size') #proportion 20, only 8???
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     parser.add_argument('--validation', action='store_true', help='validate model on validation images')
     args = parser.parse_args()
