@@ -144,9 +144,11 @@ def view_data(data_dir, meta_dir, batch_size):
 
 def get_config(data_dir, meta_dir, batch_size):
     logger.auto_set_dir()
-    dataset_train = get_data('train', data_dir, meta_dir, batch_size)
+    nr_tower = max(get_nr_gpu(), 1)
+    single_gpu_batch = batch_size // nr_tower
+    dataset_train = get_data('train', data_dir, meta_dir, single_gpu_batch)
     steps_per_epoch = dataset_train.size() * 8
-    dataset_val = get_data('val', data_dir, meta_dir, batch_size)
+    dataset_val = get_data('val', data_dir, meta_dir, single_gpu_batch)
 
     return TrainConfig(
         dataflow=dataset_train,
@@ -160,6 +162,7 @@ def get_config(data_dir, meta_dir, batch_size):
         model=Model(),
         steps_per_epoch=steps_per_epoch,
         max_epoch=10,
+        nr_tower = nr_tower
     )
 
 

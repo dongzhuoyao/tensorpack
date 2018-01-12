@@ -146,9 +146,12 @@ def view_data( meta_dir, batch_size):
 
 def get_config(meta_dir, batch_size):
     logger.auto_set_dir()
-    dataset_train = get_data('train', meta_dir, batch_size)
+    nr_tower = max(get_nr_gpu(), 1)
+    single_gpu_batch = batch_size // nr_tower
+
+    dataset_train = get_data('train', meta_dir, single_gpu_batch)
     steps_per_epoch = dataset_train.size() * 3
-    dataset_val = get_data('val',  meta_dir, batch_size)
+    dataset_val = get_data('val',  meta_dir, single_gpu_batch)
 
     return TrainConfig(
         dataflow=dataset_train,
@@ -162,6 +165,7 @@ def get_config(meta_dir, batch_size):
         model=Model(),
         steps_per_epoch=steps_per_epoch,
         max_epoch=10,
+        nr_tower = nr_tower
     )
 
 
@@ -265,10 +269,11 @@ if __name__ == '__main__':
     #parser.add_argument('--load', default="train_log/deeplabv2.naked.cs/model-26712", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
-    parser.add_argument('--batch_size', type=int, default = 12, help='batch_size') #proportion 20, only 8???
+    parser.add_argument('--batch_size', type=int, default = 10, help='batch_size') #proportion 20, only 8???
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     parser.add_argument('--validation', action='store_true', help='validate model on validation images')
     args = parser.parse_args()
+
     if args.gpu:
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 
