@@ -14,7 +14,7 @@ os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
 from tensorpack import *
 from tensorpack.dataflow import dataset
 from tensorpack.utils.gpu import get_nr_gpu
-from tensorpack.utils.segmentation import predict_slider, visualize_label, predict_scaler
+from tensorpack.utils.segmentation.segmentation import  predict_scaler
 from tensorpack.utils.stats import MIoUStatistics
 from tensorpack.dataflow.imgaug.misc import RandomCropWithPadding
 from tensorpack.utils import logger
@@ -61,7 +61,7 @@ class Model(ModelDesc):
                 with argscope([Conv2D, MaxPooling, GlobalAvgPooling, BatchNorm], data_format="NHWC"):
                     return resnet_backbone(
                         image, num_blocks,
-                        preresnet_group if mode == 'preact' else resnet_group, block_func, ASPP = True)
+                        preresnet_group if mode == 'preact' else resnet_group, block_func, CLASS_NUM, ASPP = True)
 
             return get_logits(image)
 
@@ -114,7 +114,7 @@ def get_data(name, data_dir, meta_dir, batch_size):
                      ]
     else:
         shape_aug = []
-    ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False, is_segmentation=True)
+    ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False)
 
 
     def f(ds):
@@ -145,10 +145,9 @@ def view_data(data_dir, meta_dir, batch_size):
 def get_config(data_dir, meta_dir, batch_size):
     logger.auto_set_dir()
     nr_tower = max(get_nr_gpu(), 1)
-    single_gpu_batch = batch_size // nr_tower
-    dataset_train = get_data('train', data_dir, meta_dir, single_gpu_batch)
+    dataset_train = get_data('train', data_dir, meta_dir, batch_size)
     steps_per_epoch = dataset_train.size() * 8
-    dataset_val = get_data('val', data_dir, meta_dir, single_gpu_batch)
+    dataset_val = get_data('val', data_dir, meta_dir, batch_size)
 
     return TrainConfig(
         dataflow=dataset_train,
@@ -239,13 +238,13 @@ class CalculateMIoU(Callback):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu', help='comma separated list of GPU(s) to use.')
-    parser.add_argument('--data_dir', default="/data1/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012",
+    parser.add_argument('--data_dir', default="/data2/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012",
                         help='dataset dir')
-    parser.add_argument('--meta_dir', default="pascalvoc12", help='meta dir')
+    parser.add_argument('--meta_dir', default="metadata/pascalvoc12", help='meta dir')
     parser.add_argument('--load', default="resnet101.npz", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
-    parser.add_argument('--batch_size', type=int, default = 28, help='batch_size, if multi-gpu, the batch size is sum of all GPU batches')
+    parser.add_argument('--batch_size', type=int, default = 10, help='batch_size')
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     parser.add_argument('--validation', action='store_true', help='validate model on validation images')
     args = parser.parse_args()
