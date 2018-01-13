@@ -99,5 +99,6 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(1024x2048),1GPU,bs1,full) |
 * setup a few-shot segmentation dataset.
 * [Weakly Supervised Semantic Segmentation Based on Web Image Co-segmentation](https://ascust.github.io/WSS/)
 * Instance-Level Salient Object Segmentation
+* [Learning Affinity via Spatial Propagation Networks](https://arxiv.org/abs/1710.01020)
 
 
