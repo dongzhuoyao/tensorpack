@@ -1,8 +1,6 @@
 
 ## DeepLab
 
-**check augmentation bugs**
-
 
 ### sobel FPN
 
