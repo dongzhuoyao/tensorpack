@@ -8,7 +8,10 @@ more experimental results on RemoteSense Images can be seen in [aerial/README.md
 
 
 ### Result On Pasal VOC
+
 MSF on pascalvoc MSF all tild size: 321*321
+
+MSC+Coco+Aug+ASPP+CRF=77.69% mIoU
 
 Arch | Val mIoU
 ------------ | -------------
@@ -18,6 +21,8 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,4GPU,bs32) | 73.65%
 if without imgaug.RandomResize, the mIoU will be 68.4% rather than 69.3%.
 
 ### Result On Cityscapes
+
+Full+Aug+ASPP+CRF=71.4% mIoU
 
 Arch | paper mIoU |Val mIoU
 ------------ | -------- | -------------
