@@ -81,8 +81,9 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,no MSF,1GPU,bs8) | 68.6%
 
 Arch | Val mIoU
 ------------ | -------------
-Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(321x321),1GPU,bs8, 321x321) | 63.6
-Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(1024x2048),1GPU,bs1,full) | 66.52
+Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(321x321),1GPU,bs8, 321x321,scale3) | 63.6
+Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(1024x2048),1GPU,bs1,full,scale3) | 66.52
+deeplabv2.cs.resnet101.scale6 | --
 
 
 **notice:** The validation mIOU for this repo is  all achieved with multi-scale and left-right flippling.
@@ -99,5 +100,6 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(1024x2048),1GPU,bs1,full) |
 * setup a few-shot segmentation dataset.
 * [Weakly Supervised Semantic Segmentation Based on Web Image Co-segmentation](https://ascust.github.io/WSS/)
 * Instance-Level Salient Object Segmentation
+* [Learning Affinity via Spatial Propagation Networks](https://arxiv.org/abs/1710.01020)
 
 
