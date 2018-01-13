@@ -23,9 +23,6 @@ from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 import tensorpack.tfutils.symbolic_functions as symbf
 from tqdm import tqdm
 
-from imagenet_utils import (
-    fbresnet_augmentor, get_imagenet_dataflow, ImageNetModel,
-    eval_on_ILSVRC12)
 from resnet_model import (
     preresnet_group, preresnet_basicblock, preresnet_bottleneck,
     resnet_group, resnet_basicblock, resnet_bottleneck_deeplab, se_resnet_bottleneck,
@@ -186,6 +183,7 @@ def view_data(data_dir, meta_dir, batch_size):
 
 def get_config(data_dir, meta_dir, batch_size):
     logger.auto_set_dir()
+    nr_tower = max(get_nr_gpu(), 1)
     dataset_train = get_data('train', data_dir, meta_dir, batch_size)
     steps_per_epoch = dataset_train.size() * 8
     dataset_val = get_data('val', data_dir, meta_dir, batch_size)
@@ -202,6 +200,7 @@ def get_config(data_dir, meta_dir, batch_size):
         model=Model(),
         steps_per_epoch=steps_per_epoch,
         max_epoch=10,
+        nr_tower = nr_tower
     )
 
 

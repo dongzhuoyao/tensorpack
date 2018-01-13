@@ -110,9 +110,9 @@ def get_data(name, meta_dir, batch_size):
 
 
     if isTrain:#special augmentation
-        shape_aug = [#imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
-                     #       aspect_ratio_thres=0.15),
-                     #RandomCropWithPadding((IMAGE_H,IMAGE_W),IGNORE_LABEL),
+        shape_aug = [imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
+                            aspect_ratio_thres=0.15),
+                     RandomCropWithPadding((IMAGE_H,IMAGE_W),IGNORE_LABEL),
                      imgaug.Flip(horiz=True),
                      ]
     else:
@@ -146,6 +146,8 @@ def view_data( meta_dir, batch_size):
 
 def get_config(meta_dir, batch_size):
     logger.auto_set_dir()
+    nr_tower = max(get_nr_gpu(), 1)
+
     dataset_train = get_data('train', meta_dir, batch_size)
     steps_per_epoch = dataset_train.size() * 3
     dataset_val = get_data('val',  meta_dir, batch_size)
@@ -162,6 +164,7 @@ def get_config(meta_dir, batch_size):
         model=Model(),
         steps_per_epoch=steps_per_epoch,
         max_epoch=10,
+        nr_tower = nr_tower
     )
 
 
