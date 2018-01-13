@@ -23,17 +23,16 @@ from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 import tensorpack.tfutils.symbolic_functions as symbf
 from tqdm import tqdm
 
-from resnet_model_fpn import (
+from resnet_model import (
     preresnet_group, preresnet_basicblock, preresnet_bottleneck,
-    resnet_group, resnet_basicblock, resnet_bottleneck_deeplab, se_resnet_bottleneck,resnet_bottleneck,
+    resnet_group, resnet_basicblock, resnet_bottleneck, se_resnet_bottleneck,
     resnet_backbone)
 
 
-CLASS_NUM = dataset.Cityscapes.class_num()
+CLASS_NUM = 19
 IMAGE_H = 1024
 IMAGE_W = 2048
 IGNORE_LABEL = 255
-epoch_scale = 6
 
 class Model(ModelDesc):
 
@@ -48,7 +47,7 @@ class Model(ModelDesc):
             depth = 101
             basicblock = preresnet_basicblock if mode == 'preact' else resnet_basicblock
             bottleneck = {
-                'resnet': resnet_bottleneck, #TODO,please notice here, this is different from pacalvoc
+                'resnet': resnet_bottleneck,
                 'preact': preresnet_bottleneck,
                 'se': se_resnet_bottleneck}[mode]
             num_blocks, block_func = {
@@ -63,7 +62,7 @@ class Model(ModelDesc):
                 with argscope([Conv2D, MaxPooling, GlobalAvgPooling, BatchNorm], data_format="NHWC"):
                     return resnet_backbone(
                         image, num_blocks,
-                        preresnet_group if mode == 'preact' else resnet_group, block_func, class_num = CLASS_NUM)
+                        preresnet_group if mode == 'preact' else resnet_group, block_func, class_num = CLASS_NUM,ASPP = False)
 
             return get_logits(image)
 
@@ -147,8 +146,10 @@ def view_data( meta_dir, batch_size):
 
 def get_config(meta_dir, batch_size):
     logger.auto_set_dir()
+    nr_tower = max(get_nr_gpu(), 1)
+
     dataset_train = get_data('train', meta_dir, batch_size)
-    steps_per_epoch = dataset_train.size() * epoch_scale
+    steps_per_epoch = dataset_train.size() * 3
     dataset_val = get_data('val',  meta_dir, batch_size)
 
     return TrainConfig(
@@ -163,6 +164,7 @@ def get_config(meta_dir, batch_size):
         model=Model(),
         steps_per_epoch=steps_per_epoch,
         max_epoch=10,
+        nr_tower = nr_tower
     )
 
 
@@ -260,7 +262,7 @@ class CalculateMIoU(Callback):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="0", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="4", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--meta_dir', default="../metadata/cityscapes", help='meta dir')
     parser.add_argument('--load', default="../resnet101.npz", help='load model')
     #parser.add_argument('--load', default="train_log/deeplabv2.naked.cs/model-26712", help='load model')
