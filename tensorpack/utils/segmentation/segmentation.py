@@ -115,52 +115,6 @@ def visualize_mixlabel(label,mask):#H,W,C
     return img_color
 
 
-def predict_slider(full_image, predictor, classes, tile_size):
-    if isinstance(tile_size, int):
-        tile_size = (tile_size, tile_size)
-    overlap = 1/3
-    stride = ceil(tile_size[0] * (1 - overlap))
-    tile_rows = int(ceil((full_image.shape[0] - tile_size[0]) / stride) + 1)  # strided convolution formula
-    tile_cols = int(ceil((full_image.shape[1] - tile_size[1]) / stride) + 1)
-    full_probs = np.zeros((full_image.shape[0], full_image.shape[1], classes))
-    count_predictions = np.zeros((full_image.shape[0], full_image.shape[1], classes))
-    tile_counter = 0
-    for row in range(tile_rows):
-        for col in range(tile_cols):
-            x1 = int(col * stride)
-            y1 = int(row * stride)
-            x2 = min(x1 + tile_size[1], full_image.shape[1])
-            y2 = min(y1 + tile_size[0], full_image.shape[0])
-            x1 = max(int(x2 - tile_size[1]), 0)  # for portrait images the x1 underflows sometimes
-            y1 = max(int(y2 - tile_size[0]), 0)  # for very few rows y1 underflows
-            img = full_image[y1:y2, x1:x2]
-            padded_img, padding_index = pad_image(img, tile_size) #only happen in validation or test when the original image size is already smaller than tile_size
-            tile_counter += 1
-            padded_img = padded_img[None, :, :, :].astype('float32') # extend one dimension
-            padded_prediction = predictor(padded_img)[0][0]
-            prediction_no_padding = padded_prediction[padding_index[0]:padding_index[1],padding_index[2]:padding_index[3],:]
-            count_predictions[y1:y2, x1:x2] += 1
-            full_probs[y1:y2, x1:x2] += prediction_no_padding  # accumulate the predictions also in the overlapping regions
-
-    # average the predictions in the overlapping regions
-    full_probs /= count_predictions
-    return full_probs
-
-def predict_scaler(full_image, predictor, scales, classes, tile_size, is_densecrf):
-    """scaler is only respnsible for generate multi scale input for slider"""
-    full_probs = np.zeros((full_image.shape[0], full_image.shape[1], classes))
-    h_ori, w_ori = full_image.shape[:2]
-    for scale in scales:
-        scaled_img = cv2.resize(full_image, (int(scale*w_ori), int(scale*h_ori)))
-        scaled_probs = predict_slider(scaled_img, predictor, classes, tile_size)
-        probs = cv2.resize(scaled_probs, (w_ori,h_ori))
-        full_probs += probs
-    full_probs /= len(scales)
-    if is_densecrf:
-        full_probs = dense_crf(full_probs)
-    return full_probs
-
-
 
 def edge_predict_slider(full_image, edge, predictor, classes, tile_size):
     """slider is responsible for generate slide window,
@@ -218,6 +172,54 @@ def edge_predict_scaler(full_image, edge, predictor, scales, classes, tile_size,
     full_probs /= len(scales)
     if is_densecrf:
         full_probs = dense_crf(full_probs,sxy_bilateral=(67,67),srgb_bilateral=(3,3,3), n_iters=10)
+    return full_probs
+
+
+
+
+def predict_slider(full_image, predictor, classes, tile_size):
+    if isinstance(tile_size, int):
+        tile_size = (tile_size, tile_size)
+    overlap = 1/3
+    stride = ceil(tile_size[0] * (1 - overlap))
+    tile_rows = int(ceil((full_image.shape[0] - tile_size[0]) / stride) + 1)  # strided convolution formula
+    tile_cols = int(ceil((full_image.shape[1] - tile_size[1]) / stride) + 1)
+    full_probs = np.zeros((full_image.shape[0], full_image.shape[1], classes))
+    count_predictions = np.zeros((full_image.shape[0], full_image.shape[1], classes))
+    tile_counter = 0
+    for row in range(tile_rows):
+        for col in range(tile_cols):
+            x1 = int(col * stride)
+            y1 = int(row * stride)
+            x2 = min(x1 + tile_size[1], full_image.shape[1])
+            y2 = min(y1 + tile_size[0], full_image.shape[0])
+            x1 = max(int(x2 - tile_size[1]), 0)  # for portrait images the x1 underflows sometimes
+            y1 = max(int(y2 - tile_size[0]), 0)  # for very few rows y1 underflows
+            img = full_image[y1:y2, x1:x2]
+            padded_img, padding_index = pad_image(img, tile_size) #only happen in validation or test when the original image size is already smaller than tile_size
+            tile_counter += 1
+            padded_img = padded_img[None, :, :, :].astype('float32') # extend one dimension
+            padded_prediction = predictor(padded_img)[0][0]
+            prediction_no_padding = padded_prediction[padding_index[0]:padding_index[1],padding_index[2]:padding_index[3],:]
+            count_predictions[y1:y2, x1:x2] += 1
+            full_probs[y1:y2, x1:x2] += prediction_no_padding  # accumulate the predictions also in the overlapping regions
+
+    # average the predictions in the overlapping regions
+    full_probs /= count_predictions
+    return full_probs
+
+def predict_scaler(full_image, predictor, scales, classes, tile_size, is_densecrf):
+    """scaler is only respnsible for generate multi scale input for slider"""
+    full_probs = np.zeros((full_image.shape[0], full_image.shape[1], classes))
+    h_ori, w_ori = full_image.shape[:2]
+    for scale in scales:
+        scaled_img = cv2.resize(full_image, (int(scale*w_ori), int(scale*h_ori)))
+        scaled_probs = predict_slider(scaled_img, predictor, classes, tile_size)
+        probs = cv2.resize(scaled_probs, (w_ori,h_ori))
+        full_probs += probs
+    full_probs /= len(scales)
+    if is_densecrf:
+        full_probs = dense_crf(full_probs, sxy_bilateral=(67, 67), srgb_bilateral=(3, 3, 3), n_iters=10)
     return full_probs
 
 
