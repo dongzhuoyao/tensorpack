@@ -25,8 +25,8 @@ from tqdm import tqdm
 
 from resnet_model import (
     preresnet_group, preresnet_basicblock, preresnet_bottleneck,
-    resnet_group, resnet_basicblock, resnet_bottleneck_deeplab, se_resnet_bottleneck,
-    resnet_backbone)
+    resnet_group_deeplab, resnet_basicblock, resnet_bottleneck_deeplab, se_resnet_bottleneck,
+    resnet_backbone_deeplab)
 
 
 CLASS_NUM = 21
@@ -59,9 +59,9 @@ class Model(ModelDesc):
 
             def get_logits(image):
                 with argscope([Conv2D, MaxPooling, GlobalAvgPooling, BatchNorm], data_format="NHWC"):
-                    return resnet_backbone(
+                    return resnet_backbone_deeplab(
                         image, num_blocks,
-                        preresnet_group if mode == 'preact' else resnet_group, block_func,CLASS_NUM,ASPP = False)
+                        preresnet_group if mode == 'preact' else resnet_group_deeplab, block_func,CLASS_NUM,ASPP = False)
 
             return get_logits(image)
 
@@ -185,7 +185,7 @@ def run(model_path, image_path, output):
         pred = outputs[5][0]
         cv2.imwrite(output, pred * 255)
 
-def proceed_validation(args, is_save = True, is_densecrf = False):
+def proceed_validation(args, is_save = True, is_densecrf = True):
     import cv2
     ds = dataset.PascalVOC12(args.data_dir, args.meta_dir, "val")
     ds = BatchData(ds, 1)
