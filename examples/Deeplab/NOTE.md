@@ -81,6 +81,8 @@ Params | Val mIoU
 ------------ | -------------
 deeplabv2.voc.size512(baseline)|68.9
 bi_w = 4, bi_xy_std = 67, bi_rgb_std = 3, pos_w = 3, pos_xy_std = 1| --
+ bi_xy_std = 67, bi_rgb_std = 3| 68.9
+  bi_xy_std = 67, bi_rgb_std = 10|--
 
 
 ### Result On Cityscapes(offical: deeplabv2 val mIoU:71.4% with coco pretrained)
