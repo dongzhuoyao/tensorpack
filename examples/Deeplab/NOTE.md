@@ -73,7 +73,14 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,4GPU,bs32) | 73.65%
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8) | 69.3%
 Deeplabv2-resnet101(no multi-branch,no ASPP,no MSF,1GPU,bs8) | 68.6%
 deeplabv2.voc.randomresizefix|--
-deeplabv2.voc.size512|--
+deeplabv2.voc.size512|68.9
+
+DenseCRF Grid Search
+
+Params | Val mIoU
+------------ | -------------
+deeplabv2.voc.size512(baseline)|68.9
+bi_w = 4, bi_xy_std = 67, bi_rgb_std = 3, pos_w = 3, pos_xy_std = 1| --
 
 
 ### Result On Cityscapes(offical: deeplabv2 val mIoU:71.4% with coco pretrained)
