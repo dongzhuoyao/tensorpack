@@ -91,7 +91,7 @@ Arch | Val mIoU
 ------------ | -------------
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(321x321),1GPU,bs8, 321x321,scale3) | 63.6
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(1024x2048),1GPU,bs1,full,scale3) | 66.52
-deeplabv2.cs.resnet101.scale8 | --
+deeplabv2.cs.resnet101.scale8 | 50% in epoch8,stopped(:cry:)
 
 
 **notice:** The validation mIOU for this repo is  all achieved with multi-scale and left-right flippling.
