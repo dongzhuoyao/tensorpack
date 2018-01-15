@@ -192,7 +192,7 @@ class MIoUBoundaryStatistics(object):
     def __init__(self, nb_classes, ignore_label=255, kernel = 7):
         self.nb_classes = nb_classes
         self.ignore_label = ignore_label
-        self.kernel = 7
+        self.kernel = kernel
         self.reset()
 
     def reset(self):
@@ -203,21 +203,22 @@ class MIoUBoundaryStatistics(object):
         self._confusion_matrix_inner = np.zeros((self.nb_classes, self.nb_classes), dtype=np.uint64)
 
     def distinguish_boundary(self,predict, label):
-        w, h, _ = label.shape
+        w, h = label.shape
         r = self.kernel//2
         def is_boundary(gt, i, j):
             i_min = max(i-r,0)
             i_max = min(i+r+1,w)
             j_min = max(j-r,0)
             j_max = min(j+r+1,h)
-            small_block = gt[:, i_min:i_max, j_min:j_max, :]
-            small_block = small_block - small_block[i,j]
-            if LA.norm(small_block,1) == 0:
+            small_block = gt[i_min:i_max, j_min:j_max]
+
+            if LA.norm(small_block - small_block[r,r],1) == 0: # if all element equal
                 return False
             else:
                 return True
 
-        mask = np.zeros((w,h),dtype=np.unit8)
+
+        mask = np.zeros((w,h),dtype=np.uint8)
         for i in range(w):
             for j in range(h):
                 mask[i, j] = is_boundary(label, i, j)
@@ -238,19 +239,15 @@ class MIoUBoundaryStatistics(object):
         assert pred.shape == label.shape, "{} != {}".format(pred.shape, label.shape)
 
         boundary_predict, inner_predict, boundary_label, inner_label = self.distinguish_boundary(pred,label)
-        self._confusion_matrix_boundary = update_confusion_matrix(boundary_predict, boundary_label, self._confusion_matrix, self.nb_classes,
+        self._confusion_matrix_boundary = update_confusion_matrix(boundary_predict, boundary_label, self._confusion_matrix_boundary, self.nb_classes,
                                                          self.ignore_label)
 
         self._confusion_matrix_inner = update_confusion_matrix(inner_predict, inner_label,
-                                                                  self._confusion_matrix, self.nb_classes,
+                                                                  self._confusion_matrix_inner, self.nb_classes,
                                                                   self.ignore_label)
 
-    @property
-    def confusion_matrix(self):
-        return self._confusion_matrix
-
-    @property
-    def mIoU(self,_confusion_matrix):
+    @staticmethod
+    def mIoU(_confusion_matrix):
         I = np.diag(_confusion_matrix)
         U = np.sum(_confusion_matrix, axis=0) + np.sum(_confusion_matrix, axis=1) - I
         assert np.min(U) > 0,"sample number is too small.."
@@ -258,20 +255,24 @@ class MIoUBoundaryStatistics(object):
         meanIOU = np.mean(IOU)
         return meanIOU
 
-    @property
-    def accuracy(self,_confusion_matrix):
+    @staticmethod
+    def accuracy(_confusion_matrix):
         return np.sum(np.diag(_confusion_matrix))*1.0 / np.sum(_confusion_matrix)
 
-    @property
-    def mean_accuracy(self,_confusion_matrix):
+    @staticmethod
+    def mean_accuracy(_confusion_matrix):
         assert np.min(np.sum(_confusion_matrix, axis=1)) > 0, "sample number is too small.."
         return np.mean(np.diag(_confusion_matrix)*1.0 / np.sum(_confusion_matrix, axis=1))
 
     def print_result(self):
         logger.info("boundary result:")
         logger.info("boundary mIoU: {}".format(self.mIoU(self._confusion_matrix_boundary)))
+        logger.info("boundary accuracy: {}".format(self.accuracy(self._confusion_matrix_boundary)))
+        logger.info("boundary mean_accuracy: {}".format(self.mean_accuracy(self._confusion_matrix_boundary)))
+        logger.info("inner result:")
         logger.info("inner mIoU: {}".format(self.mIoU(self._confusion_matrix_inner)))
-
+        logger.info("inner accuracy: {}".format(self.accuracy(self._confusion_matrix_inner)))
+        logger.info("inner mean_accuracy: {}".format(self.mean_accuracy(self._confusion_matrix_inner)))
 
 
 class MIoUStatistics(object):

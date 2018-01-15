@@ -14,7 +14,7 @@ os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
 from tensorpack import *
 from tensorpack.dataflow import dataset
 from tensorpack.utils.gpu import get_nr_gpu
-from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler
+from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler,visualize_uncertainty
 from tensorpack.utils.stats import MIoUStatistics,MIoUBoundaryStatistics
 from tensorpack.dataflow.imgaug.misc import RandomCropWithPadding
 from tensorpack.utils import logger
@@ -186,7 +186,7 @@ def run(model_path, image_path, output):
         pred = outputs[5][0]
         cv2.imwrite(output, pred * 255)
 
-def proceed_validation(args, is_save = False, is_densecrf = False):
+def proceed_validation(args, is_save = True, is_densecrf = False):
     import cv2
     ds = dataset.PascalVOC12(args.data_dir, args.meta_dir, "val")
     ds = BatchData(ds, 1)
@@ -199,18 +199,27 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
     predictor = OfflinePredictor(pred_config)
 
     i = 0
+    from tensorpack.utils.fs import mkdir_p
+    result_dir = os.path.join("result_on_{}".format("val"))
+    mkdir_p(result_dir)
+
     #stat = MIoUStatistics(CLASS_NUM)
-    stat = MIoUBoundaryStatistics(CLASS_NUM)
+    stat = MIoUBoundaryStatistics(CLASS_NUM,kernel=11)
     logger.info("start validation....")
     for image, label in tqdm(ds.get_data()):
         label = np.squeeze(label)
         image = np.squeeze(image)
-        prediction = predict_scaler(image, predictor, scales=[0.9, 1, 1.1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
-        prediction = np.argmax(prediction, axis=2)
+        prediction_prob = predict_scaler(image, predictor, scales=[0.9, 1, 1.1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
+        prediction = np.argmax(prediction_prob, axis=2)
         stat.feed(prediction, label)
 
         if is_save:
-            cv2.imwrite("result/{}.png".format(i), np.concatenate((image, visualize_label(label), visualize_label(prediction)), axis=1))
+            cv2.imwrite(os.path.join(result_dir, "{}.png".format(i)),image)
+            cv2.imwrite(os.path.join(result_dir, "{}-label.png".format(i)), label)
+            cv2.imwrite(os.path.join(result_dir, "{}-predict.png".format(i)), visualize_label(label))
+            cv2.imwrite(os.path.join(result_dir, "{}-uncertainty.png".format(i)), visualize_uncertainty(prediction_prob,label))
+
+            #cv2.imwrite(os.path.join(result_dir,"{}.png".format(i)), np.concatenate((image, visualize_label(label), visualize_label(prediction)), axis=1))
 
         i += 1
     stat.print_result()

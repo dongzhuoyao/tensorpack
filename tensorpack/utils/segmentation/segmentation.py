@@ -89,6 +89,22 @@ def visualize_label(label):
     return img_color
 
 
+def visualize_uncertainty(prob,label):
+    prob = np.amax(prob,axis=2,keepdims=False)*255
+    return prob
+
+def visualize_strict_uncertainty(prob,label):
+    h,w,c = prob.shape
+    gt = np.reshape(label,(h*w))
+    prob = np.reshape(prob,(h*w,c))
+    gt_idx = np.where(gt > -1)[0]
+    idx = np.vstack((gt_idx, gt))
+    tmp = prob[list(idx)] #TODO advance index in numpy, here is buggy, because 255 ignore,index 255 is out of bounds for axis 1 with size 21
+    tmp = tmp*255
+    tmp = np.reshape(tmp,(w,h)).astype(np.uint8)
+    return tmp
+
+
 def visualize_mixlabel(label,mask):#H,W,C
     """Color classes a good distance away from each other."""
     h, w, c = label.shape
@@ -274,7 +290,17 @@ if __name__ == '__main__':
     label = np.array([1,1,1,0,0,0,0])
     pred = np.array([0,0,0,0,0,0,0])
     cm = np.array([[0,0],[0,0]])
-    cm = update_confusion_matrix(pred,label,cm,2)
+    #cm = update_confusion_matrix(pred,label,cm,2)
+
+    prob = np.random.rand(10,10,3)
+    gt = np.ones((10,10,1),dtype=np.uint8)
+    prob.resize((100,3))
+    gt.resize((100))
+
+    gt_idx = np.where(gt>-1)[0]
+    idx = np.vstack((gt_idx,gt))
+    tmp = prob[list(idx)]
+    t = prob[[1,2,3],[2,0,0]]
     pass
 
 
