@@ -4,9 +4,10 @@
 import numpy as np
 from ..utils.segmentation.segmentation import update_confusion_matrix
 from .import logger
+from numpy import linalg as LA
 
 __all__ = ['StatCounter', 'BinaryStatistics', 'RatioCounter', 'Accuracy',
-           'OnlineMoments', 'MIoUStatistics']
+           'OnlineMoments', 'MIoUStatistics','MIoUBoundaryStatistics']
 
 
 class StatCounter(object):
@@ -182,15 +183,105 @@ class OnlineMoments(object):
     def std(self):
         return np.sqrt(self.variance)
 
+
+class MIoUBoundaryStatistics(object):
+    """
+    Statistics for MIoUStatistics,
+    including MIoU, accuracy, mean accuracy
+    """
+    def __init__(self, nb_classes, ignore_label=255, kernel = 7):
+        self.nb_classes = nb_classes
+        self.ignore_label = ignore_label
+        self.kernel = 7
+        self.reset()
+
+    def reset(self):
+        self._mIoU = 0
+        self._accuracy = 0
+        self._mean_accuracy = 0
+        self._confusion_matrix_boundary = np.zeros((self.nb_classes, self.nb_classes), dtype=np.uint64)
+        self._confusion_matrix_inner = np.zeros((self.nb_classes, self.nb_classes), dtype=np.uint64)
+
+    def distinguish_boundary(self,predict, label):
+        w, h, _ = label.shape
+        r = self.kernel//2
+        def is_boundary(gt, i, j):
+            i_min = max(i-r,0)
+            i_max = min(i+r+1,w)
+            j_min = max(j-r,0)
+            j_max = min(j+r+1,h)
+            small_block = gt[:, i_min:i_max, j_min:j_max, :]
+            small_block = small_block - small_block[i,j]
+            if LA.norm(small_block,1) == 0:
+                return False
+            else:
+                return True
+
+        mask = np.zeros((w,h),dtype=np.unit8)
+        for i in range(w):
+            for j in range(h):
+                mask[i, j] = is_boundary(label, i, j)
+        boundary_idx = np.where(mask==1)
+        inner_idx = np.where(mask==0)
+        boundary_predict = predict[boundary_idx]
+        inner_predict = predict[inner_idx]
+        boundary_label = label[boundary_idx]
+        inner_label = predict[inner_idx]
+        return boundary_predict,inner_predict,boundary_label,inner_label
+
+    def feed(self, pred, label):
+        """
+        Args:
+            pred (np.ndarray): binary array.
+            label (np.ndarray): binary array of the same size.
+        """
+        assert pred.shape == label.shape, "{} != {}".format(pred.shape, label.shape)
+
+        boundary_predict, inner_predict, boundary_label, inner_label = self.distinguish_boundary(pred,label)
+        self._confusion_matrix_boundary = update_confusion_matrix(boundary_predict, boundary_label, self._confusion_matrix, self.nb_classes,
+                                                         self.ignore_label)
+
+        self._confusion_matrix_inner = update_confusion_matrix(inner_predict, inner_label,
+                                                                  self._confusion_matrix, self.nb_classes,
+                                                                  self.ignore_label)
+
+    @property
+    def confusion_matrix(self):
+        return self._confusion_matrix
+
+    @property
+    def mIoU(self,_confusion_matrix):
+        I = np.diag(_confusion_matrix)
+        U = np.sum(_confusion_matrix, axis=0) + np.sum(_confusion_matrix, axis=1) - I
+        assert np.min(U) > 0,"sample number is too small.."
+        IOU = I*1.0 / U
+        meanIOU = np.mean(IOU)
+        return meanIOU
+
+    @property
+    def accuracy(self,_confusion_matrix):
+        return np.sum(np.diag(_confusion_matrix))*1.0 / np.sum(_confusion_matrix)
+
+    @property
+    def mean_accuracy(self,_confusion_matrix):
+        assert np.min(np.sum(_confusion_matrix, axis=1)) > 0, "sample number is too small.."
+        return np.mean(np.diag(_confusion_matrix)*1.0 / np.sum(_confusion_matrix, axis=1))
+
+    def print_result(self):
+        logger.info("boundary result:")
+        logger.info("boundary mIoU: {}".format(self.mIoU(self._confusion_matrix_boundary)))
+        logger.info("inner mIoU: {}".format(self.mIoU(self._confusion_matrix_inner)))
+
+
+
 class MIoUStatistics(object):
     """
     Statistics for MIoUStatistics,
     including MIoU, accuracy, mean accuracy
     """
-
     def __init__(self, nb_classes, ignore_label=255):
         self.nb_classes = nb_classes
-        self.ignore_label = 255
+        self.ignore_label = ignore_label
         self.reset()
 
     def reset(self):
@@ -221,16 +312,6 @@ class MIoUStatistics(object):
         IOU = I*1.0 / U
         meanIOU = np.mean(IOU)
         return meanIOU
-        """
-        pos = confusion_matrix.sum(1)
-        res = confusion_matrix.sum(0)
-        tp = np.diag(confusion_matrix)
-
-        IU_array = (tp / np.maximum(1.0, pos + res - tp))
-        mean_IU = IU_array.mean()
-
-        return {'meanIU': mean_IU, 'IU_array': IU_array}
-        """
 
     @property
     def accuracy(self):

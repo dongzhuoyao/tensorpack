@@ -15,7 +15,7 @@ from tensorpack import *
 from tensorpack.dataflow import dataset
 from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler
-from tensorpack.utils.stats import MIoUStatistics
+from tensorpack.utils.stats import MIoUStatistics,MIoUBoundaryStatistics
 from tensorpack.dataflow.imgaug.misc import RandomCropWithPadding
 from tensorpack.utils import logger
 from tensorpack.tfutils import optimizer
@@ -186,9 +186,9 @@ def run(model_path, image_path, output):
         pred = outputs[5][0]
         cv2.imwrite(output, pred * 255)
 
-def proceed_validation(args, is_save = True, is_densecrf = False):
+def proceed_validation(args, is_save = False, is_densecrf = False):
     import cv2
-    ds = dataset.PascalVOC12Edge(args.data_dir, args.meta_dir, "val")
+    ds = dataset.PascalVOC12(args.data_dir, args.meta_dir, "val")
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
@@ -199,7 +199,8 @@ def proceed_validation(args, is_save = True, is_densecrf = False):
     predictor = OfflinePredictor(pred_config)
 
     i = 0
-    stat = MIoUStatistics(CLASS_NUM)
+    #stat = MIoUStatistics(CLASS_NUM)
+    stat = MIoUBoundaryStatistics(CLASS_NUM)
     logger.info("start validation....")
     for image, label in tqdm(ds.get_data()):
         label = np.squeeze(label)
@@ -212,11 +213,7 @@ def proceed_validation(args, is_save = True, is_densecrf = False):
             cv2.imwrite("result/{}.png".format(i), np.concatenate((image, visualize_label(label), visualize_label(prediction)), axis=1))
 
         i += 1
-
-    logger.info("mIoU: {}".format(stat.mIoU))
-    logger.info("mean_accuracy: {}".format(stat.mean_accuracy))
-    logger.info("accuracy: {}".format(stat.accuracy))
-    stat.print_confusion_matrix()
+    stat.print_result()
 
 
 
@@ -257,7 +254,7 @@ class CalculateMIoU(Callback):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="3", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="4", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--data_dir', default="/data2/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012",
                         help='dataset dir')
     parser.add_argument('--meta_dir', default="../metadata/pascalvoc12", help='meta dir')

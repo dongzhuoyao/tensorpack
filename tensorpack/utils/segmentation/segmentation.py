@@ -219,7 +219,7 @@ def predict_scaler(full_image, predictor, scales, classes, tile_size, is_densecr
         full_probs += probs
     full_probs /= len(scales)
     if is_densecrf:
-        full_probs = dense_crf(full_probs, sxy_bilateral=(67, 67), srgb_bilateral=(3, 3, 3), n_iters=10)
+        full_probs = dense_crf(full_probs, sxy_bilateral=(67, 67), srgb_bilateral=(10,10,10), n_iters=10)
     return full_probs
 
 
