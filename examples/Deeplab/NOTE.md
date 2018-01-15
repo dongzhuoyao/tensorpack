@@ -12,13 +12,13 @@ deeplabv2.naked.fpn.standard.scale10(lr10)|67.1|
 deeplabv2.naked.fpn.standard.scale10(lr12)|--|
 ------------ | -------------
 deeplabv2.naked.fpn(lr10,scale8)) 165.41MB | 68.3%(strange result, too high), 65.4%(second time ),66.8%(third time)|
-deeplabv2.naked.fpn.learnable.sobel.channelwise(lr10)|67.8%,66.9%(second time)|
-deeplabv2.naked.fpn.bilinear(lr10)|66.2%|
+deeplabv2.naked.fpn.learnable.sobel.channelwise(lr10,2order)|67.8%,66.9%(second time)|
 deeplabv2.naked.fpn.learnable.sobel.channelwise.1order(lr10)| 68.2%,68.4%(second time)|
 deeplabv2.cs.naked.fpn(lr10)) 165.41MB |55.2|
 deeplabv2.cs.naked.fpn.learnable.sobel.channelwise.1order(lr10)|57.0|
 deeplabv2.naked.fpn.scale10(lr10)) 165.41MB |68.1|
 deeplabv2.naked.fpn.scale12(lr10)) 165.41MB |66.2|
+deeplabv2.naked.fpn.bilinear(lr10)|66.2%|
 ------------ | -------------
 deeplabv2.naked.fpn.lr1,165.41MB|63.4%|
 deeplabv2.naked.fpn.learnable.sobel.channelwise.lr1,165.41MB|67.3%|
