@@ -224,10 +224,11 @@ class MIoUBoundaryStatistics(object):
                 mask[i, j] = is_boundary(label, i, j)
         boundary_idx = np.where(mask==1)
         inner_idx = np.where(mask==0)
+
         boundary_predict = predict[boundary_idx]
         inner_predict = predict[inner_idx]
         boundary_label = label[boundary_idx]
-        inner_label = predict[inner_idx]
+        inner_label = label[inner_idx]
         return boundary_predict,inner_predict,boundary_label,inner_label
 
     def feed(self, pred, label):
