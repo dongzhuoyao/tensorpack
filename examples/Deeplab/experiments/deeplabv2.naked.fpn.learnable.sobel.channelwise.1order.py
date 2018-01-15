@@ -216,7 +216,7 @@ def proceed_validation(args, is_save = True, is_densecrf = False):
         if is_save:
             cv2.imwrite(os.path.join(result_dir, "{}.png".format(i)),image)
             cv2.imwrite(os.path.join(result_dir, "{}-label.png".format(i)), label)
-            cv2.imwrite(os.path.join(result_dir, "{}-predict.png".format(i)), visualize_label(label))
+            cv2.imwrite(os.path.join(result_dir, "{}-predict.png".format(i)), visualize_label(prediction))
             cv2.imwrite(os.path.join(result_dir, "{}-uncertainty.png".format(i)), visualize_uncertainty(prediction_prob,label))
 
             #cv2.imwrite(os.path.join(result_dir,"{}.png".format(i)), np.concatenate((image, visualize_label(label), visualize_label(prediction)), axis=1))
