@@ -61,7 +61,11 @@ deeplabv2.naked.edge.learnable.sobel.channelwise.lr1.newcode|71.1%|
 deeplabv2.naked.edge.learnable.sobel.channelwise.lr10.newcode|71.3%|
 
 
+### boundary statistics
 
+Params| boundary| inner
+------------ | -------------| -------------
+kernel=11| 58.52,78.75,69.55|1,1,1
 
 
 ### Result On Pasal VOC
@@ -94,7 +98,9 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(1024x2048),1GPU,bs1,full,sc
 deeplabv2.cs.resnet101.scale8 | 50% in epoch8,stopped(:cry:)
 
 
-**notice:** The validation mIOU for this repo is  all achieved with multi-scale and left-right flippling.
+**notice:** The validation mIOU for this repo is  all achieved  with multi-scale and left-right flippling.
+
+
 
 
 ## Ideas
