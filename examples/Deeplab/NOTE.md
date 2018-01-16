@@ -67,7 +67,11 @@ deeplabv2.naked.edge.learnable.sobel.channelwise.lr10.newcode|71.3%|
 Params| boundary| inner
 ------------ | -------------| -------------
 SPK,kernel=19| 61.87,81.9,72.49|68.40,94.65,80.07
-baseline,kernel|60.85,81.47,72.28|66.14,93.49,80.35
+baseline,kernel=19|60.85,81.47,72.28|66.14,93.49,80.35
+SPK,kernel=15|60.17,80.36,70.92|69.68,94.89,80.57
+baseline,kernel=15|59.40,80.10,70.98|66.28,93.28,80.28
+SPK,kernel=11|58.51,78.76,69.55|68.52,94.11,80.01
+baseline,kernel=11|58.51,78.58,70.05|67.21,93.65,79.59
 
 
 ### Result On Pasal VOC
