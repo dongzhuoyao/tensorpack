@@ -186,7 +186,7 @@ def run(model_path, image_path, output):
         pred = outputs[5][0]
         cv2.imwrite(output, pred * 255)
 
-def proceed_validation(args, is_save = False, is_densecrf = False):
+def proceed_validation(args, is_save = True, is_densecrf = False):
     import cv2
     ds = dataset.PascalVOC12(args.data_dir, args.meta_dir, "val")
     ds = BatchData(ds, 1)
@@ -200,7 +200,7 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
 
     i = 0
     from tensorpack.utils.fs import mkdir_p
-    result_dir = os.path.join("result_on_{}".format("val"))
+    result_dir = os.path.join("baseline_result_on_{}".format("val"))
     mkdir_p(result_dir)
 
     #stat = MIoUStatistics(CLASS_NUM)
