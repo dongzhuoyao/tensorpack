@@ -82,8 +82,8 @@ Arch | Val mIoU
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,4GPU,bs32) | 73.65%
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8) | 69.3%
 Deeplabv2-resnet101(no multi-branch,no ASPP,no MSF,1GPU,bs8) | 68.6%
-deeplabv2.voc.randomresizefix|--
 deeplabv2.voc.size512|68.9
+deeplabv2.voc.size512.randomresizefix|--
 
 DenseCRF Grid Search
 
@@ -102,6 +102,7 @@ Arch | Val mIoU
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(321x321),1GPU,bs8, 321x321,scale3) | 63.6
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(1024x2048),1GPU,bs1,full,scale3) | 66.52
 deeplabv2.cs.resnet101.scale8 | 50% in epoch8,stopped(:cry:)
+deeplabv2.cs.resnet101.scale8(randomresizefix)|--
 
 
 **notice:** The validation mIOU for this repo is  all achieved  with multi-scale and left-right flippling.
