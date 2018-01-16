@@ -32,7 +32,7 @@ import numpy as np
 import sys
 import datetime
 import os
-
+from tensorpack.utils import logger
 class HourglassModel():
 	""" HourglassModel class: (to be renamed)
 	Generate TensorFlow model to train and predict Human Pose from images (soon videos)
@@ -133,7 +133,7 @@ class HourglassModel():
 		""" Create the complete graph
 		"""
 		startTime = time.time()
-		print('CREATE MODEL:')
+		logger.info('CREATE MODEL:')
 		with tf.device(self.gpu):
 			with tf.name_scope('inputs'):
 				# Shape Input Image - batchSize: None, height: 256, width: 256, channel: 3 (RGB)
@@ -145,46 +145,38 @@ class HourglassModel():
 				# TODO : Implement weighted loss function
 				# NOT USABLE AT THE MOMENT
 				#weights = tf.placeholder(dtype = tf.float32, shape = (None, self.nStack, 1, 1, self.outDim))
-			inputTime = time.time()
-			print('---Inputs : Done (' + str(int(abs(inputTime-startTime))) + ' sec.)')
+
 			if self.attention:
 				self.output = self._graph_mcam(self.img)
 			else :
 				self.output = self._graph_hourglass(self.img)
-			graphTime = time.time()
-			print('---Graph : Done (' + str(int(abs(graphTime-inputTime))) + ' sec.)')
+
 			with tf.name_scope('loss'):
 				if self.w_loss:
 					self.loss = tf.reduce_mean(self.weighted_bce_loss(), name='reduced_loss')
 				else:
 					self.loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=self.output, labels= self.gtMaps), name= 'cross_entropy_loss')
-			lossTime = time.time()	
-			print('---Loss : Done (' + str(int(abs(graphTime-lossTime))) + ' sec.)')
+
 		with tf.device(self.cpu):
 			with tf.name_scope('accuracy'):
 				self._accuracy_computation()
 			accurTime = time.time()
-			print('---Acc : Done (' + str(int(abs(accurTime-lossTime))) + ' sec.)')
+
 			with tf.name_scope('steps'):
 				self.train_step = tf.Variable(0, name = 'global_step', trainable= False)
 			with tf.name_scope('lr'):
 				self.lr = tf.train.exponential_decay(self.learning_rate, self.train_step, self.decay_step, self.decay, staircase= True, name= 'learning_rate')
-			lrTime = time.time()
-			print('---LR : Done (' + str(int(abs(accurTime-lrTime))) + ' sec.)')
+
 		with tf.device(self.gpu):
 			with tf.name_scope('rmsprop'):
 				self.rmsprop = tf.train.RMSPropOptimizer(learning_rate= self.lr)
-			optimTime = time.time()
-			print('---Optim : Done (' + str(int(abs(optimTime-lrTime))) + ' sec.)')
+
 			with tf.name_scope('minimizer'):
 				self.update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
 				with tf.control_dependencies(self.update_ops):
 					self.train_rmsprop = self.rmsprop.minimize(self.loss, self.train_step)
-			minimTime = time.time()
-			print('---Minimizer : Done (' + str(int(abs(optimTime-minimTime))) + ' sec.)')
+
 		self.init = tf.global_variables_initializer()
-		initTime = time.time()
-		print('---Init : Done (' + str(int(abs(initTime-minimTime))) + ' sec.)')
 		with tf.device(self.cpu):
 			with tf.name_scope('training'):
 				tf.summary.scalar('loss', self.loss, collections = ['train'])
@@ -195,10 +187,7 @@ class HourglassModel():
 		self.train_op = tf.summary.merge_all('train')
 		self.test_op = tf.summary.merge_all('test')
 		self.weight_op = tf.summary.merge_all('weight')
-		endTime = time.time()
-		print('Model created (' + str(int(abs(endTime-startTime))) + ' sec.)')
-		del endTime, startTime, initTime, optimTime, minimTime, lrTime, accurTime, lossTime, graphTime, inputTime
-		
+
 	
 	def restore(self, load = None):
 		""" Restore a pretrained model
@@ -211,9 +200,7 @@ class HourglassModel():
 				self._define_saver_summary(summary = False)
 				if load is not None:
 					print('Loading Trained Model')
-					t = time.time()
 					self.saver.restore(self.Session, load)
-					print('Model Loaded (', time.time() - t,' sec.)')
 				else:
 					print('Please give a Model in args (see README for further information)')
 	

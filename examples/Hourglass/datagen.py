@@ -1,32 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Deep Human Pose Estimation
- 
-Project by Walid Benbihi
-MSc Individual Project
-Imperial College
-Created on Wed Jul 12 15:53:44 2017
- 
-@author: Walid Benbihi
-@mail : w.benbihi(at)gmail.com
-@github : https://github.com/wbenbihi/hourglasstensorlfow/
- 
-Abstract:
-        This python code creates a Stacked Hourglass Model
-        (Credits : A.Newell et al.)
-        (Paper : https://arxiv.org/abs/1603.06937)
-        
-        Code translated from 'anewell' github
-        Torch7(LUA) --> TensorFlow(PYTHON)
-        (Code : https://github.com/anewell/pose-hg-train)
-        
-        Modification are made and explained in the report
-        Goal : Achieve Real Time detection (Webcam)
-        ----- Modifications made to obtain faster results (trade off speed/accuracy)
-        
-        This work is free of use, please cite the author if you use it!
-
-"""
 import numpy as np
 import cv2
 import os
@@ -35,7 +6,7 @@ import random
 import time
 from skimage import transform
 import scipy.misc as scm
-
+from tensorpack.utils import logger
 class DataGenerator():
 	""" DataGenerator Class : To generate Train, Validatidation and Test sets
 	for the Deep Human Pose Estimation Model 
@@ -123,7 +94,7 @@ class DataGenerator():
 		self.no_intel = []
 		self.data_dict = {}
 		input_file = open(self.train_data_file, 'r')
-		print('READING TRAIN DATA')
+		logger.info('READING TRAIN DATA')
 		for line in input_file:
 			line = line.strip()
 			line = line.split(' ')
@@ -172,7 +143,7 @@ class DataGenerator():
 			elif set == 'valid':
 				list_file.append(random.choice(self.valid_set))
 			else:
-				print('Set must be : train/valid')
+				logger.warn('Set must be : train/valid')
 				break
 		return list_file
 		
@@ -187,17 +158,17 @@ class DataGenerator():
 		self.train_set = self.train_table[:sample - valid_sample]
 		self.valid_set = []
 		preset = self.train_table[sample - valid_sample:]
-		print('START SET CREATION')
+		logger.info('START SET CREATION')
 		for elem in preset:
 			if self._complete_sample(elem):
 				self.valid_set.append(elem)
 			else:
 				self.train_set.append(elem)
-		print('SET CREATED')
+		logger.info('SET CREATED')
 		np.save('Dataset-Validation-Set', self.valid_set)
 		np.save('Dataset-Training-Set', self.train_set)
-		print('--Training set :', len(self.train_set), ' samples.')
-		print('--Validation set :', len(self.valid_set), ' samples.')
+		logger.info('--Training set :{} samples.'.format(len(self.train_set)))
+		logger.info('--Validation set :{} samples.'.format(len(self.valid_set)))
 	
 	def generateSet(self, rand = False):
 		""" Generate the training and validation set
@@ -568,7 +539,7 @@ class DataGenerator():
 			except:
 				return False
 		else:
-			print('Specify a sample name')
+			logger.info('Specify a sample name')
 				
 		
 		
