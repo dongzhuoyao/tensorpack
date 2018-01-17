@@ -15,6 +15,7 @@ deeplabv2.naked.fpn(lr10,scale8)) 165.41MB | 68.3%(strange result, too high), 65
 deeplabv2.naked.fpn.learnable.sobel.channelwise(lr10,2order)|67.8%,66.9%(second time)|
 deeplabv2.naked.fpn.learnable.sobel.channelwise.1order(lr10)| 68.2%,68.4%(second time)|
 deeplabv2.naked.fpn.learnable.sobel.channelcross.1order.py(lr10)|67.3|
+deeplabv2.naked.fpn.learnable.sobel.channelwise.1order.relu|67.1(epoch9)|
 deeplabv2.naked.fpn.learnable.sobel.resblock.1order.py(lr10)|68.6|
 deeplabv2.cs.naked.fpn(lr10)) 165.41MB |55.2|
 deeplabv2.cs.naked.fpn.learnable.sobel.resblock.1order|last 5 epoch:(55.4,54.4,56.5,55.2,54.4)|
