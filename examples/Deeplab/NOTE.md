@@ -17,6 +17,7 @@ deeplabv2.naked.fpn.learnable.sobel.channelwise.1order(lr10)| 68.2%,68.4%(second
 deeplabv2.naked.fpn.learnable.sobel.channelcross.1order.py(lr10)|67.3|
 deeplabv2.naked.fpn.learnable.sobel.resblock.1order.py(lr10)|68.6|
 deeplabv2.cs.naked.fpn(lr10)) 165.41MB |55.2|
+deeplabv2.cs.naked.fpn.learnable.sobel.resblock.1order|last 5 epoch:(55.4,54.4,56.5,55.2,54.4)|
 deeplabv2.cs.naked.fpn.learnable.sobel.channelwise.1order(lr10)|57.0|
 deeplabv2.naked.fpn.scale10(lr10)) 165.41MB |68.1|
 deeplabv2.naked.fpn.scale12(lr10)) 165.41MB |66.2|
@@ -84,7 +85,7 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,4GPU,bs32) | 73.65%
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8) | 69.3%
 Deeplabv2-resnet101(no multi-branch,no ASPP,no MSF,1GPU,bs8) | 68.6%
 deeplabv2.voc.size512|68.9
-deeplabv2.voc.size512.randomresizefix|--
+deeplabv2.voc.size512.randomresizefix|68.1
 
 DenseCRF Grid Search
 
@@ -103,6 +104,7 @@ Arch | Val mIoU
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(321x321),1GPU,bs8, 321x321,scale3) | 63.6
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(1024x2048),1GPU,bs1,full,scale3) | 66.52
 deeplabv2.cs.resnet101.scale8 | 50% in epoch8,stopped(:cry:)
+deeplabv2.cs.resnet101.scale3| nan (:cry:)
 deeplabv2.cs.resnet101.scale8(randomresizefix,full,aug,bs1,msf)|--
 
 
