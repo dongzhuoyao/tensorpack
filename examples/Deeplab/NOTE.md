@@ -116,6 +116,7 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(321x321),1GPU,bs8, 321x321,
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(1024x2048),1GPU,bs1,full,scale3) | 66.52
 deeplabv2.cs.resnet101.scale8 | 50% in epoch8,stopped(:cry:)
 deeplabv2.cs.resnet101.scale3| nan (:cry:)
+deeplabv2.voc.size512.randomresizefix.officiallr(2/3 1e-3, 1/3 1e-4)| epoch 7,50%(:cry:)
 deeplabv2.cs.resnet101.scale8(randomresizefix,full,aug,bs1,msf)|--
 
 
