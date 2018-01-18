@@ -94,6 +94,7 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8) | 69.3%
 Deeplabv2-resnet101(no multi-branch,no ASPP,no MSF,1GPU,bs8) | 68.6%
 deeplabv2.voc.size512|68.9
 deeplabv2.voc.size512.randomresizefix|68.1
+deeplabv2.voc.size512.randomresizefix.officiallr(2/3 1e-3, 1/3 1e-4)| epoch 7,50%(:cry:)
 
 DenseCRF Grid Search
 
