@@ -1,4 +1,5 @@
-import os
+import os,configparser
+from tensorpack.utils import logger
 
 #
 # path and dataset parameter
@@ -61,3 +62,18 @@ SAVE_ITER = 1000
 
 THRESHOLD = 0.2
 IOU_THRESHOLD = 0.5
+
+
+def process_config(conf_file='config.cfg'):
+	params = {}
+	config = configparser.ConfigParser()
+	config.read(conf_file)
+	for section in config.sections():
+		if section in ['DataSetHG', 'Network', 'Train', 'Validation', 'Saver']:
+			for option in config.options(section):
+				params[option] = eval(config.get(section, option))
+		else:
+			logger.warn("invalid section: {}".format(section))
+			exit()
+
+	return params
