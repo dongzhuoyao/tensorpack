@@ -352,17 +352,6 @@ class HourglassModel():
 						
 				
 	def _conv(self, inputs, filters, kernel_size = 1, strides = 1, pad = 'VALID', name = 'conv'):
-		""" Spatial Convolution (CONV2D)
-		Args:
-			inputs			: Input Tensor (Data Type : NHWC)
-			filters		: Number of filters (channels)
-			kernel_size	: Size of kernel
-			strides		: Stride
-			pad				: Padding Type (VALID/SAME) # DO NOT USE 'SAME' NETWORK BUILT FOR VALID
-			name			: Name of the block
-		Returns:
-			conv			: Output Tensor (Convolved Input)
-		"""
 		with tf.name_scope(name):
 			# Kernel for convolution, Xavier Initialisation
 			kernel = tf.Variable(tf.contrib.layers.xavier_initializer(uniform=False)([kernel_size,kernel_size, inputs.get_shape().as_list()[3], filters]), name= 'weights')
@@ -370,17 +359,6 @@ class HourglassModel():
 			return conv
 			
 	def _conv_bn_relu(self, inputs, filters, kernel_size = 1, strides = 1, pad = 'VALID', name = 'conv_bn_relu'):
-		""" Spatial Convolution (CONV2D) + BatchNormalization + ReLU Activation
-		Args:
-			inputs			: Input Tensor (Data Type : NHWC)
-			filters		: Number of filters (channels)
-			kernel_size	: Size of kernel
-			strides		: Stride
-			pad				: Padding Type (VALID/SAME) # DO NOT USE 'SAME' NETWORK BUILT FOR VALID
-			name			: Name of the block
-		Returns:
-			norm			: Output Tensor
-		"""
 		with tf.name_scope(name):
 			kernel = tf.Variable(tf.contrib.layers.xavier_initializer(uniform=False)([kernel_size,kernel_size, inputs.get_shape().as_list()[3], filters]), name= 'weights')
 			conv = tf.nn.conv2d(inputs, kernel, [1,strides,strides,1], padding='VALID', data_format='NHWC')
@@ -388,14 +366,6 @@ class HourglassModel():
 			return norm
 	
 	def _conv_block(self, inputs, numOut, name = 'conv_block'):
-		""" Convolutional Block
-		Args:
-			inputs	: Input Tensor
-			numOut	: Desired output number of channel
-			name	: Name of the block
-		Returns:
-			conv_3	: Output Tensor
-		"""
 		if self.tiny:
 			with tf.name_scope(name):
 				norm = tf.contrib.layers.batch_norm(inputs, 0.9, epsilon=1e-5, activation_fn = tf.nn.relu, is_training = self.training)
@@ -417,14 +387,6 @@ class HourglassModel():
 				return conv_3
 	
 	def _skip_layer(self, inputs, numOut, name = 'skip_layer'):
-		""" Skip Layer
-		Args:
-			inputs	: Input Tensor
-			numOut	: Desired output number of channel
-			name	: Name of the bloc
-		Returns:
-			Tensor of shape (None, inputs.height, inputs.width, numOut)
-		"""
 		with tf.name_scope(name):
 			if inputs.get_shape().as_list()[3] == numOut:
 				return inputs
@@ -433,12 +395,6 @@ class HourglassModel():
 				return conv				
 	
 	def _residual(self, inputs, numOut, name = 'residual_block'):
-		""" Residual Unit
-		Args:
-			inputs	: Input Tensor
-			numOut	: Number of Output Features (channels)
-			name	: Name of the block
-		"""
 		with tf.name_scope(name):
 			convb = self._conv_block(inputs, numOut)
 			skipl = self._skip_layer(inputs, numOut)
