@@ -1,32 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Deep Human Pose Estimation
- 
-Project by Walid Benbihi
-MSc Individual Project
-Imperial College
-Created on Mon Sep  4 20:54:25 2017
- 
-@author: Walid Benbihi
-@mail : w.benbihi(at)gmail.com
-@github : https://github.com/wbenbihi/hourglasstensorlfow/
- 
-Abstract:
-        This python code creates a Stacked Hourglass Model
-        (Credits : A.Newell et al.)
-        (Paper : https://arxiv.org/abs/1603.06937)
-        
-        Code translated from 'anewell' github
-        Torch7(LUA) --> TensorFlow(PYTHON)
-        (Code : https://github.com/anewell/pose-hg-train)
-        
-        Modification are made and explained in the report
-        Goal : Achieve Real Time detection (Webcam)
-        ----- Modifications made to obtain faster results (trade off speed/accuracy)
-        
-        This work is free of use, please cite the author if you use it!
 
-"""
 import numpy as np
 import cv2
 class VideoFilters():
