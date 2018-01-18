@@ -10,14 +10,13 @@ from tqdm import tqdm
 config = process_config()
 
 class HourglassModel():
-	def __init__(self, dataset, training = True, w_summary = True, modif = True):
+	def __init__(self, dataset, training = True, modif = True):
 		self.nStack = config['nstacks']
 		self.nFeat = config['nfeats']
 		self.nModules = config['nmodules']
 		self.outDim = config['num_joints']
 		self.batchSize = config['batch_size']
 		self.training = training
-		self.w_summary = w_summary
 		self.tiny = config['tiny']
 		self.dropout_rate = config['dropout_rate']
 		self.learning_rate = config['learning_rate']
@@ -125,70 +124,43 @@ class HourglassModel():
 
 
 		self.init = tf.global_variables_initializer()
-		with tf.device(self.cpu):
-			with tf.name_scope('training'):
-				tf.summary.scalar('loss', self.loss, collections = ['train'])
-				tf.summary.scalar('learning_rate', self.lr, collections = ['train'])
-			with tf.name_scope('summary'):
-				for i in range(len(self.joints)):
-					tf.summary.scalar(self.joints[i], self.joint_accur[i], collections = ['train', 'test'])
-		self.train_op = tf.summary.merge_all('train')
-		self.test_op = tf.summary.merge_all('test')
-		self.weight_op = tf.summary.merge_all('weight')
 
-	
 	def restore(self, load = None):
 		with tf.name_scope('Session'):
 			with tf.device(self.gpu):
 				self._init_session()
-				self._define_saver_summary(summary = False)
 				if load is not None:
 					print('Loading Trained Model')
 					self.saver.restore(self.Session, load)
 				else:
 					print('Please give a Model in args (see README for further information)')
 	
-	def _train(self, nEpochs = 10, epochSize = 1000, saveStep = 500, validIteration = 10):
+	def _train(self, nEpochs = 10, epochSize = 1000, ShowStep = 50, validIteration = 10):
 		with tf.name_scope('Train'):
 			self.generator = self.dataset._aux_generator(self.batchSize, self.nStack, normalize = True, sample_set = 'train')
 			self.valid_gen = self.dataset._aux_generator(self.batchSize, self.nStack, normalize = True, sample_set = 'valid')
-			startTime = time.time()
 			self.resume = {}
 			self.resume['accur'] = []
 			self.resume['loss'] = []
 			self.resume['err'] = []
-			for epoch in tqdm(range(nEpochs)):
+			for epoch in range(nEpochs):
 				avg_cost = 0.
 				cost = 0.
-				logger.info('Epoch :{}/{}\n'.format(epoch,nEpochs))
-				for i in range(epochSize):
-					logger.info("cost: {}, average-cost: {}".format(str(cost)[:6],str(avg_cost)[:5]))
+				logger.info('Epoch :{}/{}'.format(epoch,nEpochs))
+				for i in tqdm(range(epochSize)):
+					if i%ShowStep == 0:
+						logger.info("cost: {}, average-cost: {}".format(str(cost)[:6],str(avg_cost)[:5]))
+
 					img_train, gt_train, weight_train = next(self.generator)
-					if i % saveStep == 0:
-						if self.w_loss:
-							_, c, summary = self.Session.run([self.train_rmsprop, self.loss, self.train_op], feed_dict = {self.img : img_train, self.gtMaps: gt_train, self.weights: weight_train})
-						else:
-							_, c, summary = self.Session.run([self.train_rmsprop, self.loss, self.train_op], feed_dict = {self.img : img_train, self.gtMaps: gt_train})
-						# Save summary (Loss + Accuracy)
-						self.train_summary.add_summary(summary, epoch*epochSize + i)
-						self.train_summary.flush()
+					if self.w_loss:
+						_, c, = self.Session.run([self.train_rmsprop, self.loss], feed_dict = {self.img : img_train, self.gtMaps: gt_train, self.weights: weight_train})
 					else:
-						if self.w_loss:
-							_, c, = self.Session.run([self.train_rmsprop, self.loss], feed_dict = {self.img : img_train, self.gtMaps: gt_train, self.weights: weight_train})
-						else:	
-							_, c, = self.Session.run([self.train_rmsprop, self.loss], feed_dict = {self.img : img_train, self.gtMaps: gt_train})
+						_, c, = self.Session.run([self.train_rmsprop, self.loss], feed_dict = {self.img : img_train, self.gtMaps: gt_train})
 					cost += c
 					avg_cost += c/epochSize
-				if self.w_loss:
-					weight_summary = self.Session.run(self.weight_op, {self.img : img_train, self.gtMaps: gt_train, self.weights: weight_train})
-				else :
-					weight_summary = self.Session.run(self.weight_op, {self.img : img_train, self.gtMaps: gt_train})
-				self.train_summary.add_summary(weight_summary, epoch)
-				self.train_summary.flush()
-
 
 				with tf.name_scope('save'):
-					self.saver.save(self.Session, os.path.join(os.getcwd(),str(self.name + '_' + str(epoch + 1))))
+					self.saver.save(self.Session, os.path.join(logger.get_logger_dir(),(epoch + 1)))
 				self.resume['loss'].append(cost)
 
 				# Validation Set
@@ -201,9 +173,6 @@ class HourglassModel():
 				logger.info('--Avg. Accuracy =', str((np.sum(accuracy_array) / len(accuracy_array)) * 100)[:6], '%' )
 				self.resume['accur'].append(accuracy_pred)
 				self.resume['err'].append(np.sum(accuracy_array) / len(accuracy_array))
-				valid_summary = self.Session.run(self.test_op, feed_dict={self.img : img_valid, self.gtMaps: gt_valid})
-				self.test_summary.add_summary(valid_summary, epoch)
-				self.test_summary.flush()
 
 			logger.info('Training Done')
 			logger.info('Resume:' + '\n' + '  Epochs: ' + str(nEpochs) + '\n' + '  n. Images: ' + str(nEpochs * epochSize * self.batchSize) )
@@ -238,13 +207,8 @@ class HourglassModel():
 		with tf.name_scope('Session'):
 			with tf.device(self.gpu):
 				self._init_weight()
-				self._define_saver_summary()
 				if load is not None:
 					self.saver.restore(self.Session, load)
-					#try:
-						#	self.saver.restore(self.Session, load)
-					#except Exception:
-						#	print('Loading Failed! (Check README file for further information)')
 				self._train(nEpochs, epochSize, saveStep, validIteration=10)
 	
 	def weighted_bce_loss(self):
@@ -263,24 +227,7 @@ class HourglassModel():
 		self.joint_accur = []
 		for i in range(len(self.joints)):
 			self.joint_accur.append(self._accur(self.output[:, self.nStack - 1, :, :,i], self.gtMaps[:, self.nStack - 1, :, :, i], self.batchSize))
-		
-	def _define_saver_summary(self, summary = True):
-		""" Create Summary and Saver
-		Args:
-			logdir_train		: Path to train summary directory
-			logdir_test		: Path to test summary directory
-		"""
-		if (self.logdir_train == None) or (self.logdir_test == None):
-			raise ValueError('Train/Test directory not assigned')
-		else:
-			with tf.device(self.cpu):
-				self.saver = tf.train.Saver()
-			if summary:
-				with tf.device(self.gpu):
-					self.train_summary = tf.summary.FileWriter(self.logdir_train, tf.get_default_graph())
-					self.test_summary = tf.summary.FileWriter(self.logdir_test)
-					#self.weight_summary = tf.summary.FileWriter(self.logdir_train, tf.get_default_graph())
-	
+
 	def _init_weight(self):
 		""" Initialize weights
 		"""
@@ -420,9 +367,6 @@ class HourglassModel():
 			# Kernel for convolution, Xavier Initialisation
 			kernel = tf.Variable(tf.contrib.layers.xavier_initializer(uniform=False)([kernel_size,kernel_size, inputs.get_shape().as_list()[3], filters]), name= 'weights')
 			conv = tf.nn.conv2d(inputs, kernel, [1,strides,strides,1], padding=pad, data_format='NHWC')
-			if self.w_summary:
-				with tf.device('/cpu:0'):
-					tf.summary.histogram('weights_summary', kernel, collections = ['weight'])
 			return conv
 			
 	def _conv_bn_relu(self, inputs, filters, kernel_size = 1, strides = 1, pad = 'VALID', name = 'conv_bn_relu'):
@@ -441,9 +385,6 @@ class HourglassModel():
 			kernel = tf.Variable(tf.contrib.layers.xavier_initializer(uniform=False)([kernel_size,kernel_size, inputs.get_shape().as_list()[3], filters]), name= 'weights')
 			conv = tf.nn.conv2d(inputs, kernel, [1,strides,strides,1], padding='VALID', data_format='NHWC')
 			norm = tf.contrib.layers.batch_norm(conv, 0.9, epsilon=1e-5, activation_fn = tf.nn.relu, is_training = self.training)
-			if self.w_summary:
-				with tf.device('/cpu:0'):
-					tf.summary.histogram('weights_summary', kernel, collections = ['weight'])
 			return norm
 	
 	def _conv_block(self, inputs, numOut, name = 'conv_block'):

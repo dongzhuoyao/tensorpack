@@ -370,10 +370,6 @@ class DataGenerator():
 			yield train_img, train_gtmap
 			
 	def _aux_generator(self, batch_size = 16, stacks = 4, normalize = True, sample_set = 'train'):
-		""" Auxiliary Generator
-		Args:
-			See Args section in self._generator
-		"""
 		while True:
 			train_img = np.zeros((batch_size, 256,256,3), dtype = np.float32)
 			train_gtmap = np.zeros((batch_size, stacks, 64, 64, len(self.joints_list)), np.float32)
@@ -406,7 +402,8 @@ class DataGenerator():
 					train_gtmap[i] = hm
 					i = i + 1
 				except :
-					print('error file: ', name)
+					logger.error('error file: {}'.format(name))
+
 			yield train_img, train_gtmap, train_weights
 					
 	def generator(self, batchSize = 16, stacks = 4, norm = True, sample = 'train'):
@@ -437,7 +434,8 @@ class DataGenerator():
 		elif color == 'GRAY':
 			img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 		else:
-			print('Color mode supported: RGB/BGR. If you need another mode do it yourself :p')
+			logger.error('Color mode supported: RGB/BGR. If you need another mode do it yourself :p')
+			exit()
 	
 	def plot_img(self, name, plot = 'cv2'):
 		""" Plot an image
@@ -453,39 +451,8 @@ class DataGenerator():
 			plt.imshow(img)
 			plt.show()
 	
-	def test(self, toWait = 0.2):
-		""" TESTING METHOD
-		You can run it to see if the preprocessing is well done.
-		Wait few seconds for loading, then diaporama appears with image and highlighted joints
-		/!\ Use Esc to quit
-		Args:
-			toWait : In sec, time between pictures
-		"""
-		self._create_train_table()
-		self._create_sets()
-		for i in range(len(self.train_set)):
-			img = self.open_img(self.train_set[i])
-			w = self.data_dict[self.train_set[i]]['weights']
-			padd, box = self._crop_data(img.shape[0], img.shape[1], self.data_dict[self.train_set[i]]['box'], self.data_dict[self.train_set[i]]['joints'], boxp= 0.0)
-			new_j = self._relative_joints(box,padd, self.data_dict[self.train_set[i]]['joints'], to_size=256)
-			rhm = self._generate_hm(256, 256, new_j,256, w)
-			rimg = self._crop_img(img, padd, box)
-			# See Error in self._generator
-			#rimg = cv2.resize(rimg, (256,256))
-			rimg = scm.imresize(rimg, (256,256))
-			#rhm = np.zeros((256,256,16))
-			#for i in range(16):
-			#	rhm[:,:,i] = cv2.resize(rHM[:,:,i], (256,256))
-			grimg = cv2.cvtColor(rimg, cv2.COLOR_RGB2GRAY)
-			cv2.imshow('image', grimg / 255 + np.sum(rhm,axis = 2))
-			# Wait
-			time.sleep(toWait)
-			if cv2.waitKey(1) == 27:
-				print('Ended')
-				cv2.destroyAllWindows()
-				break
-	
-	
+
+
 	
 	# ------------------------------- PCK METHODS-------------------------------
 	def pck_ready(self, idlh = 3, idrs = 12, testSet = None):
@@ -540,6 +507,32 @@ class DataGenerator():
 				return False
 		else:
 			logger.info('Specify a sample name')
+
+			def test(self, toWait=0.2):
+				self._create_train_table()
+				self._create_sets()
+				for i in range(len(self.train_set)):
+					img = self.open_img(self.train_set[i])
+					w = self.data_dict[self.train_set[i]]['weights']
+					padd, box = self._crop_data(img.shape[0], img.shape[1], self.data_dict[self.train_set[i]]['box'],
+												self.data_dict[self.train_set[i]]['joints'], boxp=0.0)
+					new_j = self._relative_joints(box, padd, self.data_dict[self.train_set[i]]['joints'], to_size=256)
+					rhm = self._generate_hm(256, 256, new_j, 256, w)
+					rimg = self._crop_img(img, padd, box)
+					# See Error in self._generator
+					# rimg = cv2.resize(rimg, (256,256))
+					rimg = scm.imresize(rimg, (256, 256))
+					# rhm = np.zeros((256,256,16))
+					# for i in range(16):
+					#	rhm[:,:,i] = cv2.resize(rHM[:,:,i], (256,256))
+					grimg = cv2.cvtColor(rimg, cv2.COLOR_RGB2GRAY)
+					cv2.imshow('image', grimg / 255 + np.sum(rhm, axis=2))
+					# Wait
+					time.sleep(toWait)
+					if cv2.waitKey(1) == 27:
+						print('Ended')
+						cv2.destroyAllWindows()
+						break
 				
 		
 		
