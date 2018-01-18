@@ -78,6 +78,7 @@ baseline,kernel=11|58.51,78.58,70.05|67.21,93.65,79.59
 
 
 ### Result On Pasal VOC
+![voc.png](voc.png)
 MSF on pascalvoc MSF all tild size: 321*321
 
 Arch | Val mIoU
