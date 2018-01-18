@@ -117,7 +117,7 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(321x321),1GPU,bs8, 321x321,
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(1024x2048),1GPU,bs1,full,scale3) | 66.52
 deeplabv2.cs.resnet101.scale8 | 50% in epoch8,stopped(:cry:)
 deeplabv2.cs.resnet101.scale3| nan (:cry:)
-deeplabv2.cs.resnet101.scale8(randomresizefix,full,aug,bs1,msf)|--
+deeplabv2.cs( new deeplab,res5-dilation2),upsample 8x   | cost:nan(:cry:)
 
 
 **notice:** The validation mIOU for this repo is  all achieved  with multi-scale and left-right flippling.
