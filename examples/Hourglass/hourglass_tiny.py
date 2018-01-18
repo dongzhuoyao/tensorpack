@@ -6,7 +6,7 @@ import datetime
 import os
 from tensorpack.utils import logger
 from config import process_config
-
+from tqdm import tqdm
 config = process_config()
 
 class HourglassModel():
@@ -34,9 +34,9 @@ class HourglassModel():
 		self.logdir_test = config['log_dir_test']
 		self.joints = config['joint_list']
 		self.w_loss = config['weighted_loss']
-		
+
 	# ACCESSOR
-	
+
 	def get_input(self):
 		""" Returns Input (Placeholder) Tensor
 		Image Input :
@@ -83,13 +83,9 @@ class HourglassModel():
 	
 	
 	def generate_model(self):
-		""" Create the complete graph
-		"""
-		startTime = time.time()
 		logger.info('CREATE MODEL:')
 		with tf.device(self.gpu):
 			with tf.name_scope('inputs'):
-				# Shape Input Image - batchSize: None, height: 256, width: 256, channel: 3 (RGB)
 				self.img = tf.placeholder(dtype= tf.float32, shape= (None, 256, 256, 3), name = 'input_img')
 				if self.w_loss:
 					self.weights = tf.placeholder(dtype = tf.float32, shape = (None, self.outDim))
@@ -113,21 +109,20 @@ class HourglassModel():
 		with tf.device(self.cpu):
 			with tf.name_scope('accuracy'):
 				self._accuracy_computation()
-			accurTime = time.time()
-
 			with tf.name_scope('steps'):
 				self.train_step = tf.Variable(0, name = 'global_step', trainable= False)
 			with tf.name_scope('lr'):
 				self.lr = tf.train.exponential_decay(self.learning_rate, self.train_step, self.decay_step, self.decay, staircase= True, name= 'learning_rate')
 
+
 		with tf.device(self.gpu):
 			with tf.name_scope('rmsprop'):
 				self.rmsprop = tf.train.RMSPropOptimizer(learning_rate= self.lr)
-
 			with tf.name_scope('minimizer'):
 				self.update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
 				with tf.control_dependencies(self.update_ops):
 					self.train_rmsprop = self.rmsprop.minimize(self.loss, self.train_step)
+
 
 		self.init = tf.global_variables_initializer()
 		with tf.device(self.cpu):
@@ -143,10 +138,6 @@ class HourglassModel():
 
 	
 	def restore(self, load = None):
-		""" Restore a pretrained model
-		Args:
-			load	: Model to load (None if training from scratch) (see README for further information)
-		"""
 		with tf.name_scope('Session'):
 			with tf.device(self.gpu):
 				self._init_session()
@@ -157,9 +148,7 @@ class HourglassModel():
 				else:
 					print('Please give a Model in args (see README for further information)')
 	
-	def _train(self, nEpochs = 10, epochSize = 1000, saveStep = 500, validIter = 10):
-		"""
-		"""
+	def _train(self, nEpochs = 10, epochSize = 1000, saveStep = 500, validIteration = 10):
 		with tf.name_scope('Train'):
 			self.generator = self.dataset._aux_generator(self.batchSize, self.nStack, normalize = True, sample_set = 'train')
 			self.valid_gen = self.dataset._aux_generator(self.batchSize, self.nStack, normalize = True, sample_set = 'valid')
@@ -168,20 +157,12 @@ class HourglassModel():
 			self.resume['accur'] = []
 			self.resume['loss'] = []
 			self.resume['err'] = []
-			for epoch in range(nEpochs):
-				epochstartTime = time.time()
+			for epoch in tqdm(range(nEpochs)):
 				avg_cost = 0.
 				cost = 0.
-				print('Epoch :' + str(epoch) + '/' + str(nEpochs) + '\n')
-				# Training Set
+				logger.info('Epoch :{}/{}\n'.format(epoch,nEpochs))
 				for i in range(epochSize):
-					# DISPLAY PROGRESS BAR
-					# TODO : Customize Progress Bar
-					percent = ((i+1)/epochSize) * 100
-					num = np.int(20*percent/100)
-					#tToEpoch = int((time.time() - epochstartTime) * (100 - percent)/(percent))
-					sys.stdout.write('\r Train: {0}>'.format("="*num) + "{0}>".format(" "*(20-num)) + '||' + str(percent)[:4] + '%' + ' -cost: ' + str(cost)[:6] + ' -avg_loss: ' + str(avg_cost)[:5] + ' -timeToEnd: ' + str(10000000) + ' sec.')
-					sys.stdout.flush()
+					logger.info("cost: {}, average-cost: {}".format(str(cost)[:6],str(avg_cost)[:5]))
 					img_train, gt_train, weight_train = next(self.generator)
 					if i % saveStep == 0:
 						if self.w_loss:
@@ -198,37 +179,36 @@ class HourglassModel():
 							_, c, = self.Session.run([self.train_rmsprop, self.loss], feed_dict = {self.img : img_train, self.gtMaps: gt_train})
 					cost += c
 					avg_cost += c/epochSize
-				epochfinishTime = time.time()
-				#Save Weight (axis = epoch)
 				if self.w_loss:
 					weight_summary = self.Session.run(self.weight_op, {self.img : img_train, self.gtMaps: gt_train, self.weights: weight_train})
 				else :
 					weight_summary = self.Session.run(self.weight_op, {self.img : img_train, self.gtMaps: gt_train})
 				self.train_summary.add_summary(weight_summary, epoch)
 				self.train_summary.flush()
-				#self.weight_summary.add_summary(weight_summary, epoch)
-				#self.weight_summary.flush()
-				print('Epoch ' + str(epoch) + '/' + str(nEpochs) + ' done in ' + str(int(epochfinishTime-epochstartTime)) + ' sec.' + ' -avg_time/batch: ' + str(((epochfinishTime-epochstartTime)/epochSize))[:4] + ' sec.')
+
+
 				with tf.name_scope('save'):
 					self.saver.save(self.Session, os.path.join(os.getcwd(),str(self.name + '_' + str(epoch + 1))))
 				self.resume['loss'].append(cost)
+
 				# Validation Set
 				accuracy_array = np.array([0.0]*len(self.joint_accur))
-				for i in range(validIter):
+				for i in range(validIteration):
 					img_valid, gt_valid, w_valid = next(self.generator)
 					accuracy_pred = self.Session.run(self.joint_accur, feed_dict = {self.img : img_valid, self.gtMaps: gt_valid})
-					accuracy_array += np.array(accuracy_pred, dtype = np.float32) / validIter
-				print('--Avg. Accuracy =', str((np.sum(accuracy_array) / len(accuracy_array)) * 100)[:6], '%' )
+					accuracy_array += np.array(accuracy_pred, dtype = np.float32) / validIteration
+
+				logger.info('--Avg. Accuracy =', str((np.sum(accuracy_array) / len(accuracy_array)) * 100)[:6], '%' )
 				self.resume['accur'].append(accuracy_pred)
 				self.resume['err'].append(np.sum(accuracy_array) / len(accuracy_array))
 				valid_summary = self.Session.run(self.test_op, feed_dict={self.img : img_valid, self.gtMaps: gt_valid})
 				self.test_summary.add_summary(valid_summary, epoch)
 				self.test_summary.flush()
-			print('Training Done')
-			print('Resume:' + '\n' + '  Epochs: ' + str(nEpochs) + '\n' + '  n. Images: ' + str(nEpochs * epochSize * self.batchSize) )
-			print('  Final Loss: ' + str(cost) + '\n' + '  Relative Loss: ' + str(100*self.resume['loss'][-1]/(self.resume['loss'][0] + 0.1)) + '%' )
-			print('  Relative Improvement: ' + str((self.resume['err'][-1] - self.resume['err'][0]) * 100) +'%')
-			print('  Training Time: ' + str( datetime.timedelta(seconds=time.time() - startTime)))
+
+			logger.info('Training Done')
+			logger.info('Resume:' + '\n' + '  Epochs: ' + str(nEpochs) + '\n' + '  n. Images: ' + str(nEpochs * epochSize * self.batchSize) )
+			logger.info('  Final Loss: ' + str(cost) + '\n' + '  Relative Loss: ' + str(100*self.resume['loss'][-1]/(self.resume['loss'][0] + 0.1)) + '%' )
+			logger.info('  Relative Improvement: ' + str((self.resume['err'][-1] - self.resume['err'][0]) * 100) +'%')
 	
 	def record_training(self, record):
 		""" Record Training Data and Export them in CSV file
@@ -265,7 +245,7 @@ class HourglassModel():
 						#	self.saver.restore(self.Session, load)
 					#except Exception:
 						#	print('Loading Failed! (Check README file for further information)')
-				self._train(nEpochs, epochSize, saveStep, validIter=10)
+				self._train(nEpochs, epochSize, saveStep, validIteration=10)
 	
 	def weighted_bce_loss(self):
 		""" Create Weighted Loss Function
