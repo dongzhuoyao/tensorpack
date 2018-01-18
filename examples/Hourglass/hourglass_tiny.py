@@ -1,31 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Deep Human Pose Estimation
-
-Project by Walid Benbihi
-MSc Individual Project
-Imperial College
-Created on Mon Jul 10 19:13:56 2017
-
-@author: Walid Benbihi
-@mail : w.benbihi(at)gmail.com
-@github : https://github.com/wbenbihi/hourglasstensorlfow/
-
-Abstract:
-	This python code creates a Stacked Hourglass Model
-	(Credits : A.Newell et al.)
-	(Paper : https://arxiv.org/abs/1603.06937)
-	
-	Code translated from 'anewell' github
-	Torch7(LUA) --> TensorFlow(PYTHON)
-	(Code : https://github.com/anewell/pose-hg-train)
-	
-	Modification are made and explained in the report
-	Goal : Achieve Real Time detection (Webcam)
-	----- Modifications made to obtain faster results (trade off speed/accuracy)
-	
-	This work is free of use, please cite the author if you use it!
-"""
 import time
 import tensorflow as tf
 import numpy as np
@@ -33,11 +5,8 @@ import sys
 import datetime
 import os
 from tensorpack.utils import logger
+
 class HourglassModel():
-	""" HourglassModel class: (to be renamed)
-	Generate TensorFlow model to train and predict Human Pose from images (soon videos)
-	Please check README.txt for further information on model management.
-	"""
 	def __init__(self, nFeat = 512, nStack = 4, nModules = 1, nLow = 4, outputDim = 16, batch_size = 16, drop_rate = 0.2, lear_rate = 2.5e-4, decay = 0.96, decay_step = 2000, dataset = None, training = True, w_summary = True, logdir_train = None, logdir_test = None,tiny = True, attention = False,modif = True,w_loss = False, name = 'tiny_hourglass',  joints = ['r_anckle', 'r_knee', 'r_hip', 'l_hip', 'l_knee', 'l_anckle', 'pelvis', 'thorax', 'neck', 'head', 'r_wrist', 'r_elbow', 'r_shoulder', 'l_shoulder', 'l_elbow', 'l_wrist']):
 		""" Initializer
 		Args:

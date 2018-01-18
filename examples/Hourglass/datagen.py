@@ -94,7 +94,7 @@ class DataGenerator():
 		self.no_intel = []
 		self.data_dict = {}
 		input_file = open(self.train_data_file, 'r')
-		logger.info('READING TRAIN DATA')
+		logger.info('reading data from {}'.format(self.train_data_file))
 		for line in input_file:
 			line = line.strip()
 			line = line.split(' ')

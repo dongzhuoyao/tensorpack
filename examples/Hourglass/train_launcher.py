@@ -32,7 +32,15 @@ if __name__ == '__main__':
 	dataset._randomize()
 	dataset._create_sets()
 	
-	model = HourglassModel(nFeat=config['nfeats'], nStack=config['nstacks'], nModules=config['nmodules'], nLow=config['nlow'], outputDim=config['num_joints'], batch_size=config['batch_size'], attention = config['mcam'], training=True, drop_rate= config['dropout_rate'], lear_rate=config['learning_rate'], decay=config['learning_rate_decay'], decay_step=config['decay_step'], dataset=dataset, name=config['name'], logdir_train=config['log_dir_train'], logdir_test=config['log_dir_test'], tiny= config['tiny'], w_loss=config['weighted_loss'], joints= config['joint_list'], modif=False)
+	model = HourglassModel(nFeat=config['nfeats'], nStack=config['nstacks'], nModules=config['nmodules'],
+						   nLow=config['nlow'], outputDim=config['num_joints'], batch_size=config['batch_size'],
+						   attention = config['mcam'], training=True, drop_rate= config['dropout_rate'],
+						   lear_rate=config['learning_rate'], decay=config['learning_rate_decay'],
+						   decay_step=config['decay_step'], dataset=dataset, name=config['name'],
+						   logdir_train=config['log_dir_train'], logdir_test=config['log_dir_test'],
+						   tiny= config['tiny'], w_loss=config['weighted_loss'], joints= config['joint_list'],
+						   modif=False)
+
 	model.generate_model()
 	model.training_init(nEpochs=config['nepochs'], epochSize=config['epoch_size'], saveStep=config['saver_step'], dataset = None)
 	
