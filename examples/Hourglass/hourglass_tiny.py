@@ -130,25 +130,20 @@ class HourglassModel():
 			with tf.device(self.gpu):
 				self._init_session()
 				if load is not None:
-					print('Loading Trained Model')
+					logger.info('Loading Trained Model')
 					self.saver.restore(self.Session, load)
-				else:
-					print('Please give a Model in args (see README for further information)')
-	
-	def _train(self, nEpochs = 10, epochSize = 1000, ShowStep = 50, validIteration = 10):
+
+	def _train(self, nEpochs = 10, epochSize = 1000, valid_iter_num = 10):
 		with tf.name_scope('Train'):
 			self.generator = self.dataset._aux_generator(self.batchSize, self.nStack, normalize = True, sample_set = 'train')
 			self.valid_gen = self.dataset._aux_generator(self.batchSize, self.nStack, normalize = True, sample_set = 'valid')
-			self.resume = {}
-			self.resume['accur'] = []
-			self.resume['loss'] = []
-			self.resume['err'] = []
+
 			for epoch in range(nEpochs):
 				avg_cost = 0.
 				cost = 0.
 				logger.info('Epoch :{}/{}'.format(epoch,nEpochs))
 				for i in tqdm(range(epochSize)):
-					if i%ShowStep == 0:
+					if (i % 100) == 0:
 						logger.info("cost: {}, average-cost: {}".format(str(cost)[:6],str(avg_cost)[:5]))
 
 					img_train, gt_train, weight_train = next(self.generator)
@@ -159,26 +154,21 @@ class HourglassModel():
 					cost += c
 					avg_cost += c/epochSize
 
+
 				with tf.name_scope('save'):
-					self.saver.save(self.Session, os.path.join(logger.get_logger_dir(),(epoch + 1)))
-				self.resume['loss'].append(cost)
+					self.saver.save(self.Session, os.path.join(logger.get_logger_dir(),str(epoch + 1)))
 
 				# Validation Set
-				accuracy_array = np.array([0.0]*len(self.joint_accur))
-				for i in range(validIteration):
-					img_valid, gt_valid, w_valid = next(self.generator)
+				aver_acc_array = np.array([0.0]*len(self.joint_accur))
+				for i in range(valid_iter_num):
+					img_valid, gt_valid, w_valid = next(self.valid_gen)
 					accuracy_pred = self.Session.run(self.joint_accur, feed_dict = {self.img : img_valid, self.gtMaps: gt_valid})
-					accuracy_array += np.array(accuracy_pred, dtype = np.float32) / validIteration
+					aver_acc_array += np.array(accuracy_pred, dtype = np.float32) / valid_iter_num
 
-				logger.info('--Avg. Accuracy =', str((np.sum(accuracy_array) / len(accuracy_array)) * 100)[:6], '%' )
-				self.resume['accur'].append(accuracy_pred)
-				self.resume['err'].append(np.sum(accuracy_array) / len(accuracy_array))
-
+				logger.info('--Avg. Accuracy ={}%'.format(str((np.sum(aver_acc_array) / len(aver_acc_array)) * 100)[:6]))
 			logger.info('Training Done')
-			logger.info('Resume:' + '\n' + '  Epochs: ' + str(nEpochs) + '\n' + '  n. Images: ' + str(nEpochs * epochSize * self.batchSize) )
-			logger.info('  Final Loss: ' + str(cost) + '\n' + '  Relative Loss: ' + str(100*self.resume['loss'][-1]/(self.resume['loss'][0] + 0.1)) + '%' )
-			logger.info('  Relative Improvement: ' + str((self.resume['err'][-1] - self.resume['err'][0]) * 100) +'%')
-	
+
+
 	def record_training(self, record):
 		""" Record Training Data and Export them in CSV file
 		Args:
@@ -195,7 +185,7 @@ class HourglassModel():
 		out_file.close()
 		print('Training Record Saved')
 			
-	def training_init(self, nEpochs = 10, epochSize = 1000, saveStep = 500, dataset = None, load = None):
+	def training_init(self, nEpochs = 10, epochSize = 1000, dataset = None, load = None):
 		""" Initialize the training
 		Args:
 			nEpochs		: Number of Epochs to train
@@ -207,9 +197,11 @@ class HourglassModel():
 		with tf.name_scope('Session'):
 			with tf.device(self.gpu):
 				self._init_weight()
+				with tf.device(self.cpu):
+					self.saver = tf.train.Saver()
 				if load is not None:
 					self.saver.restore(self.Session, load)
-				self._train(nEpochs, epochSize, saveStep, validIteration=10)
+				self._train(nEpochs, epochSize, valid_iter_num=10)
 	
 	def weighted_bce_loss(self):
 		""" Create Weighted Loss Function

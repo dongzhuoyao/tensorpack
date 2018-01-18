@@ -23,5 +23,5 @@ if __name__ == '__main__':
 	model = HourglassModel( training=True,modif=False,dataset=dataset)
 
 	model.generate_model()
-	model.training_init(nEpochs=config['nepochs'], epochSize=config['epoch_size'], saveStep=config['saver_step'], dataset = None)
+	model.training_init(nEpochs=config['nepochs'], epochSize=config['epoch_size'], dataset = None)
 	
