@@ -35,7 +35,7 @@ IGNORE_LABEL = 255
 
 first_batch_lr = 2.5e-4
 lr_schedule = [(2, 1e-4), (4, 1e-5), (6, 8e-6)]
-epoch_scale = 3 #next test with 18
+epoch_scale = 18
 max_epoch = 10
 lr_multi_schedule = [('aspp.*_conv/W', 5),('aspp.*_conv/b',10)]
 batch_size = 7
@@ -268,7 +268,7 @@ class CalculateMIoU(Callback):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="2", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="3", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--meta_dir', default="../metadata/cityscapes", help='meta dir')
     parser.add_argument('--load', default="../resnet101.npz", help='load model')
     #parser.add_argument('--load', default="train_log/deeplabv2.naked.cs/model-26712", help='load model')
