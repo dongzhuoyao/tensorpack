@@ -8,7 +8,7 @@ Deeplabv2: [http://ethereon.github.io/netscope/#/gist/ff41a61a5384146fc099511a50
 
 Dataset |scale|image size| batch size| prefetch speed|
 ------------ | -------------| -------------| -------------| -------------
-VOC | 4|473*473|15|1.2items/s
+VOC | 4|473*473|14|1.2items/s
 Cityscapes|9|672*672 |7|1.2items/s
 
 
