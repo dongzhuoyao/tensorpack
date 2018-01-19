@@ -14,40 +14,38 @@ os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
 from tensorpack import *
 from tensorpack.dataflow import dataset
 from tensorpack.utils.gpu import get_nr_gpu
-from tensorpack.utils.segmentation.segmentation import  visualize_label, predict_scaler
+from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler
 from tensorpack.utils.stats import MIoUStatistics
 from tensorpack.utils import logger
-from tensorpack.dataflow.imgaug.misc import RandomCropWithPadding
 from tensorpack.tfutils import optimizer
 from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 import tensorpack.tfutils.symbolic_functions as symbf
-from seg_utils import RandomResize
 from tqdm import tqdm
-
+from seg_utils import RandomCropWithPadding
 from resnet_model import (
     preresnet_group, preresnet_basicblock, preresnet_bottleneck,
     resnet_group_deeplab, resnet_basicblock, resnet_bottleneck_deeplab, se_resnet_bottleneck,
     resnet_backbone_deeplab)
 
 
-CLASS_NUM = 21
-CROP_SIZE = 512
+CLASS_NUM = 19
+IMAGE_H = 672
+IMAGE_W = 672
 IGNORE_LABEL = 255
-first_batch_lr = 2.5e-4
-lr_schedule = [(2, 1e-4), (6, 1e-5)]
-epoch_scale = 6
-max_epoch = 8
 
-#lr_schedule = [(2, 1e-4), (4, 1e-5)]
-#epoch_scale = 6
-#max_epoch = 6
+first_batch_lr = 2.5e-4
+lr_schedule = [(2, 1e-4), (4, 1e-5), (6, 8e-6)]
+epoch_scale = 3
+max_epoch = 10
+lr_multi_schedule = [('aspp.*_conv/W', 5),('aspp.*_conv/b',10)]
+batch_size = 7
 
 class Model(ModelDesc):
 
     def _get_inputs(self):
         ## Set static shape so that tensorflow knows shape at compile time.
-        return [InputDesc(tf.float32, [None, CROP_SIZE, CROP_SIZE, 3], 'image'),
-                InputDesc(tf.int32, [None, CROP_SIZE, CROP_SIZE], 'gt')]
+        return [InputDesc(tf.float32, [None, IMAGE_H, IMAGE_W, 3], 'image'),
+                InputDesc(tf.int32, [None, IMAGE_H, IMAGE_W], 'gt')]
 
     def _build_graph(self, inputs):
         def resnet101(image):
@@ -70,7 +68,7 @@ class Model(ModelDesc):
                 with argscope([Conv2D, MaxPooling, GlobalAvgPooling, BatchNorm], data_format="NHWC"):
                     return resnet_backbone_deeplab(
                         image, num_blocks,
-                        preresnet_group if mode == 'preact' else resnet_group_deeplab, block_func,CLASS_NUM,ASPP = False)
+                        preresnet_group if mode == 'preact' else resnet_group_deeplab, block_func, class_num = CLASS_NUM,ASPP = False)
 
             return get_logits(image)
 
@@ -78,6 +76,7 @@ class Model(ModelDesc):
         image = image - tf.constant([104, 116, 122], dtype='float32')
         label = tf.identity(label, name="label")
 
+        #predict = vgg16(image)
         predict = resnet101(image)
 
         costs = []
@@ -85,6 +84,7 @@ class Model(ModelDesc):
 
         label4d = tf.expand_dims(label, 3, name='label4d')
         new_size = prob.get_shape()[1:3]
+        #label_resized = tf.image.resize_nearest_neighbor(label4d, new_size)
 
         cost = symbf.softmax_cross_entropy_with_ignore_label(logits=predict, label=label4d,
                                                              class_num=CLASS_NUM)
@@ -107,19 +107,18 @@ class Model(ModelDesc):
         opt = tf.train.AdamOptimizer(lr, epsilon=2.5e-4)
         return optimizer.apply_grad_processors(
             opt, [gradproc.ScaleGradient(
-                [('aspp.*_conv/W', 1),('aspp.*_conv/b',1)])])
+                [('aspp.*_conv/W', 10),('aspp.*_conv/b',20)])])
 
 
-def get_data(name, data_dir, meta_dir, batch_size):
+def get_data(name, meta_dir, batch_size):
     isTrain = name == 'train'
-    ds = dataset.PascalVOC12(data_dir, meta_dir, name, shuffle=True)
+    ds = dataset.Cityscapes(meta_dir, name, shuffle=True)
 
-    if isTrain:
-        ds = MapData(ds, RandomResize)
 
     if isTrain:#special augmentation
-        shape_aug = [
-                     RandomCropWithPadding(CROP_SIZE,IGNORE_LABEL),
+        shape_aug = [imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
+                            aspect_ratio_thres=0.15),
+                     RandomCropWithPadding((IMAGE_H,IMAGE_W),IGNORE_LABEL),
                      imgaug.Flip(horiz=True),
                      ]
     else:
@@ -127,8 +126,10 @@ def get_data(name, data_dir, meta_dir, batch_size):
 
     ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False)
 
-
+    def f(ds):
+        return ds
     if isTrain:
+        ds = MapData(ds,f)
         ds = BatchData(ds, batch_size)
         ds = PrefetchDataZMQ(ds, 1)
     else:
@@ -136,8 +137,8 @@ def get_data(name, data_dir, meta_dir, batch_size):
     return ds
 
 
-def view_data(data_dir, meta_dir, batch_size):
-    ds = RepeatedData(get_data('train',data_dir, meta_dir, batch_size), -1)
+def view_data( meta_dir, batch_size):
+    ds = RepeatedData(get_data('train',meta_dir, batch_size), -1)
     ds.reset_state()
     for ims, labels in ds.get_data():
         for im, label in zip(ims, labels):
@@ -149,25 +150,26 @@ def view_data(data_dir, meta_dir, batch_size):
             cv2.waitKey(0)
 
 
-def get_config(data_dir, meta_dir, batch_size):
+def get_config(meta_dir, batch_size):
     logger.auto_set_dir()
     nr_tower = max(get_nr_gpu(), 1)
-    dataset_train = get_data('train', data_dir, meta_dir, batch_size)
-    steps_per_epoch = dataset_train.size() * epoch_scale
-    dataset_val = get_data('val', data_dir, meta_dir, batch_size)
+
+    dataset_train = get_data('train', meta_dir, batch_size)
+    steps_per_epoch = dataset_train.size() * 3
+    dataset_val = get_data('val',  meta_dir, batch_size)
 
     return TrainConfig(
         dataflow=dataset_train,
         callbacks=[
             ModelSaver(),
-            ScheduledHyperParamSetter('learning_rate',lr_schedule),
+            ScheduledHyperParamSetter('learning_rate', lr_schedule),
             HumanHyperParamSetter('learning_rate'),
             PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=1),
             ProgressBar(["cross_entropy_loss","cost","wd_cost"])#uncomment it to debug for every step
         ],
         model=Model(),
         steps_per_epoch=steps_per_epoch,
-        max_epoch=max_epoch,
+        max_epoch=10,
         nr_tower = nr_tower
     )
 
@@ -196,7 +198,8 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = True, is_densecrf = False):
     import cv2
-    ds = dataset.PascalVOC12(args.data_dir, args.meta_dir, "val")
+    name = "val"
+    ds = dataset.Cityscapes(args.meta_dir, name)
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
@@ -206,18 +209,22 @@ def proceed_validation(args, is_save = True, is_densecrf = False):
         output_names=['prob'])
     predictor = OfflinePredictor(pred_config)
 
+    from tensorpack.utils.fs import mkdir_p
+    result_dir = os.path.join("result_on_{}".format(name))
+    mkdir_p(result_dir)
+
     i = 0
     stat = MIoUStatistics(CLASS_NUM)
     logger.info("start validation....")
     for image, label in tqdm(ds.get_data()):
         label = np.squeeze(label)
         image = np.squeeze(image)
-        prediction = predict_scaler(image, predictor, scales=[0.9, 1, 1.1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
+        prediction = predict_scaler(image, predictor, scales=[0.9, 1, 1.1], classes=CLASS_NUM, tile_size=(IMAGE_H,IMAGE_W), is_densecrf = is_densecrf)
         prediction = np.argmax(prediction, axis=2)
-        stat.feed(prediction, label)
+        #stat.feed(prediction, label)
 
         if is_save:
-            cv2.imwrite("result/{}.png".format(i), np.concatenate((image, visualize_label(label), visualize_label(prediction)), axis=1))
+            cv2.imwrite(os.path.join(result_dir,"{}.png".format(i)), np.concatenate((image, visualize_label(label), visualize_label(prediction)), axis=1))
 
         i += 1
 
@@ -242,7 +249,7 @@ class CalculateMIoU(Callback):
 
     def _trigger(self):
         global args
-        self.val_ds = get_data('val', args.data_dir, args.meta_dir, args.batch_size)
+        self.val_ds = get_data('val', args.meta_dir, args.batch_size)
         self.val_ds.reset_state()
 
         self.stat = MIoUStatistics(self.nb_class)
@@ -250,7 +257,7 @@ class CalculateMIoU(Callback):
         for image, label in tqdm(self.val_ds.get_data()):
             label = np.squeeze(label)
             image = np.squeeze(image)
-            prediction = predict_scaler(image, self.pred, scales=[0.9, 1, 1.1], classes=CLASS_NUM, tile_size=CROP_SIZE,
+            prediction = predict_scaler(image, self.pred, scales=[0.9, 1, 1.1], classes=CLASS_NUM, tile_size=(IMAGE_H,IMAGE_W),
                            is_densecrf=False)
             prediction = np.argmax(prediction, axis=2)
             self.stat.feed(prediction, label)
@@ -259,18 +266,15 @@ class CalculateMIoU(Callback):
         self.trainer.monitors.put_scalar("mean_accuracy", self.stat.mean_accuracy)
         self.trainer.monitors.put_scalar("accuracy", self.stat.accuracy)
 
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="4", help='comma separated list of GPU(s) to use.')
-    parser.add_argument('--data_dir', default="/data2/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012",
-                        help='dataset dir')
-    parser.add_argument('--meta_dir', default="../metadata/pascalvoc12", help='meta dir')
+    parser.add_argument('--gpu', default="2", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--meta_dir', default="../metadata/cityscapes", help='meta dir')
     parser.add_argument('--load', default="../resnet101.npz", help='load model')
+    #parser.add_argument('--load', default="train_log/deeplabv2.naked.cs/model-26712", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
-    parser.add_argument('--batch_size', type=int, default = 10, help='batch_size')
+    parser.add_argument('--batch_size', type=int, default = batch_size, help='batch_size')
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     parser.add_argument('--validation', action='store_true', help='validate model on validation images')
     args = parser.parse_args()
@@ -279,17 +283,15 @@ if __name__ == '__main__':
 
 
     if args.view:
-        view_data(args.data_dir,args.meta_dir,args.batch_size)
+        view_data(args.meta_dir,args.batch_size)
     elif args.run:
         run(args.load, args.run, args.output)
     elif args.validation:
         proceed_validation(args)
     else:
-        config = get_config(args.data_dir,args.meta_dir,args.batch_size)
+        config = get_config(args.meta_dir,args.batch_size)
         if args.load:
             config.session_init = get_model_loader(args.load)
-        #launch_train_with_config(
-        #    config,
-        #    SyncMultiGPUTrainer(max(get_nr_gpu(), 1))
-        trainer = SyncMultiGPUTrainerParameterServer(max(get_nr_gpu(), 1))
-        launch_train_with_config(config, trainer)
+        launch_train_with_config(
+            config,
+            SyncMultiGPUTrainer(max(get_nr_gpu(), 1)))

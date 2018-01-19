@@ -10,7 +10,7 @@ from tensorpack.utils import logger
 from config import process_config
 
 logger.auto_set_dir()
-os.environ['CUDA_VISIBLE_DEVICES'] ='3'
+os.environ['CUDA_VISIBLE_DEVICES'] ='4'
 
 
 if __name__ == '__main__':

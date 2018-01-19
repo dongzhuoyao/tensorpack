@@ -102,7 +102,7 @@ def get_config(model, fake=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="0,1,2,3", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="0,1,2,4", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--data', default="/data1/dataset/imagenet", help='ILSVRC dataset dir')
     parser.add_argument('--load', help='load model')
     parser.add_argument('--fake', help='use fakedata to test or benchmark this model', action='store_true')

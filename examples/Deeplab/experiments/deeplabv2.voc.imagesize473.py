@@ -14,16 +14,14 @@ os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
 from tensorpack import *
 from tensorpack.dataflow import dataset
 from tensorpack.utils.gpu import get_nr_gpu
-from tensorpack.utils.segmentation.segmentation import  visualize_label, predict_scaler
+from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler
 from tensorpack.utils.stats import MIoUStatistics
 from tensorpack.utils import logger
-from tensorpack.dataflow.imgaug.misc import RandomCropWithPadding
 from tensorpack.tfutils import optimizer
 from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 import tensorpack.tfutils.symbolic_functions as symbf
-from seg_utils import RandomResize
 from tqdm import tqdm
-
+from seg_utils import RandomCropWithPadding
 from resnet_model import (
     preresnet_group, preresnet_basicblock, preresnet_bottleneck,
     resnet_group_deeplab, resnet_basicblock, resnet_bottleneck_deeplab, se_resnet_bottleneck,
@@ -31,16 +29,15 @@ from resnet_model import (
 
 
 CLASS_NUM = 21
-CROP_SIZE = 512
+CROP_SIZE = 473
 IGNORE_LABEL = 255
-first_batch_lr = 2.5e-4
-lr_schedule = [(2, 1e-4), (6, 1e-5)]
-epoch_scale = 6
-max_epoch = 8
 
-#lr_schedule = [(2, 1e-4), (4, 1e-5)]
-#epoch_scale = 6
-#max_epoch = 6
+first_batch_lr = 2.5e-4
+lr_schedule = [(2, 1e-4), (4, 1e-5), (6, 8e-6)]
+epoch_scale = 8
+max_epoch = 10
+lr_multi_schedule = [('aspp.*_conv/W', 5),('aspp.*_conv/b',10)]
+batch_size = 15
 
 class Model(ModelDesc):
 
@@ -85,6 +82,7 @@ class Model(ModelDesc):
 
         label4d = tf.expand_dims(label, 3, name='label4d')
         new_size = prob.get_shape()[1:3]
+        #label_resized = tf.image.resize_nearest_neighbor(label4d, new_size)
 
         cost = symbf.softmax_cross_entropy_with_ignore_label(logits=predict, label=label4d,
                                                              class_num=CLASS_NUM)
@@ -107,18 +105,17 @@ class Model(ModelDesc):
         opt = tf.train.AdamOptimizer(lr, epsilon=2.5e-4)
         return optimizer.apply_grad_processors(
             opt, [gradproc.ScaleGradient(
-                [('aspp.*_conv/W', 1),('aspp.*_conv/b',1)])])
+                lr_multi_schedule)])
 
 
 def get_data(name, data_dir, meta_dir, batch_size):
     isTrain = name == 'train'
     ds = dataset.PascalVOC12(data_dir, meta_dir, name, shuffle=True)
 
-    if isTrain:
-        ds = MapData(ds, RandomResize)
 
     if isTrain:#special augmentation
-        shape_aug = [
+        shape_aug = [imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
+                            aspect_ratio_thres=0.15),
                      RandomCropWithPadding(CROP_SIZE,IGNORE_LABEL),
                      imgaug.Flip(horiz=True),
                      ]
@@ -160,7 +157,7 @@ def get_config(data_dir, meta_dir, batch_size):
         dataflow=dataset_train,
         callbacks=[
             ModelSaver(),
-            ScheduledHyperParamSetter('learning_rate',lr_schedule),
+            ScheduledHyperParamSetter('learning_rate', lr_schedule),
             HumanHyperParamSetter('learning_rate'),
             PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=1),
             ProgressBar(["cross_entropy_loss","cost","wd_cost"])#uncomment it to debug for every step
@@ -194,7 +191,7 @@ def run(model_path, image_path, output):
         pred = outputs[5][0]
         cv2.imwrite(output, pred * 255)
 
-def proceed_validation(args, is_save = True, is_densecrf = False):
+def proceed_validation(args, is_save = True, is_densecrf = True):
     import cv2
     ds = dataset.PascalVOC12(args.data_dir, args.meta_dir, "val")
     ds = BatchData(ds, 1)
@@ -263,14 +260,14 @@ class CalculateMIoU(Callback):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="4", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="0", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--data_dir', default="/data2/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012",
                         help='dataset dir')
     parser.add_argument('--meta_dir', default="../metadata/pascalvoc12", help='meta dir')
     parser.add_argument('--load', default="../resnet101.npz", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
-    parser.add_argument('--batch_size', type=int, default = 10, help='batch_size')
+    parser.add_argument('--batch_size', type=int, default = batch_size, help='batch_size')
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     parser.add_argument('--validation', action='store_true', help='validate model on validation images')
     args = parser.parse_args()
@@ -288,8 +285,6 @@ if __name__ == '__main__':
         config = get_config(args.data_dir,args.meta_dir,args.batch_size)
         if args.load:
             config.session_init = get_model_loader(args.load)
-        #launch_train_with_config(
-        #    config,
-        #    SyncMultiGPUTrainer(max(get_nr_gpu(), 1))
-        trainer = SyncMultiGPUTrainerParameterServer(max(get_nr_gpu(), 1))
-        launch_train_with_config(config, trainer)
+        launch_train_with_config(
+            config,
+            SyncMultiGPUTrainer(max(get_nr_gpu(), 1)))
