@@ -6,6 +6,10 @@ Deeplabv1: [http://ethereon.github.io/netscope/#/gist/f3643b581154e8d6f26bde092e
 
 Deeplabv2: [http://ethereon.github.io/netscope/#/gist/ff41a61a5384146fc099511a5075e1f9](http://ethereon.github.io/netscope/#/gist/ff41a61a5384146fc099511a5075e1f9)
 
+VOC best scale=4, 473*473,15
+
+Cityscapes best scale=9, 672*672, 7
+
 
 
 ### sobel FPN
