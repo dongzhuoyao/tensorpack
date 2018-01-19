@@ -92,10 +92,10 @@ Arch |metadata| Val mIoU
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,4GPU,bs32) || 73.65%
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8) | |69.3%
 Deeplabv2-resnet101(no multi-branch,no ASPP,no MSF,1GPU,bs8) | |68.6%
-deeplabv2.voc.size512||68.9
-deeplabv2.voc.size512.randomresizefix||68.1
-deeplabv2.voc.size512.randomresizefix.officiallr(2/3 1e-3, 1/3 1e-4)|| epoch 7,50%(:cry:)
-deeplabv2.voc.size512.randomresizefix.4gpu|rs,flip,crop;deeplabv2;msf;4gpu;first_batch_lr = 2.5e-4;lr_schedule = [(2, 1e-4), (6, 1e-5)];epoch_scale = 6;max_epoch = 8|69.9%
+deeplabv2.voc.size512|rs-nearest,flip,crop;deeplabv2-largedilation;first_batch_lr=2.5e-4;first-batch-lr=2.5e-4;lr_schedule=[(2, 1e-4), (4, 1e-5), (6, 8e-6)];epoch_scale=8;max_epoch=10|68.9
+deeplabv2.voc.size512.randomresizefix|rs-bilinear,flip,crop;deeplabv2-largedilation;1gpu;first-batch-lr=2.5e-4;lr_schedule=[(2, 1e-4), (4, 1e-5), (6, 8e-6)];epoch_scale=8;max_epoch=10|68.1
+deeplabv2.voc.size512.randomresizefix.officiallr|rs-bilinear;(2/3 1e-3, 1/3 1e-4)| epoch 7,50%(:cry:)
+deeplabv2.voc.size512.randomresizefix.4gpu|rs-bilinear,flip,crop;deeplabv2;msf;4gpu;first_batch_lr = 2.5e-4;lr_schedule = [(2, 1e-4), (6, 1e-5)];epoch_scale = 6;max_epoch = 8|69.9%
 
 DenseCRF Grid Search
 
