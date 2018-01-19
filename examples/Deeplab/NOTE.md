@@ -6,6 +6,11 @@ Deeplabv1: [http://ethereon.github.io/netscope/#/gist/f3643b581154e8d6f26bde092e
 
 Deeplabv2: [http://ethereon.github.io/netscope/#/gist/ff41a61a5384146fc099511a5075e1f9](http://ethereon.github.io/netscope/#/gist/ff41a61a5384146fc099511a5075e1f9)
 
+Dataset |scale|image size| batch size| prefetch speed|
+------------ | -------------| -------------| -------------| -------------
+VOC | 4|473*473|14|1.2items/s
+Cityscapes|9|672*672 |7|1.2items/s
+
 
 
 ### sobel FPN
@@ -96,6 +101,7 @@ deeplabv2.voc.size512|rs-nearest,flip,crop;deeplabv2-largedilation;first_batch_l
 deeplabv2.voc.size512.randomresizefix|rs-bilinear,flip,crop;deeplabv2-largedilation;1gpu;first-batch-lr=2.5e-4;lr_schedule=[(2, 1e-4), (4, 1e-5), (6, 8e-6)];epoch_scale=8;max_epoch=10|68.1
 deeplabv2.voc.size512.randomresizefix.officiallr|rs-bilinear;(2/3 1e-3, 1/3 1e-4)| epoch 7,50%(:cry:)
 deeplabv2.voc.size512.randomresizefix.4gpu|rs-bilinear,flip,crop;deeplabv2;msf;4gpu;first_batch_lr = 2.5e-4;lr_schedule = [(2, 1e-4), (6, 1e-5)];epoch_scale = 6;max_epoch = 8|69.9%
+deeplabv2.voc.epoch6|first_batch_lr = 2.5e-4;lr_schedule = [(2, 1e-4), (4, 1e-5)];epoch_scale = 6;max_epoch = 6|67.2%
 
 DenseCRF Grid Search
 
@@ -119,6 +125,7 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(1024x2048),1GPU,bs1,full,sc
 deeplabv2.cs.resnet101.scale8 | 50% in epoch8,stopped(:cry:)
 deeplabv2.cs.resnet101.scale3| nan (:cry:)
 deeplabv2.cs( new deeplab,res5-dilation2),upsample 8x   | cost:nan(:cry:)
+deeplabv2.cs.newlr(first_batch_lr = 2.5e-4;lr_schedule = [(2, 1e-4), (4, 1e-5)];epoch_scale = 3;max_epoch = 6)|35.5%
 
 
 **notice:** The validation mIOU for this repo is  all achieved  with multi-scale and left-right flippling.
