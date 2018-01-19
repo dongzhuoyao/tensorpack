@@ -88,7 +88,7 @@ baseline,kernel=11|58.51,78.58,70.05|67.21,93.65,79.59
 MSF on pascalvoc MSF all tild size: 321*321
 
 Arch |metadata| Val mIoU 
------------- | -------------
+------------ | -------------| -------------
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,4GPU,bs32) || 73.65%
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8) | |69.3%
 Deeplabv2-resnet101(no multi-branch,no ASPP,no MSF,1GPU,bs8) | |68.6%
