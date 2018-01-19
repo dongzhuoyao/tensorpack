@@ -95,10 +95,7 @@ Deeplabv2-resnet101(no multi-branch,no ASPP,no MSF,1GPU,bs8) | |68.6%
 deeplabv2.voc.size512||68.9
 deeplabv2.voc.size512.randomresizefix||68.1
 deeplabv2.voc.size512.randomresizefix.officiallr(2/3 1e-3, 1/3 1e-4)|| epoch 7,50%(:cry:)
-deeplabv2.voc.size512.randomresizefix.4gpu(rs,flip,crop;deeplabv2;msf;4gpu)|first_batch_lr = 2.5e-4
-lr_schedule = [(2, 1e-4), (6, 1e-5)]
-epoch_scale = 6
-max_epoch = 8|69.9%
+deeplabv2.voc.size512.randomresizefix.4gpu|rs,flip,crop;deeplabv2;msf;4gpu;first_batch_lr = 2.5e-4;lr_schedule = [(2, 1e-4), (6, 1e-5)];epoch_scale = 6;max_epoch = 8|69.9%
 
 DenseCRF Grid Search
 
