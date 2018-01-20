@@ -6,10 +6,20 @@ Deeplabv1: [http://ethereon.github.io/netscope/#/gist/f3643b581154e8d6f26bde092e
 
 Deeplabv2: [http://ethereon.github.io/netscope/#/gist/ff41a61a5384146fc099511a5075e1f9](http://ethereon.github.io/netscope/#/gist/ff41a61a5384146fc099511a5075e1f9)
 
-Dataset |scale|image size| batch size| prefetch speed|
------------- | -------------| -------------| -------------| -------------
-VOC | 4|473*473|14|1.2items/s
-Cityscapes|9|672*672 |7|1.2items/s
+Totally, PascalVOC 30K iterations, Cityscapes 45K iterations.
+
+lr schedule:
+
+Dataset|Schedule
+------------ | -------------
+PascalVOC|
+Cityscapes|
+
+
+Dataset |scale|epoch_iters|image size| batch size| prefetch speed|
+------------ | -------------| -------------| -------------| -------------| -------------
+VOC | 4|3020|473*473|14|1.2items/s
+Cityscapes|9|3825|672*672 |7|1.2items/s
 
 
 
