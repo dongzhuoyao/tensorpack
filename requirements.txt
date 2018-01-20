@@ -8,3 +8,4 @@ msgpack-numpy>=0.3.9
 pyzmq>=16
 subprocess32; python_version < '3.0'
 functools32; python_version < '3.0'
+pydensecrf

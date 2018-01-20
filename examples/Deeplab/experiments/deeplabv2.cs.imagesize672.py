@@ -222,7 +222,7 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
         image = np.squeeze(image)
         prediction = predict_scaler(image, predictor, scales=[0.9, 1, 1.1], classes=CLASS_NUM, tile_size=(IMAGE_H,IMAGE_W), is_densecrf = is_densecrf)
         prediction = np.argmax(prediction, axis=2)
-        #stat.feed(prediction, label)
+        stat.feed(prediction, label)
 
         if is_save:
             cv2.imwrite(os.path.join(result_dir,"{}.png".format(i)), np.concatenate((image, visualize_label(label), visualize_label(prediction)), axis=1))
@@ -269,7 +269,7 @@ class CalculateMIoU(Callback):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="2", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="1", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--meta_dir', default="../metadata/cityscapes", help='meta dir')
     parser.add_argument('--load', default="../resnet101.npz", help='load model')
     #parser.add_argument('--load', default="train_log/deeplabv2.naked.cs/model-26712", help='load model')

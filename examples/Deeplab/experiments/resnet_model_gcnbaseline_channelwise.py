@@ -210,7 +210,7 @@ def edge_conv(l, name, channel_num):
 def resnet_backbone(image, num_blocks, group_func, block_func, class_num):
     with argscope(Conv2D, nl=tf.identity, use_bias=False,
                   W_init=variance_scaling_initializer(mode='FAN_OUT')):
-        l = Conv2D('conv0', image, 64, 7, stride=2, nl=BNReLU)
+        resnet1 = l= Conv2D('conv0', image, 64, 7, stride=2, nl=BNReLU)
         l = MaxPooling('pool0', l, shape=3, stride=2, padding='SAME')
         resnet2 = l = group_func(l, 'group0', block_func, 64, num_blocks[0], 1, stride_first=False)
 
@@ -224,26 +224,26 @@ def resnet_backbone(image, num_blocks, group_func, block_func, class_num):
         with tf.variable_scope("res5"):
             resnet5 = Conv2D('res-simplify', resnet5, class_num, 1, stride=1, nl=BNReLU)
             resnet5 = edge_conv(resnet5, name="sobel", channel_num=class_num)
-            resnet5_upsample = Deconv2D("deconv_res5",resnet5, out_channel = class_num, kernel_shape = 3, stride=2, nl=BNReLU)
+            resnet5_upsample = tf.image.resize_bilinear(resnet5, resnet4.shape[1:3])
         with tf.variable_scope("res4"):
             resnet4 = Conv2D('res-simplify', resnet4, class_num, 1, stride=1, nl=BNReLU)
             resnet4 = edge_conv(resnet4, name="sobel", channel_num=class_num)
             resnet4 = resnet4 + resnet5_upsample
-            resnet4_upsample = Deconv2D("deconv_res4",resnet4, out_channel = class_num, kernel_shape = 3, stride=2, nl=BNReLU)
+            resnet4_upsample = tf.image.resize_bilinear(resnet4, resnet3.shape[1:3])
         with tf.variable_scope("res3"):
             resnet3 = Conv2D('res-simplify', resnet3, class_num, 1, stride=1, nl=BNReLU)
             resnet3 = edge_conv(resnet3, name="sobel", channel_num=class_num)
             resnet3 = resnet3 + resnet4_upsample
-            resnet3_upsample = Deconv2D("deconv_res3",resnet3, out_channel = class_num, kernel_shape = 3, stride=2, nl=BNReLU)
+            resnet3_upsample = tf.image.resize_bilinear(resnet3, resnet2.shape[1:3])
         with tf.variable_scope("res2"):
             with tf.variable_scope("block1"):
                 resnet2 = Conv2D('res-simplify', resnet2, class_num, 1, stride=1, nl=BNReLU)
                 resnet2 = edge_conv(resnet2, name="sobel", channel_num=class_num)
                 resnet2 = resnet2 + resnet3_upsample
-                resnet2_upsample = Deconv2D("deconv_res2",resnet2, out_channel = class_num, kernel_shape = 3, stride=2, nl=BNReLU)
+                resnet2_upsample = tf.image.resize_bilinear(resnet2, resnet1.shape[1:3])
             with tf.variable_scope("block2"):
                 resnet2_upsample = resnet_basicblock(resnet2_upsample,class_num,stride=1)
-                resnet2_upsample = Deconv2D("deconv_res2_2", resnet2_upsample, out_channel=class_num, kernel_shape=3, stride=2, nl=BNReLU)
+                resnet2_upsample = tf.image.resize_bilinear(resnet2_upsample, image.shape[1:3])
             with tf.variable_scope("block3"):
                 output = resnet_basicblock(resnet2_upsample, class_num, stride=1)
 
