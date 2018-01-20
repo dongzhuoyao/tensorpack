@@ -39,6 +39,7 @@ epoch_scale = 18
 max_epoch = 10
 lr_multi_schedule = [('aspp.*_conv/W', 5),('aspp.*_conv/b',10)]
 batch_size = 7
+evaluate_every_n_epoch = max_epoch
 
 class Model(ModelDesc):
 
@@ -164,7 +165,7 @@ def get_config(meta_dir, batch_size):
             ModelSaver(),
             ScheduledHyperParamSetter('learning_rate', lr_schedule),
             HumanHyperParamSetter('learning_rate'),
-            PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=max_epoch),
+            PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
             ProgressBar(["cross_entropy_loss","cost","wd_cost"])#uncomment it to debug for every step
         ],
         model=Model(),
