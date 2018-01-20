@@ -16,6 +16,8 @@ PascalVOC|
 Cityscapes|
 
 
+scale ratio 4:9 or 8:18? to be decided.
+
 Dataset |scale|epoch_iters|image size| batch size| prefetch speed|
 ------------ | -------------| -------------| -------------| -------------| -------------
 VOC | 4|3020|473*473|14|1.2items/s
