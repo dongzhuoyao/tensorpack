@@ -15,8 +15,8 @@ MSC+Coco+Aug+ASPP+CRF=77.69% mIoU
 
 Arch | Val mIoU
 ------------ | -------------
-Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8) | **69.3%**
-Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,4GPU,bs32) | 73.65%
+deeplabv2.voc.imagesize473| **71.5%**
+
 
 if without imgaug.RandomResize, the mIoU will be 68.4% rather than 69.3%.
 
