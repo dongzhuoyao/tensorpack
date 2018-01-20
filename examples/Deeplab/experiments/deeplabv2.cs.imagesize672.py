@@ -164,7 +164,7 @@ def get_config(meta_dir, batch_size):
             ModelSaver(),
             ScheduledHyperParamSetter('learning_rate', lr_schedule),
             HumanHyperParamSetter('learning_rate'),
-            #PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=1),
+            PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=max_epoch),
             ProgressBar(["cross_entropy_loss","cost","wd_cost"])#uncomment it to debug for every step
         ],
         model=Model(),
