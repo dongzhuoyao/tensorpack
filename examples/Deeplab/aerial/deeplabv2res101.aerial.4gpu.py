@@ -257,13 +257,13 @@ def proceed_test(args,is_densecrf = False):
     _itr = ds.get_data()
     for i in tqdm(range(len(imglist))):
         image = next(_itr)
-        name = os.path.basename(imglist[i]).strip(".tif")
+        name = os.path.basename(imglist[i]).rstrip(".tif")
         image = np.squeeze(image)
         prediction = predict_scaler(image, predictor, scales=[0.9,1,1.1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
         prediction = np.argmax(prediction, axis=2)
         prediction = prediction*255 # to 0-255
         file_path = os.path.join(result_dir,"{}.tif".format(name))
-        compressed_file_path = os.path.join(result_dir, "compressed","{}.tiff".format(name))
+        compressed_file_path = os.path.join(result_dir, "compressed","{}.tif".format(name))
         cv2.imwrite(file_path, prediction)
         command = "gdal_translate --config GDAL_PAM_ENABLED NO -co COMPRESS=CCITTFAX4 -co NBITS=1 " + file_path + " " + compressed_file_path
         print command
@@ -308,7 +308,7 @@ class CalculateMIoU(Callback):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="1", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="1,2,3,4", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--meta_dir', default="../metadata/aerial", help='meta dir')
     parser.add_argument('--load', default="../resnet101.npz", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
