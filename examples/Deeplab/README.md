@@ -24,10 +24,10 @@ if without imgaug.RandomResize, the mIoU will be 68.4% rather than 69.3%.
 
 Full+Aug+ASPP+CRF=71.4% mIoU
 
-Arch | paper mIoU |Val mIoU
------------- | -------- | -------------
-Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(1024X2048),1GPU,bs1,full) | 66.6(Full Image)  | **66.52**(without ASPP,CRF)
-Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF(321X321),1GPU,bs8, 321*321) | -- | 63.6
+Arch  |Val mIoU
+------------ | -------- 
+deeplabv2.cs.imagesize672.scale18.py| **74.21%**
+
 
 ### TODO
 

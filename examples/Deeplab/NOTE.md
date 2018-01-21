@@ -57,6 +57,8 @@ deeplabv2.naked.fpn.learnable.sobel.channelcross.lr1|65.1%|
 Arch |official Val mIoU |Val mIoU
 ------------ | -------------|----------
 deeplabv2.naked.gcn(lr10)| 74.1 with resnet150,coco+pascal+BSDS |66.8(buggy)|
+deeplabv2.voc.imagesize473.gcnbaseline||67.5|
+deeplabv2.voc.imagesize473.gcnbaseline.channelwise||65.9|
 
 
 
@@ -139,6 +141,8 @@ deeplabv2.cs.resnet101.scale8 | 50% in epoch8,stopped(:cry:)
 deeplabv2.cs.resnet101.scale3| nan (:cry:)
 deeplabv2.cs( new deeplab,res5-dilation2),upsample 8x   | cost:nan(:cry:)
 deeplabv2.cs.newlr(first_batch_lr = 2.5e-4;lr_schedule = [(2, 1e-4), (4, 1e-5)];epoch_scale = 3;max_epoch = 6)|35.5%
+deeplabv2.cs.imagesize672|70.87
+deeplabv2.cs.imagesize672.scale18|**74.21**
 
 
 **notice:** The validation mIOU for this repo is  all achieved  with multi-scale and left-right flippling.
