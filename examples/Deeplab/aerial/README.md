@@ -9,6 +9,7 @@ Val mIoU | Test mIoU
 ------------ | -------------
 87.25 | 68.2
 88.7(deeplabv2.naked.aerial.4gpu/model-35385) | ?
+deeplabv2res101.aerial(88.07)|?
 
 ### models
 
