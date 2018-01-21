@@ -14,24 +14,32 @@ os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
 from tensorpack import *
 from tensorpack.dataflow import dataset
 from tensorpack.utils.gpu import get_nr_gpu
-from tensorpack.utils.segmentation.segmentation import  predict_scaler
+from tensorpack.utils.segmentation.segmentation import imwrite_grid, visualize_label, predict_scaler
 from tensorpack.utils.stats import MIoUStatistics
-from tensorpack.dataflow.imgaug.misc import RandomCropWithPadding
 from tensorpack.utils import logger
 from tensorpack.tfutils import optimizer
 from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 import tensorpack.tfutils.symbolic_functions as symbf
 from tqdm import tqdm
-
+from seg_utils import RandomCropWithPadding
 from resnet_model import (
     preresnet_group, preresnet_basicblock, preresnet_bottleneck,
     resnet_group, resnet_basicblock, resnet_bottleneck_deeplab, se_resnet_bottleneck,
     resnet_backbone)
 
 
-CLASS_NUM = 21
-CROP_SIZE = 321
+CLASS_NUM = 2
+CROP_SIZE = 512
 IGNORE_LABEL = 255
+
+first_batch_lr = 2.5e-4
+lr_schedule = [(2, 1e-4), (4, 1e-5), (6, 8e-6)]
+epoch_scale = 15
+max_epoch = 10
+lr_multi_schedule = [('aspp.*_conv/W', 5),('aspp.*_conv/b',10)]
+batch_size = 12
+evaluate_every_n_epoch = 1
+
 
 class Model(ModelDesc):
 
@@ -61,7 +69,7 @@ class Model(ModelDesc):
                 with argscope([Conv2D, MaxPooling, GlobalAvgPooling, BatchNorm], data_format="NHWC"):
                     return resnet_backbone(
                         image, num_blocks,
-                        preresnet_group if mode == 'preact' else resnet_group, block_func, CLASS_NUM, ASPP = True)
+                        preresnet_group if mode == 'preact' else resnet_group, block_func,CLASS_NUM,ASPP = False)
 
             return get_logits(image)
 
@@ -75,6 +83,8 @@ class Model(ModelDesc):
         prob = tf.nn.softmax(predict, name='prob')
 
         label4d = tf.expand_dims(label, 3, name='label4d')
+        new_size = prob.get_shape()[1:3]
+
 
         cost = symbf.softmax_cross_entropy_with_ignore_label(logits=predict, label=label4d,
                                                              class_num=CLASS_NUM)
@@ -93,35 +103,31 @@ class Model(ModelDesc):
             add_moving_summary(costs + [self.cost])
 
     def _get_optimizer(self):
-        lr = tf.get_variable('learning_rate', initializer=2.5e-4, trainable=False)
+        lr = tf.get_variable('learning_rate', initializer=first_batch_lr, trainable=False)
         opt = tf.train.AdamOptimizer(lr, epsilon=2.5e-4)
         return optimizer.apply_grad_processors(
             opt, [gradproc.ScaleGradient(
-                [('aspp.*_conv/W', 10),('aspp.*_conv/b',20)])])
+                lr_multi_schedule)])
 
 
-def get_data(name, data_dir, meta_dir, batch_size):
+def get_data(name, meta_dir, batch_size):
     isTrain = name == 'train'
-    ds = dataset.PascalVOC12(data_dir, meta_dir, name, shuffle=True)
-
+    ds = dataset.Aerial(meta_dir, name, shuffle=True)
 
 
     if isTrain:#special augmentation
         shape_aug = [imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
                             aspect_ratio_thres=0.15),
-                     RandomCropWithPadding(CROP_SIZE, IGNORE_LABEL),
+                     RandomCropWithPadding(CROP_SIZE,IGNORE_LABEL),
                      imgaug.Flip(horiz=True),
                      ]
     else:
         shape_aug = []
+
     ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False)
 
 
-    def f(ds):
-        return ds#just for debugging
-
     if isTrain:
-        ds = MapData(ds, f)
         ds = BatchData(ds, batch_size)
         ds = PrefetchDataZMQ(ds, 1)
     else:
@@ -129,8 +135,8 @@ def get_data(name, data_dir, meta_dir, batch_size):
     return ds
 
 
-def view_data(data_dir, meta_dir, batch_size):
-    ds = RepeatedData(get_data('train',data_dir, meta_dir, batch_size), -1)
+def view_data(meta_dir, batch_size):
+    ds = RepeatedData(get_data('train', meta_dir, batch_size), -1)
     ds.reset_state()
     for ims, labels in ds.get_data():
         for im, label in zip(ims, labels):
@@ -142,35 +148,96 @@ def view_data(data_dir, meta_dir, batch_size):
             cv2.waitKey(0)
 
 
-def get_config(data_dir, meta_dir, batch_size):
+def get_config( meta_dir, batch_size):
     logger.auto_set_dir()
     nr_tower = max(get_nr_gpu(), 1)
-    dataset_train = get_data('train', data_dir, meta_dir, batch_size)
-    steps_per_epoch = dataset_train.size() * 8
-    dataset_val = get_data('val', data_dir, meta_dir, batch_size)
+
+    dataset_train = get_data('train',  meta_dir, batch_size)
+    steps_per_epoch = dataset_train.size() * epoch_scale
+    dataset_val = get_data('val', meta_dir, batch_size)
+
 
     return TrainConfig(
         dataflow=dataset_train,
         callbacks=[
             ModelSaver(),
-            ScheduledHyperParamSetter('learning_rate', [(2, 1e-4), (4, 1e-5), (6, 8e-6)]),
+            ScheduledHyperParamSetter('learning_rate', lr_schedule),
             HumanHyperParamSetter('learning_rate'),
-            PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=1),
+            PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
             ProgressBar(["cross_entropy_loss","cost","wd_cost"])#uncomment it to debug for every step
         ],
         model=Model(),
         steps_per_epoch=steps_per_epoch,
-        max_epoch=10,
+        max_epoch=max_epoch,
         nr_tower = nr_tower
+
     )
 
 
 def run(model_path, image_path, output):
-    pass #TODO
+    pred_config = PredictConfig(
+        model=Model(),
+        session_init=get_model_loader(model_path),
+        input_names=['image'],
+        output_names=['output' + str(k) for k in range(1, 7)])
+    predictor = OfflinePredictor(pred_config)
+    im = cv2.imread(image_path)
+    assert im is not None
+    im = cv2.resize(
+        im, (im.shape[1] // 16 * 16, im.shape[0] // 16 * 16)
+    )[None, :, :, :].astype('float32')
+    outputs = predictor(im)
+    if output is None:
+        for k in range(6):
+            pred = outputs[k][0]
+            cv2.imwrite("out{}.png".format(
+                '-fused' if k == 5 else str(k + 1)), pred * 255)
+    else:
+        pred = outputs[5][0]
+        cv2.imwrite(output, pred * 255)
 
 def proceed_validation(args, is_save = True, is_densecrf = False):
     import cv2
-    ds = dataset.PascalVOC12(args.data_dir, args.meta_dir, "val")
+    #name = "ningbo_val"
+    name = "val"
+    ds = dataset.Aerial( args.meta_dir, name)
+    ds = BatchData(ds, 1)
+
+    pred_config = PredictConfig(
+        model=Model(),
+        session_init=get_model_loader(args.load),
+        input_names=['image'],
+        output_names=['prob'])
+    predictor = OfflinePredictor(pred_config)
+    from tensorpack.utils.fs import mkdir_p
+    result_dir = "result/validation_border512"
+    #result_dir = "ningbo_validation"
+    mkdir_p(result_dir)
+    i = 1
+    stat = MIoUStatistics(CLASS_NUM)
+    logger.info("start validation....")
+    for image, label in tqdm(ds.get_data()):
+        label = np.squeeze(label)
+        image = np.squeeze(image)
+        prediction = predict_scaler(image, predictor, scales=[0.9,1,1.1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
+        prediction = np.argmax(prediction, axis=2)
+        stat.feed(prediction, label)
+
+        if is_save:
+            #cv2.imwrite(os.path.join(result_dir,"{}.png".format(i)),
+            #            np.concatenate((image, visualize_label(label), visualize_label(prediction)), axis=1))
+            imwrite_grid(image,label,prediction, border=512, prefix_dir=result_dir, imageId = i)
+        i += 1
+
+    logger.info("mIoU: {}".format(stat.mIoU))
+    logger.info("mean_accuracy: {}".format(stat.mean_accuracy))
+    logger.info("accuracy: {}".format(stat.accuracy))
+
+
+def proceed_test(args,is_densecrf = False):
+    import cv2
+    ds = dataset.Aerial( args.meta_dir, "test")
+    imglist = ds.imglist
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
@@ -180,24 +247,29 @@ def proceed_validation(args, is_save = True, is_densecrf = False):
         output_names=['prob'])
     predictor = OfflinePredictor(pred_config)
 
-    i = 0
-    stat = MIoUStatistics(CLASS_NUM)
+    from tensorpack.utils.fs import mkdir_p
+    result_dir = "result"
+    mkdir_p(result_dir)
+    mkdir_p(os.path.join(result_dir,"compressed"))
+
+    import subprocess
+
     logger.info("start validation....")
-    for image, label in tqdm(ds.get_data()):
-        label = np.squeeze(label)
+    _itr = ds.get_data()
+    for i in tqdm(range(len(imglist))):
+        image = next(_itr)
+        name = os.path.basename(imglist[i]).strip(".tif")
         image = np.squeeze(image)
-        prediction = predict_scaler(image, predictor, scales=[0.9, 1, 1.1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
+        prediction = predict_scaler(image, predictor, scales=[0.9,1,1.1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
         prediction = np.argmax(prediction, axis=2)
-        stat.feed(prediction, label)
+        prediction = prediction*255 # to 0-255
+        file_path = os.path.join(result_dir,"{}.tif".format(name))
+        compressed_file_path = os.path.join(result_dir, "compressed","{}.tiff".format(name))
+        cv2.imwrite(file_path, prediction)
+        command = "gdal_translate --config GDAL_PAM_ENABLED NO -co COMPRESS=CCITTFAX4 -co NBITS=1 " + file_path + " " + compressed_file_path
+        print command
+        subprocess.call(command, shell=True)
 
-        if is_save:
-            cv2.imwrite("result/{}.png".format(i), np.concatenate((image, visualize_label(label), visualize_label(prediction)), axis=1))
-
-        i += 1
-
-    logger.info("mIoU: {}".format(stat.mIoU))
-    logger.info("mean_accuracy: {}".format(stat.mean_accuracy))
-    logger.info("accuracy: {}".format(stat.accuracy))
 
 
 
@@ -216,7 +288,7 @@ class CalculateMIoU(Callback):
 
     def _trigger(self):
         global args
-        self.val_ds = get_data('val', args.data_dir, args.meta_dir, args.batch_size)
+        self.val_ds = get_data('val', args.meta_dir, 1)
         self.val_ds.reset_state()
 
         self.stat = MIoUStatistics(self.nb_class)
@@ -224,7 +296,7 @@ class CalculateMIoU(Callback):
         for image, label in tqdm(self.val_ds.get_data()):
             label = np.squeeze(label)
             image = np.squeeze(image)
-            prediction = predict_scaler(image, self.pred, scales=[0.9, 1, 1.1], classes=CLASS_NUM, tile_size=CROP_SIZE,
+            prediction = predict_scaler(image, self.pred, scales=[0.9,1,1.1], classes=CLASS_NUM, tile_size=CROP_SIZE,
                            is_densecrf=False)
             prediction = np.argmax(prediction, axis=2)
             self.stat.feed(prediction, label)
@@ -237,29 +309,30 @@ class CalculateMIoU(Callback):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', help='comma separated list of GPU(s) to use.')
-    parser.add_argument('--data_dir', default="/data2/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012",
-                        help='dataset dir')
-    parser.add_argument('--meta_dir', default="metadata/pascalvoc12", help='meta dir')
-    parser.add_argument('--load', default="resnet101.npz", help='load model')
+    parser.add_argument('--gpu', default="1,2,3,4", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--meta_dir', default="../metadata/aerial", help='meta dir')
+    parser.add_argument('--load', default="../resnet101.npz", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
-    parser.add_argument('--batch_size', type=int, default = 10, help='batch_size')
+    parser.add_argument('--batch_size', type=int, default = batch_size, help='batch_size')
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     parser.add_argument('--validation', action='store_true', help='validate model on validation images')
+    parser.add_argument('--test', action='store_true', help='generate test result')
     args = parser.parse_args()
     if args.gpu:
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 
 
     if args.view:
-        view_data(args.data_dir,args.meta_dir,args.batch_size)
+        view_data(args.meta_dir,args.batch_size)
     elif args.run:
         run(args.load, args.run, args.output)
     elif args.validation:
         proceed_validation(args)
+    elif args.test:
+        proceed_test(args)
     else:
-        config = get_config(args.data_dir,args.meta_dir,args.batch_size)
+        config = get_config(args.meta_dir,args.batch_size)
         if args.load:
             config.session_init = get_model_loader(args.load)
         launch_train_with_config(
