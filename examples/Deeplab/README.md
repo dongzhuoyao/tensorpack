@@ -38,6 +38,7 @@ deeplabv2.cs.imagesize672.scale18.py| **74.21%**
 
 ### TODO
 
+* DeformableConvolution [https://github.com/Zardinality/TF-deformable-conv](https://github.com/Zardinality/TF-deformable-conv)
 * WideResNet
 * ResNext on cifar10(which in details: ResNeXt-29, 8×64d with baseline wideResNet)
 * SE-ResNeXt-101+Mixup(currently best basic model) on cifar10
