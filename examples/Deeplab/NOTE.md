@@ -57,6 +57,8 @@ deeplabv2.naked.fpn.learnable.sobel.channelcross.lr1|65.1%|
 Arch |official Val mIoU |Val mIoU
 ------------ | -------------|----------
 deeplabv2.naked.gcn(lr10)| 74.1 with resnet150,coco+pascal+BSDS |66.8(buggy)|
+deeplabv2.voc.imagesize473.gcnbaseline||67.5|
+deeplabv2.voc.imagesize473.gcnbaseline.channelwise||65.9|
 
 
 
