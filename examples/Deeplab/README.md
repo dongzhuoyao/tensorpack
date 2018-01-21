@@ -28,6 +28,13 @@ Arch  |Val mIoU
 ------------ | -------- 
 deeplabv2.cs.imagesize672.scale18.py| **74.21%**
 
+## BN strategy
+
+* standard gamma,beta are updated in 4 gpus. please note that mean,variance doesn't involve in back propagation.
+* EMA of the mean, variance is maintained in the main_training_tower. 
+* when back propagation, the gamma, beta are averaged over 4gpus just like other variable.
+* when inference, we use the EMA of mean, variance in main_training_tower, and use the averaged gamma,beta.
+* when fine tuning to segmentation task, all gamma, beta are trained,(in this case you must make the batch size as large as possible to gain a stable BN statistics.)
 
 ### TODO
 
