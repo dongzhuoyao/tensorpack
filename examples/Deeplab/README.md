@@ -36,7 +36,7 @@ deeplabv2.cs.imagesize672.scale18.py| **74.21%**
 * when inference, we use the EMA of mean, variance in main_training_tower, and use the averaged gamma,beta.
 * when fine tuning to segmentation task, all gamma, beta are trained,(in this case you must make the batch size as large as possible to gain a stable BN statistics.)
 
-### TODO
+## TODO
 
 * DeformableConvolution [https://github.com/Zardinality/TF-deformable-conv](https://github.com/Zardinality/TF-deformable-conv)
 * WideResNet
@@ -45,3 +45,8 @@ deeplabv2.cs.imagesize672.scale18.py| **74.21%**
 * GCN
 * FRRN
 * DCN
+
+## Note
+
+* Deeplabv3, interestingly, when evaluating our best cascaded model with output stride = 8, the performance
+improves over evaluating with output stride = 16 by 1:39%.
