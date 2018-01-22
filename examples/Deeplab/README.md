@@ -15,7 +15,7 @@ MSC+Coco+Aug+ASPP+CRF=77.69% mIoU
 
 Arch | Val mIoU
 ------------ | -------------
-deeplabv2.voc.imagesize473| **71.5%**
+deeplabv2.voc.imagesize473| **74.21%**
 
 
 if without imgaug.RandomResize, the mIoU will be 68.4% rather than 69.3%.
@@ -26,7 +26,7 @@ Full+Aug+ASPP+CRF=71.4% mIoU
 
 Arch  |Val mIoU
 ------------ | -------- 
-deeplabv2.cs.imagesize672.scale18.py| **74.21%**
+deeplabv2.cs.imagesize672.scale18.py| **71.5%**
 
 ## BN strategy
 
