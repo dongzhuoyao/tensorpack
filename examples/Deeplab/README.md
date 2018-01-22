@@ -48,5 +48,8 @@ deeplabv2.cs.imagesize672.scale18.py| **74.21%**
 
 ## Note
 
-* Deeplabv3, interestingly, when evaluating our best cascaded model with output stride = 8, the performance
+* Deeplabv3: The proposed model is
+trained with output stride = 16, and then during inference
+we apply output stride = 8 to get more detailed feature
+map.interestingly, when evaluating our best cascaded model with output stride = 8, the performance
 improves over evaluating with output stride = 16 by 1:39%.
