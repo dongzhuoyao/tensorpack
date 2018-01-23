@@ -66,6 +66,7 @@ class ResizeTransform(ImageTransform):
                 img, (self.neww, self.newh),
                 interpolation=self.interp)
 
+
         if img.ndim == 3 and ret.ndim == 2:
             ret = ret[:, :, np.newaxis]
         return ret
