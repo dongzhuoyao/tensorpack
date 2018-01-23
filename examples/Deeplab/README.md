@@ -36,6 +36,20 @@ deeplabv2.cs.imagesize672.scale18.py| **74.21%**
 * when inference, we use the EMA of mean, variance in main_training_tower, and use the averaged gamma,beta.
 * when fine tuning to segmentation task, all gamma, beta are trained,(in this case you must make the batch size as large as possible to gain a stable BN statistics.)
 
+
+## PascalVOC 2012 preparation
+
+ We have preprocessed the augmented images for you, you can download here, unzip it and move it into  VOCdevkit/VOC2012
+ 
+ [https://www.dropbox.com/s/ylukfny2j1g55dq/SegmentationClassAug.zip?dl=0](https://www.dropbox.com/s/ylukfny2j1g55dq/SegmentationClassAug.zip?dl=0)
+ 
+ 
+ PascalVOC 2012: [http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar)
+ 
+ SBD: [http://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/semantic_contours/benchmark.tgz](http://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/semantic_contours/benchmark.tgz)
+ 
+ 
+ 
 ## TODO
 
 * DeformableConvolution [https://github.com/Zardinality/TF-deformable-conv](https://github.com/Zardinality/TF-deformable-conv)
