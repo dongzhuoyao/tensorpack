@@ -116,7 +116,7 @@ deeplabv2.voc.size512.randomresizefix|rs-bilinear,flip,crop;deeplabv2-largedilat
 deeplabv2.voc.size512.randomresizefix.officiallr|rs-bilinear;(2/3 1e-3, 1/3 1e-4)| epoch 7,50%(:cry:)
 deeplabv2.voc.size512.randomresizefix.4gpu|rs-bilinear,flip,crop;deeplabv2;msf;4gpu;first_batch_lr = 2.5e-4;lr_schedule = [(2, 1e-4), (6, 1e-5)];epoch_scale = 6;max_epoch = 8|69.9%
 deeplabv2.voc.epoch6|first_batch_lr = 2.5e-4;lr_schedule = [(2, 1e-4), (4, 1e-5)];epoch_scale = 6;max_epoch = 6|67.2%
-deeplabv2.voc.imagesize473|imagesize:473;first_batch_lr = 2.5e-4;lr_schedule = [(2, 1e-4), (4, 1e-5), (6, 8e-6)];epoch_scale = 8;max_epoch = 10|71.5
+deeplabv2.voc.imagesize473|imagesize:473;first_batch_lr = 2.5e-4;lr_schedule = [(2, 1e-4), (4, 1e-5), (6, 8e-6)];epoch_scale = 8;max_epoch = 10; **compared with deeplabv2.voc.size512, differ in (1). imagesize 512x10, here is 473x15, lr_multi =10, here is lr_multi=5** |71.5
 
 DenseCRF Grid Search
 
@@ -141,7 +141,7 @@ deeplabv2.cs.resnet101.scale8 | 50% in epoch8,stopped(:cry:)
 deeplabv2.cs.resnet101.scale3| nan (:cry:)
 deeplabv2.cs( new deeplab,res5-dilation2),upsample 8x   | cost:nan(:cry:)
 deeplabv2.cs.newlr(first_batch_lr = 2.5e-4;lr_schedule = [(2, 1e-4), (4, 1e-5)];epoch_scale = 3;max_epoch = 6)|35.5%
-deeplabv2.cs.imagesize672|70.87
+deeplabv2.cs.imagesize672(scale:3)|70.87
 deeplabv2.cs.imagesize672.scale18|**74.21**
 
 
