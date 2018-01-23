@@ -211,7 +211,7 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
     predictor = OfflinePredictor(pred_config)
 
     from tensorpack.utils.fs import mkdir_p
-    result_dir = os.path.join("result_on_{}".format(name))
+    result_dir = "validation-{}".format(os.path.basename(__file__).rstrip(".py"))
     mkdir_p(result_dir)
 
     i = 0

@@ -131,7 +131,7 @@ def BatchNorm(x, use_local_stat=None, decay=0.9, epsilon=1e-5,
             x = tf.reshape(x, [-1, 1, 1, n_out])    # fused_bn only takes 4D input
             # fused_bn has error using NCHW? (see #190)
 
-        xn, batch_mean, batch_var = tf.nn.fused_batch_norm(
+        xn, batch_mean, batch_var = tf.nn.fused_batch_norm( #https://www.quora.com/Whats-the-difference-between-batch-normalization-and-fused-batch-norm-in-TensorFlow
             x, gamma, beta, epsilon=epsilon,
             is_training=True, data_format=data_format)
 

@@ -247,7 +247,9 @@ def proceed_test(args,is_densecrf = False):
     predictor = OfflinePredictor(pred_config)
 
     from tensorpack.utils.fs import mkdir_p
-    result_dir = "result"
+    result_dir = "test-{}".format(os.path.basename(__file__).rstrip(".py"))
+    import shutil
+    shutil.rmtree(result_dir, ignore_errors=True)
     mkdir_p(result_dir)
     mkdir_p(os.path.join(result_dir,"compressed"))
 
@@ -308,7 +310,7 @@ class CalculateMIoU(Callback):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="1,2,3,4", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="1", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--meta_dir', default="../metadata/aerial", help='meta dir')
     parser.add_argument('--load', default="../resnet101.npz", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')

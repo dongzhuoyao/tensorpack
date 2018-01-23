@@ -248,7 +248,9 @@ def proceed_test(args,is_densecrf = False):
     predictor = OfflinePredictor(pred_config)
 
     from tensorpack.utils.fs import mkdir_p
-    result_dir = "result2"
+    result_dir = "test-{}".format(os.path.basename(__file__).rstrip(".py"))
+    import shutil
+    shutil.rmtree(result_dir, ignore_errors=True)
     mkdir_p(result_dir)
     mkdir_p(os.path.join(result_dir,"compressed"))
 
