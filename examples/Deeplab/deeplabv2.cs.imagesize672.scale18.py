@@ -267,17 +267,63 @@ class CalculateMIoU(Callback):
         self.trainer.monitors.put_scalar("mean_accuracy", self.stat.mean_accuracy)
         self.trainer.monitors.put_scalar("accuracy", self.stat.accuracy)
 
+
+def proceed_test(args, is_save = True, is_densecrf = False):
+    import cv2
+    name = "test"
+    ds = dataset.Cityscapes(args.meta_dir, name)
+    ds = BatchData(ds, 1)
+
+    test_p = open(os.path.join(args.meta_dir,"test.txt"),"r")
+    lines = test_p.readlines()
+    names = [os.path.basename(tmp.split()[0]).split(".")[0] for tmp in lines]
+
+    pred_config = PredictConfig(
+        model=Model(),
+        session_init=get_model_loader(args.load),
+        input_names=['image'],
+        output_names=['prob'])
+    predictor = OfflinePredictor(pred_config)
+
+    from tensorpack.utils.fs import mkdir_p
+    result_dir = "test-{}".format(os.path.basename(__file__).rstrip(".py"))
+    standard_dir = os.path.join(result_dir,"upload")
+    vis_dir = os.path.join(result_dir, "vis")
+    mkdir_p(result_dir)
+    mkdir_p(standard_dir)
+    mkdir_p(vis_dir)
+
+    i = 0
+    logger.info("start test....")
+    from tensorpack.utils.segmentation.cs_helper import trainId2label
+    getlabel = lambda trainid: trainId2label[trainid].id
+    vgetlabel = np.vectorize(getlabel)
+    for image, label in tqdm(ds.get_data()):
+        label = np.squeeze(label)
+        image = np.squeeze(image)
+        prediction = predict_scaler(image, predictor, scales=[0.9, 1, 1.1], classes=CLASS_NUM, tile_size=(IMAGE_H,IMAGE_W), is_densecrf = is_densecrf)
+        prediction = np.argmax(prediction, axis=2)
+
+
+        if is_save:
+            cv2.imwrite(os.path.join(standard_dir,"{}.png".format(names[i])), vgetlabel(prediction))
+            cv2.imwrite(os.path.join(vis_dir, "{}.png".format(names[i])),
+                    np.concatenate((image, visualize_label(label), visualize_label(prediction)), axis=1))
+        i += 1
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu', default="0", help='comma separated list of GPU(s) to use.')
-    parser.add_argument('--meta_dir', default="../metadata/cityscapes", help='meta dir')
-    parser.add_argument('--load', default="../resnet101.npz", help='load model')
+    parser.add_argument('--meta_dir', default="metadata/cityscapes", help='meta dir')
+    parser.add_argument('--load', default="resnet101.npz", help='load model')
     #parser.add_argument('--load', default="train_log/deeplabv2.naked.cs/model-26712", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
     parser.add_argument('--batch_size', type=int, default = batch_size, help='batch_size')
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     parser.add_argument('--validation', action='store_true', help='validate model on validation images')
+    parser.add_argument('--test', action='store_true', help='test model on test images')
     args = parser.parse_args()
     if args.gpu:
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
@@ -289,6 +335,8 @@ if __name__ == '__main__':
         run(args.load, args.run, args.output)
     elif args.validation:
         proceed_validation(args)
+    elif args.test:
+        proceed_test(args)
     else:
         config = get_config(args.meta_dir,args.batch_size)
         if args.load:

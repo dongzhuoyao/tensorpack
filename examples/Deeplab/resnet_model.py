@@ -4,7 +4,7 @@
 
 import tensorflow as tf
 from tensorflow.contrib.layers import variance_scaling_initializer
-
+import numpy as np
 
 from tensorpack.tfutils.argscope import argscope, get_arg_scope
 from tensorpack.models import (
@@ -174,7 +174,45 @@ def se_resnet_bottleneck(l, ch_out, stride):
     return l + resnet_shortcut(shortcut, ch_out * 4, stride, nl=get_bn(zero_init=False))
 
 
-def resnet_group(l, name, block_func, features, count, stride, dilation, stride_first):
+def edge_conv(l, name, channel_num):
+    channel_axis = 3
+    W_init = tf.contrib.layers.variance_scaling_initializer()
+    W1 = tf.get_variable('{}_W1'.format(name), [3,3,channel_num,1], initializer=W_init)
+    constant1 = np.array([[1,1,1],[0,0,0],[1,1,1]])
+    constant1 = np.expand_dims(constant1, axis=-1)
+    constant1 = np.expand_dims(constant1, axis=-1)
+    constant1 = np.broadcast_to(constant1,(3,3,channel_num,1))
+    W1_mask = tf.constant(constant1,dtype=tf.float32)
+    W1 = W1*W1_mask
+
+    W2 = tf.get_variable('{}_W2'.format(name), [3,3,channel_num,1], initializer=W_init)
+    constant2 = np.array([[1, 0, 1], [1, 0, 1], [1, 0, 1]])
+    constant2 = np.expand_dims(constant2, axis=-1)
+    constant2 = np.expand_dims(constant2, axis=-1)
+    constant2 = np.broadcast_to(constant2, (3, 3, channel_num, 1))
+    W2_mask = tf.constant(constant2, dtype=tf.float32)
+
+    W2 = W2 * W2_mask
+
+
+    inputs = tf.split(l, channel_num, channel_axis)
+
+
+    kernels1 = tf.split(W1, channel_num, 2)
+    output = [tf.nn.conv2d(i, k, strides=[1, 1, 1, 1], padding="SAME")
+                   for i, k in zip(inputs, kernels1)]
+    conv1 = tf.concat(output, channel_axis)
+
+    kernels2 = tf.split(W2, channel_num, 2)
+    output = [tf.nn.conv2d(i, k, strides=[1, 1, 1, 1], padding="SAME")
+              for i, k in zip(inputs, kernels2)]
+    conv2 = tf.concat(output, channel_axis)
+
+    l = conv1 + conv2 + l
+    return l
+
+
+def resnet_group_deeplab(l, name, block_func, features, count, stride, dilation, stride_first):
     with tf.variable_scope(name):
         for i in range(0, count):
             with tf.variable_scope('block{}'.format(i)):
@@ -184,7 +222,7 @@ def resnet_group(l, name, block_func, features, count, stride, dilation, stride_
     return l
 
 
-def resnet_backbone(image, num_blocks, group_func, block_func, class_num, ASPP = False):
+def resnet_backbone_deeplab(image, num_blocks, group_func, block_func, class_num, ASPP = False, SPK = False):
     with argscope(Conv2D, nl=tf.identity, use_bias=False,
                   W_init=variance_scaling_initializer(mode='FAN_OUT')):
         resnet_head = (LinearWrap(image)
@@ -202,5 +240,33 @@ def resnet_backbone(image, num_blocks, group_func, block_func, class_num, ASPP =
         output = aspp_branch(resnet_head , 6) +aspp_branch(resnet_head, 12) +aspp_branch(resnet_head, 18)+aspp_branch(resnet_head, 24)
     else:
         output = aspp_branch(resnet_head, 6)
+
+    if SPK:
+        output = edge_conv(output,"spk",class_num)
     output = tf.image.resize_bilinear(output, image.shape[1:3])
+    return output
+
+
+def resnet_group(l, name, block_func, features, count, stride):
+    with tf.variable_scope(name):
+        for i in range(0, count):
+            with tf.variable_scope('block{}'.format(i)):
+                l = block_func(l, features, stride if i == 0 else 1)
+                # end of each block need an activation
+                l = tf.nn.relu(l)
+    return l
+
+def resnet_backbone(image, num_blocks, group_func, block_func,class_num):
+    with argscope(Conv2D, nl=tf.identity, use_bias=False,
+                  W_init=variance_scaling_initializer(mode='FAN_OUT')):
+        logits = (LinearWrap(image)
+                  .Conv2D('conv0', 64, 7, stride=2, nl=BNReLU)
+                  .MaxPooling('pool0', shape=3, stride=2, padding='SAME')
+                  .apply(group_func, 'group0', block_func, 64, num_blocks[0], 1)
+                  .apply(group_func, 'group1', block_func, 128, num_blocks[1], 2)
+                  .apply(group_func, 'group2', block_func, 256, num_blocks[2], 2)
+                  .apply(group_func, 'group3', block_func, 512, num_blocks[3], 2)())
+
+        output = resnet_basicblock(logits,class_num,stride=1)
+        output = tf.image.resize_bilinear(output, image.shape[1:3])
     return output

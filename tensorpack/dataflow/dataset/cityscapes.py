@@ -16,7 +16,7 @@ class Cityscapes(RNGDataFlow):
     def __init__(self, meta_dir, name,
                  shuffle=None, dir_structure=None):
 
-        assert name in ['train', 'val'], name
+        assert name in ['train', 'val','test'], name
         assert os.path.isdir(meta_dir), meta_dir
         self.reset_state()
         self.name = name
