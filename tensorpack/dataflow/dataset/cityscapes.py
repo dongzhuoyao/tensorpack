@@ -28,8 +28,12 @@ class Cityscapes(RNGDataFlow):
 
         if name == 'train':
             f = open(os.path.join(meta_dir,"train.txt"),"r")
-        else:
+        elif name=="val":
             f = open(os.path.join(meta_dir, "val.txt"), "r")
+        elif name=="test":
+            f = open(os.path.join(meta_dir, "test.txt"), "r")
+        else:
+            raise
 
         for line in f.readlines():
             self.imglist.append(line.strip("\n").split(" "))

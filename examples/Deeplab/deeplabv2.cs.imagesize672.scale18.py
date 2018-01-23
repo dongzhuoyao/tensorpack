@@ -272,11 +272,10 @@ def proceed_test(args, is_save = True, is_densecrf = False):
     import cv2
     name = "test"
     ds = dataset.Cityscapes(args.meta_dir, name)
+    imglist = ds.imglist
     ds = BatchData(ds, 1)
 
-    test_p = open(os.path.join(args.meta_dir,"test.txt"),"r")
-    lines = test_p.readlines()
-    names = [os.path.basename(tmp.split()[0]).split(".")[0] for tmp in lines]
+    names = [os.path.basename(tmp[0]).split(".")[0] for tmp in imglist]
 
     pred_config = PredictConfig(
         model=Model(),
@@ -286,9 +285,11 @@ def proceed_test(args, is_save = True, is_densecrf = False):
     predictor = OfflinePredictor(pred_config)
 
     from tensorpack.utils.fs import mkdir_p
+    import shutil
     result_dir = "test-{}".format(os.path.basename(__file__).rstrip(".py"))
     standard_dir = os.path.join(result_dir,"upload")
     vis_dir = os.path.join(result_dir, "vis")
+    shutil.rmtree(result_dir)
     mkdir_p(result_dir)
     mkdir_p(standard_dir)
     mkdir_p(vis_dir)
