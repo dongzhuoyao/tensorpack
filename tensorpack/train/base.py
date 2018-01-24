@@ -216,6 +216,11 @@ class Trainer(object):
         self.hooked_sess = tf.train.MonitoredSession(
             session_creator=ReuseSessionCreator(self.sess), hooks=hooks)
 
+        # reset global step by dongzhuoyao
+        #from tensorpack.tfutils.common import get_global_step_var
+        #assign_op = get_global_step_var().assign(0)
+        #self.sess.run(assign_op)
+
         if self.is_chief:
             logger.info("Initializing the session ...")
             session_init._run_init(self.sess)
