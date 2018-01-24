@@ -205,6 +205,8 @@ def deeplabv3(inputs,
       net = slim.conv2d(net, num_classes, [1,1], stride=1,
         activation_fn=None, normalizer_fn=None)
 
+    net = tf.image.resize_bilinear(net, inputs.shape[1:3])
+
     return net
 
 if __name__ == "__main__":
