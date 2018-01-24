@@ -162,5 +162,6 @@ deeplabv2.cs.imagesize672.scale18|**74.21** ([test:72.67](https://www.cityscapes
 * [Weakly Supervised Semantic Segmentation Based on Web Image Co-segmentation](https://ascust.github.io/WSS/)
 * Instance-Level Salient Object Segmentation
 * [Learning Affinity via Spatial Propagation Networks](https://arxiv.org/abs/1710.01020)
-*  A Classification Refinement Strategy for Semantic Segmentation
+*  [A Classification Refinement Strategy for Semantic Segmentation](https://arxiv.org/abs/1801.07674)
+* [Statistically Motivated Second Order Pooling](https://arxiv.org/abs/1801.07492)
 
