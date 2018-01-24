@@ -231,6 +231,7 @@ def resnet_arg_scope(weight_decay=0.0001,
       'fused': None,  # Use fused batch norm if possible.
   }
 
+
   with slim.arg_scope(
       [slim.conv2d],
       weights_regularizer=slim.l2_regularizer(weight_decay),

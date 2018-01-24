@@ -207,6 +207,11 @@ class Trainer(object):
             session_creator (tf.train.SessionCreator):
             session_init (sessinit.SessionInit):
         """
+
+        # reset global step by dongzhuoyao
+        from tensorpack.tfutils.common import get_global_step_var
+        self.reset_global_step_op = get_global_step_var().assign(0)
+
         session_init._setup_graph()
 
         logger.info("Creating the session ...")
@@ -216,10 +221,6 @@ class Trainer(object):
         self.hooked_sess = tf.train.MonitoredSession(
             session_creator=ReuseSessionCreator(self.sess), hooks=hooks)
 
-        # reset global step by dongzhuoyao
-        #from tensorpack.tfutils.common import get_global_step_var
-        #assign_op = get_global_step_var().assign(0)
-        #self.sess.run(assign_op)
 
         if self.is_chief:
             logger.info("Initializing the session ...")
@@ -231,6 +232,14 @@ class Trainer(object):
         self.sess.graph.finalize()
         logger.info("Graph Finalized.")
 
+        vars = tf.global_variables()
+        for v in vars:
+            print v.name
+
+
+
+
+
     @call_only_once
     def main_loop(self, steps_per_epoch, starting_epoch, max_epoch):
         """
@@ -240,6 +249,9 @@ class Trainer(object):
             steps_per_epoch, starting_epoch, max_epoch (int):
         """
         with self.sess.as_default():
+            self.sess.run(self.reset_global_step_op)  # dongzhuoyao
+            logger.info("reset global_step to {}".format(get_global_step_value()))
+
             self.loop.config(steps_per_epoch, starting_epoch, max_epoch)
             self.loop.update_global_step()
             try:

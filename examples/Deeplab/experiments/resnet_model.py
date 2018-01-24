@@ -174,6 +174,70 @@ def se_resnet_bottleneck(l, ch_out, stride):
     return l + resnet_shortcut(shortcut, ch_out * 4, stride, nl=get_bn(zero_init=False))
 
 
+def edge_conv_four(l, name, channel_num):
+    channel_axis = 3
+    W_init = tf.contrib.layers.variance_scaling_initializer()
+    W1 = tf.get_variable('{}_W1'.format(name), [3,3,channel_num,1], initializer=W_init)
+    constant1 = np.array([[1,1,1],[0,0,0],[1,1,1]])
+    constant1 = np.expand_dims(constant1, axis=-1)
+    constant1 = np.expand_dims(constant1, axis=-1)
+    constant1 = np.broadcast_to(constant1,(3,3,channel_num,1))
+    W1_mask = tf.constant(constant1,dtype=tf.float32)
+    W1 = W1*W1_mask
+
+    W2 = tf.get_variable('{}_W2'.format(name), [3,3,channel_num,1], initializer=W_init)
+    constant2 = np.array([[1, 0, 1], [1, 0, 1], [1, 0, 1]])
+    constant2 = np.expand_dims(constant2, axis=-1)
+    constant2 = np.expand_dims(constant2, axis=-1)
+    constant2 = np.broadcast_to(constant2, (3, 3, channel_num, 1))
+    W2_mask = tf.constant(constant2, dtype=tf.float32)
+    W2 = W2 * W2_mask
+
+    W3 = tf.get_variable('{}_W3'.format(name), [3, 3, channel_num, 1], initializer=W_init)
+    constant3 = np.array([[0, 1, 1], [1, 0, 1], [1, 1, 0]])
+    constant3 = np.expand_dims(constant3, axis=-1)
+    constant3 = np.expand_dims(constant3, axis=-1)
+    constant3 = np.broadcast_to(constant3, (3, 3, channel_num, 1))
+    W3_mask = tf.constant(constant3, dtype=tf.float32)
+    W3 = W3 * W3_mask
+
+    W4 = tf.get_variable('{}_W4'.format(name), [3, 3, channel_num, 1], initializer=W_init)
+    constant4 = np.array([[1, 1, 0], [1, 0, 1], [0, 1, 1]])
+    constant4 = np.expand_dims(constant4, axis=-1)
+    constant4 = np.expand_dims(constant4, axis=-1)
+    constant4 = np.broadcast_to(constant4, (3, 3, channel_num, 1))
+    W4_mask = tf.constant(constant4, dtype=tf.float32)
+    W4 = W4 * W4_mask
+
+
+
+
+    inputs = tf.split(l, channel_num, channel_axis)
+
+
+    kernels1 = tf.split(W1, channel_num, 2)
+    output = [tf.nn.conv2d(i, k, strides=[1, 1, 1, 1], padding="SAME")
+                   for i, k in zip(inputs, kernels1)]
+    conv1 = tf.concat(output, channel_axis)
+
+    kernels2 = tf.split(W2, channel_num, 2)
+    output = [tf.nn.conv2d(i, k, strides=[1, 1, 1, 1], padding="SAME")
+              for i, k in zip(inputs, kernels2)]
+    conv2 = tf.concat(output, channel_axis)
+
+    kernels3 = tf.split(W3, channel_num, 2)
+    output = [tf.nn.conv2d(i, k, strides=[1, 1, 1, 1], padding="SAME")
+              for i, k in zip(inputs, kernels3)]
+    conv3 = tf.concat(output, channel_axis)
+
+    kernels4 = tf.split(W4, channel_num, 2)
+    output = [tf.nn.conv2d(i, k, strides=[1, 1, 1, 1], padding="SAME")
+              for i, k in zip(inputs, kernels4)]
+    conv4 = tf.concat(output, channel_axis)
+
+    l = conv1 + conv2 + conv3 + conv4 + l
+    return l
+
 def edge_conv(l, name, channel_num):
     channel_axis = 3
     W_init = tf.contrib.layers.variance_scaling_initializer()
@@ -222,7 +286,7 @@ def resnet_group_deeplab(l, name, block_func, features, count, stride, dilation,
     return l
 
 
-def resnet_backbone_deeplab(image, num_blocks, group_func, block_func, class_num, ASPP = False, SPK = False):
+def resnet_backbone_deeplab(image, num_blocks, group_func, block_func, class_num, ASPP = False, SPK = 0):
     with argscope(Conv2D, nl=tf.identity, use_bias=False,
                   W_init=variance_scaling_initializer(mode='FAN_OUT')):
         resnet_head = (LinearWrap(image)
@@ -241,8 +305,14 @@ def resnet_backbone_deeplab(image, num_blocks, group_func, block_func, class_num
     else:
         output = aspp_branch(resnet_head, 6)
 
-    if SPK:
+    if SPK==0:
+        pass
+    elif SPK==1:
         output = edge_conv(output,"spk",class_num)
+    elif SPK==2:
+        output = edge_conv_four(output, "spk", class_num)
+    else:
+        raise
     output = tf.image.resize_bilinear(output, image.shape[1:3])
     return output
 
