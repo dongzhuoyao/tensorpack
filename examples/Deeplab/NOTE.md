@@ -122,6 +122,7 @@ deeplabv2.voc.imagesize473|imagesize:473;first_batch_lr = 2.5e-4;lr_schedule = [
 
 Arch |metadata| Val mIoU 
 ------------ | -------------| -------------
+|Deeplabv3 global segmentation|official 92||
 |deeplabv2.voc.imagesize473.human||83.69 in epoch9??|
 
 DenseCRF Grid Search
