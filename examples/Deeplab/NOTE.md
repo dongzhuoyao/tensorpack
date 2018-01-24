@@ -117,6 +117,14 @@ deeplabv2.voc.size512.randomresizefix.officiallr|rs-bilinear;(2/3 1e-3, 1/3 1e-4
 deeplabv2.voc.size512.randomresizefix.4gpu|rs-bilinear,flip,crop;deeplabv2;msf;4gpu;first_batch_lr = 2.5e-4;lr_schedule = [(2, 1e-4), (6, 1e-5)];epoch_scale = 6;max_epoch = 8|69.9%
 deeplabv2.voc.epoch6|first_batch_lr = 2.5e-4;lr_schedule = [(2, 1e-4), (4, 1e-5)];epoch_scale = 6;max_epoch = 6|67.2%
 deeplabv2.voc.imagesize473|imagesize:473;first_batch_lr = 2.5e-4;lr_schedule = [(2, 1e-4), (4, 1e-5), (6, 8e-6)];epoch_scale = 8;max_epoch = 10; **compared with deeplabv2.voc.size512, differ in (1). imagesize 512x10, here is 473x15, lr_multi =10, here is lr_multi=5** |71.5
+deeplabv2.voc.imagesize473.spk||72.1|
+
+### Human Segmentation
+
+Arch |metadata| Val mIoU 
+------------ | -------------| -------------
+|Deeplabv3 global segmentation|official 92||
+|deeplabv2.voc.imagesize473.human||83.69 in epoch9??|
 
 DenseCRF Grid Search
 
@@ -162,5 +170,7 @@ deeplabv2.cs.imagesize672.scale18|**74.21** ([test:72.67](https://www.cityscapes
 * [Weakly Supervised Semantic Segmentation Based on Web Image Co-segmentation](https://ascust.github.io/WSS/)
 * Instance-Level Salient Object Segmentation
 * [Learning Affinity via Spatial Propagation Networks](https://arxiv.org/abs/1710.01020)
-
-
+*  [A Classification Refinement Strategy for Semantic Segmentation](https://arxiv.org/abs/1801.07674)
+* [Statistically Motivated Second Order Pooling](https://arxiv.org/abs/1801.07492)
+* [Spatial Temporal Graph Convolutional Networks for Skeleton-Based Action
+Recognition](https://arxiv.org/abs/1801.07455)
