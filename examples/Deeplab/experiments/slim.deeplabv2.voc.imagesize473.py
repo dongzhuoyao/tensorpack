@@ -31,11 +31,13 @@ IGNORE_LABEL = 255
 
 first_batch_lr = 2.5e-4
 lr_schedule = [(2, 1e-4), (4, 1e-5), (6, 8e-6)]
+#first_batch_lr = 2.5e-5
+#lr_schedule = [(2,1e-5), (4, 1e-4), (6, 8e-5)]
 epoch_scale = 8
 max_epoch = 10
-lr_multi_schedule = [('aspp.*_conv/W', 5),('aspp.*_conv/b',10)]
+lr_multi_schedule = [('resnet_v2_101/logits.*/weights', 5),('resnet_v2_101/logits.*/biases',10)]
 batch_size = 12
-evaluate_every_n_epoch = max_epoch
+evaluate_every_n_epoch = 1
 
 class Model(ModelDesc):
 
@@ -56,7 +58,6 @@ class Model(ModelDesc):
 
         label4d = tf.expand_dims(label, 3, name='label4d')
         new_size = prob.get_shape()[1:3]
-        #label_resized = tf.image.resize_nearest_neighbor(label4d, new_size)
 
         cost = symbf.softmax_cross_entropy_with_ignore_label(logits=predict, label=label4d,
                                                              class_num=CLASS_NUM)
