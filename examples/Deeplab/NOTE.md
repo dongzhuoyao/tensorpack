@@ -164,4 +164,5 @@ deeplabv2.cs.imagesize672.scale18|**74.21** ([test:72.67](https://www.cityscapes
 * [Learning Affinity via Spatial Propagation Networks](https://arxiv.org/abs/1710.01020)
 *  [A Classification Refinement Strategy for Semantic Segmentation](https://arxiv.org/abs/1801.07674)
 * [Statistically Motivated Second Order Pooling](https://arxiv.org/abs/1801.07492)
-
+* [Spatial Temporal Graph Convolutional Networks for Skeleton-Based Action
+Recognition](https://arxiv.org/abs/1801.07455)
