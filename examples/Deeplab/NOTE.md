@@ -126,7 +126,12 @@ Arch |metadata| Val mIoU
 |Deeplabv3 global segmentation|official 92||
 |deeplabv2.voc.imagesize473.human||83.69 in epoch9??|
 
-DenseCRF Grid Search
+### Pascal in Slim
+Params | Val mIoU
+------------ | -------------
+slim.deeplabv2.voc.imagesize473| 58.8
+
+###DenseCRF Grid Search
 
 Params | Val mIoU
 ------------ | -------------
