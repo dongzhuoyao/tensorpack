@@ -22,7 +22,7 @@ from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 import tensorpack.tfutils.symbolic_functions as symbf
 from tqdm import tqdm
 from seg_utils import RandomCropWithPadding
-from deeplabv3_slim.deeplabv3 import deeplabv3
+from deeplabv3_slim.deeplabv2_moreconv import deeplabv2
 
 
 CLASS_NUM = 21
@@ -33,7 +33,7 @@ first_batch_lr = 2.5e-4
 lr_schedule = [(2, 1e-4), (4, 1e-5), (6, 8e-6)]
 epoch_scale = 8
 max_epoch = 10
-lr_multi_schedule = [('aspp.*_conv/W', 5),('aspp.*_conv/b',10)]
+lr_multi_schedule = [('resnet_v2_101/logits.*/weights', 5),('resnet_v2_101/logits.*/biases',10)]
 batch_size = 12
 evaluate_every_n_epoch = 1
 
@@ -48,15 +48,14 @@ class Model(ModelDesc):
         image, label = inputs
         image = image - tf.constant([104, 116, 122], dtype='float32')
         label = tf.identity(label, name="label")
+        predict = deeplabv2(image, CLASS_NUM, is_training=False)
 
-        predict = deeplabv3(image, CLASS_NUM, is_training=False)
 
         costs = []
         prob = tf.nn.softmax(predict, name='prob')
 
         label4d = tf.expand_dims(label, 3, name='label4d')
         new_size = prob.get_shape()[1:3]
-        #label_resized = tf.image.resize_nearest_neighbor(label4d, new_size)
 
         cost = symbf.softmax_cross_entropy_with_ignore_label(logits=predict, label=label4d,
                                                              class_num=CLASS_NUM)
@@ -73,12 +72,10 @@ class Model(ModelDesc):
 
             #add_param_summary(('.*/weights', ['histogram']))   # monitor W
             self.cost = tf.add_n(costs, name='cost')
-            add_moving_summary(costs + [self.cost])
+            #add_moving_summary(costs + [self.cost])
 
     def _get_optimizer(self):
         lr = tf.get_variable('learning_rate', initializer=first_batch_lr, trainable=False)
-        #update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        #with tf.control_dependencies(update_ops):
         opt = tf.train.AdamOptimizer(lr, epsilon=2.5e-4)
         return optimizer.apply_grad_processors(
             opt, [gradproc.ScaleGradient(
@@ -237,7 +234,7 @@ class CalculateMIoU(Callback):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="0", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="2", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--data_dir', default="/data2/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012",
                         help='dataset dir')
     parser.add_argument('--meta_dir', default="../metadata/pascalvoc12", help='meta dir')

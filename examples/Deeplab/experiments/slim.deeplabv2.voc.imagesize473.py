@@ -31,8 +31,6 @@ IGNORE_LABEL = 255
 
 first_batch_lr = 2.5e-4
 lr_schedule = [(2, 1e-4), (4, 1e-5), (6, 8e-6)]
-#first_batch_lr = 2.5e-5
-#lr_schedule = [(2,1e-5), (4, 1e-4), (6, 8e-5)]
 epoch_scale = 8
 max_epoch = 10
 lr_multi_schedule = [('resnet_v2_101/logits.*/weights', 5),('resnet_v2_101/logits.*/biases',10)]
@@ -50,8 +48,8 @@ class Model(ModelDesc):
         image, label = inputs
         image = image - tf.constant([104, 116, 122], dtype='float32')
         label = tf.identity(label, name="label")
-
         predict = deeplabv2(image, CLASS_NUM, is_training=False)
+
 
         costs = []
         prob = tf.nn.softmax(predict, name='prob')
@@ -74,7 +72,7 @@ class Model(ModelDesc):
 
             #add_param_summary(('.*/weights', ['histogram']))   # monitor W
             self.cost = tf.add_n(costs, name='cost')
-            add_moving_summary(costs + [self.cost])
+            #add_moving_summary(costs + [self.cost])
 
     def _get_optimizer(self):
         lr = tf.get_variable('learning_rate', initializer=first_batch_lr, trainable=False)

@@ -192,11 +192,13 @@ class SingleCostTrainer(TowerTrainer):
             else:
                 varlist = tf.trainable_variables()
             opt = get_opt_fn()
+            #update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)#dongzhuoyao
+            #with tf.control_dependencies(update_ops):#dongzhuoyao
             grads = opt.compute_gradients(
-                cost, var_list=varlist,
-                gate_gradients=self.GATE_GRADIENTS,
-                colocate_gradients_with_ops=self.COLOCATE_GRADIENTS_WITH_OPS,
-                aggregation_method=self.AGGREGATION_METHOD)
+                    cost, var_list=varlist,
+                    gate_gradients=self.GATE_GRADIENTS,
+                    colocate_gradients_with_ops=self.COLOCATE_GRADIENTS_WITH_OPS,
+                    aggregation_method=self.AGGREGATION_METHOD)
             grads = FilterNoneGrad().process(grads)
             return grads
 
