@@ -59,6 +59,7 @@ deeplabv2.cs.imagesize672.scale18.py| **74.21%**
 * GCN
 * FRRN
 * DCN
+* PointNet
 
 ## Note
 
