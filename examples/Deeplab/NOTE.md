@@ -131,7 +131,7 @@ Params | Val mIoU
 ------------ | -------------
 slim.deeplabv2.voc.imagesize473| 58.8
 
-###DenseCRF Grid Search
+### DenseCRF Grid Search
 
 Params | Val mIoU
 ------------ | -------------
