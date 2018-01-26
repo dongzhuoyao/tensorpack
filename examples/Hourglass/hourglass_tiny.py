@@ -396,13 +396,6 @@ class HourglassModel():
 				return tf.add_n([convb, skipl], name = 'res_block')
 	
 	def _hourglass(self, inputs, n, numOut, name = 'hourglass'):
-		""" Hourglass Module
-		Args:
-			inputs	: Input Tensor
-			n		: Number of downsampling step
-			numOut	: Number of Output Features (channels)
-			name	: Name of the block
-		"""
 		with tf.name_scope(name):
 			# Upper Branch
 			up_1 = self._residual(inputs, numOut, name = 'up_1')

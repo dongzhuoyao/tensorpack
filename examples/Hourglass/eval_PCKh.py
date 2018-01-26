@@ -6,7 +6,7 @@ import numpy as np
 import os
 
 
-detection = loadmat('evaluation/data/detections.mat')
+detection = loadmat('evaluation/detections.mat')
 det_idxs = detection['RELEASE_img_index']
 debug = 0
 threshold = 0.5
@@ -14,10 +14,9 @@ SC_BIAS = 0.6
 
 pa = [2, 3, 7, 7, 4, 5, 8, 9, 10, 0, 12, 13, 8, 8, 14, 15]
 
-dict = loadmat('evaluation/data/detections_our_format.mat')
+dict = loadmat('evaluation/detections_our_format.mat')
 dataset_joints = dict['dataset_joints']
 jnt_missing = dict['jnt_missing']
-pos_pred_src = dict['pos_pred_src']
 pos_gt_src = dict['pos_gt_src']
 headboxes_src = dict['headboxes_src']
 
@@ -25,7 +24,7 @@ headboxes_src = dict['headboxes_src']
 
 #predictions
 model_name = 'hg4'
-predfile = 'checkpoint/mpii/' + model_name + '/preds_valid.mat'
+predfile = 'evaluation/preds_best.mat'
 preds = loadmat(predfile)['preds']
 pos_pred_src = transpose(preds, [1, 2, 0])
 
