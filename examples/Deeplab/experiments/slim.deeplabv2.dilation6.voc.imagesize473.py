@@ -22,7 +22,7 @@ from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 import tensorpack.tfutils.symbolic_functions as symbf
 from tqdm import tqdm
 from seg_utils import RandomCropWithPadding
-from deeplabv3_slim.deeplabv2_moreconv import deeplabv2
+from deeplabv3_slim.deeplabv2_dilation6 import deeplabv2
 
 
 CLASS_NUM = 21
@@ -45,12 +45,14 @@ class Model(ModelDesc):
                 InputDesc(tf.int32, [None, CROP_SIZE, CROP_SIZE], 'gt')]
 
     def _build_graph(self, inputs):
+
         image, label = inputs
         image = image - tf.constant([104, 116, 122], dtype='float32')
         label = tf.identity(label, name="label")
         ctx = get_current_tower_context()
         logger.info("current ctx.is_training: {}".format(ctx.is_training))
         predict = deeplabv2(image, CLASS_NUM, is_training=ctx.is_training)
+
 
         costs = []
         prob = tf.nn.softmax(predict, name='prob')

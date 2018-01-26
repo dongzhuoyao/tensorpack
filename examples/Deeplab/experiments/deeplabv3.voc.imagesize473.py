@@ -49,7 +49,9 @@ class Model(ModelDesc):
         image = image - tf.constant([104, 116, 122], dtype='float32')
         label = tf.identity(label, name="label")
 
-        predict = deeplabv3(image, CLASS_NUM, is_training=False)
+        ctx = get_current_tower_context()
+        logger.info("current ctx.is_training: {}".format(ctx.is_training))
+        predict = deeplabv3(image, CLASS_NUM, is_training=ctx.is_training)
 
         costs = []
         prob = tf.nn.softmax(predict, name='prob')
@@ -77,8 +79,6 @@ class Model(ModelDesc):
 
     def _get_optimizer(self):
         lr = tf.get_variable('learning_rate', initializer=first_batch_lr, trainable=False)
-        #update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        #with tf.control_dependencies(update_ops):
         opt = tf.train.AdamOptimizer(lr, epsilon=2.5e-4)
         return optimizer.apply_grad_processors(
             opt, [gradproc.ScaleGradient(

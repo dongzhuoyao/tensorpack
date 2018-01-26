@@ -48,7 +48,7 @@ class Model(ModelDesc):
         image, label = inputs
         image = image - tf.constant([104, 116, 122], dtype='float32')
         label = tf.identity(label, name="label")
-        predict = deeplabv2(image, CLASS_NUM, is_training=False)
+        predict = deeplabv2(image, CLASS_NUM, is_training=True)
 
 
         costs = []

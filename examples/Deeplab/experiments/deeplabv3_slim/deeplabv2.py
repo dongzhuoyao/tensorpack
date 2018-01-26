@@ -15,7 +15,7 @@ def deeplabv2(inputs,
   scope ='resnet_v{}_101'.format(resnet_vn)
   with tf.variable_scope(scope, [inputs], reuse=reuse) as sc:
     with slim.arg_scope(resnet_v2.resnet_arg_scope()):
-      #with slim.arg_scope([slim.batch_norm], is_training=is_training):
+      with slim.arg_scope([slim.batch_norm], is_training=is_training):
           net = inputs
           # We do not include batch normalization or activation functions in
           # conv1 because the first ResNet unit will perform these. Cf.

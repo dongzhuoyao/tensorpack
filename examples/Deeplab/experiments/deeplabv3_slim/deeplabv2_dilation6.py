@@ -78,11 +78,7 @@ def deeplabv2(inputs,
 
 
     with tf.variable_scope('logits',[net]) as sc:
-      with slim.arg_scope(resnet_v2.resnet_arg_scope()):
-          with slim.arg_scope([slim.batch_norm], is_training=is_training):
-            net = slim.conv2d(net, 1024, [1, 1], stride=1)
-
-      net = slim.conv2d(net, num_classes, [1,1], stride=1,
+      net = slim.conv2d(net, num_classes, [3,3], stride=1, rate=6,
         activation_fn=None, normalizer_fn=None)
 
     net = tf.image.resize_bilinear(net, inputs.shape[1:3])
