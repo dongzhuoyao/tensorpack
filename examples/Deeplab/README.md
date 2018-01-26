@@ -34,7 +34,7 @@ deeplabv2.cs.imagesize672.scale18.py| **74.21%**
 * EMA of the mean, variance is maintained in the main_training_tower. 
 * when back propagation, the gamma, beta are averaged over 4gpus just like other variable.
 * when inference, we use the EMA of mean, variance in main_training_tower, and use the averaged gamma,beta.
-* when fine tuning to segmentation task, all gamma, beta are trained,(in this case you must make the batch size as large as possible to gain a stable BN statistics.)
+* when fine tuning to segmentation task, all gamma, beta are trained,(in this case you must make the batch size as large as possible to gain a stable BN statistics). the moving_mean, moving_var is not restored from model file.
 
 
 ## PascalVOC 2012 preparation
