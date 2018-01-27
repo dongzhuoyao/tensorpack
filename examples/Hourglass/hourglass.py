@@ -226,7 +226,7 @@ class hg():
 class Model(ModelDesc):
     def _get_inputs(self):
         return [InputDesc(tf.float32, [None, image_size[0], image_size[1], 3], 'image'),
-                InputDesc(tf.float32, [None, heatmap_size[0], heatmap_size[1]], 'heatmap')]
+                InputDesc(tf.float32, [None, heatmap_size[0], heatmap_size[1], 16], 'heatmap')]
 
     def _build_graph(self, inputs):
         image, edgemap = inputs
@@ -259,41 +259,16 @@ class Model(ModelDesc):
 
 def get_data(name):
     isTrain = name == 'train'
-    ds = dataset.mpii(name, "metadata/mpii_annotations.json", shuffle=True)
+    ds = dataset.mpii("/data1/dataset/mpii/images", "metadata/mpii_annotations.json", name, shuffle=True)
 
-
-
+    batch_size = 1
     if isTrain:
-        shape_aug = [
-            imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
-                                aspect_ratio_thres=0.15),
-            imgaug.RotationAndCropValid(90),
-            imgaug.Flip(horiz=True),
-            imgaug.Flip(vert=True)
-        ]
-    else:
-        # the original image shape (321x481) in BSDS is not a multiple of 16
-        IMAGE_SHAPE = (320, 480)
-        shape_aug = [imgaug.CenterCrop(IMAGE_SHAPE)]
-    ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False)
-
-    def f(m):   # thresholding
-        m[m >= 0.50] = 1
-        m[m < 0.50] = 0
-        return m
-    ds = MapDataComponent(ds, f, 1)
-
-    if isTrain:
-        augmentors = [
-            imgaug.Brightness(63, clip=False),
-            imgaug.Contrast((0.4, 1.5)),
-        ]
-        ds = AugmentImageComponent(ds, augmentors, copy=False)
-        ds = BatchDataByShape(ds, 8, idx=0)
+        ds = BatchData(ds, batch_size)
         ds = PrefetchDataZMQ(ds, 1)
     else:
         ds = BatchData(ds, 1)
     return ds
+
 
 
 def view_data():
