@@ -132,6 +132,7 @@ Params | Val mIoU
 slim.deeplabv2.voc.imagesize473| 58.8
 deeplabv3.voc.imagesize473|63.2
 deeplabv3.voc.imagesize473|**71.6**
+deeplabv3.voc.imagesize473.scale12|70.4
 slim.deeplabv2.dilation6.voc.imagesize473|**70.6**
 
 
