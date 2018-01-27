@@ -18,6 +18,7 @@ from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 from tensorpack.utils import logger
 import numpy as np
 
+img_dir, meta_dir = "/data1/dataset/mpii/images", "metadata/mpii_annotations.json"
 image_size =(256,256)
 heatmap_size = (64,64)
 
@@ -259,7 +260,7 @@ class Model(ModelDesc):
 
 def get_data(name):
     isTrain = name == 'train'
-    ds = dataset.mpii("/data1/dataset/mpii/images", "metadata/mpii_annotations.json", name, shuffle=True)
+    ds = dataset.mpii(img_dir, meta_dir, name, shuffle=True)
 
     batch_size = 1
     if isTrain:
@@ -281,6 +282,27 @@ def view_data():
             cv2.waitKey(1000)
             cv2.imshow("edge", edgemap)
             cv2.waitKey(1000)
+
+class CalculateMIoU(Callback):
+    def __init__(self, nb_class):
+        self.nb_class = nb_class
+
+    def _setup_graph(self):
+        self.pred = self.trainer.get_predictor(
+            ['image'], ['prob'])
+
+    def _before_train(self):
+        pass
+
+    def _trigger(self):
+        global args
+        self.val_ds = dataset.mpii(img_dir, meta_dir, "val", shuffle=True)
+        self.val_ds.reset_state()
+
+        for image, label in tqdm(self.val_ds.get_data()):
+            label = np.squeeze(label)
+            image = np.squeeze(image)
+            prediction = np.argmax(prediction, axis=2)
 
 
 def get_config():
