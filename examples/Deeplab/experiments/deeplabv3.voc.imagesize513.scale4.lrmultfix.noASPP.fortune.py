@@ -32,11 +32,10 @@ IGNORE_LABEL = 255
 first_batch_lr = 2.5e-4
 lr_schedule = [(2, 1e-4), (4, 1e-5), (6, 8e-6)]
 epoch_scale = 4
-max_epoch = 10
-lr_multi_schedule = [('lr_multiply.*/weights', 5),('lr_multiply.*/biases',10)]
+max_epoch = 8
+lr_multi_schedule = [('lr_multiply.*/weights', 10),('lr_multiply.*/biases',20)]
 
-
-batch_size = 12
+batch_size = 8
 evaluate_every_n_epoch = 1
 
 class Model(ModelDesc):
@@ -53,7 +52,7 @@ class Model(ModelDesc):
 
         ctx = get_current_tower_context()
         logger.info("current ctx.is_training: {}".format(ctx.is_training))
-        predict = deeplabv3(image, CLASS_NUM, is_training=ctx.is_training)
+        predict = deeplabv3(image, CLASS_NUM, is_training=ctx.is_training, aspp=False)
 
         costs = []
         prob = tf.nn.softmax(predict, name='prob')
@@ -235,7 +234,7 @@ class CalculateMIoU(Callback):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="2", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="0", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--data_dir', default="/data1/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012",
                         help='dataset dir')
     parser.add_argument('--meta_dir', default="../metadata/pascalvoc12", help='meta dir')
