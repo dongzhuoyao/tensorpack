@@ -164,6 +164,17 @@ deeplabv2.cs.imagesize672.scale18|**74.21** ([test:72.67](https://www.cityscapes
 
 **notice:** The validation mIOU for this repo is  all achieved  with multi-scale and left-right flippling.
 
+## Devils in version3
+
+* image size=513; batch size=16;
+
+* The proposed model is trained with output stride = 16, and then during inference we apply output stride = 8 to get more detailed feature map. 
+
+* multi-GPU training;
+
+* After training on the trainaug set with 30K iterations and initial learning rate = 0.007, we then freeze batch normalization
+parameters, employ output stride = 8(via dilation to control it), and train on the official PASCAL VOC 2012 trainval set for another 30K iterations and smaller base learning rate = 0.001.
+
 
 
 
