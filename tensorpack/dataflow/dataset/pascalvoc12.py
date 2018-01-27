@@ -16,19 +16,21 @@ class PascalVOC12(RNGDataFlow):
     def __init__(self, dir, meta_dir, name,
                  shuffle=None, dir_structure=None):
 
-        assert name in ['train', 'val'], name
+        assert name in ['train_aug', 'train', 'val'], name
         assert os.path.isdir(dir), dir
         self.reset_state()
         self.dir = dir
         self.name = name
 
         if shuffle is None:
-            shuffle = name == 'train'
+            shuffle = (name == 'train' or name == 'train_aug')
         self.shuffle = shuffle
         self.imglist = []
 
         if name == 'train':
-            f = open(os.path.join(meta_dir,"train_aug.txt"),"r")
+            f = open(os.path.join(meta_dir,"train.txt"),"r")
+        elif name == 'train_aug':
+            f = open(os.path.join(meta_dir, "train_aug.txt"), "r")
         else:
             f = open(os.path.join(meta_dir, "val.txt"), "r")
 

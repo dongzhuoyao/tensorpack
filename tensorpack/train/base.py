@@ -232,9 +232,9 @@ class Trainer(object):
         self.sess.graph.finalize()
         logger.info("Graph Finalized.")
 
-        vars = tf.global_variables()
-        for v in vars:
-            print v.name
+        #vars = tf.global_variables()
+        #for v in vars:
+        #    print v.name
 
 
 
