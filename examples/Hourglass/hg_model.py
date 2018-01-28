@@ -12,14 +12,6 @@ BN_EPSILON = 0.001
 weight_decay = 1e-4
 nr_skeleton = 16
 
-def activation_summary(x):
-    '''
-    :param x: A Tensor
-    :return: Add histogram summary and scalar summary of the sparsity of the tensor
-    '''
-    tensor_name = x.op.name
-    tf.summary.histogram(tensor_name + '/activations', x)
-    tf.summary.scalar(tensor_name + '/sparsity', tf.nn.zero_fraction(x))
 
 
 def create_variables(name, shape, initializer=tf.contrib.layers.xavier_initializer(), is_fc_layer=False):
@@ -43,19 +35,6 @@ def create_variables(name, shape, initializer=tf.contrib.layers.xavier_initializ
     return new_variables
 
 
-def output_layer(input_layer, num_labels):
-    '''
-    :param input_layer: 2D tensor
-    :param num_labels: int. How many output labels in total? (10 for cifar10 and 100 for cifar100)
-    :return: output layer Y = WX + B
-    '''
-    input_dim = input_layer.get_shape().as_list()[-1]
-    fc_w = create_variables(name='fc_weights', shape=[input_dim, num_labels], is_fc_layer=True,
-                            initializer=tf.uniform_unit_scaling_initializer(factor=1.0))
-    fc_b = create_variables(name='fc_bias', shape=[num_labels], initializer=tf.zeros_initializer())
-
-    fc_h = tf.matmul(input_layer, fc_w) + fc_b
-    return fc_h
 
 
 def batch_normalization_layer(input_layer, dimension,name):
@@ -77,14 +56,6 @@ def batch_normalization_layer(input_layer, dimension,name):
 
 
 def conv_bn_relu_layer(prefix,input_layer,ksize,stride,num_outputs,has_bn=True, has_relu=True,conv_name_fun=None, bn_name_fun=None):
-    '''
-    A helper function to conv, batch normalize and relu the input tensor sequentially
-    :param input_layer: 4D tensor
-    :param filter_shape: list. [filter_height, filter_width, filter_depth, filter_number]
-    :param stride: stride size for conv
-    :return: 4D tensor. Y = Relu(batch_normalize(conv(X)))
-    '''
-
     num_iutputs = input_layer.get_shape().as_list()[-1]
     filter_shape = [ksize,ksize,num_iutputs,num_outputs]
     conv_name = prefix
@@ -179,9 +150,7 @@ def create_conv(input,input_nums,output_nums,stride,ksize,name):
     filter = create_variables(name=name, shape=filter_shape)
     return  tf.nn.conv2d(input, filter, strides=[1, stride, stride, 1], padding='SAME')
 
-def make_network(data,label, phase, init_model=None):
-    big_interval = 1
-    is_train = 'train' in phase
+def make_network(data,label, stage, is_training):
     module = {}
     output = []
     L = {}
@@ -189,19 +158,19 @@ def make_network(data,label, phase, init_model=None):
     add_init(module, 'init_1')
 
     last_input = 'init_1'
-    for i in range(big_interval) :
+    for i in range(stage) :
         f = add_hourglass(module, 'hg_'+str(i)+'_ori', 4, 256, last_input)
         f = create_bottleneck('hg_'+str(i)+'_1', f, 1, 128, 256, has_proj=False)
         f = conv_bn_relu_layer('hg_'+str(i)+'_2_convbnrelu', f, ksize=1, stride=1,num_outputs=256)
         module['hg_'+str(i)+'_2'] = f
         module['output_' + str(i)] =create_conv(f, input_nums=f.get_shape().as_list()[-1], output_nums=nr_skeleton, stride=1, ksize=1, name='output_'+str(i))
 
-        if is_train:
+        if is_training:
             tmploss = tf.losses.mean_squared_error(label, module['output_'+str(i)])
             L["mse{}".format(i)] = tmploss
         output.append(module['output_'+str(i)])
 
-        if i < big_interval - 1 :
+        if i < stage - 1 :
             module['hg_' + str(i) + '_3'] = create_conv(module['hg_'+str(i)+'_2'], input_nums=module['hg_'+str(i)+'_2'].get_shape().as_list()[-1], output_nums=256, stride=1, ksize=1,
                         name='hg_'+str(i)+'_3')
             module['hg_' + str(i) + '_4'] =create_conv(module['output_'+str(i)],
@@ -213,10 +182,6 @@ def make_network(data,label, phase, init_model=None):
             last_input = 'hg_'+str(i)
 
     return output,L
-
-
-def loss(data,label,mask):
-    pass
 
 
 def bn_relu_conv_layer(input_layer, filter_shape, stride):
@@ -280,66 +245,3 @@ def residual_block(input_layer, output_channel, first_block=False):
 
     output = conv2 + padded_input
     return output
-
-
-def inference(input_tensor_batch, n, reuse):
-    '''
-    The main function that defines the ResNet. total layers = 1 + 2n + 2n + 2n +1 = 6n + 2
-    :param input_tensor_batch: 4D tensor
-    :param n: num_residual_blocks
-    :param reuse: To build train graph, reuse=False. To build validation graph and share weights
-    with train graph, resue=True
-    :return: last layer in the network. Not softmax-ed
-    '''
-
-    layers = []
-    with tf.variable_scope('conv0', reuse=reuse):
-        conv0 = conv_bn_relu_layer(input_tensor_batch, [3, 3, 3, 16], 1)
-        activation_summary(conv0)
-        layers.append(conv0)
-
-    for i in range(n):
-        with tf.variable_scope('conv1_%d' % i, reuse=reuse):
-            if i == 0:
-                conv1 = residual_block(layers[-1], 16, first_block=True)
-            else:
-                conv1 = residual_block(layers[-1], 16)
-            activation_summary(conv1)
-            layers.append(conv1)
-
-    for i in range(n):
-        with tf.variable_scope('conv2_%d' % i, reuse=reuse):
-            conv2 = residual_block(layers[-1], 32)
-            activation_summary(conv2)
-            layers.append(conv2)
-
-    for i in range(n):
-        with tf.variable_scope('conv3_%d' % i, reuse=reuse):
-            conv3 = residual_block(layers[-1], 64)
-            layers.append(conv3)
-        assert conv3.get_shape().as_list()[1:] == [8, 8, 64]
-
-    with tf.variable_scope('fc', reuse=reuse):
-        in_channel = layers[-1].get_shape().as_list()[-1]
-        bn_layer = batch_normalization_layer(layers[-1], in_channel)
-        relu_layer = tf.nn.relu(bn_layer)
-        global_pool = tf.reduce_mean(relu_layer, [1, 2])
-
-        assert global_pool.get_shape().as_list()[-1:] == [64]
-        output = output_layer(global_pool, 10)
-        layers.append(output)
-
-    return layers[-1]
-
-
-def test_graph(train_dir='logs'):
-    '''
-    Run this function to look at the graph structure on tensorboard. A fast way!
-    :param train_dir:
-    '''
-    input_tensor = tf.constant(np.ones([128, 32, 32, 3]), dtype=tf.float32)
-    result = inference(input_tensor, 2, reuse=False)
-    init = tf.initialize_all_variables()
-    sess = tf.Session()
-    sess.run(init)
-    summary_writer = tf.train.SummaryWriter(train_dir, sess.graph)

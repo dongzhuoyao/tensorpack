@@ -30,6 +30,7 @@ lr_schedule = [(30, 5e-5), (45, 1e-5)]
 max_epoch = 60
 epoch_scale = 1
 evaluate_every_n_epoch = 1
+stage = 4
 
 from hg_model import make_network
 
@@ -44,7 +45,7 @@ class Model(ModelDesc):
         ctx = get_current_tower_context()
         logger.info("current ctx.is_training: {}".format(ctx.is_training))
 
-        predict, L = make_network(image, heatmap, "train")
+        predict, L = make_network(image, heatmap, stage, is_training)
 
         predict = tf.identity(predict,'predict')
 
