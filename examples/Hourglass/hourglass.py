@@ -44,8 +44,7 @@ class Model(ModelDesc):
         image = image - tf.constant([104, 116, 122], dtype='float32')
         ctx = get_current_tower_context()
         logger.info("current ctx.is_training: {}".format(ctx.is_training))
-
-        predict, L = make_network(image, heatmap, stage, is_training)
+        predict, L = make_network(image, heatmap, stage, ctx.is_training)
 
         predict = tf.identity(predict,'predict')
 
@@ -59,7 +58,7 @@ class Model(ModelDesc):
         if get_current_tower_context().is_training:
             wd_w = tf.train.exponential_decay(2e-4, get_global_step_var(),
                                               80000, 0.7, True)
-            wd_cost = tf.multiply(wd_w, regularize_cost('.*/W', tf.nn.l2_loss), name='wd_cost')
+            wd_cost = tf.multiply(wd_w, regularize_cost('.*/weights', tf.nn.l2_loss), name='wd_cost')
             costs.append(wd_cost)
             self.cost = tf.add_n(costs, name='cost')
 
