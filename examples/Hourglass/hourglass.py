@@ -21,11 +21,13 @@ from eval_PCKh import pckh
 from pose_util import final_preds
 
 img_dir, meta_dir = "/data1/dataset/mpii/images", "metadata/mpii_annotations.json"
-image_size =(256,256)
-heatmap_size = (64,64)
-init_lr = 3e-5
-lr_schedule = [(30, 6e-6), (45, 1e-6), (60, 8e-7)]
-nr_skeleton = 16
+nr_skeleton = dataset.mpii.joint_num()
+input_shape =(256, 256)
+output_shape = (64, 64)
+
+init_lr = 1e-4
+lr_schedule = [(30, 5e-5), (45, 1e-5)]
+max_epoch = 60
 epoch_scale = 1
 evaluate_every_n_epoch = 1
 
@@ -33,8 +35,8 @@ from hg_model import make_network
 
 class Model(ModelDesc):
     def _get_inputs(self):
-        return [InputDesc(tf.float32, [None, image_size[0], image_size[1], 3], 'image'),
-                InputDesc(tf.float32, [None, heatmap_size[0], heatmap_size[1], 16], 'heatmap')]
+        return [InputDesc(tf.float32, [None, input_shape[0], input_shape[1], 3], 'image'),
+                InputDesc(tf.float32, [None, output_shape[0], output_shape[1], 16], 'heatmap')]
 
     def _build_graph(self, inputs):
         image,heatmap = inputs
@@ -72,7 +74,7 @@ class Model(ModelDesc):
 def get_data(name):
     global  args
     isTrain = name == 'train'
-    ds = dataset.mpii(img_dir, meta_dir, name, shuffle=True)
+    ds = dataset.mpii(img_dir, meta_dir, name, input_shape, output_shape, shuffle=True)
 
     if isTrain:
         ds = BatchData(ds, args.batch_size)
@@ -107,11 +109,11 @@ class CalculateMIoU(Callback):
 
     def _trigger(self):
         global args
-        origin_ds = ds = dataset.mpii(img_dir, meta_dir, "val", shuffle=False)
+        origin_ds = ds = dataset.mpii(img_dir, meta_dir, "val", input_shape, output_shape, shuffle=False)
         #ds = BatchData(ds, 1)
 
         final_result = np.zeros((len(origin_ds.imglist), nr_skeleton, 2), np.float32)
-        final_heatmap = np.zeros((len(origin_ds.imglist), nr_skeleton, heatmap_size[0], heatmap_size[1]), np.float32)
+        final_heatmap = np.zeros((len(origin_ds.imglist), nr_skeleton, output_shape[0], output_shape[1]), np.float32)
         final_center = []
         final_scale = []
         image_id = 0
@@ -137,7 +139,7 @@ class CalculateMIoU(Callback):
 #--validation --load train_log/hourglass/model-20
 
 def proceed_validation(args, is_save = False):
-    origin_ds = ds = dataset.mpii(img_dir, meta_dir, "val", shuffle=False)
+    origin_ds = ds = dataset.mpii(img_dir, meta_dir, "val", input_shape, output_shape, shuffle=False)
     pred_config = PredictConfig(
         model=Model(),
         session_init=get_model_loader(args.load),
@@ -150,7 +152,7 @@ def proceed_validation(args, is_save = False):
     mkdir_p(result_dir)
 
     final_result = np.zeros((len(origin_ds.imglist), nr_skeleton, 2), np.float32)
-    final_heatmap = np.zeros((len(origin_ds.imglist),nr_skeleton, heatmap_size[0],heatmap_size[1]),np.float32)
+    final_heatmap = np.zeros((len(origin_ds.imglist), nr_skeleton, output_shape[0], output_shape[1]), np.float32)
     final_center = []
     final_scale = []
     image_id = 0
@@ -194,15 +196,15 @@ def get_config():
         ],
         model=Model(),
         steps_per_epoch=steps_per_epoch,
-        max_epoch=100,
+        max_epoch=max_epoch,
     )
 
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu',default='0', help='comma separated list of GPU(s) to use.')
-    parser.add_argument('--batch_size', default='10',type=int,  help='batch size')
+    parser.add_argument('--gpu',default='1', help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--batch_size', default='16',type=int,  help='batch size')
     parser.add_argument('--load', help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')

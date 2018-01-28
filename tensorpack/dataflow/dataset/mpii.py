@@ -13,22 +13,22 @@ from tensorpack.utils.skeleton import visualization
 import scipy
 __all__ = ['mpii']
 
-nr_skeleton = 16 #??
-nr_aug_copies =4
-pixel_means = np.array([[[102.9801, 115.9465, 122.7717]]]) # BGR
-data_shape = (256,256)
-output_shape = (64,64)
+
+
 label_type = "Gaussian"
 sigma = 1
-img_path = "/data1/dataset/mpii/images"
+nr_skeleton = 16
 
 class mpii(RNGDataFlow):
-    def __init__(self, img_dir, meta_dir, name,
+    def __init__(self, img_dir, meta_dir, name, data_shape, output_shape,
                  shuffle=None):
 
         assert name in ['train', 'val'], name
 
         self.reset_state()
+        self.data_shape = data_shape
+        self.output_shape = output_shape
+        self.nr_skeleton = nr_skeleton
         self.meta_dir = meta_dir
         self.name = name
         self.img_dir = img_dir
@@ -51,7 +51,7 @@ class mpii(RNGDataFlow):
             else:
                 raise
 
-        self.imglist = self.imglist[:200]
+        #self.imglist = self.imglist[:200]
 
 
     def size(self):
@@ -81,16 +81,16 @@ class mpii(RNGDataFlow):
             # For single-person pose estimation with a centered/scaled figure
             c = cur['objpos']
             s = cur['scale_provided']
-            inp = crop(img, c, s, [data_shape[0], data_shape[1]], rot=0)
+            inp = crop(img, c, s, [self.data_shape[0], self.data_shape[1]], rot=0)
             #TODO color_normalize
 
             # Generate ground truth
             tpts = np.copy(joint_self)
-            target = np.zeros((nr_skeleton, output_shape[0], output_shape[1]))
-            for i in range(nr_skeleton):
+            target = np.zeros((self.nr_skeleton, self.output_shape[0], self.output_shape[1]))
+            for i in range(self.nr_skeleton):
                 # if tpts[i, 2] > 0: # This is evil!!
                 if tpts[i, 0] > 0:
-                    tpts[i, 0:2] = transform(tpts[i, 0:2] + 1, c, s, [output_shape[0], output_shape[1]], rot=0)
+                    tpts[i, 0:2] = transform(tpts[i, 0:2] + 1, c, s, [self.output_shape[0], self.output_shape[1]], rot=0)
                     target[i] = draw_labelmap(target[i], tpts[i] - 1, sigma, type=label_type)
 
             # Meta info
@@ -242,5 +242,5 @@ if __name__ == '__main__':
 
         feat = np.sum(feat,axis=2)
         cv2.imshow("img", img)
-        cv2.imshow("featmap",cv2.resize(feat,(data_shape[0],data_shape[1])))
+        cv2.imshow("featmap",cv2.resize(feat,(256,256)))
         cv2.waitKey()
