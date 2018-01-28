@@ -133,6 +133,9 @@ slim.deeplabv2.voc.imagesize473| 58.8
 deeplabv3.voc.imagesize473|63.2
 deeplabv3.voc.imagesize473|**71.6**
 deeplabv3.voc.imagesize473.scale12|70.4
+deeplabv3.voc.imagesize513.scale4.lrmultfix.noASPP.fortune|68.8
+deeplabv3.voc.imagesize513.scale4.lrmultfix.fortune|71.2
+deeplabv3.voc.imagesize513.scale4.lrmultfix.tune|68.9(slowly move down)
 slim.deeplabv2.dilation6.voc.imagesize473|**70.6**
 
 
