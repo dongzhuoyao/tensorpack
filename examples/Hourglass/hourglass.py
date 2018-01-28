@@ -26,11 +26,12 @@ input_shape =(256, 256)
 output_shape = (64, 64)
 
 init_lr = 1e-4
-lr_schedule = [(30, 5e-5), (45, 1e-5)]
-max_epoch = 60
-epoch_scale = 1
+lr_schedule = [(6, 5e-5), (9, 1e-5)]
+max_epoch = 12
+epoch_scale = 5
 evaluate_every_n_epoch = 1
 stage = 4
+batch_size = 27
 
 from hg_model import make_network
 
@@ -96,7 +97,7 @@ def view_data():
             cv2.imshow("edge", edgemap)
             cv2.waitKey(1000)
 
-class CalculateMIoU(Callback):
+class EvalPCKh(Callback):
     def __init__(self):
         pass
 
@@ -192,7 +193,7 @@ def get_config():
             ScheduledHyperParamSetter('learning_rate', lr_schedule),
             HumanHyperParamSetter('learning_rate'),
             ProgressBar(['mse_loss', "cost", "wd_cost"]),  # uncomment it to debug for every step
-            PeriodicTrigger(CalculateMIoU(), every_k_epochs=evaluate_every_n_epoch),
+            PeriodicTrigger(EvalPCKh(), every_k_epochs=evaluate_every_n_epoch),
         ],
         model=Model(),
         steps_per_epoch=steps_per_epoch,
@@ -204,7 +205,7 @@ def get_config():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu',default='1', help='comma separated list of GPU(s) to use.')
-    parser.add_argument('--batch_size', default='16',type=int,  help='batch size')
+    parser.add_argument('--batch_size', default=batch_size,type=int,  help='batch size')
     parser.add_argument('--load', help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
