@@ -51,7 +51,7 @@ class mpii(RNGDataFlow):
             else:
                 raise
 
-        #self.imglist = self.imglist[:20]
+        self.imglist = self.imglist[:200]
 
 
     def size(self):
@@ -98,7 +98,12 @@ class mpii(RNGDataFlow):
                     'pts': joint_self, 'tpts': tpts}
 
             target = np.transpose(target, (1, 2, 0))
-            yield [inp, target, meta]
+            if self.name == "train":
+                yield [inp, target]
+            elif self.name == "val":
+                yield [inp, target, meta]
+            else:
+                raise
 
 
 def draw_labelmap(img, pt, sigma, type='Gaussian'):

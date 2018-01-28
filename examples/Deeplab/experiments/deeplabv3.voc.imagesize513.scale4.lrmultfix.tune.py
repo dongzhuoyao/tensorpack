@@ -29,10 +29,10 @@ CLASS_NUM = 21
 CROP_SIZE = 513
 IGNORE_LABEL = 255
 
-first_batch_lr = 2.5e-4
-lr_schedule = [(2, 1e-4), (4, 1e-5), (6, 8e-6)]
-epoch_scale = 4
-max_epoch = 11
+first_batch_lr = 6e-5
+lr_schedule = [(2, 3e-5), (4, 1e-5), (6, 5e-6)]
+epoch_scale = 20
+max_epoch = 8
 lr_multi_schedule = [('lr_multiply.*/weights', 5),('lr_multiply.*/biases',10)]
 batch_size = 9
 evaluate_every_n_epoch = 1
