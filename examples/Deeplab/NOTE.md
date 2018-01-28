@@ -136,6 +136,7 @@ deeplabv3.voc.imagesize473.scale12|70.4
 deeplabv3.voc.imagesize513.scale4.lrmultfix.noASPP.fortune|68.8
 deeplabv3.voc.imagesize513.scale4.lrmultfix.fortune|71.2
 deeplabv3.voc.imagesize513.scale4.lrmultfix.tune|68.9(slowly move down)
+deeplabv3.voc.imagesize513.scale4.lrmultfix.tune.betagammafix|69.7(slowly move down then up)
 slim.deeplabv2.dilation6.voc.imagesize473|**70.6**
 
 
