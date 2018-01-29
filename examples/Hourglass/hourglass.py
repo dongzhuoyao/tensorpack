@@ -89,13 +89,10 @@ def get_data(name):
 def view_data():
     ds = RepeatedData(get_data('train'), -1)
     ds.reset_state()
-    for ims, edgemaps in ds.get_data():
-        for im, edgemap in zip(ims, edgemaps):
-            assert im.shape[0] % 16 == 0 and im.shape[1] % 16 == 0, im.shape
-            cv2.imshow("im", im / 255.0)
-            cv2.waitKey(1000)
-            cv2.imshow("edge", edgemap)
-            cv2.waitKey(1000)
+    for image, heatmap  in ds.get_data():
+        cv2.imshow("img",image[0])
+        cv2.imshow("heatmap_gt",255*cv2.resize(np.sum(heatmap[0], axis=2),(input_shape[0],input_shape[1])))
+        cv2.waitKey(4000)
 
 class EvalPCKh(Callback):
     def __init__(self):
@@ -115,13 +112,11 @@ class EvalPCKh(Callback):
 
         final_result = np.zeros((len(origin_ds.imglist), nr_skeleton, 2), np.float32)
         final_heatmap = np.zeros((len(origin_ds.imglist), nr_skeleton, output_shape[0], output_shape[1]), np.float32)
-        final_center = []
-        final_scale = []
         image_id = 0
         _itr = ds.get_data()
         for _ in tqdm(range(len(origin_ds.imglist))):
             image, heatmap, meta = next(_itr)
-            predict = self.pred(image[None, :, :, :])
+            predict = predictor(image[None, :, :, :])
             predict = np.squeeze(predict)
             predict = predict[-1, :, :, :]  # last stage
             final_heatmap[image_id, :, :, :] = np.transpose(predict, [2, 0, 1])
@@ -141,13 +136,29 @@ class EvalPCKh(Callback):
                 final_result[image_id, i, 0] = x
                 final_result[image_id, i, 1] = y
 
-            final_center.append(meta['center'])
-            final_scale.append(meta['scale'])
+            final_result[image_id, :, 0] /= meta['transform']['divide_first'][0]
+            final_result[image_id, :, 1] /= meta['transform']['divide_first'][1]
+            final_result[image_id, :, 0] += meta['transform']['add_second'][0]
+            final_result[image_id, :, 1] += meta['transform']['add_second'][1]
+
+            # some coordinate may be negative after the transformation.
+            img_height = meta['meta']['img_height']
+            img_width = meta['meta']['img_width']
+            final_result[image_id, :, 0] = np.minimum(final_result[image_id, :, 0], img_width)
+            final_result[image_id, :, 0] = np.maximum(final_result[image_id, :, 0], 0)
+            final_result[image_id, :, 1] = np.minimum(final_result[image_id, :, 1], img_height)
+            final_result[image_id, :, 1] = np.maximum(final_result[image_id, :, 1], 0)
+
+            if False:
+                from utils import draw_skeleton
+                big_img = cv2.imread(os.path.join(img_dir, meta['meta']['img_paths']))
+                draw_skeleton(big_img, final_result[image_id])
+                cv2.imshow("result", big_img)
+                cv2.waitKey(3000)  # 3s
+
             image_id += 1
 
-        preds = final_preds(final_heatmap, final_result, final_center, final_scale, [output_shape[0], output_shape[1]])
-        pckh(preds)
-#--validation --load train_log/hourglass/model-20
+        pckh(final_result)
 
 def proceed_validation(args, is_save = False):
     origin_ds = ds = dataset.mpii(img_dir, meta_dir, "val", input_shape, output_shape, shuffle=False)
@@ -164,8 +175,6 @@ def proceed_validation(args, is_save = False):
 
     final_result = np.zeros((len(origin_ds.imglist), nr_skeleton, 2), np.float32)
     final_heatmap = np.zeros((len(origin_ds.imglist), nr_skeleton, output_shape[0], output_shape[1]), np.float32)
-    final_center = []
-    final_scale = []
     image_id = 0
     _itr = ds.get_data()
     for _  in tqdm(range(len(origin_ds.imglist))):
@@ -192,17 +201,28 @@ def proceed_validation(args, is_save = False):
 
         final_result[image_id, :, 0] /= meta['transform']['divide_first'][0]
         final_result[image_id, :, 1] /= meta['transform']['divide_first'][1]
-        final_result[image_id, :, 0] -= meta['transform']['minus_second'][0]
-        final_result[image_id, :, 1] -= meta['transform']['minus_second'][1]
+        final_result[image_id, :, 0] += meta['transform']['add_second'][0]
+        final_result[image_id, :, 1] += meta['transform']['add_second'][1]
+
+        # some coordinate may be negative after the transformation.
+        img_height = meta['meta']['img_height']
+        img_width = meta['meta']['img_width']
+        final_result[image_id, :, 0] = np.minimum(final_result[image_id, :, 0],img_width)
+        final_result[image_id, :, 0] = np.maximum(final_result[image_id, :, 0], 0)
+        final_result[image_id, :, 1] = np.minimum(final_result[image_id, :, 1], img_height)
+        final_result[image_id, :, 1] = np.maximum(final_result[image_id, :, 1], 0)
 
 
+        if False:
+            from utils import draw_skeleton
+            big_img = cv2.imread(os.path.join(img_dir,meta['meta']['img_paths']))
+            draw_skeleton(big_img,final_result[image_id])
+            cv2.imshow("result", big_img)
+            cv2.waitKey(3000) #3s
 
-        final_center.append(meta['center'])
-        final_scale.append( meta['scale'])
         image_id += 1
 
-    preds = final_preds(final_heatmap, final_result, final_center, final_scale, [output_shape[0], output_shape[1]])
-    pckh(preds)
+    pckh(final_result)
 
 
 
@@ -232,7 +252,7 @@ def get_config():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu',default='2', help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu',default='1', help='comma separated list of GPU(s) to use.')
     parser.add_argument('--batch_size', default=batch_size,type=int,  help='batch size')
     parser.add_argument('--load', help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')

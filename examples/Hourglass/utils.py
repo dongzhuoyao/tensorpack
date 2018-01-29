@@ -1,3 +1,27 @@
+import cv2
+
+
+def draw_skeleton(input_image, sk):
+    for j in range(sk.shape[0]):
+        cv2.circle(input_image, tuple(sk[j]), 2, tuple((255, 0, 0)), 2)
+    cv2.line(input_image, tuple(sk[0]), tuple(sk[1]), (0, 255, 255), 2)
+    cv2.line(input_image, tuple(sk[1]), tuple(sk[2]), (0, 255, 255), 2)
+    cv2.line(input_image, tuple(sk[2]), tuple(sk[6]), (0, 255, 255), 2)
+    cv2.line(input_image, tuple(sk[6]), tuple(sk[3]), (0, 255, 255), 2)
+    cv2.line(input_image, tuple(sk[3]), tuple(sk[4]), (0, 255, 255), 2)
+    cv2.line(input_image, tuple(sk[4]), tuple(sk[5]), (0, 255, 255), 2)
+    cv2.line(input_image, tuple(sk[6]), tuple(sk[7]), (0, 255, 255), 2)
+    cv2.line(input_image, tuple(sk[7]), tuple(sk[8]), (0, 255, 255), 2)
+    cv2.line(input_image, tuple(sk[8]), tuple(sk[9]), (0, 255, 255), 2)
+    cv2.line(input_image, tuple(sk[8]), tuple(sk[12]), (0, 255, 255), 2)
+    cv2.line(input_image, tuple(sk[12]), tuple(sk[11]), (0, 255, 255), 2)
+    cv2.line(input_image, tuple(sk[11]), tuple(sk[10]), (0, 255, 255), 2)
+    cv2.line(input_image, tuple(sk[8]), tuple(sk[13]), (0, 255, 255), 2)
+    cv2.line(input_image, tuple(sk[13]), tuple(sk[14]), (0, 255, 255), 2)
+    cv2.line(input_image, tuple(sk[14]), tuple(sk[15]), (0, 255, 255), 2)
+
+
+
 
 def visualize(oriImg, points, pa):
     import matplotlib

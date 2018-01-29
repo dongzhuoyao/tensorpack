@@ -51,7 +51,7 @@ class mpii(RNGDataFlow):
             else:
                 raise
 
-        self.imglist = self.imglist[:200]
+        #self.imglist = self.imglist[:200]
 
 
     def size(self):
@@ -86,19 +86,27 @@ class mpii(RNGDataFlow):
 
             image, label, transform_dict =crop_and_padding(img_path=os.path.join(self.img_dir,img_paths),
                                                            objcenter=c, scale=s, joints=joint_self,
-                                                           headRect=1, output_shape= self.output_shape, stage=self.name)
+                                                           headRect=1, data_shape = self.data_shape, output_shape= self.output_shape, stage=self.name)
 
             target = np.zeros((self.nr_skeleton, self.output_shape[0], self.output_shape[1]))
             for i in range(self.nr_skeleton):
                 # if tpts[i, 2] > 0: # This is evil!!
-                if joint_self[i, 0] > 0:
-                    target[i,int(label[i,0]),int(label[i,1])] = 1
+                if  label[i,0] < self.output_shape[0] and label[i,1] < self.output_shape[1] \
+                        and label[i, 0]>0 and label[i,1] > 0:
+                        target[i,int(label[i,1]),int(label[i,0])] = 1 #here, notice the order of opencv
+
 
             target = np.transpose(target, (1, 2, 0))
-            target = cv2.GaussianBlur(target, (7, 7), 0)
+            target = cv2.GaussianBlur(target, (3, 3), 0)
+
+            for i in range(nr_skeleton): # normalize to 1, otherwise the peak value may be 0.25, please notice the cv2.GaussianBlur's result.
+                    am = np.amax(target[:,:,i])
+                    if am == 0:
+                        continue
+                    target[:, :, i] /= am / 1  # normalize to 1
 
             # Meta info
-            meta = {'index': annolist_index, 'center': c, 'scale': s, 'transform': transform_dict}
+            meta = {'index': annolist_index, 'center': c, 'scale': s, 'transform': transform_dict,"meta":cur}
 
             if self.name == "train":
                 yield [image, target]
@@ -115,16 +123,17 @@ pixel_means = np.array([[[102.9801, 115.9465, 122.7717]]]) # BGR
 
 
 
-def crop_and_padding(img_path, objcenter, scale, joints, headRect, output_shape, stage):
-    width, height = output_shape
+def crop_and_padding(img_path, objcenter, scale, joints, headRect, data_shape, output_shape, stage):
     img = cv2.imread(img_path)
     add = max(img.shape[0], img.shape[1])
     big_img = cv2.copyMakeBorder(img, add, add, add, add, borderType=cv2.BORDER_CONSTANT,
                               value=pixel_means.reshape(-1))
 
     joints_origin = np.copy(joints)
-
-    joints[:, :2] += add
+    joints[:, 0] += add
+    joints[:, 1] += add
+    objcenter[0] += add
+    objcenter[1] += add
     ###################################################### here is one cheat
     if stage == 'train':
         ext_ratio = 1.25
@@ -134,29 +143,30 @@ def crop_and_padding(img_path, objcenter, scale, joints, headRect, output_shape,
         ext_ratio = 1.
 
     delta = int(scale * ext_ratio)//2
-    min_x = int(objcenter[0] + add - delta)
-    max_x = int(objcenter[0] + add + delta)
-    min_y = int(objcenter[1] + add - delta)
-    max_y = int(objcenter[1] + add + delta)
+    min_x = int(objcenter[0]  - delta)
+    max_x = int(objcenter[0]  + delta)
+    min_y = int(objcenter[1]  - delta)
+    max_y = int(objcenter[1]  + delta)
 
     joints[:, 0] -=  min_x
     joints[:, 1] -=  min_y
 
-    x_ratio = float(width) / (max_x - min_x);
-    y_ratio = float(height) / (max_y - min_y)
+    x_ratio = float(output_shape[0]) / (max_x - min_x)
+    y_ratio = float(output_shape[1]) / (max_y - min_y)
+
+
 
     joints[:, 0] *= x_ratio
     joints[:, 1] *= y_ratio
 
-    num_joints = nr_skeleton
-    img = cv2.resize(big_img[min_y:max_y, min_x:max_x, :], (height, width))
+    img = cv2.resize(big_img[min_y:max_y, min_x:max_x, :], (data_shape[0], data_shape[1]))
 
     ind = joints[:, 2].argsort()
     label = joints[ind, :2]
 
     transform = {}
     transform['divide_first'] = (x_ratio, y_ratio)
-    transform['minus_second'] = (add - min_x, add - min_y)
+    transform['add_second'] = (min_x - add, min_y - add)
 
 
     return img, label, transform
@@ -171,9 +181,9 @@ if __name__ == '__main__':
         feat = data[1]
         meta = data[2]
 
-        """
+
         feat = np.sum(feat,axis=2)
         cv2.imshow("img", img)
         cv2.imshow("featmap",cv2.resize(feat*255,(256,256)))
-        cv2.waitKey()
-        """
+        cv2.waitKey(3000)
+
