@@ -57,7 +57,7 @@ class Model(ModelDesc):
         costs.append(nodecay_loss)
 
         if get_current_tower_context().is_training:
-            wd_w = tf.train.exponential_decay(2e-4, get_global_step_var(),
+            wd_w = tf.train.exponential_decay(2e-5, get_global_step_var(),
                                               80000, 0.7, True)
             wd_cost = tf.multiply(wd_w, regularize_cost('.*/weights', tf.nn.l2_loss), name='wd_cost')
             costs.append(wd_cost)
@@ -69,7 +69,7 @@ class Model(ModelDesc):
         opt = tf.train.AdamOptimizer(lr, epsilon=1e-3)
         return optimizer.apply_grad_processors(
             opt, [gradproc.ScaleGradient(
-                [('convfcweight.*', 0.1), ('conv5_.*', 5)])])
+                [('nothing.*', 0.1), ('nothing.*', 5)])])
 
 
 def get_data(name):
