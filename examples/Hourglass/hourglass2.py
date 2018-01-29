@@ -28,7 +28,7 @@ output_shape = (64, 64)
 init_lr = 1e-4
 lr_schedule = [(6, 5e-5), (9, 1e-5)]
 max_epoch = 12
-epoch_scale = 5 #10
+epoch_scale = 1 #10
 evaluate_every_n_epoch = 1
 stage = 4
 batch_size = 27
@@ -57,7 +57,7 @@ class Model(ModelDesc):
         costs.append(nodecay_loss)
 
         if get_current_tower_context().is_training:
-            wd_w = tf.train.exponential_decay(2e-4, get_global_step_var(),
+            wd_w = tf.train.exponential_decay(2e-3, get_global_step_var(),
                                               80000, 0.7, True)
             wd_cost = tf.multiply(wd_w, regularize_cost('.*/weights', tf.nn.l2_loss), name='wd_cost')
             costs.append(wd_cost)
@@ -252,7 +252,7 @@ def get_config():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu',default='1', help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu',default='2', help='comma separated list of GPU(s) to use.')
     parser.add_argument('--batch_size', default=batch_size,type=int,  help='batch size')
     parser.add_argument('--load', help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')

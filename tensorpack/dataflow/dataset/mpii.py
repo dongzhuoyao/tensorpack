@@ -103,7 +103,7 @@ class mpii(RNGDataFlow):
                     am = np.amax(target[:,:,i])
                     if am == 0:
                         continue
-                    target[:, :, i] /= am / 1  # normalize to 1
+                    target[:, :, i] /= am / 255  # normalize to 1
 
             # Meta info
             meta = {'index': annolist_index, 'center': c, 'scale': s, 'transform': transform_dict,"meta":cur}
@@ -118,10 +118,6 @@ class mpii(RNGDataFlow):
 
 
 pixel_means = np.array([[[102.9801, 115.9465, 122.7717]]]) # BGR
-
-
-
-
 
 def crop_and_padding(img_path, objcenter, scale, joints, headRect, data_shape, output_shape, stage):
     img = cv2.imread(img_path)
