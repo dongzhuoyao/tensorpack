@@ -209,7 +209,7 @@ def proceed_validation(args, is_save = True, is_densecrf = False):
         output_names=['prob'])
     predictor = OfflinePredictor(pred_config)
     from tensorpack.utils.fs import mkdir_p
-    result_dir = "result/validation_border512"
+    result_dir = "result/validation_border512_rank2"
     #result_dir = "ningbo_validation"
     mkdir_p(result_dir)
     i = 1

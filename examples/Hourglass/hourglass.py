@@ -118,10 +118,21 @@ class EvalPCKh(Callback):
         final_center = []
         final_scale = []
         image_id = 0
-        for image, heatmap, meta in ds.get_data():
+        _itr = ds.get_data()
+        for _ in tqdm(range(len(origin_ds.imglist))):
+            image, heatmap, meta = next(_itr)
             predict = self.pred(image[None, :, :, :])
             predict = np.squeeze(predict)
+            predict = predict[-1, :, :, :]  # last stage
             final_heatmap[image_id, :, :, :] = np.transpose(predict, [2, 0, 1])
+            if True:
+                heatmap_view = np.sum(heatmap, axis=2)
+                predict_view = np.sum(predict, axis=2)
+                cv2.imshow("img", image)
+                cv2.imshow("featmap", cv2.resize(heatmap_view, (input_shape[0], input_shape[1])))
+                cv2.imshow("predict", cv2.resize(heatmap_view, (input_shape[0], input_shape[1])))
+                cv2.waitKey()
+
             # TODO flip
             # TODO multi scale fusion
             for i in range(nr_skeleton):
@@ -134,9 +145,8 @@ class EvalPCKh(Callback):
             final_scale.append(meta['scale'])
             image_id += 1
 
-        preds = final_preds(final_heatmap, final_result, final_center, final_scale, [64, 64])
+        preds = final_preds(final_heatmap, final_result, final_center, final_scale, [output_shape[0], output_shape[1]])
         pckh(preds)
-
 #--validation --load train_log/hourglass/model-20
 
 def proceed_validation(args, is_save = False):
