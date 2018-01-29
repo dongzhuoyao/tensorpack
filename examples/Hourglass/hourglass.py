@@ -174,7 +174,7 @@ def proceed_validation(args, is_save = False):
         predict = np.squeeze(predict)
         predict = predict[-1,:,:,:]# last stage
         final_heatmap[image_id,:,:,:] = np.transpose(predict,[2,0,1])
-        if True:
+        if False:
             heatmap_view = np.sum(heatmap, axis=2)
             predict_view = np.sum(predict, axis=2)
             cv2.imshow("img", image)
@@ -189,6 +189,13 @@ def proceed_validation(args, is_save = False):
             x, y = np.unravel_index(lb, predict[:,:,i].shape)
             final_result[image_id, i, 0] = x
             final_result[image_id, i, 1] = y
+
+        final_result[image_id, :, 0] /= meta['transform']['divide_first'][0]
+        final_result[image_id, :, 1] /= meta['transform']['divide_first'][1]
+        final_result[image_id, :, 0] -= meta['transform']['minus_second'][0]
+        final_result[image_id, :, 1] -= meta['transform']['minus_second'][1]
+
+
 
         final_center.append(meta['center'])
         final_scale.append( meta['scale'])
@@ -225,7 +232,7 @@ def get_config():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu',default='1', help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu',default='2', help='comma separated list of GPU(s) to use.')
     parser.add_argument('--batch_size', default=batch_size,type=int,  help='batch size')
     parser.add_argument('--load', help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')

@@ -25,12 +25,12 @@ def pckh(preds):
     jnt_missing = dict['jnt_missing']
     pos_gt_src = dict['pos_gt_src']
     headboxes_src = dict['headboxes_src']
-    """
+
     debug_length = 200
     pos_gt_src = pos_gt_src[:,:,:debug_length]
     jnt_missing =jnt_missing[:,:debug_length]
     headboxes_src = headboxes_src[:,:,:debug_length]
-    """
+
 
     pos_pred_src = transpose(preds, [1, 2, 0])
 
