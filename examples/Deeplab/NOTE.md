@@ -180,7 +180,11 @@ deeplabv2.cs.imagesize672.scale18|**74.21** ([test:72.67](https://www.cityscapes
 * After training on the trainaug set with 30K iterations and initial learning rate = 0.007, we then freeze batch normalization
 parameters, employ output stride = 8(via dilation to control it), and train on the official PASCAL VOC 2012 trainval set for another 30K iterations and smaller base learning rate = 0.001.
 
+* how to evaluate
 
+Arch | Pre | After
+------------ | -------------| -------------
+deeplabv3.voc.imagesize513.scale4.lrmultfix.noASPP.fortune| 68.9 |59 |
 
 
 ## Ideas
