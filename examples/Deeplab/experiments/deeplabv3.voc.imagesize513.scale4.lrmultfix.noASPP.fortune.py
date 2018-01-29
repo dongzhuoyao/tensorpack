@@ -22,7 +22,7 @@ from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 import tensorpack.tfutils.symbolic_functions as symbf
 from tqdm import tqdm
 from seg_utils import RandomCropWithPadding
-from deeplabv3_slim.deeplabv3 import deeplabv3
+from deeplabv3_slim.deeplabv3_noaspp import deeplabv3
 
 
 CLASS_NUM = 21

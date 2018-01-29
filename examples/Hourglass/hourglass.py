@@ -125,7 +125,7 @@ class EvalPCKh(Callback):
             predict = np.squeeze(predict)
             predict = predict[-1, :, :, :]  # last stage
             final_heatmap[image_id, :, :, :] = np.transpose(predict, [2, 0, 1])
-            if True:
+            if False:
                 heatmap_view = np.sum(heatmap, axis=2)
                 predict_view = np.sum(predict, axis=2)
                 cv2.imshow("img", image)

@@ -67,10 +67,9 @@ def bottleneck_hdc(inputs,
 
 def deeplabv3(inputs,
               num_classes,
-              depth=101,
               aspp=True,
               reuse=None,
-              is_training=True):
+              is_training=True,fix_bn = False):
   """DeepLabV3
   Args:
     inputs: A tensor of size [batch, height, width, channels].
@@ -88,9 +87,15 @@ def deeplabv3(inputs,
     multi_grid = (1,2,4)
   else:
     multi_grid = (1,2,1)
+
+  bn_is_training = is_training
+  if fix_bn:
+    bn_is_training = False
+
+
   scope ='resnet_v{}_101'.format(resnet_vn)
   with slim.arg_scope(resnet_v2.resnet_arg_scope()):
-    with slim.arg_scope([slim.batch_norm], is_training=is_training):
+    with slim.arg_scope([slim.batch_norm], is_training=bn_is_training):
       with tf.variable_scope(scope, [inputs], reuse=reuse) as sc:
           net = inputs
           # We do not include batch normalization or activation functions in
@@ -138,15 +143,16 @@ def deeplabv3(inputs,
                   depth_bottleneck=base_depth,rate=1, stride=1)
 
 
-      with tf.variable_scope('lr_multiply', [net]) as sc:
-        with tf.variable_scope('block4', [net]) as sc:
-          base_depth = 512
-          for i in range(3):
-            with tf.variable_scope('unit_%d' % (i + 1), values=[net]):
-              net = bottleneck_hdc(net, depth=base_depth * 4,
-                                   depth_bottleneck=base_depth, stride=1, rate=2,
-                                   multi_grid=multi_grid)
+          stage_scale = 2 if is_training else 1
+          with tf.variable_scope('block4', [net]) as sc:
+            base_depth = 512
+            for i in range(3):
+              with tf.variable_scope('unit_%d' % (i + 1), values=[net]):
+                net = bottleneck_hdc(net, depth=base_depth * 4,
+                  depth_bottleneck=base_depth, rate=stage_scale,stride=1,
+                  multi_grid=multi_grid)
 
+      with tf.variable_scope('lr_multiply', [net]) as sc:
         if aspp:
           with tf.variable_scope('aspp', [net]) as sc:
             aspp_list = []
@@ -180,7 +186,7 @@ def deeplabv3(inputs,
             for i in range(3):
               with tf.variable_scope('unit_%d' % (i + 1), values=[net]):
                 net = bottleneck_hdc(net, depth=base_depth * 4,
-                  depth_bottleneck=base_depth, stride=1, rate=4)
+                  depth_bottleneck=base_depth, stride=1, rate=stage_scale*2)
 
 
           with tf.variable_scope('block6', [net]) as sc:
@@ -189,7 +195,7 @@ def deeplabv3(inputs,
             for i in range(3):
               with tf.variable_scope('unit_%d' % (i + 1), values=[net]):
                 net = bottleneck_hdc(net, depth=base_depth * 4,
-                  depth_bottleneck=base_depth, stride=1, rate=8)
+                  depth_bottleneck=base_depth, stride=1, rate=stage_scale*4)
 
 
           with tf.variable_scope('block7', [net]) as sc:
@@ -198,20 +204,14 @@ def deeplabv3(inputs,
             for i in range(3):
               with tf.variable_scope('unit_%d' % (i + 1), values=[net]):
                 net = bottleneck_hdc(net, depth=base_depth * 4,
-                  depth_bottleneck=base_depth, stride=1, rate=16)
+                  depth_bottleneck=base_depth, stride=1, rate=stage_scale*8)
 
 
-          with tf.variable_scope('logits',[net]) as sc:
+        with tf.variable_scope('logits',[net]) as sc:
             net = slim.conv2d(net, num_classes, [1,1], stride=1,
               activation_fn=None, normalizer_fn=None)
 
-      net = tf.image.resize_bilinear(net, inputs.shape[1:3])
+  net = tf.image.resize_bilinear(net, inputs.shape[1:3])
 
-    return net
+  return net
 
-if __name__ == "__main__":
-  x = tf.placeholder(tf.float32, [None, 512, 512, 3])
-
-  net, end_points = deeplabv3(x, 21)
-  for i in end_points:
-    print(i, end_points[i])
