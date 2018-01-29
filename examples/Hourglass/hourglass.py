@@ -28,7 +28,7 @@ output_shape = (64, 64)
 init_lr = 1e-4
 lr_schedule = [(6, 5e-5), (9, 1e-5)]
 max_epoch = 12
-epoch_scale = 10
+epoch_scale = 1 #10
 evaluate_every_n_epoch = 1
 stage = 4
 batch_size = 27
@@ -45,13 +45,13 @@ class Model(ModelDesc):
         image = image - tf.constant([104, 116, 122], dtype='float32')
         ctx = get_current_tower_context()
         logger.info("current ctx.is_training: {}".format(ctx.is_training))
-        predict, L = make_network(image, heatmap, stage, ctx.is_training)
+        predict, multi_stage_loss_dict = make_network(image, heatmap, stage, nr_skeleton, ctx.is_training)
 
         predict = tf.identity(predict,'predict')
 
         nodecay_loss = 0.
-        for loss in L.values():
-            nodecay_loss += loss / len(L)
+        for loss in multi_stage_loss_dict.values():
+            nodecay_loss += loss / len(multi_stage_loss_dict)
         nodecay_loss = tf.identity(nodecay_loss, 'mse_loss')
         costs =[]
         costs.append(nodecay_loss)
@@ -164,6 +164,14 @@ def proceed_validation(args, is_save = False):
         predict = np.squeeze(predict)
         predict = predict[-1,:,:,:]# last stage
         final_heatmap[image_id,:,:,:] = np.transpose(predict,[2,0,1])
+        if True:
+            heatmap_view = np.sum(heatmap, axis=2)
+            predict_view = np.sum(predict, axis=2)
+            cv2.imshow("img", image)
+            cv2.imshow("featmap", cv2.resize(heatmap_view, (input_shape[0], input_shape[1])))
+            cv2.imshow("predict", cv2.resize(heatmap_view, (input_shape[0], input_shape[1])))
+            cv2.waitKey()
+
         # TODO flip
         # TODO multi scale fusion
         for i in range(nr_skeleton):

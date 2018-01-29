@@ -103,7 +103,7 @@ class mpii(RNGDataFlow):
             elif self.name == "val":
                 yield [inp, target, meta]
             else:
-                raise
+                raise NotImplementedError
 
 
 def draw_labelmap(img, pt, sigma, type='Gaussian'):
