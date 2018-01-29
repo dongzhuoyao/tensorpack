@@ -19,7 +19,7 @@ from tensorpack.utils import logger
 import numpy as np
 from eval_PCKh import pckh
 from pose_util import final_preds
-
+from tqdm import tqdm
 img_dir, meta_dir = "/data1/dataset/mpii/images", "metadata/mpii_annotations.json"
 nr_skeleton = dataset.mpii.joint_num()
 input_shape =(256, 256)
@@ -28,7 +28,7 @@ output_shape = (64, 64)
 init_lr = 1e-4
 lr_schedule = [(6, 5e-5), (9, 1e-5)]
 max_epoch = 12
-epoch_scale = 5
+epoch_scale = 10
 evaluate_every_n_epoch = 1
 stage = 4
 batch_size = 27
@@ -157,9 +157,12 @@ def proceed_validation(args, is_save = False):
     final_center = []
     final_scale = []
     image_id = 0
-    for image, heatmap, meta in ds.get_data():
+    _itr = ds.get_data()
+    for _  in tqdm(range(len(origin_ds.imglist))):
+        image, heatmap, meta = next(_itr)
         predict = predictor(image[None, :, :, :])
         predict = np.squeeze(predict)
+        predict = predict[-1,:,:,:]# last stage
         final_heatmap[image_id,:,:,:] = np.transpose(predict,[2,0,1])
         # TODO flip
         # TODO multi scale fusion
@@ -173,7 +176,7 @@ def proceed_validation(args, is_save = False):
         final_scale.append( meta['scale'])
         image_id += 1
 
-    preds = final_preds(final_heatmap, final_result, final_center, final_scale, [64, 64])
+    preds = final_preds(final_heatmap, final_result, final_center, final_scale, [output_shape[0], output_shape[1]])
     pckh(preds)
 
 
