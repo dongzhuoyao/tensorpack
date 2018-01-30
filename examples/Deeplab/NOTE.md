@@ -203,3 +203,4 @@ deeplabv3.voc.imagesize513.scale4.lrmultfix.noASPP.fortune| 68.9 |59 |
 * [Statistically Motivated Second Order Pooling](https://arxiv.org/abs/1801.07492)
 * [Spatial Temporal Graph Convolutional Networks for Skeleton-Based Action
 Recognition](https://arxiv.org/abs/1801.07455)
+*  [LIFT](https://github.com/cvlab-epfl/tf-lift)
