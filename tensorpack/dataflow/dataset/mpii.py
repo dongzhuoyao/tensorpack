@@ -155,7 +155,12 @@ def crop_and_padding(img_path, objcenter, scale, joints, headRect, data_shape, o
     joints[:, 0] *= x_ratio
     joints[:, 1] *= y_ratio
 
-    img = cv2.resize(big_img[min_y:max_y, min_x:max_x, :], (data_shape[0], data_shape[1]))
+
+    try:
+        img = cv2.resize(big_img[min_y:max_y, min_x:max_x, :], (data_shape[0], data_shape[1]))
+    except:
+        from IPython import embed
+        embed()
 
     ind = joints[:, 2].argsort()
     label = joints[ind, :2]
@@ -171,15 +176,23 @@ def crop_and_padding(img_path, objcenter, scale, joints, headRect, data_shape, o
 
 if __name__ == '__main__':
     mm = mpii('/data1/dataset/mpii/images','/home/hutao/lab/tensorpack-forpr/examples/Hourglass/metadata/mpii_annotations.json',
-              "val",(256,256),(64,64))
+              "val",(256,256),(64,64),shuffle=False)
+    ll = mm.imglist
+    i = 0
     for data in mm.get_data():
         img = data[0]
         feat = data[1]
-        meta = data[2]
+        #meta = data[2]
+        try:
+            meta = ll[i]
+            tmp =  img.shape
+        except:
+            from IPython import embed
+            embed()
+        #feat = np.sum(feat,axis=2)
+        #cv2.imshow("img", img)
+        #cv2.imshow("featmap",cv2.resize(feat*255,(256,256)))
+        #cv2.waitKey(3000)
 
-
-        feat = np.sum(feat,axis=2)
-        cv2.imshow("img", img)
-        cv2.imshow("featmap",cv2.resize(feat*255,(256,256)))
-        cv2.waitKey(3000)
+        i +=1
 
