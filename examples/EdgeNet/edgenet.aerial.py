@@ -254,9 +254,10 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
 
         label = label[0]
         label = label[:,:,None]
-        outputs = to_size(outputs)#last fusion map
+        #outputs = to_size(outputs)#last fusion map
+        outputs = np.dstack((outputs*255,outputs*255,outputs*255))
         cv2.imwrite(os.path.join(result_dir,"out{}.png".format(i)),
-                    np.concatenate((image,outputs,),axis=1))
+                    np.concatenate((image,outputs),axis=1))
 
 def proceed_validation512(args, is_save=True, is_densecrf=False):
     import cv2
