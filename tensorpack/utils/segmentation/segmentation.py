@@ -8,7 +8,7 @@ from math import ceil
 import cv2,colorsys
 import pydensecrf.densecrf as dcrf
 import os, sys
-
+from tensorpack.utils import logger
 
 __all__ = ['update_confusion_matrix', 'predict_slider']
 
@@ -176,7 +176,8 @@ def edge_predict_slider(full_image, edge, predictor, classes, tile_size):
 
 
 def edge_predict_scaler(full_image, edge, predictor, scales, classes, tile_size, is_densecrf=True):
-    """scaler is only respnsible for generate multi scale input for slider"""
+    """ scaler is only respnsible for generate multi scale input for slider """
+
     full_probs = np.zeros((full_image.shape[0], full_image.shape[1], classes))
     h_ori, w_ori = full_image.shape[:2]
     for scale in scales:
@@ -215,7 +216,7 @@ def predict_slider(full_image, predictor, classes, tile_size):
             padded_img, padding_index = pad_image(img, tile_size) #only happen in validation or test when the original image size is already smaller than tile_size
             tile_counter += 1
             padded_img = padded_img[None, :, :, :].astype('float32') # extend one dimension
-            padded_prediction = predictor(padded_img)[0][0]
+            padded_prediction = predictor(padded_img)# TODO dongzhuoyao, may be influence other function. mayb
             prediction_no_padding = padded_prediction[padding_index[0]:padding_index[1],padding_index[2]:padding_index[3],:]
             count_predictions[y1:y2, x1:x2] += 1
             full_probs[y1:y2, x1:x2] += prediction_no_padding  # accumulate the predictions also in the overlapping regions
@@ -225,13 +226,16 @@ def predict_slider(full_image, predictor, classes, tile_size):
     return full_probs
 
 def predict_scaler(full_image, predictor, scales, classes, tile_size, is_densecrf):
-    """scaler is only respnsible for generate multi scale input for slider"""
+    """  scaler is only respnsible for generate multi scale input for slider  """
+
     full_probs = np.zeros((full_image.shape[0], full_image.shape[1], classes))
     h_ori, w_ori = full_image.shape[:2]
     for scale in scales:
         scaled_img = cv2.resize(full_image, (int(scale*w_ori), int(scale*h_ori)))
         scaled_probs = predict_slider(scaled_img, predictor, classes, tile_size)
         probs = cv2.resize(scaled_probs, (w_ori,h_ori))
+        if scaled_probs.shape[-1]==1:
+            probs = probs[:,:,None]# if dimension is 1, resize will cause dimension missed, here just keep the dimension.
         full_probs += probs
     full_probs /= len(scales)
     if is_densecrf:
@@ -283,6 +287,22 @@ def dense_crf(probs, img=None, n_iters=10,
     Q = d.inference(n_iters)
     preds = np.array(Q, dtype=np.float32).reshape((class_num, h, w)).transpose(1, 2, 0)
     return preds
+
+
+def predict_from_dir(mypredictor,image_dir,target_dir,CLASS_NUM,CROP_SIZE,is_densecrf, image_format="jpg"):
+    ll = os.listdir(image_dir)
+    from tqdm import tqdm
+    for l in tqdm(ll):
+        filename = os.path.basename(l)
+        extension = filename.rsplit(".")[-1]
+        logger.info("process {}.".format(filename))
+        src_img = cv2.imread(os.path.join(image_dir,l))
+        result = predict_scaler(src_img, mypredictor, scales=[0.9,1,1.1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
+        result = np.argmax(result, axis=2)
+        cv2.imwrite(os.path.join(target_dir,filename),np.concatenate((src_img, visualize_label(result)), axis=1))
+
+
+
 
 
 

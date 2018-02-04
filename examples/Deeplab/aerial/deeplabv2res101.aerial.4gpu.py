@@ -14,7 +14,7 @@ os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
 from tensorpack import *
 from tensorpack.dataflow import dataset
 from tensorpack.utils.gpu import get_nr_gpu
-from tensorpack.utils.segmentation.segmentation import imwrite_grid, visualize_label, predict_scaler
+from tensorpack.utils.segmentation.segmentation import imwrite_grid, visualize_label, predict_scaler,predict_from_dir
 from tensorpack.utils.stats import MIoUStatistics
 from tensorpack.utils import logger
 from tensorpack.tfutils import optimizer
@@ -202,6 +202,12 @@ def proceed_validation(args, is_save = True, is_densecrf = False):
     ds = dataset.Aerial( args.meta_dir, name)
     ds = BatchData(ds, 1)
 
+    def mypredictor(input_img):
+        # input image: 1*H*W*3
+        # output : H*W*C
+        output = predictor(input_img)
+        return output[0][0]
+
     pred_config = PredictConfig(
         model=Model(),
         session_init=get_model_loader(args.load),
@@ -209,7 +215,7 @@ def proceed_validation(args, is_save = True, is_densecrf = False):
         output_names=['prob'])
     predictor = OfflinePredictor(pred_config)
     from tensorpack.utils.fs import mkdir_p
-    result_dir = "result/validation_border512_rank2"
+    result_dir = "result/validation_borderfull_rank2"
     #result_dir = "ningbo_validation"
     mkdir_p(result_dir)
     i = 1
@@ -218,14 +224,14 @@ def proceed_validation(args, is_save = True, is_densecrf = False):
     for image, label in tqdm(ds.get_data()):
         label = np.squeeze(label)
         image = np.squeeze(image)
-        prediction = predict_scaler(image, predictor, scales=[0.9,1,1.1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
+        prediction = predict_scaler(image, mypredictor, scales=[0.9,1,1.1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
         prediction = np.argmax(prediction, axis=2)
         stat.feed(prediction, label)
 
         if is_save:
-            #cv2.imwrite(os.path.join(result_dir,"{}.png".format(i)),
-            #            np.concatenate((image, visualize_label(label), visualize_label(prediction)), axis=1))
-            imwrite_grid(image,label,prediction, border=512, prefix_dir=result_dir, imageId = i)
+            cv2.imwrite(os.path.join(result_dir,"{}.png".format(i)),
+                        np.concatenate((image, visualize_label(label), visualize_label(prediction)), axis=1))
+            #imwrite_grid(image,label,prediction, border=512, prefix_dir=result_dir, imageId = i)
         i += 1
 
     logger.info("mIoU: {}".format(stat.mIoU))
@@ -272,6 +278,30 @@ def proceed_test(args,is_densecrf = False):
         subprocess.call(command, shell=True)
 
 
+def proceed_apply(args,is_densecrf = False):
+    import cv2
+    image_dir = "/data1/hutao/slam"
+    target_dir = "/data1/hutao/slam_result"
+    pred_config = PredictConfig(
+        model=Model(),
+        session_init=get_model_loader(args.load),
+        input_names=['image'],
+        output_names=['prob'])
+    predictor = OfflinePredictor(pred_config)
+
+    from tensorpack.utils.fs import mkdir_p
+    import shutil
+    shutil.rmtree(target_dir, ignore_errors=True)
+    mkdir_p(target_dir)
+    def mypredictor(input_img):
+        # input image: 1*H*W*3
+        # output : H*W*C
+        output = predictor(input_img)
+        return output[0][0]
+
+    predict_from_dir(mypredictor, image_dir, target_dir, CLASS_NUM, CROP_SIZE, is_densecrf, image_format="jpg")
+
+
 
 
 
@@ -310,7 +340,7 @@ class CalculateMIoU(Callback):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="1", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="2", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--meta_dir', default="../metadata/aerial", help='meta dir')
     parser.add_argument('--load', default="../resnet101.npz", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
@@ -319,6 +349,7 @@ if __name__ == '__main__':
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     parser.add_argument('--validation', action='store_true', help='validate model on validation images')
     parser.add_argument('--test', action='store_true', help='generate test result')
+    parser.add_argument('--apply', action='store_true', help='generate test result')
     args = parser.parse_args()
     if args.gpu:
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
@@ -332,6 +363,8 @@ if __name__ == '__main__':
         proceed_validation(args)
     elif args.test:
         proceed_test(args)
+    elif args.apply:
+        proceed_apply(args)
     else:
         config = get_config(args.meta_dir,args.batch_size)
         if args.load:

@@ -215,7 +215,50 @@ def run(model_path, image_path, output):
         cv2.imwrite(output, pred * 255)
 
 
-def proceed_validation(args, is_save=True, is_densecrf=False):
+def proceed_validation(args, is_save = False, is_densecrf = False):
+    import cv2
+    name = "val"
+    ds = dataset.Aerial(args.meta_dir, name)
+    ds = BatchData(ds, 1)
+
+    pred_config = PredictConfig(
+        model=Model(),
+        session_init=get_model_loader(args.load),
+        input_names=['image'],
+        output_names=['prediction'])
+    predictor = OfflinePredictor(pred_config)
+
+
+    from tensorpack.utils.fs import mkdir_p
+    result_dir = os.path.join("aerail_result_full_{}".format(name))
+    mkdir_p(result_dir)
+
+    from tqdm import tqdm
+    i =0
+    def to_size(input):
+        input[input >= 0.50] = 1
+        input[input < 0.50] = 0
+        return np.dstack((input*255,input*255,input*255))
+    for image, label in tqdm(ds.get_data()):
+        i += 1
+        #label = np.squeeze(label)
+        image = np.squeeze(image)
+        from tensorpack.utils.segmentation.segmentation import visualize_label, predict_scaler
+        def mypredictor(input_img):
+            #input image: 1*H*W*3
+            #output : H*W*C
+            output = predictor(input_img)
+            return output[0][0]
+        outputs = predict_scaler(image, mypredictor, scales=[0.9, 1, 1.1], classes=1,
+                                    tile_size=(512, 512), is_densecrf=is_densecrf)
+
+        label = label[0]
+        label = label[:,:,None]
+        outputs = to_size(outputs)#last fusion map
+        cv2.imwrite(os.path.join(result_dir,"out{}.png".format(i)),
+                    np.concatenate((image,outputs,),axis=1))
+
+def proceed_validation512(args, is_save=True, is_densecrf=False):
     import cv2
     name = "val"
     ds = dataset.Aerial(args.meta_dir, name )
@@ -229,7 +272,7 @@ def proceed_validation(args, is_save=True, is_densecrf=False):
     predictor = OfflinePredictor(pred_config)
 
     from tensorpack.utils.fs import mkdir_p
-    result_dir = os.path.join("aerial_validation_result512_lisan_in_{}".format(name))
+    result_dir = os.path.join("aerial_validation_resultfull_lisan_in_{}".format(name))
     mkdir_p(result_dir)
 
     from tqdm import tqdm

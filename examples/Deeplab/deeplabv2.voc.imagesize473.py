@@ -210,7 +210,12 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
     for image, label in tqdm(ds.get_data()):
         label = np.squeeze(label)
         image = np.squeeze(image)
-        prediction = predict_scaler(image, predictor, scales=[0.9, 1, 1.1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
+        def mypredictor(input_img):
+            #input image: 1*H*W*3
+            #output : H*W*C
+            output = predictor(input_img)
+            return output[0][0]
+        prediction = predict_scaler(image, mypredictor, scales=[0.9, 1, 1.1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
         prediction = np.argmax(prediction, axis=2)
         stat.feed(prediction, label)
 
@@ -248,7 +253,13 @@ class CalculateMIoU(Callback):
         for image, label in tqdm(self.val_ds.get_data()):
             label = np.squeeze(label)
             image = np.squeeze(image)
-            prediction = predict_scaler(image, self.pred, scales=[0.9, 1, 1.1], classes=CLASS_NUM, tile_size=CROP_SIZE,
+
+            def mypredictor(input_img):
+                # input image: 1*H*W*3
+                # output : H*W*C
+                output = self.pred(input_img)
+                return output[0][0]
+            prediction = predict_scaler(image, mypredictor, scales=[0.9, 1, 1.1], classes=CLASS_NUM, tile_size=CROP_SIZE,
                            is_densecrf=False)
             prediction = np.argmax(prediction, axis=2)
             self.stat.feed(prediction, label)
@@ -258,14 +269,13 @@ class CalculateMIoU(Callback):
         self.trainer.monitors.put_scalar("accuracy", self.stat.accuracy)
 
 
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="0", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="2", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--data_dir', default="/data2/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012",
                         help='dataset dir')
-    parser.add_argument('--meta_dir', default="../metadata/pascalvoc12", help='meta dir')
-    parser.add_argument('--load', default="../resnet101.npz", help='load model')
+    parser.add_argument('--meta_dir', default="./metadata/pascalvoc12", help='meta dir')
+    parser.add_argument('--load', default="./resnet101.npz", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
     parser.add_argument('--batch_size', type=int, default = batch_size, help='batch_size')
