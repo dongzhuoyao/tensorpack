@@ -194,10 +194,9 @@ def edge_predict_scaler(full_image, edge, predictor, scales, classes, tile_size,
 
 
 
-def predict_slider(full_image, predictor, classes, tile_size):
+def predict_slider(full_image, predictor, classes, tile_size, overlap = 1.0/3):
     if isinstance(tile_size, int):
         tile_size = (tile_size, tile_size)
-    overlap = 1/3
     stride = ceil(tile_size[0] * (1 - overlap))
     tile_rows = int(ceil((full_image.shape[0] - tile_size[0]) / stride) + 1)  # strided convolution formula
     tile_cols = int(ceil((full_image.shape[1] - tile_size[1]) / stride) + 1)
@@ -225,14 +224,14 @@ def predict_slider(full_image, predictor, classes, tile_size):
     full_probs /= count_predictions
     return full_probs
 
-def predict_scaler(full_image, predictor, scales, classes, tile_size, is_densecrf):
+def predict_scaler(full_image, predictor, scales, classes, tile_size, is_densecrf,overlap=1.0/3):
     """  scaler is only respnsible for generate multi scale input for slider  """
 
     full_probs = np.zeros((full_image.shape[0], full_image.shape[1], classes))
     h_ori, w_ori = full_image.shape[:2]
     for scale in scales:
         scaled_img = cv2.resize(full_image, (int(scale*w_ori), int(scale*h_ori)))
-        scaled_probs = predict_slider(scaled_img, predictor, classes, tile_size)
+        scaled_probs = predict_slider(scaled_img, predictor, classes, tile_size, overlap)
         probs = cv2.resize(scaled_probs, (w_ori,h_ori))
         if scaled_probs.shape[-1]==1:
             probs = probs[:,:,None]# if dimension is 1, resize will cause dimension missed, here just keep the dimension.
@@ -289,7 +288,7 @@ def dense_crf(probs, img=None, n_iters=10,
     return preds
 
 
-def predict_from_dir(mypredictor,image_dir,target_dir,CLASS_NUM,CROP_SIZE,is_densecrf, image_format="jpg"):
+def predict_from_dir(mypredictor,image_dir,target_dir,CLASS_NUM,CROP_SIZE,is_densecrf, image_format="jpg",overlap=1.0/3):
     ll = os.listdir(image_dir)
     from tqdm import tqdm
     for l in tqdm(ll):
@@ -297,7 +296,7 @@ def predict_from_dir(mypredictor,image_dir,target_dir,CLASS_NUM,CROP_SIZE,is_den
         extension = filename.rsplit(".")[-1]
         logger.info("process {}.".format(filename))
         src_img = cv2.imread(os.path.join(image_dir,l))
-        result = predict_scaler(src_img, mypredictor, scales=[0.9,1,1.1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
+        result = predict_scaler(src_img, mypredictor, scales=[0.9,1,1.1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf, overlap=overlap)
         result = np.argmax(result, axis=2)
         cv2.imwrite(os.path.join(target_dir,filename),np.concatenate((src_img, visualize_label(result)), axis=1))
 

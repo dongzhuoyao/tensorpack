@@ -225,7 +225,7 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
         model=Model(),
         session_init=get_model_loader(args.load),
         input_names=['image'],
-        output_names=['prediction'])
+        output_names=['output6'])
     predictor = OfflinePredictor(pred_config)
 
 
@@ -233,28 +233,25 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
     result_dir = os.path.join("aerail_result_full_{}".format(name))
     mkdir_p(result_dir)
 
+
+
     from tqdm import tqdm
     i =0
-    def to_size(input):
-        input[input >= 0.50] = 1
-        input[input < 0.50] = 0
-        return np.dstack((input*255,input*255,input*255))
     for image, label in tqdm(ds.get_data()):
         i += 1
         #label = np.squeeze(label)
         image = np.squeeze(image)
-        from tensorpack.utils.segmentation.segmentation import visualize_label, predict_scaler
+        from tensorpack.utils.segmentation.segmentation import predict_scaler
         def mypredictor(input_img):
             #input image: 1*H*W*3
             #output : H*W*C
             output = predictor(input_img)
             return output[0][0]
-        outputs = predict_scaler(image, mypredictor, scales=[0.9, 1, 1.1], classes=1,
-                                    tile_size=(512, 512), is_densecrf=is_densecrf)
+        outputs = predict_scaler(image, mypredictor, scales=[0.9,1,1.1], classes=1,
+                                    tile_size=(512, 512), is_densecrf=is_densecrf,overlap=1.0/3)
 
         label = label[0]
         label = label[:,:,None]
-        #outputs = to_size(outputs)#last fusion map
         outputs = np.dstack((outputs*255,outputs*255,outputs*255))
         cv2.imwrite(os.path.join(result_dir,"out{}.png".format(i)),
                     np.concatenate((image,outputs),axis=1))
@@ -309,7 +306,7 @@ def proceed_validation512(args, is_save=True, is_densecrf=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="2", help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default="0", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--meta_dir', default="aerial", help='meta dir')
     parser.add_argument('--load', default="HED_pretrained_bsds.npy", help='load model')
     parser.add_argument('--class_num', type=int, default=2)
