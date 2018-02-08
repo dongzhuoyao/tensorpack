@@ -298,7 +298,12 @@ class CalculateMIoU(Callback):
         for image, label in tqdm(self.val_ds.get_data()):
             label = np.squeeze(label)
             image = np.squeeze(image)
-            prediction = predict_scaler(image, self.pred, scales=[0.9,1,1.1], classes=CLASS_NUM, tile_size=CROP_SIZE,
+            def mypredictor(input_img):
+                # input image: 1*H*W*3
+                # output : H*W*C
+                output = self.pred(input_img)
+                return output[0][0]
+            prediction = predict_scaler(image, mypredictor, scales=[0.9,1,1.1], classes=CLASS_NUM, tile_size=CROP_SIZE,
                            is_densecrf=False)
             prediction = np.argmax(prediction, axis=2)
             self.stat.feed(prediction, label)
