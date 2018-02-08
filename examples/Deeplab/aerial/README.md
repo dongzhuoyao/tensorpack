@@ -12,6 +12,8 @@ Val mIoU | Test mIoU
 deeplabv2res101.aerial(88.07)|73.41
 deeplabv2res101.aerial.shk(88.34)|?
 deeplabv2res101.aerial.4gpu（88.67)|74.95
+deeplabv2res101.aerial.shk.crop513.4gpu,(0.9,1,1.1 multi scale)(88.98)|?
+deeplabv2res101.aerial.shk.crop513.4gpu,(0.7,0.9,1,1.1,1.3 multi scale)(89.14)|?
 
 ### models
 
