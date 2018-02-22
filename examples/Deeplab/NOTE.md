@@ -1,4 +1,10 @@
 
+## Target
+
+*  slim deeplabv2 pascal reproduce
+*  slim deeplabv2 Cityscapes reproduce
+*  slim deeplabv2 Mapillary reproduce
+
 ## DeepLab
 
 
