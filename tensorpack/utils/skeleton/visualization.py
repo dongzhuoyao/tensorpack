@@ -19,28 +19,29 @@ def paint_pixel( img, x, y, c, ratio ):
     img[ x, y, 1 ] = int( c[ 1 ] * ratio )
     img[ x, y, 2 ] = int( c[ 2 ] * ratio )
 
-def draw_skeleton(aa, sk):
+def draw_skeleton(canvas, sk):
     for j in range(nr_skeleton):
-        cv2.circle( aa, tuple(sk[j]), 2, tuple((255,0,0)), 2 )
-    cv2.line( aa, tuple(sk[0]), tuple(sk[1]), (0,255,255), 2 )
-    cv2.line( aa, tuple(sk[1]), tuple(sk[2]), (0,255,255), 2 )
-    cv2.line( aa, tuple(sk[2]), tuple(sk[6]), (0,255,255), 2 )
-    cv2.line( aa, tuple(sk[6]), tuple(sk[3]), (0,255,255), 2 )
-    cv2.line( aa, tuple(sk[3]), tuple(sk[4]), (0,255,255), 2 )
-    cv2.line( aa, tuple(sk[4]), tuple(sk[5]), (0,255,255), 2 )
-    cv2.line( aa, tuple(sk[6]), tuple(sk[7]), (0,255,255), 2 )
-    cv2.line( aa, tuple(sk[7]), tuple(sk[8]), (0,255,255), 2 )
-    cv2.line( aa, tuple(sk[8]), tuple(sk[9]), (0,255,255), 2 )
-    cv2.line( aa, tuple(sk[8]), tuple(sk[12]), (0,255,255), 2 )
-    cv2.line( aa, tuple(sk[12]), tuple(sk[11]), (0,255,255), 2 )
-    cv2.line( aa, tuple(sk[11]), tuple(sk[10]), (0,255,255), 2 )
-    cv2.line( aa, tuple(sk[8]), tuple(sk[13]), (0,255,255), 2 )
-    cv2.line( aa, tuple(sk[13]), tuple(sk[14]), (0,255,255), 2 )
-    cv2.line( aa, tuple(sk[14]), tuple(sk[15]), (0,255,255), 2 )
+        cv2.circle(canvas, tuple(sk[j]), 2, tuple((255, 0, 0)), 2)
+    cv2.line(canvas, tuple(sk[0]), tuple(sk[1]), (0, 255, 255), 2)
+    cv2.line(canvas, tuple(sk[1]), tuple(sk[2]), (0, 255, 255), 2)
+    cv2.line(canvas, tuple(sk[2]), tuple(sk[6]), (0, 255, 255), 2)
+    cv2.line(canvas, tuple(sk[6]), tuple(sk[3]), (0, 255, 255), 2)
+    cv2.line(canvas, tuple(sk[3]), tuple(sk[4]), (0, 255, 255), 2)
+    cv2.line(canvas, tuple(sk[4]), tuple(sk[5]), (0, 255, 255), 2)
+    cv2.line(canvas, tuple(sk[6]), tuple(sk[7]), (0, 255, 255), 2)
+    cv2.line(canvas, tuple(sk[7]), tuple(sk[8]), (0, 255, 255), 2)
+    cv2.line(canvas, tuple(sk[8]), tuple(sk[9]), (0, 255, 255), 2)
+    cv2.line(canvas, tuple(sk[8]), tuple(sk[12]), (0, 255, 255), 2)
+    cv2.line(canvas, tuple(sk[12]), tuple(sk[11]), (0, 255, 255), 2)
+    cv2.line(canvas, tuple(sk[11]), tuple(sk[10]), (0, 255, 255), 2)
+    cv2.line(canvas, tuple(sk[8]), tuple(sk[13]), (0, 255, 255), 2)
+    cv2.line(canvas, tuple(sk[13]), tuple(sk[14]), (0, 255, 255), 2)
+    cv2.line(canvas, tuple(sk[14]), tuple(sk[15]), (0, 255, 255), 2)
+    return canvas
 
-def draw_skeleton_new(canvas,sk):
-    #stickwidth = 3
-    stickwidth = 7
+def draw_skeleton_beatiful(canvas,sk): # sk shape: (16,2)
+    stickwidth = 3
+    #stickwidth = 7
     limbSeq = [
         [0,1],
         [1,2],

@@ -14,7 +14,7 @@ os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
 from tensorpack import *
 from tensorpack.dataflow import dataset
 from tensorpack.utils.gpu import get_nr_gpu
-from tensorpack.utils.segmentation.segmentation import imwrite_grid, visualize_label, predict_scaler,predict_from_dir
+from tensorpack.utils.segmentation.segmentation import imwrite_grid, visualize_label, predict_scaler,predict_from_dir, visualize_uncertainty
 from tensorpack.utils.stats import MIoUStatistics
 from tensorpack.utils import logger
 from tensorpack.tfutils import optimizer
@@ -215,7 +215,7 @@ def proceed_validation(args, is_save = True, is_densecrf = False):
         output_names=['prob'])
     predictor = OfflinePredictor(pred_config)
     from tensorpack.utils.fs import mkdir_p
-    result_dir = "result/validation_borderfull_rank2"
+    result_dir = "result/validation_borderfull_rank2_uncertainty"
     #result_dir = "ningbo_validation"
     mkdir_p(result_dir)
     i = 1
@@ -224,14 +224,17 @@ def proceed_validation(args, is_save = True, is_densecrf = False):
     for image, label in tqdm(ds.get_data()):
         label = np.squeeze(label)
         image = np.squeeze(image)
-        prediction = predict_scaler(image, mypredictor, scales=[0.9,1,1.1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
+        prediction= prob = predict_scaler(image, mypredictor, scales=[0.9,1,1.1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
         prediction = np.argmax(prediction, axis=2)
         stat.feed(prediction, label)
 
+        uncertainty = visualize_uncertainty(prob)
+        uncertainty = np.dstack((uncertainty,uncertainty,uncertainty))
+
         if is_save:
-            cv2.imwrite(os.path.join(result_dir,"{}.png".format(i)),
-                        np.concatenate((image, visualize_label(label), visualize_label(prediction)), axis=1))
-            #imwrite_grid(image,label,prediction, border=512, prefix_dir=result_dir, imageId = i)
+            #cv2.imwrite(os.path.join(result_dir,"{}.png".format(i)),
+            #            np.concatenate((image, visualize_label(label), visualize_label(prediction)), axis=1))
+            imwrite_grid(image,label,prediction,uncertainty, border=512, prefix_dir=result_dir, imageId = i)
         i += 1
 
     logger.info("mIoU: {}".format(stat.mIoU))

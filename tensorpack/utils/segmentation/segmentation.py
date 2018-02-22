@@ -43,7 +43,7 @@ def update_confusion_matrix(pred, label, conf_m, nb_classes, ignore = 255):
         return conf_m
 
 
-def imwrite_grid(image,label,prediction,border,prefix_dir, imageId):
+def imwrite_grid(image,label,prediction,uncertainty,border,prefix_dir, imageId):
     h,w,_ = image.shape
     grid_num = h/border
     for i in range(grid_num):
@@ -55,7 +55,7 @@ def imwrite_grid(image,label,prediction,border,prefix_dir, imageId):
             cv2.imwrite(os.path.join(prefix_dir,"out{}_patch{}_{}.png".format(imageId,i,j)),
                         np.concatenate((image[start_i:end_i,start_j:end_j],
                                         visualize_label(label[start_i:end_i,start_j:end_j]),
-                                        visualize_label(prediction[start_i:end_i,start_j:end_j]*2)), axis=1))
+                                        visualize_label(prediction[start_i:end_i,start_j:end_j]),uncertainty[start_i:end_i,start_j:end_j]), axis=1))
 
 
 def pad_image(img, target_size):
@@ -89,7 +89,7 @@ def visualize_label(label):
     return img_color
 
 
-def visualize_uncertainty(prob,label):
+def visualize_uncertainty(prob):
     prob = np.amax(prob,axis=2,keepdims=False)*255
     return prob
 

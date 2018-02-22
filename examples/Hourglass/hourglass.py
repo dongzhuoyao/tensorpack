@@ -79,7 +79,7 @@ def get_data(name):
 
     if isTrain:
         ds = BatchData(ds, args.batch_size)
-        ds = PrefetchDataZMQ(ds, 1)
+        #ds = PrefetchDataZMQ(ds, 1)
     else:
         ds = BatchData(ds, 1)
     return ds
@@ -91,7 +91,7 @@ def view_data():
     ds.reset_state()
     for image, heatmap  in ds.get_data():
         cv2.imshow("img",image[0])
-        cv2.imshow("heatmap_gt",255*cv2.resize(np.sum(heatmap[0], axis=2),(input_shape[0],input_shape[1])))
+        cv2.imshow("heatmap_enlarge4x",cv2.resize(np.sum(heatmap[0], axis=2),(input_shape[0],input_shape[1])))
         cv2.waitKey(4000)
 
 class EvalPCKh(Callback):
