@@ -108,7 +108,7 @@ MSF on pascalvoc MSF all tild size: 321*321
 
 Arch |metadata| Val mIoU 
 ------------ | -------------| -------------
-Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,4GPU,bs32) || 73.65%
+Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,4GPU,bs32) || 73.65%(log not found)
 Deeplabv2-resnet101(no multi-branch,no ASPP,with MSF,1GPU,bs8) | |69.3%
 Deeplabv2-resnet101(no multi-branch,no ASPP,no MSF,1GPU,bs8) | |68.6%
 deeplabv2.voc.size512|rs-nearest,flip,crop;deeplabv2-largedilation;first_batch_lr=2.5e-4;first-batch-lr=2.5e-4;lr_schedule=[(2, 1e-4), (4, 1e-5), (6, 8e-6)];epoch_scale=8;max_epoch=10|68.9
@@ -205,3 +205,9 @@ deeplabv3.voc.imagesize513.scale4.lrmultfix.noASPP.fortune| 68.9 |59 |
 Recognition](https://arxiv.org/abs/1801.07455)
 *  [LIFT](https://github.com/cvlab-epfl/tf-lift)
 * use [Pose-Guided-Person-Image-Generation](https://github.com/charliememory/Pose-Guided-Person-Image-Generation) to realize human segmentation
+
+## Target
+
+*  slim deeplabv2 pascal reproduce
+*  slim deeplabv2 Cityscapes reproduce
+*  slim deeplabv2 Mapillary reproduce
