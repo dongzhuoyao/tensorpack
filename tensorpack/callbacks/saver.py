@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # File: saver.py
-# Author: Yuxin Wu <ppwwyyxx@gmail.com>
+
 
 import tensorflow as tf
 from datetime import datetime
@@ -15,7 +15,7 @@ __all__ = ['ModelSaver', 'MinSaver', 'MaxSaver']
 
 class ModelSaver(Callback):
     """
-    Save the model every epoch.
+    Save the model once triggered.
     """
 
     def __init__(self, max_to_keep=10,
@@ -37,12 +37,14 @@ class ModelSaver(Callback):
         self.var_collections = var_collections
         if checkpoint_dir is None:
             checkpoint_dir = logger.get_logger_dir()
-        assert checkpoint_dir is not None
-        if not tf.gfile.IsDirectory(checkpoint_dir):
-            tf.gfile.MakeDirs(checkpoint_dir)
+        if checkpoint_dir is not None:
+            if not tf.gfile.IsDirectory(checkpoint_dir):
+                tf.gfile.MakeDirs(checkpoint_dir)
         self.checkpoint_dir = checkpoint_dir
 
     def _setup_graph(self):
+        assert self.checkpoint_dir is not None, \
+            "ModelSaver() doesn't have a valid checkpoint directory."
         vars = []
         for key in self.var_collections:
             vars.extend(tf.get_collection(key))

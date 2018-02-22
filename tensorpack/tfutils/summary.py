@@ -1,11 +1,10 @@
 # -*- coding: UTF-8 -*-
 # File: summary.py
-# Author: Yuxin Wu <ppwwyyxx@gmail.com>
+
 
 import six
 import tensorflow as tf
 import re
-import io
 from six.moves import range
 from contextlib import contextmanager
 
@@ -71,20 +70,25 @@ def create_image_summary(name, val):
     s = tf.Summary()
     for k in range(n):
         arr = val[k]
-        if arr.shape[2] == 1:   # scipy doesn't accept (h,w,1)
-            arr = arr[:, :, 0]
+        #CV2 will only write correctly in BGR chanel order
+        if c == 3:
+            arr = cv2.cvtColor(arr, cv2.COLOR_RGB2BGR)
+        elif c == 4:
+            arr = cv2.cvtColor(arr, cv2.COLOR_RGBA2BGRA)
         tag = name if n == 1 else '{}/{}'.format(name, k)
 
-        buf = io.BytesIO()
-        # scipy assumes RGB
-        scipy.misc.toimage(arr).save(buf, format='png')
+        retval, img_str = cv2.imencode('.png', arr)
+        if not retval:
+            # Encoding has failed.
+            continue
+        img_str = img_str.tostring()
 
         img = tf.Summary.Image()
         img.height = h
         img.width = w
         # 1 - grayscale 3 - RGB 4 - RGBA
         img.colorspace = c
-        img.encoded_image_string = buf.getvalue()
+        img.encoded_image_string = img_str
         s.value.add(tag=tag, image=img)
     return s
 
@@ -216,6 +220,9 @@ def add_moving_summary(*args, **kwargs):
     # allow ctx to be none
     if ctx is not None and not ctx.is_main_training_tower:
         return []
+    if tf.get_variable_scope().reuse is True:
+        logger.warn("add_moving_summary() called under reuse=True scope, ignored.")
+        return []
 
     if not isinstance(args[0], list):
         v = args
@@ -223,8 +230,9 @@ def add_moving_summary(*args, **kwargs):
         log_deprecated("Call add_moving_summary with positional args instead of a list!", eos="2018-02-28")
         v = args[0]
     for x in v:
-        assert isinstance(x, tf.Tensor), x
-        assert x.get_shape().ndims == 0, x.get_shape()
+        assert isinstance(x, (tf.Tensor, tf.Variable)), x
+        assert x.get_shape().ndims == 0, \
+            "add_moving_summary() only accepts scalar tensor! Got one with {}".format(x.get_shape())
     G = tf.get_default_graph()
     # TODO variable not saved under distributed
 
@@ -257,7 +265,7 @@ def add_moving_summary(*args, **kwargs):
 
 
 try:
-    import scipy.misc
+    import cv2
 except ImportError:
     from ..utils.develop import create_dummy_func
-    create_image_summary = create_dummy_func('create_image_summary', 'scipy.misc')  # noqa
+    create_image_summary = create_dummy_func('create_image_summary', 'cv2')  # noqa

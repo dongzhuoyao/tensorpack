@@ -17,41 +17,46 @@ You can start using `tf.layers` today as long as it fits your need.
 
 The following code:
 ```python
-with argscope(Conv2D, out_channel=32, kernel_shape=3, nl=tf.nn.relu):
+with argscope(Conv2D, filters=32, kernel_size=3, activation=tf.nn.relu):
   l = (LinearWrap(image)  # the starting brace is only for line-breaking
        .Conv2D('conv0')
        .MaxPooling('pool0', 2)
        .Conv2D('conv1', padding='SAME')
-       .Conv2D('conv2', kernel_shape=5)
-       .FullyConnected('fc0', 512, nl=tf.nn.relu)
-       .Dropout('dropout', 0.5)
+       .Conv2D('conv2', kernel_size=5)
+       .FullyConnected('fc0', 512, activation=tf.nn.relu)
+       .Dropout('dropout', rate=0.5)
        .tf.multiply(0.5)
        .apply(func, *args, **kwargs)
-       .FullyConnected('fc1', out_dim=10, nl=tf.identity)())
+       .FullyConnected('fc1', units=10, activation=tf.identity)())
 ```
 is equivalent to:
 ```
-l = Conv2D('conv0', image, 32, 3, nl=tf.nn.relu)
+l = Conv2D('conv0', image, 32, 3, activation=tf.nn.relu)
 l = MaxPooling('pool0', l, 2)
-l = Conv2D('conv1', l, 32, 3, padding='SAME', nl=tf.nn.relu)
-l = Conv2D('conv2', l, 32, 5, nl=tf.nn.relu)
-l = FullyConnected('fc0', l, 512, nl=tf.nn.relu)
-l = Dropout('dropout', l, 0.5)
+l = Conv2D('conv1', l, 32, 3, padding='SAME', activation=tf.nn.relu)
+l = Conv2D('conv2', l, 32, 5, activation=tf.nn.relu)
+l = FullyConnected('fc0', l, 512, activation=tf.nn.relu)
+l = Dropout('dropout', l, rate=0.5)
 l = tf.multiply(l, 0.5)
 l = func(l, *args, **kwargs)
-l = FullyConnected('fc1', l, 10, nl=tf.identity)
+l = FullyConnected('fc1', l, 10, activation=tf.identity)
 ```
 
-### Access Internal Variables:
+### Access Relevant Tensors
 
-Access the variables like this:
+The variables inside the layer will be named `name/W`, `name/b`, etc.
+See the API documentation of each layer for details.
+When building the graph, you can access the variables like this:
 ```python
 l = Conv2D('conv1', l, 32, 3)
 print(l.variables.W)
 print(l.variables.b)
 ```
-The names are documented in API documentation.
-Note that this method doesn't work with LinearWrap, and cannot access the variables created by an activation function.
+But note that this is a hacky way and may not work with future versions of TensorFlow.
+Also this method doesn't work with LinearWrap, and cannot access the variables created by an activation function.
+
+The output of a layer is usually named `name/output` unless documented differently in the API.
+You can always print a tensor to see its name.
 
 ### Use Models outside Tensorpack
 
@@ -81,5 +86,5 @@ to be handled in those libraries, though.
 
 It is a bit different to use sonnet/Keras.
 sonnet/Keras manages the variable scope by their own model classes, and calling their symbolic functions
-always creates new variable scope. See the [Keras example](../examples/mnist-keras.py) for how to use it within tensorpack.
+always creates new variable scope. See the [Keras example](../examples/keras) for how to use it within tensorpack.
 The support is only preliminary for now.

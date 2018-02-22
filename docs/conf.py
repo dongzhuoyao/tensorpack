@@ -20,7 +20,7 @@ import inspect
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('../'))
-os.environ['TENSORPACK_DOC_BUILDING'] = '1'
+os.environ['DOC_BUILDING'] = '1'
 ON_RTD = (os.environ.get('READTHEDOCS') == 'True')
 
 
@@ -30,7 +30,7 @@ MOCK_MODULES = ['tabulate', 'h5py',
                 'scipy', 'scipy.misc', 'scipy.io',
                 'tornado', 'tornado.concurrent',
                 'horovod', 'horovod.tensorflow',
-                'msgpack', 'msgpack_numpy',
+                'pyarrow', 'msgpack', 'msgpack_numpy',
                 'functools32']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.Mock(name=mod_name)
@@ -364,7 +364,6 @@ def autodoc_skip_member(app, what, name, obj, skip, options):
             return False
     # hide deprecated stuff
     if name in [
-        'MultiGPUTrainerBase',
         'get_predictors',
         'GaussianDeform',
         'dump_chkpt_vars',
@@ -373,9 +372,12 @@ def autodoc_skip_member(app, what, name, obj, skip, options):
         'set_tower_func',
         'TryResumeTraining',
         'LeakyReLU',
+        'PrefetchOnGPUs',
+        'PeriodicRunHooks',
+        'apply_default_prefetch',
 
-        'guided_relu', 'saliency_map', 'get_scalar_var',
-        'prediction_incorrect', 'huber_loss',
+        'guided_relu', 'saliency_map', 'get_scalar_var', 'psnr',
+        'prediction_incorrect', 'huber_loss', 'SoftMax'
         ]:
         return True
     if name in ['get_data', 'size', 'reset_state']:

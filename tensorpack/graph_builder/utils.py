@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # File: utils.py
-# Author: Yuxin Wu <ppwwyyxxc@gmail.com>
+
 
 from contextlib import contextmanager
 import operator
 import tensorflow as tf
+
+from ..tfutils.common import get_tf_version_number
 
 
 __all__ = ['LeastLoadedDeviceSetter',
@@ -41,12 +43,21 @@ def override_to_local_variable(enable=True):
             return getter(name, *args, **kwargs)
 
         orig_vs = tf.get_variable_scope()
-        # TODO TF1.5 has https://github.com/tensorflow/tensorflow/pull/14390
-        with tf.variable_scope(
-                tf.get_variable_scope(),
-                custom_getter=custom_getter):
-            with tf.name_scope(orig_vs.original_name_scope):
+        if get_tf_version_number() >= 1.5:
+            with tf.variable_scope(
+                    orig_vs,
+                    custom_getter=custom_getter,
+                    auxiliary_name_scope=False):
                 yield
+        else:
+            if get_tf_version_number() >= 1.2:
+                ns = tf.get_default_graph().get_name_scope()
+            else:
+                ns = orig_vs.original_name_scope
+            with tf.variable_scope(
+                    orig_vs, custom_getter=custom_getter):
+                with tf.name_scope(ns + '/'):
+                    yield
     else:
         yield
 
@@ -85,13 +96,14 @@ class LeastLoadedDeviceSetter(object):
         return "LeastLoadedDeviceSetter-{}".format(self.worker_device)
 
 
-def allreduce_grads(all_grads):
+def allreduce_grads(all_grads, average):
     """
     All-reduce average the gradients among devices. Results are broadcasted to all devices.
 
     Args:
         all_grads (K x N x 2): A list of K lists. Each of the list is a list of N (grad, var) tuples.
             The variables have to be the same across the K lists.
+        average (bool): average gradients or not.
 
     Returns:
         (K x N x 2): same as input, but each grad is replaced by the average over K lists.
@@ -110,7 +122,9 @@ def allreduce_grads(all_grads):
             grads_for_a_var = []
             for (_, v), g in zip(grad_and_vars, summed):
                 with tf.device(g.device):
-                    g = tf.multiply(g, 1.0 / nr_tower)
+                    # tensorflow/benchmarks didn't average gradients
+                    if average:
+                        g = tf.multiply(g, 1.0 / nr_tower)
                     grads_for_a_var.append((g, v))
             new_all_grads.append(grads_for_a_var)
 
@@ -119,36 +133,51 @@ def allreduce_grads(all_grads):
     return ret
 
 
-def average_grads(all_grads, colocation=True):
+def average_grads(all_grads, colocation=True, devices=None, average=True):
     """
-    Average the gradients, on the device of each variable.
+    Average the gradients.
 
     Args:
         all_grads (K x N x 2): A list of K lists. Each of the list is a list of N (grad, var) tuples.
             The variables have to be the same across the K lists.
-        colocation (bool): colocate gradient averaging with the variable
+        colocation (bool): colocate gradient averaging on the device of the variable.
+        devices (list[str]): assign the averaging to these device in
+            round-robin. Cannot be used together with ``colocation``.
+        average (bool): do average or sum
 
     Returns:
         (N x 2): A list of N (grad, var) tuples, where grad is averaged over K.
     """
+    assert not (devices is not None and colocation)
+    if devices is not None:
+        assert isinstance(devices, list), devices
 
     nr_tower = len(all_grads)
     if nr_tower == 1:
         return all_grads[0]
+
+    def aggregate(grads):
+        if average:
+            return tf.multiply(tf.add_n(grads), 1.0 / nr_tower)
+        else:
+            return tf.add_n(grads)
+
     ret = []
     with tf.name_scope('AvgGrad'):
-        for grad_and_vars in zip(*all_grads):
+        for idx, grad_and_vars in enumerate(zip(*all_grads)):
             # Ngpu * 2
             v = grad_and_vars[0][1]
             grads = [g for (g, _) in grad_and_vars]
 
             if colocation:
                 with tf.device(v.device):       # colocate summed grad with var
-                    grad = tf.multiply(
-                        tf.add_n(grads), 1.0 / nr_tower)
+                    grad = aggregate(grads)
+            elif devices is None:
+                grad = aggregate(grads)
             else:
-                grad = tf.multiply(
-                    tf.add_n(grads), 1.0 / nr_tower)
+                dev = devices[idx % len(devices)]
+                with tf.device(dev):
+                    grad = aggregate(grads)
             ret.append((grad, v))
     return ret
 

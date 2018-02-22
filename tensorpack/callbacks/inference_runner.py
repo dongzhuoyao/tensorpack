@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # File: inference_runner.py
-# Author: Yuxin Wu <ppwwyyxxc@gmail.com>
+
 
 import sys
 import tensorflow as tf
@@ -18,14 +18,14 @@ from ..utils.utils import get_tqdm_kwargs
 from ..dataflow.base import DataFlow
 
 from ..input_source import (
-    InputSource, FeedInput, QueueInput)
+    InputSource, FeedInput, QueueInput, StagingInput)
 from ..graph_builder.predict import SimplePredictBuilder
 
 from .base import Callback
 from .group import Callbacks
 from .inference import Inferencer
 
-__all__ = ['InferenceRunner',
+__all__ = ['InferenceRunnerBase', 'InferenceRunner',
            'DataParallelInferenceRunner']
 
 
@@ -57,7 +57,8 @@ def _inference_context():
 class InferenceRunnerBase(Callback):
     """ Base class for inference runner.
         Please note that InferenceRunner will use `input.size()` to determine
-        how much iterations to run, so you want it to be accurate.
+        how much iterations to run, so you're responsible to ensure that
+        `size()` is accurate.
 
         Also, InferenceRunner assumes that `trainer.model` exists.
     """
@@ -115,8 +116,9 @@ class InferenceRunner(InferenceRunnerBase):
             device (int): the device to use
         """
         if isinstance(input, DataFlow):
-            input = FeedInput(input, infinite=False)
+            input = FeedInput(input, infinite=True)     # TODO a better way to handle inference size
         assert isinstance(input, InputSource), input
+        assert not isinstance(input, StagingInput), input
         self._tower_name = tower_name
         self._device = device
         super(InferenceRunner, self).__init__(input, infs)
@@ -155,7 +157,6 @@ class InferenceRunner(InferenceRunnerBase):
             inf.before_epoch()
 
         # iterate over the data, and run the hooked session
-        self._input_source.reset_state()
         with _inference_context(), \
                 tqdm.tqdm(total=self._size, **get_tqdm_kwargs()) as pbar:
             num_itr = self._size if self._size > 0 else sys.maxsize
@@ -170,14 +171,18 @@ class DataParallelInferenceRunner(InferenceRunnerBase):
     """
     Inference with data-parallel support on multiple GPUs.
     It will build one predict tower on each GPU, and run prediction
-    with a larger batch.
+    with a large total batch in parallel on all GPUs.
+    It will run the remainder (when the total size of input is not a multiple of #GPU)
+    sequentially.
     """
     def __init__(self, input, infs, gpus):
         """
         Args:
             input (DataFlow or QueueInput)
-            gpus (list[int]): list of GPU id
+            gpus (int or list[int]): #gpus, or list of GPU id
         """
+        if isinstance(gpus, int):
+            gpus = list(range(gpus))
         self._tower_names = ['InferenceTower{}'.format(k) for k in range(len(gpus))]
         if isinstance(input, DataFlow):
             input = QueueInput(input)
@@ -185,6 +190,9 @@ class DataParallelInferenceRunner(InferenceRunnerBase):
         super(DataParallelInferenceRunner, self).__init__(input, infs)
         assert self._size > 0, "Input for DataParallelInferenceRunner must have a size!"
         self._gpus = gpus
+
+        self._hooks = []
+        self._hooks_parallel = []
 
     def _setup_graph(self):
         self._handles = []
@@ -207,15 +215,18 @@ class DataParallelInferenceRunner(InferenceRunnerBase):
         # e.g. hooks from StagingInput will force the consumption
         # of nr_tower datapoints in every run.
         input_hooks = self._input_callbacks.get_hooks()
-        self._hooks = [self._build_hook(inf) for inf in self.infs] + input_hooks
-        self._hooks_parallel = [self._build_hook_parallel(inf) for inf in self.infs] + input_hooks
+        self._hooks.extend([self._build_hook(inf) for inf in self.infs] + input_hooks)
+        self._hooks_parallel.extend([self._build_hook_parallel(inf) for inf in self.infs] + input_hooks)
 
         for inf in self.infs:
             inf.setup_graph(self.trainer)
         self._input_callbacks.setup_graph(self.trainer)
 
     def register_hook(self, h):
-        raise NotImplementedError("DataParallelInferenceRunner doesn't accept extra hooks!")
+        logger.info(
+            "[DataParallelInferenceRunner] Registering hook {} on both parallel and sequential inference.")
+        self._hooks.append(h)
+        self._hooks_parallel.append(h)
 
     class InferencerToHookDataParallel(InferencerToHook):
         def __init__(self, inf, fetches, size):
@@ -252,7 +263,6 @@ class DataParallelInferenceRunner(InferenceRunnerBase):
         for inf in self.infs:
             inf.before_epoch()
 
-        self._input_source.reset_state()
         total = self._size
         nr_tower = len(self._gpus)
         with _inference_context():

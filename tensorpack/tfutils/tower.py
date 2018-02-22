@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # File: tower.py
-# Author: Yuxin Wu <ppwwyyxxc@gmail.com>
+
 
 import tensorflow as tf
 from six.moves import zip
@@ -95,7 +95,8 @@ class TowerContext(object):
     @call_only_once
     def _get_scopes(self):
         if not len(self._name):
-            return []
+            # work around https://github.com/tensorflow/tensorflow/issues/14703
+            return [tf.variable_scope(tf.get_variable_scope())]
         ret = []
 
         # either the Tower was originally created with reuse,
@@ -109,6 +110,9 @@ class TowerContext(object):
             if reuse:
                 ret.append(tf.variable_scope(
                     tf.get_variable_scope(), reuse=True))
+            else:
+                # work around https://github.com/tensorflow/tensorflow/issues/14703
+                ret.append(tf.variable_scope(tf.get_variable_scope()))
         # always clear existing ns  # TODO check existing ns
         if len(self._name) and self._name != self._vs_name:
             ret.append(tf.name_scope(self._name + '/'))
@@ -166,12 +170,11 @@ def get_current_tower_context():
 
 class TowerFuncWrapper(object):
     """
-    A wrapper around a function which builds one tower (one replicate of the model).
+    A wrapper around a tower function (function which builds one tower, i.e. one replicate of the model).
     It keeps track of the name scope, variable scope and input/output tensors
     each time the function is called.
 
-    :class:`TowerTrainer` needs this option to be set, so that
-    it knows how to build a predictor.
+    :class:`TowerTrainer` needs this so that it knows how to build a predictor.
     """
 
     def __init__(self, tower_fn, inputs_desc):
@@ -182,11 +185,13 @@ class TowerFuncWrapper(object):
             inputs_desc ([InputDesc]): use this to figure out the right name for the input tensors.
         """
         assert callable(tower_fn), tower_fn
-        if not isinstance(tower_fn, TowerFuncWrapper):
-            self._tower_fn = tower_fn
-            self._inputs_desc = inputs_desc
+        inputs_desc_names = [k.name for k in inputs_desc]
+        assert len(set(inputs_desc_names)) == len(inputs_desc_names), \
+            "Duplicated names in inputs_desc! " + str(inputs_desc_names)
+        self._tower_fn = tower_fn
+        self._inputs_desc = inputs_desc
 
-            self._handles = []
+        self._handles = []
 
     def __new__(cls, tower_fn, inputs_desc):
         # to avoid double-wrapping a function

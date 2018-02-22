@@ -17,6 +17,7 @@ from tensorpack.predict import PredictConfig, SimpleDatasetPredictor
 from tensorpack.utils.stats import RatioCounter
 from tensorpack.models import regularize_cost
 from tensorpack.tfutils.summary import add_moving_summary
+from tensorpack.utils import logger
 
 
 class GoogleNetResize(imgaug.ImageAugmentor):
@@ -83,7 +84,7 @@ def fbresnet_augmentor(isTrain):
 
 def get_imagenet_dataflow(
         datadir, name, batch_size,
-        augmentors):
+        augmentors, parallel=None):
     """
     See explanations in the tutorial:
     http://tensorpack.readthedocs.io/en/latest/tutorial/efficient-dataflow.html
@@ -92,11 +93,14 @@ def get_imagenet_dataflow(
     assert datadir is not None
     assert isinstance(augmentors, list)
     isTrain = name == 'train'
-    cpu = min(40, multiprocessing.cpu_count())
+    if parallel is None:
+        parallel = min(40, multiprocessing.cpu_count())
     if isTrain:
         ds = dataset.ILSVRC12(datadir, name, shuffle=True)
         ds = AugmentImageComponent(ds, augmentors, copy=False)
-        ds = PrefetchDataZMQ(ds, cpu)
+        if parallel < 16:
+            logger.warn("DataFlow may become the bottleneck when too few processes are used.")
+        ds = PrefetchDataZMQ(ds, parallel)
         ds = BatchData(ds, batch_size, remainder=False)
     else:
         ds = dataset.ILSVRC12Files(datadir, name, shuffle=False)
@@ -107,7 +111,7 @@ def get_imagenet_dataflow(
             im = cv2.imread(fname, cv2.IMREAD_COLOR)
             im = aug.augment(im)
             return im, cls
-        ds = MultiThreadMapData(ds, cpu, mapf, buffer_size=2000, strict=True)
+        ds = MultiThreadMapData(ds, parallel, mapf, buffer_size=2000, strict=True)
         ds = BatchData(ds, batch_size, remainder=True)
         ds = PrefetchDataZMQ(ds, 1)
     return ds
@@ -150,7 +154,7 @@ class ImageNetModel(ModelDesc):
 
     def _build_graph(self, inputs):
         image, label = inputs
-        image = self.image_preprocess(image, bgr=True)
+        image = ImageNetModel.image_preprocess(image, bgr=True)
         if self.data_format == 'NCHW':
             image = tf.transpose(image, [0, 3, 1, 2])
 
@@ -178,10 +182,11 @@ class ImageNetModel(ModelDesc):
 
     def _get_optimizer(self):
         lr = tf.get_variable('learning_rate', initializer=0.1, trainable=False)
-        tf.summary.scalar('learning_rate', lr)
+        tf.summary.scalar('learning_rate-summary', lr)
         return tf.train.MomentumOptimizer(lr, 0.9, use_nesterov=True)
 
-    def image_preprocess(self, image, bgr=True):
+    @staticmethod
+    def image_preprocess(image, bgr=True):
         with tf.name_scope('image_preprocess'):
             if image.dtype.base_dtype != tf.float32:
                 image = tf.cast(image, tf.float32)
@@ -221,13 +226,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data', required=True)
     parser.add_argument('--batch', type=int, default=32)
+    parser.add_argument('--aug', choices=['train', 'val'], default='val')
     args = parser.parse_args()
 
-    augs = fbresnet_augmentor(False)
-    augs = [imgaug.ResizeShortestEdge(256),
-            imgaug.CenterCrop(224)
-            ]
+    if args.aug == 'val':
+        augs = fbresnet_augmentor(False)
+    elif args.aug == 'train':
+        augs = fbresnet_augmentor(True)
     df = get_imagenet_dataflow(
         args.data, 'train', args.batch, augs)
-
+    # For val augmentor, Should get >100 it/s (i.e. 3k im/s) here on a decent E5 server.
     TestDataSpeed(df).start()

@@ -4,6 +4,7 @@
 
 import os
 import tensorflow as tf
+import multiprocessing as mp
 
 from ..callbacks import RunOp
 from ..tfutils.sesscreate import NewSessionCreator
@@ -138,13 +139,15 @@ class SyncMultiGPUTrainerReplicated(SingleCostTrainer):
     """
 
     @map_arg(gpus=_int_to_range)
-    def __init__(self, gpus):
+    def __init__(self, gpus, average=True, use_nccl=True):
         """
         Args:
-            gpus ([int]): list of GPU ids.
+            gpus (int or [int]): list of GPU ids.
+            average (bool): whether to average or sum gradients.
+            use_nccl (bool): use NCCL or TensorFlow copy to reduce.
         """
         self.devices = gpus
-        self._builder = SyncMultiGPUReplicatedBuilder(gpus)
+        self._builder = SyncMultiGPUReplicatedBuilder(gpus, average, use_nccl)
         super(SyncMultiGPUTrainerReplicated, self).__init__()
 
     def _setup_graph(self, input, get_cost_fn, get_opt_fn):
@@ -280,30 +283,53 @@ class HorovodTrainer(SingleCostTrainer):
             --output-filename mylog  -x LD_LIBRARY_PATH -x CUDA_VISIBLE_DEVICES=0,1,2,3 \
             python train.py
 
+        (Add other environment variables you need by -x, e.g. PYTHONPATH, PATH)
+
     Note:
         1. If using all GPUs, you can always skip the `CUDA_VISIBLE_DEVICES` option.
 
         2. Due to the use of MPI, training is less informative (no progress bar).
+
+        3. MPI often fails to kill all processes. Be sure to check it.
     """
-    def __init__(self):
+    def __init__(self, average=True):
+        """
+        Args:
+            average (bool): whether to average or sum the gradients across processes.
+        """
         hvd.init()
         self.is_chief = hvd.rank() == 0
         self._local_rank = hvd.local_rank()
+        self._average = average
         logger.info("Horovod local rank={}".format(self._local_rank))
         super(HorovodTrainer, self).__init__()
+
+    def allreduce(self, grads):
+        if hvd.size() == 1:
+            return grads
+        # copied from https://github.com/uber/horovod/blob/master/horovod/tensorflow/__init__.py
+        averaged_gradients = []
+        with tf.name_scope("HVDAllReduce"):
+            for grad, var in grads:
+                if grad is not None:
+                    avg_grad = hvd.allreduce(grad, average=self._average)
+                    averaged_gradients.append((avg_grad, var))
+                else:
+                    averaged_gradients.append((None, var))
+        return averaged_gradients
 
     def _setup_graph(self, input, get_cost_fn, get_opt_fn):
         with TowerContext('', is_training=True):
             grads = self._make_get_grad_fn(input, get_cost_fn, get_opt_fn)()
+            grads = self.allreduce(grads)
+
             opt = get_opt_fn()
-            opt = hvd.DistributedOptimizer(opt)
             self.train_op = opt.apply_gradients(grads, name='min_op')
         with tf.name_scope('horovod_broadcast'):
             op = hvd.broadcast_global_variables(0)
         cb = RunOp(
             op, run_before=True,
             run_as_trigger=False, verbose=True)
-        cb.chief_only = False
         return [cb]
 
     @HIDE_DOC
@@ -311,7 +337,13 @@ class HorovodTrainer(SingleCostTrainer):
         if not isinstance(session_creator, NewSessionCreator):
             raise ValueError(
                 "session_creator has to be `NewSessionCreator` for horovod training! ")
+        # NOTE It will fail if GPU was already detected before initializing the session
+        # https://github.com/tensorflow/tensorflow/issues/8136
         session_creator.config.gpu_options.visible_device_list = str(self._local_rank)
+        try:
+            session_creator.config.inter_op_parallelism_threads = mp.cpu_count() // hvd.local_size()
+        except AttributeError:
+            pass
         super(HorovodTrainer, self).initialize(
             session_creator, session_init)
 

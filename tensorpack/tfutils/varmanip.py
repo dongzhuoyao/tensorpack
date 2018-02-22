@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # File: varmanip.py
-# Author: Yuxin Wu <ppwwyyxxc@gmail.com>
+
 
 import six
 import os
 import pprint
 import tensorflow as tf
 import numpy as np
+from ..utils.develop import deprecated
 from ..utils import logger
 from .common import get_op_tensor_name
 
@@ -113,10 +114,10 @@ class SessionUpdate(object):
 def dump_session_params(path):
     """
     Dump value of all TRAINABLE + MODEL variables to a dict, and save as
-    npy/npz format (loadable by :class:`DictRestore`).
+    npz format (loadable by :class:`DictRestore`).
 
     Args:
-        path(str): the file name to save the parameters. Must ends with npy or npz.
+        path(str): the file name to save the parameters. Must ends with npz.
     """
     var = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
     var.extend(tf.get_collection(tf.GraphKeys.MODEL_VARIABLES))
@@ -186,8 +187,8 @@ def load_chkpt_vars(model_path):
     return result
 
 
+@deprecated("Renamed to 'load_chkpt_vars!'", "2018-04-20")
 def dump_chkpt_vars(model_path):
-    logger.warn("dump_chkpt_vars was renamed to load_chkpt_vars!")
     return load_chkpt_vars(model_path)
 
 
@@ -210,5 +211,7 @@ def is_training_name(name):
     if name.endswith('/Adagrad'):
         return True
     if name.startswith('EMA/'):  # all the moving average summaries
+        return True
+    if name.startswith('AccumGrad') or name.endswith('/AccumGrad'):
         return True
     return False

@@ -11,6 +11,7 @@ import six
 from ..callbacks import (
     Callback, Callbacks, Monitors, TrainingMonitor)
 from ..utils import logger
+from ..utils.utils import humanize_time_delta
 from ..utils.argtools import call_only_once
 from ..tfutils import get_global_step_value
 from ..tfutils.tower import TowerFuncWrapper
@@ -270,8 +271,8 @@ class Trainer(object):
                         self.run_step()  # implemented by subclass
                         self._callbacks.trigger_step()
                     self._callbacks.after_epoch()
-                    logger.info("Epoch {} (global_step {}) finished, time:{:.2f} sec.".format(
-                        self.loop.epoch_num, self.loop.global_step, time.time() - start_time))
+                    logger.info("Epoch {} (global_step {}) finished, time:{}.".format(
+                        self.loop.epoch_num, self.loop.global_step, humanize_time_delta(time.time() - start_time)))
 
                     # trigger epoch outside the timing region.
                     self._callbacks.trigger_epoch()
@@ -311,8 +312,8 @@ class Trainer(object):
         """
         Same as :meth:`train()`, but will:
 
-        1. Append `DEFAULT_CALLBACKS()` to callbacks.
-        2. Append `DEFAULT_MONITORS()` to monitors.
+        1. Append :meth:`DEFAULT_CALLBACKS()` to callbacks.
+        2. Append :meth:`DEFAULT_MONITORS()` to monitors.
         3. Provide default values for every option except `steps_per_epoch`.
         """
         callbacks = (callbacks or []) + DEFAULT_CALLBACKS()

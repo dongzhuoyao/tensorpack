@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 # File: interface.py
 
-import tensorflow as tf
-
 from ..input_source import (
     InputSource, FeedInput, QueueInput, StagingInput, DummyConstantInput)
 from ..utils import logger
@@ -22,12 +20,16 @@ def apply_default_prefetch(input_source_or_dataflow, trainer):
     Args:
         input_source_or_dataflow(InputSource | DataFlow):
         trainer (Trainer):
+
+    Returns:
+        InputSource
     """
     if not isinstance(input_source_or_dataflow, InputSource):
         # to mimic same behavior of the old trainer interface
         if type(trainer) == SimpleTrainer:
             input = FeedInput(input_source_or_dataflow)
         else:
+            logger.info("Automatically applying QueueInput on the DataFlow.")
             input = QueueInput(input_source_or_dataflow)
     else:
         input = input_source_or_dataflow
@@ -36,9 +38,9 @@ def apply_default_prefetch(input_source_or_dataflow, trainer):
         if len(towers) > 1:
             # seem to only improve on >1 GPUs
             assert not isinstance(trainer, SimpleTrainer)
-            assert tf.test.is_gpu_available()
 
             if not isinstance(input, (StagingInput, DummyConstantInput)):
+                logger.info("Automatically applying StagingInput on the DataFlow.")
                 input = StagingInput(input)
     return input
 

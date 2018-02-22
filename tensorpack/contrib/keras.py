@@ -10,8 +10,9 @@ from tensorflow.python.keras import metrics as metrics_module
 from ..models.regularize import regularize_cost_from_collection
 from ..train import Trainer, SimpleTrainer, SyncMultiGPUTrainerParameterServer
 from ..train.trainers import DistributedTrainerBase
+from ..train.interface import apply_default_prefetch
 from ..callbacks import (
-    Callback, InferenceRunner, CallbackToHook,
+    Callback, InferenceRunnerBase, InferenceRunner, CallbackToHook,
     ScalarStats)
 
 from ..tfutils.common import get_op_tensor_name
@@ -19,6 +20,7 @@ from ..tfutils.tower import get_current_tower_context
 from ..tfutils.scope_utils import cached_name_scope
 from ..tfutils.summary import add_moving_summary
 from ..utils.gpu import get_nr_gpu
+from ..utils import logger
 
 
 __all__ = ['KerasPhaseCallback', 'setup_keras_trainer', 'KerasModel']
@@ -56,6 +58,8 @@ class KerasModelCaller(object):
 
         if reuse:
             # use the cached Keras model to mimic reuse
+            # NOTE: ctx.is_training won't be useful inside model,
+            # because inference will always use the cached Keras model
             return self.cached_model.call(input_tensors)
         else:
             # create new Keras model if not reuse
@@ -74,10 +78,12 @@ class KerasPhaseCallback(Callback):
         self._learning_phase = keras.backend.learning_phase()
 
     def _setup_graph(self):
+        logger.info("Using Keras leraning phase {} in the graph!".format(
+            self._learning_phase.name))
         cbs = self.trainer._callbacks.cbs
         for cb in cbs:
             # XXX HACK
-            if isinstance(cb, InferenceRunner):
+            if isinstance(cb, InferenceRunnerBase):
                 h = CallbackToHook(KerasPhaseCallback(False))
                 cb.register_hook(h)
 
@@ -135,8 +141,8 @@ def setup_keras_trainer(
             total_loss = tf.add_n(loss_tensors + [loss_reg], name=TOTAL_LOSS_NAME)
             add_moving_summary(loss_reg, total_loss, *loss_tensors)
         else:
-            add_moving_summary(*loss_tensors)
             total_loss = tf.add_n(loss_tensors, name=TOTAL_LOSS_NAME)
+            add_moving_summary(total_loss, *loss_tensors)
 
         if metrics and (ctx.is_main_training_tower or not ctx.is_training):
             # for list: one metric for each output
@@ -172,7 +178,7 @@ class KerasModel(object):
             get_model ( -> keras.model.Model):
             inputs_desc ([InputDesc]):
             targets_desc ([InputDesc]):
-            input (InputSource):
+            input (InputSource | DataFlow):
             trainer (Trainer): the default will check the number of available
                 GPUs and use them all.
         """
@@ -189,7 +195,7 @@ class KerasModel(object):
         assert isinstance(trainer, Trainer), trainer
         assert not isinstance(trainer, DistributedTrainerBase)
 
-        self.input = input
+        self.input = apply_default_prefetch(input, trainer)
         self.trainer = trainer
 
     def compile(self, optimizer, loss, metrics=None):

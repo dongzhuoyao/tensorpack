@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # File: concurrency.py
-# Author: Yuxin Wu <ppwwyyxx@gmail.com>
+
 # Credit belongs to Xinyu Zhou
 
 import threading
@@ -124,10 +124,10 @@ class ShareSessionThread(threading.Thread):
     def default_sess(self):
         if self._sess:
             with self._sess.as_default():
-                yield
+                yield self._sess
         else:
             logger.warn("ShareSessionThread {} wasn't under a default session!".format(self.name))
-            yield
+            yield None
 
     def start(self):
         import tensorflow as tf

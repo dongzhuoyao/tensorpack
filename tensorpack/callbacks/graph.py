@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # File: graph.py
-# Author: Yuxin Wu <ppwwyyxxc@gmail.com>
+
 
 """ Graph related callbacks"""
 
@@ -19,6 +19,8 @@ __all__ = ['RunOp', 'RunUpdateOps', 'ProcessTensors', 'DumpTensors', 'DumpTensor
 class RunOp(Callback):
     """ Run an Op. """
 
+    _chief_only = False
+
     def __init__(self, op,
                  run_before=True, run_as_trigger=True,
                  run_step=False, verbose=False):
@@ -27,9 +29,9 @@ class RunOp(Callback):
             op (tf.Operation or function): an Op, or a function that returns the Op in the graph.
                 The function will be called later (in the `setup_graph` callback).
             run_before (bool): run the Op before training
-            run_as_trigger (bool): run the Op on every trigger
+            run_as_trigger (bool): run the Op on every :meth:`trigger()` call.
             run_step (bool): run the Op every step (along with training)
-            verbose (bool): pring logs when the op is run.
+            verbose (bool): print logs when the op is run.
 
         Examples:
             The `DQN Example
@@ -75,8 +77,6 @@ class RunUpdateOps(RunOp):
     Run ops from the collection UPDATE_OPS every step
     """
 
-    _chief_only = False
-
     def __init__(self, collection=tf.GraphKeys.UPDATE_OPS):
         """
         Args:
@@ -100,6 +100,8 @@ class ProcessTensors(Callback):
     """
     Fetch extra tensors **along with** each training step,
     and call some function over the values.
+    It uses `_{before,after}_run` method to inject `tf.train.SessionRunHooks`
+    to the session.
     You can use it to print tensors, save tensors to file, etc.
 
     Examples:

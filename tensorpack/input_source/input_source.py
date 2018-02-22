@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # File: input_source.py
-# Author: Yuxin Wu <ppwwyyxxc@gmail.com>
+
 
 import tensorflow as tf
 try:
@@ -9,6 +9,7 @@ try:
 except ImportError:
     pass
 
+from contextlib import contextmanager
 from itertools import chain
 from six.moves import range, zip
 import threading
@@ -118,6 +119,7 @@ class EnqueueThread(ShareSessionThread):
         self.close_op = self.queue.close(cancel_pending_enqueues=True)
 
         self._lock = threading.Lock()
+        # self._size = queue.size()
 
     def run(self):
         with self.default_sess():
@@ -130,6 +132,7 @@ class EnqueueThread(ShareSessionThread):
 
                     dp = next(self._itr)
                     feed = dict(zip(self.placehdrs, dp))
+                    # _, sz = sess.run([self.op, self._sz], feed_dict=feed)
                     self.op.run(feed_dict=feed)
             except (tf.errors.CancelledError, tf.errors.OutOfRangeError, DataFlowTerminated):
                 pass
@@ -221,7 +224,7 @@ class QueueInput(FeedfreeInput):
         with self.cached_name_scope():
             # in TF there is no API to get queue capacity, so we can only summary the size
             size = tf.cast(self.queue.size(), tf.float32, name='queue_size')
-        size_ema_op = add_moving_summary(size, collection=None)[0].op
+        size_ema_op = add_moving_summary(size, collection=None, decay=0.5)[0].op
         return RunOp(
             lambda: size_ema_op,
             run_before=False,
@@ -344,7 +347,7 @@ class TensorInput(FeedfreeInput):
 
 
 class DummyConstantInput(TensorInput):
-    """ Input with some random tensor placed on GPU.
+    """ Input with a constant zero tensor placed on GPU.
         Useful for debugging performance issues """
     def __init__(self, shapes):
         """
@@ -370,10 +373,10 @@ class DummyConstantInput(TensorInput):
 
 class ZMQInput(TensorInput):
     """
-    Recv tensors from a ZMQ endpoint.
+    Recv tensors from a ZMQ endpoint, with ops from https://github.com/tensorpack/zmq_ops.
     It works with :meth:`dataflow.remote.send_dataflow_zmq(format='zmq_op')`.
     """
-    def __init__(self, end_point, hwm):
+    def __init__(self, end_point, hwm, bind=True):
         """
         Args:
             end_point (str):
@@ -381,6 +384,7 @@ class ZMQInput(TensorInput):
         """
         self._end_point = end_point
         self._hwm = int(hwm)
+        self._bind = bind
 
         def fn():
             ret = self._zmq_pull_socket.pull()
@@ -395,11 +399,12 @@ class ZMQInput(TensorInput):
             "ZMQInput has to be used with InputDesc!"
         self._desc = inputs_desc
 
-        from ..user_ops import zmq_ops
+        import zmq_ops
         self._zmq_pull_socket = zmq_ops.ZMQPullSocket(
             self._end_point,
             [x.type for x in inputs_desc],
-            self._hwm)
+            hwm=self._hwm,
+            bind=self._bind)
 
 
 class TFDatasetInput(FeedfreeInput):
@@ -488,9 +493,11 @@ class StagingInput(FeedfreeInput):
                 fetches=[self.stage_op, unstage_op])
 
         def _prefill(self):
-            logger.info("Pre-filling staging area ...")
+            logger.info("Pre-filling StagingArea ...")
             for k in range(self.nr_stage):
                 self.stage_op.run()
+            logger.info("Successfully put {} element{} to StagingArea.".format(
+                self.nr_stage, "s" if self.nr_stage > 1 else ""))
 
         def _before_run(self, ctx):
             # This has to happen once, right before the first iteration.
@@ -499,12 +506,16 @@ class StagingInput(FeedfreeInput):
                 self._prefill()
             return self.fetches
 
-    def __init__(self, input, towers=None, nr_stage=5):
+    def __init__(self, input, towers=None, nr_stage=1, device=None):
         """
         Args:
             input (FeedfreeInput):
-            nr_stage: number of elements to prefetch on each GPU.
+            nr_stage: number of elements to prefetch into each StagingArea, at the beginning.
+                Since enqueue and dequeue are synchronized, prefetching 1
+                    element should be sufficient.
             towers: deprecated
+            device (str or None): if not None, place the StagingArea on a specific device. e.g., '/cpu:0'.
+                Otherwise, they are placed under where `get_inputs_tensors` gets called.
         """
         assert isinstance(input, FeedfreeInput), input
         self._input = input
@@ -515,14 +526,17 @@ class StagingInput(FeedfreeInput):
         self._areas = []
         self._stage_ops = []
         self._unstage_ops = []
-        # self._size_ops = []
+        self._device = device
 
     def _setup(self, inputs):
         self._input.setup(inputs)
+        with self.cached_name_scope():
+            pass    # just to cache the correct ns to use
 
     def _get_callbacks(self):
         cbs = self._input.get_callbacks()
 
+        # this callback has to happen after others, so StagingInput can be stacked together
         cbs.append(
             StagingInput.StagingCallback(self, self._nr_stage))
         return cbs
@@ -530,8 +544,16 @@ class StagingInput(FeedfreeInput):
     def _size(self):
         return self._input.size()
 
+    @contextmanager
+    def _device_ctx(self):
+        if not self._device:
+            yield
+        else:
+            with tf.device(self._device):
+                yield
+
     def _get_input_tensors(self):
-        with self.cached_name_scope():
+        with self.cached_name_scope(), self._device_ctx():
             inputs = self._input.get_input_tensors()
 
             # Putting variables to stagingarea will cause trouble
@@ -542,17 +564,21 @@ class StagingInput(FeedfreeInput):
                     inputs[idx] = tf.identity(inputs[idx])
                 dtypes.append(dtype.base_dtype)
 
+            # TODO tensorflow/benchmarks use static shapes here,
+            # though it doesn't seem to help. We can use it when it's known.
             stage = StagingArea(dtypes, shapes=None)
-            self._stage_ops.append(stage.put(inputs))
-            self._areas.append(stage)
-            outputs = stage.get()
-            if isinstance(outputs, tf.Tensor):  # when size=1, TF doesn't return a list
-                outputs = [outputs]
-            for vin, vout in zip(inputs, outputs):
-                vout.set_shape(vin.get_shape())
-            self._unstage_ops.append(outputs)
-            # self._size_ops.append(stage.size())
-            return outputs
+
+        # put & get automatically inherit the name scope from the area
+        self._stage_ops.append(stage.put(inputs))
+        self._areas.append(stage)
+        outputs = stage.get()
+        if isinstance(outputs, tf.Tensor):  # when size=1, TF doesn't return a list
+            outputs = [outputs]
+        for vin, vout in zip(inputs, outputs):
+            vout.set_shape(vin.get_shape())
+        self._unstage_ops.append(outputs)
+        # self._size_ops.append(stage.size())
+        return outputs
 
     def _get_stage_op(self):
         with self.cached_name_scope():

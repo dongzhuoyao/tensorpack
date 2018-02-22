@@ -9,7 +9,7 @@ __Training__ code of three variants of ResNet on ImageNet:
 
 The training mostly follows the setup in [fb.resnet.torch](https://github.com/facebook/fb.resnet.torch)
 and gets similar performance (with much fewer lines of code).
-Models can be [downloaded here](https://goo.gl/6XjK9V).
+Models can be [downloaded here](http://models.tensorpack.com/ResNet/).
 
 | Model              | Top 5 Error | Top 1 Error |
 |:-------------------|-------------|------------:|
@@ -20,10 +20,11 @@ Models can be [downloaded here](https://goo.gl/6XjK9V).
 | ResNet101      		 |     6.04%   |      21.95% |
 | ResNet152      		 |     5.78%   |      21.51% |
 
-To train, just run:
+To train, first decompress ImageNet data into [this structure](http://tensorpack.readthedocs.io/en/latest/modules/dataflow.dataset.html#tensorpack.dataflow.dataset.ILSVRC12), then:
 ```bash
 ./imagenet-resnet.py --data /path/to/original/ILSVRC --gpu 0,1,2,3 -d 50 [--mode resnet/preact/se]
 ```
+
 You should be able to see good GPU utilization (95%~99%), if your data is fast enough.
 The default data pipeline is probably OK for most systems.
 See the [tutorial](http://tensorpack.readthedocs.io/en/latest/tutorial/efficient-dataflow.html) on other options to speed up your data.
@@ -37,10 +38,10 @@ Note that the architecture is different from the `imagenet-resnet.py` script and
 
 Usage:
 ```bash
-# download and convert caffe model to npy format
-python -m tensorpack.utils.loadcaffe PATH/TO/{ResNet-101-deploy.prototxt,ResNet-101-model.caffemodel} ResNet101.npy
+# download and convert caffe model to npz format
+python -m tensorpack.utils.loadcaffe PATH/TO/{ResNet-101-deploy.prototxt,ResNet-101-model.caffemodel} ResNet101.npz
 # run on an image
-./load-resnet.py --load ResNet-101.npy --input cat.jpg --depth 101
+./load-resnet.py --load ResNet-101.npz --input cat.jpg --depth 101
 ```
 
 The converted models are verified on ILSVRC12 validation set.

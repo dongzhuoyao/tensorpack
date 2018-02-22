@@ -10,8 +10,10 @@ import itertools
 import tqdm
 import numpy as np
 import json
+import six
 import tensorflow as tf
 
+assert six.PY3, "FasterRCNN requires Python 3!"
 
 from tensorpack import *
 from tensorpack.tfutils.summary import add_moving_summary
@@ -37,7 +39,7 @@ from viz import (
     draw_predictions, draw_final_outputs)
 from common import print_config
 from eval import (
-    eval_on_dataflow, detect_one_image, print_evaluation_scores, DetectionResult)
+    eval_coco, detect_one_image, print_evaluation_scores, DetectionResult)
 import config
 
 
@@ -278,7 +280,7 @@ def visualize(model_path, nr_visualize=50, output_dir='output'):
 
 def offline_evaluate(pred_func, output_file):
     df = get_eval_dataflow()
-    all_results = eval_on_dataflow(
+    all_results = eval_coco(
         df, lambda img: detect_one_image(img, pred_func))
     with open(output_file, 'w') as f:
         json.dump(all_results, f)
@@ -308,7 +310,7 @@ class EvalCallback(Callback):
         self.epochs_to_eval.add(self.trainer.max_epoch)
 
     def _eval(self):
-        all_results = eval_on_dataflow(self.df, lambda img: detect_one_image(img, self.pred))
+        all_results = eval_coco(self.df, lambda img: detect_one_image(img, self.pred))
         output_file = os.path.join(
             logger.get_logger_dir(), 'outputs{}.json'.format(self.global_step))
         with open(output_file, 'w') as f:
@@ -344,6 +346,10 @@ if __name__ == '__main__':
 
         assert args.load
         print_config()
+
+        if args.predict or args.visualize:
+            config.RESULT_SCORE_THRESH = config.RESULT_SCORE_THRESH_VIS
+
         if args.visualize:
             visualize(args.load)
         else:
@@ -356,14 +362,22 @@ if __name__ == '__main__':
                 assert args.evaluate.endswith('.json')
                 offline_evaluate(pred, args.evaluate)
             elif args.predict:
-                COCODetection(config.BASEDIR, 'train2014')   # to load the class names into caches
+                COCODetection(config.BASEDIR, 'val2014')   # Only to load the class names into caches
                 predict(pred, args.predict)
     else:
         logger.set_logger_dir(args.logdir)
         print_config()
-        stepnum = 500
-        warmup_epoch = 3
         factor = get_batch_factor()
+        stepnum = config.STEPS_PER_EPOCH
+
+        # warmup is step based, lr is epoch based
+        warmup_schedule = [(0, config.BASE_LR / 3), (config.WARMUP * factor, config.BASE_LR)]
+        warmup_end_epoch = config.WARMUP * factor * 1. / stepnum
+        lr_schedule = [(int(np.ceil(warmup_end_epoch)), warmup_schedule[-1][1])]
+        for idx, steps in enumerate(config.LR_SCHEDULE[:-1]):
+            mult = 0.1 ** (idx + 1)
+            lr_schedule.append(
+                (steps * factor // stepnum, config.BASE_LR * mult))
 
         cfg = TrainConfig(
             model=Model(),
@@ -372,19 +386,13 @@ if __name__ == '__main__':
                 ModelSaver(max_to_keep=10, keep_checkpoint_every_n_hours=1),
                 # linear warmup
                 ScheduledHyperParamSetter(
-                    'learning_rate',
-                    [(0, 3e-3), (warmup_epoch * factor, 1e-2)], interp='linear'),
-                # step decay
-                ScheduledHyperParamSetter(
-                    'learning_rate',
-                    [(warmup_epoch * factor, 1e-2),
-                     (150000 * factor // stepnum, 1e-3),
-                     (230000 * factor // stepnum, 1e-4)]),
+                    'learning_rate', warmup_schedule, interp='linear', step_based=True),
+                ScheduledHyperParamSetter('learning_rate', lr_schedule),
                 EvalCallback(),
                 GPUUtilizationTracker(),
             ],
             steps_per_epoch=stepnum,
-            max_epoch=280000 * factor // stepnum,
+            max_epoch=config.LR_SCHEDULE[2] * factor // stepnum,
             session_init=get_model_loader(args.load) if args.load else None,
         )
         trainer = SyncMultiGPUTrainerReplicated(get_nr_gpu())

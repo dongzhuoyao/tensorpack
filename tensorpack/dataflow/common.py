@@ -1,18 +1,20 @@
 # -*- coding: UTF-8 -*-
 # File: common.py
-# Author: Yuxin Wu <ppwwyyxx@gmail.com>
+
 
 from __future__ import division
 import numpy as np
 from copy import copy
 import pprint
+import itertools
 from termcolor import colored
 from collections import deque, defaultdict
 from six.moves import range, map
+import tqdm
 
 from .base import DataFlow, ProxyDataFlow, RNGDataFlow, DataFlowReentrantGuard
 from ..utils import logger
-from ..utils.utils import get_tqdm, get_rng
+from ..utils.utils import get_tqdm, get_rng, get_tqdm_kwargs
 from ..utils.develop import log_deprecated
 
 __all__ = ['TestDataSpeed', 'PrintData', 'BatchData', 'BatchDataByShape', 'FixedSizeData', 'MapData',
@@ -23,14 +25,16 @@ __all__ = ['TestDataSpeed', 'PrintData', 'BatchData', 'BatchDataByShape', 'Fixed
 
 class TestDataSpeed(ProxyDataFlow):
     """ Test the speed of some DataFlow """
-    def __init__(self, ds, size=5000):
+    def __init__(self, ds, size=5000, warmup=0):
         """
         Args:
             ds (DataFlow): the DataFlow to test.
             size (int): number of datapoints to fetch.
+            warmup (int): warmup iterations
         """
         super(TestDataSpeed, self).__init__(ds)
-        self.test_size = size
+        self.test_size = int(size)
+        self.warmup = int(warmup)
 
     def get_data(self):
         """ Will run testing at the beginning, then produce data normally. """
@@ -43,10 +47,14 @@ class TestDataSpeed(ProxyDataFlow):
         Start testing with a progress bar.
         """
         self.ds.reset_state()
+        itr = self.ds.get_data()
+        if self.warmup:
+            for d in tqdm.trange(self.warmup, **get_tqdm_kwargs()):
+                next(itr)
         # add smoothing for speed benchmark
         with get_tqdm(total=self.test_size,
                       leave=True, smoothing=0.2) as pbar:
-            for idx, dp in enumerate(self.ds.get_data()):
+            for idx, dp in enumerate(itr):
                 pbar.update()
                 if idx == self.test_size - 1:
                     break
@@ -77,6 +85,7 @@ class BatchData(ProxyDataFlow):
                 enough to form a batch, whether or not to also produce the remaining
                 data as a smaller batch.
                 If set to False, all produced datapoints are guranteed to have the same batch size.
+                If set to True, `ds.size()` must be accurate.
             use_list (bool): if True, each component will contain a list
                 of datapoints instead of an numpy array of an extra dimension.
         """
@@ -637,9 +646,9 @@ class PrintData(ProxyDataFlow):
         .. code-block:: python
 
             def get_data():
-                ds = CaffeLMDB('path/to/lmdb')
+                ds = SomeDataSource('path/to/lmdb')
                 ds = SomeInscrutableMappings(ds)
-                ds = PrintData(ds, num=2)
+                ds = PrintData(ds, num=2, max_list=2)
                 return ds
             ds = get_data()
 
@@ -649,23 +658,31 @@ class PrintData(ProxyDataFlow):
 
             [0110 09:22:21 @common.py:589] DataFlow Info:
             datapoint 0<2 with 4 components consists of
-               dp 0: is float of shape () with range [0.0816501893251]
-               dp 1: is ndarray of shape (64, 64) with range [0.1300, 0.6895]
-               dp 2: is ndarray of shape (64, 64) with range [-1.2248, 1.2177]
-               dp 3: is ndarray of shape (9, 9) with range [-0.6045, 0.6045]
+               0: float with value 0.0816501893251
+               1: ndarray:int32 of shape (64,) in range [0, 10]
+               2: ndarray:float32 of shape (64, 64) in range [-1.2248, 1.2177]
+               3: list of len 50
+                  0: ndarray:int32 of shape (64, 64) in range [-128, 80]
+                  1: ndarray:float32 of shape (64, 64) in range [0.8400, 0.6845]
+                  ...
             datapoint 1<2 with 4 components consists of
-               dp 0: is float of shape () with range [5.88252075399]
-               dp 1: is ndarray of shape (64, 64) with range [0.0072, 0.9371]
-               dp 2: is ndarray of shape (64, 64) with range [-0.9011, 0.8491]
-               dp 3: is ndarray of shape (9, 9) with range [-0.5585, 0.5585]
+               0: float with value 5.88252075399
+               1: ndarray:int32 of shape (64,) in range [0, 10]
+               2: ndarray:float32 of shape (64, 64) with range [-0.9011, 0.8491]
+               3: list of len 50
+                  0: ndarray:int32 of shape (64, 64) in range [-70, 50]
+                  1: ndarray:float32 of shape (64, 64) in range [0.7400, 0.3545]
+                  ...
     """
 
-    def __init__(self, ds, num=1, label=None, name=None):
+    def __init__(self, ds, num=1, label=None, name=None, max_depth=3, max_list=3):
         """
         Args:
-            ds(DataFlow): input DataFlow.
-            num(int): number of dataflow points to print.
-            name(str, optional): name to identify this DataFlow.
+            ds (DataFlow): input DataFlow.
+            num (int): number of dataflow points to print.
+            name (str, optional): name to identify this DataFlow.
+            max_depth (int, optional): stop output when too deep recursion in sub elements
+            max_list (int, optional): stop output when too many sub elements
         """
         super(PrintData, self).__init__(ds)
         self.num = num
@@ -676,8 +693,10 @@ class PrintData(ProxyDataFlow):
         else:
             self.name = name
         self.cnt = 0
+        self.max_depth = max_depth
+        self.max_list = max_list
 
-    def _analyze_input_data(self, entry, k, depth=1):
+    def _analyze_input_data(self, entry, k, depth=1, max_depth=3, max_list=3):
         """
         Gather useful debug information from a datapoint.
 
@@ -685,52 +704,72 @@ class PrintData(ProxyDataFlow):
             entry: the datapoint component
             k (int): index of this compoennt in current datapoint
             depth (int, optional): recursion depth
-
-        Todo:
-            * call this recursively and stop when depth>n for some n if an element is a list
+            max_depth, max_list: same as in :meth:`__init__`.
 
         Returns:
             string: debug message
         """
-        el = entry
-        if isinstance(el, list):
-            return "%s is list of %i elements" % (" " * (depth * 2), len(el))
-        else:
-            el_type = el.__class__.__name__
 
-            if isinstance(el, (int, float, bool)):
-                el_max = el_min = el
-                el_shape = "()"
-                el_range = el
-            else:
-                el_shape = "n.A."
-                if hasattr(el, 'shape'):
-                    el_shape = el.shape
+        class _elementInfo(object):
+            def __init__(self, el, pos, depth=0, max_list=3):
+                self.shape = ""
+                self.type = type(el).__name__
+                self.dtype = ""
+                self.range = ""
 
-                el_max, el_min = None, None
-                if hasattr(el, 'max'):
-                    el_max = el.max()
-                if hasattr(el, 'min'):
-                    el_min = el.min()
+                self.sub_elements = []
 
-                el_range = ("None, None")
-                if el_max is not None or el_min is not None:
-                    el_range = "%.4f, %.4f" % (el_min, el_max)
+                self.ident = " " * (depth * 2)
+                self.pos = pos
 
-            return ("%s dp %i: is %s of shape %s with range [%s]" % (" " * (depth * 2), k, el_type, el_shape, el_range))
+                numpy_scalar_types = list(itertools.chain(*np.sctypes.values()))
+
+                if isinstance(el, (int, float, bool)):
+                    self.range = " with value {}".format(el)
+                elif type(el) is np.ndarray:
+                    self.shape = " of shape {}".format(el.shape)
+                    self.dtype = ":{}".format(str(el.dtype))
+                    self.range = " in range [{}, {}]".format(el.min(), el.max())
+                elif type(el) in numpy_scalar_types:
+                    self.range = " with value {}".format(el)
+                elif isinstance(el, (list)):
+                    self.shape = " of len {}".format(len(el))
+
+                    if depth < max_depth:
+                        for k, subel in enumerate(el):
+                            if k < max_list:
+                                self.sub_elements.append(_elementInfo(subel, k, depth + 1, max_list))
+                            else:
+                                self.sub_elements.append(" " * ((depth + 1) * 2) + '...')
+                                break
+                    else:
+                        if len(el) > 0:
+                            self.sub_elements.append(" " * ((depth + 1) * 2) + ' ...')
+
+            def __str__(self):
+                strings = []
+                vals = (self.ident, self.pos, self.type, self.dtype, self.shape, self.range)
+                strings.append("{}{}: {}{}{}{}".format(*vals))
+
+                for k, el in enumerate(self.sub_elements):
+                    strings.append(str(el))
+                return "\n".join(strings)
+
+        return str(_elementInfo(entry, k, depth, max_list))
 
     def _get_msg(self, dp):
         msg = [u"datapoint %i<%i with %i components consists of" % (self.cnt, self.num, len(dp))]
         for k, entry in enumerate(dp):
-            msg.append(self._analyze_input_data(entry, k))
+            msg.append(self._analyze_input_data(entry, k, max_depth=self.max_depth, max_list=self.max_list))
         return u'\n'.join(msg)
 
     def get_data(self):
-        if self.cnt == 0:
-            label = "" if self.name is None else " (" + self.label + ")"
-            logger.info(colored("DataFlow Info%s:" % label, 'cyan'))
-
         for dp in self.ds.get_data():
+            # it is important to place this here! otherwise it mixes the output of multiple PrintData
+            if self.cnt == 0:
+                label = ' (%s)' % self.name if self.name is not None else ""
+                logger.info(colored("DataFlow Info%s:" % label, 'cyan'))
+
             if self.cnt < self.num:
                 print(self._get_msg(dp))
                 self.cnt += 1

@@ -6,7 +6,7 @@ Performance is different across machines and tasks.
 So you need to figure out most parts by your own.
 Here's a list of things you can do when your training is slow.
 
-If you're going to open an issue about slow training,
+If you need help improving the speed,
 PLEASE do them and include your findings.
 
 ## Figure out the bottleneck
@@ -20,10 +20,10 @@ PLEASE do them and include your findings.
 
 ## Benchmark the components
 1. Use `DummyConstantInput(shapes)` as the `InputSource`.
-	so that the iterations doesn't take any data from Python side but train on a constant tensor.
+	so that the iterations only take data from a constant tensor.
 	This will help find out the slow operations you're using in the graph.
 2. Use `dataflow=FakeData(shapes, random=False)` to replace your original DataFlow by a constant DataFlow.
-  This is almost the same as (1), i.e., it eliminates the overhead of data.
+  This is almost the same as (1), i.e., it removes the overhead of data.
 3. If you're using a TF-based input pipeline you wrote, you can simply run it in a loop and test its speed.
 4. Use `TestDataSpeed(mydf).start()` to benchmark your DataFlow.
 
@@ -33,10 +33,10 @@ A benchmark will give you more precise information about which part you should i
 
 Understand the [Efficient DataFlow](efficient-dataflow.html) tutorial, so you know what your DataFlow is doing.
 
-Benchmark your DataFlow with modifications and you'll understand which part is the bottleneck. Some examples
+Benchmark your DataFlow with modifications to understand which part is the bottleneck. Some examples
 include:
 
-1. Benchmark only raw reader (and perhaps add some prefetching).
+1. Benchmark only raw reader (and perhaps add some parallel prefetching).
 2. Gradually add some pre-processing and see how the performance changes.
 3. Change the number of parallel processes or threads.
 

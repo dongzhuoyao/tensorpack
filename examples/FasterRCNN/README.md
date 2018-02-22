@@ -1,11 +1,11 @@
 # Faster-RCNN / Mask-RCNN on COCO
-This example aims to provide a minimal (1.3k lines) multi-GPU implementation of
-Faster-RCNN / Mask-RCNN (without FPN) on COCO.
+This example aims to provide a minimal (1.3k lines) implementation of
+end-to-end Faster-RCNN & Mask-RCNN (with ResNet backbones) on COCO.
 
 ## Dependencies
 + Python 3; TensorFlow >= 1.4.0
 + [pycocotools](https://github.com/pdollar/coco/tree/master/PythonAPI/pycocotools), OpenCV.
-+ Pre-trained [ResNet model](https://goo.gl/6XjK9V) from tensorpack model zoo.
++ Pre-trained [ResNet model](http://models.tensorpack.com/ResNet/) from tensorpack model zoo.
 + COCO data. It assumes the following directory structure:
 ```
 DIR/
@@ -25,8 +25,8 @@ DIR/
 
 ## Usage
 Change config in `config.py`:
-1. Set `BASEDIR` to `/path/to/DIR` as described above.
-2. Set `MODE_MASK` to switch Faster-RCNN or Mask-RCNN.
+1. Change `BASEDIR` to `/path/to/DIR` as described above.
+2. Change `MODE_MASK` to switch Faster-RCNN or Mask-RCNN.
 
 Train:
 ```
@@ -48,19 +48,23 @@ Evaluate the performance of a model and save to json.
 
 ## Results
 
-Models are trained on trainval35k and evaluated on minival using mAP@IoU=0.50:0.95.
+These models are trained with different configurations on trainval35k and evaluated on minival using mAP@IoU=0.50:0.95.
 MaskRCNN results contain both bbox and segm mAP.
 
-|Backbone | `FASTRCNN_BATCH` | resolution | mAP (bbox/segm) | Time |
-| - | - | - | - | - |
-| Res50 | 64 | (600, 1024) | 33.0 | 22h on 8 P100 |
-| Res50 | 256 | (600, 1024) | 34.4 | 49h on 8 M40 |
-| Res50 | 512 | (800, 1333) | 35.6 | 55h on 8 P100|
-| Res50 | 256 | (800, 1333) | 36.9/32.3 | 39h on 8 P100|
-| Res101 | 512 | (800, 1333) | 40.1/34.4 | 70h on 8 P100|
+|Backbone|`FASTRCNN_BATCH`|resolution |schedule|mAP (bbox/segm)|Time         |
+|   -    |    -           |    -      |   -    |   -           |   -         |
+|R-50    |64              |(600, 1024)|280k    |33.0           |22h on 8 P100|
+|R-50    |512             |(800, 1333)|280k    |35.6           |55h on 8 P100|
+|R-50    |512             |(800, 1333)|360k    |36.7           |49h on 8 V100|
+|R-50    |256             |(800, 1333)|280k    |36.9/32.3      |39h on 8 P100|
+|R-50    |512							|(800, 1333)|360k    |37.7/33.0      |72h on 8 P100|
+|R-101   |512             |(800, 1333)|280k    |40.1/34.4      |70h on 8 P100|
 
-Note that these models are trained with a larger ROI batch size than the paper,
-and get about 1mAP better performance.
+The two 360k models have identical configurations with
+`R50-C4-2x` configuration in
+[Detectron Model Zoo](https://github.com/facebookresearch/Detectron/blob/master/MODEL_ZOO.md#end-to-end-faster--mask-r-cnn-baselines).
+They get the __same performance__ with the official models, and are about 14% slower than the official implementation,
+probably due to the lack of specialized ops in TensorFlow.
 
 ## Notes
 

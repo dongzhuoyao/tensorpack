@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 # File: model_desc.py
-# Author: Yuxin Wu <ppwwyyxx@gmail.com>
+
 
 from abc import ABCMeta, abstractmethod
 from collections import namedtuple
@@ -35,6 +35,8 @@ class InputDesc(
         """
         shape = tuple(shape)    # has to be tuple for "self" to be hashable
         assert isinstance(type, tf.DType), type
+        if any(k in name for k in [':', '/', ' ']):
+            raise ValueError("Invalid InputDesc name: '{}'".format(name))
         self = super(InputDesc, cls).__new__(cls, type, shape, name)
         self._cached_placeholder = None
         return self

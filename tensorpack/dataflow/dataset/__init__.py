@@ -1,6 +1,12 @@
 #  -*- coding: UTF-8 -*-
 #  File: __init__.py
-#  Author: Yuxin Wu <ppwwyyxx@gmail.com>
+
+if False:
+    from .bsds500 import *
+    from .cifar import *
+    from .ilsvrc import *
+    from .mnist import *
+    from .svhn import *
 
 from pkgutil import iter_modules
 import os

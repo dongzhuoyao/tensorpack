@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # File: optimizer.py
-# Author: Yuxin Wu <ppwwyyxxc@gmail.com>
+
 
 import tensorflow as tf
 from contextlib import contextmanager
-from .gradproc import FilterNoneGrad
+from .gradproc import FilterNoneGrad, GradientProcessor
 
 __all__ = ['apply_grad_processors', 'ProxyOptimizer',
            'PostProcessOptimizer', 'VariableAssignmentOptimizer',
@@ -48,6 +48,8 @@ def apply_grad_processors(opt, gradprocs):
         processors before updating the variables.
     """
     assert isinstance(gradprocs, (list, tuple)), gradprocs
+    for gp in gradprocs:
+        assert isinstance(gp, GradientProcessor), gp
 
     class _ApplyGradientProcessor(ProxyOptimizer):
         def __init__(self, opt, gradprocs):

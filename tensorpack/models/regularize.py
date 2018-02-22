@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # File: regularize.py
-# Author: Yuxin Wu <ppwwyyxx@gmail.com>
+
 
 import tensorflow as tf
 import re
@@ -14,8 +14,8 @@ __all__ = ['regularize_cost', 'l2_regularizer', 'l1_regularizer', 'Dropout']
 
 
 @graph_memoized
-def _log_regularizer(name):
-    logger.info("Apply regularizer for {}".format(name))
+def _log_once(msg):
+    logger.info(msg)
 
 
 l2_regularizer = tf.contrib.layers.l2_regularizer
@@ -56,7 +56,7 @@ def regularize_cost(regex, func, name='regularize_cost'):
     else:
         params = tf.trainable_variables()
 
-    to_regularize = []
+    names = []
 
     with tf.name_scope(name + '_internals'):
         costs = []
@@ -64,7 +64,7 @@ def regularize_cost(regex, func, name='regularize_cost'):
             para_name = p.op.name
             if re.search(regex, para_name):
                 costs.append(func(p))
-                to_regularize.append(p.name)
+                names.append(p.name)
         if not costs:
             return tf.constant(0, dtype=tf.float32, name='empty_' + name)
 
@@ -77,9 +77,9 @@ def regularize_cost(regex, func, name='regularize_cost'):
             if name.startswith(prefix):
                 return name[prefixlen:]
             return name
-        to_regularize = list(map(f, to_regularize))
-    to_print = ', '.join(to_regularize)
-    _log_regularizer(to_print)
+        names = list(map(f, names))
+    logger.info("regularize_cost() found {} tensors.".format(len(names)))
+    _log_once("Applying regularizer for {}".format(', '.join(names)))
 
     return tf.add_n(costs, name=name)
 
@@ -106,7 +106,7 @@ def regularize_cost_from_collection(name='regularize_cost'):
     else:
         losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
     if len(losses) > 0:
-        logger.info("Add REGULARIZATION_LOSSES of {} tensors on the total cost.".format(len(losses)))
+        logger.info("regularize_cost_from_collection() found {} tensors in REGULARIZATION_LOSSES.".format(len(losses)))
         reg_loss = tf.add_n(losses, name=name)
         return reg_loss
     else:
@@ -114,19 +114,30 @@ def regularize_cost_from_collection(name='regularize_cost'):
 
 
 @layer_register(use_scope=None)
-def Dropout(x, keep_prob=0.5, is_training=None, noise_shape=None):
+def Dropout(x, *args, **kwargs):
     """
-    Dropout layer as in the paper `Dropout: a Simple Way to Prevent
-    Neural Networks from Overfitting <http://dl.acm.org/citation.cfm?id=2670313>`_.
+    Same as `tf.layers.dropout`.
+    However, for historical reasons, the first positional argument is
+    interpreted as keep_prob rather than drop_prob.
+    Explicitly use `rate=` keyword arguments to ensure things are consistent.
+    """
+    if 'is_training' in kwargs:
+        kwargs['training'] = kwargs.pop('is_training')
+    if len(args) > 0:
+        logger.warn(
+            "The first positional argument to tensorpack.Dropout is the probability to keep rather than to drop. "
+            "This is different from the rate argument in tf.layers.Dropout due to historical reasons. "
+            "To mimic tf.layers.Dropout, explicitly use keyword argument 'rate' instead")
+        rate = 1 - args[0]
+    elif 'keep_prob' in kwargs:
+        assert 'rate' not in kwargs, "Cannot set both keep_prob and rate!"
+        rate = 1 - kwargs.pop('keep_prob')
+    elif 'rate' in kwargs:
+        rate = kwargs.pop('rate')
+    else:
+        rate = 0.5
 
-    Args:
-        keep_prob (float): the probability that each element is kept. It is only used
-            when is_training=True.
-        is_training (bool): If None, will use the current :class:`tensorpack.tfutils.TowerContext`
-            to figure out.
-        noise_shape: same as `tf.nn.dropout`.
-    """
-    if is_training is None:
-        is_training = get_current_tower_context().is_training
-    return tf.layers.dropout(
-        x, rate=1 - keep_prob, noise_shape=noise_shape, training=is_training)
+    if kwargs.get('training', None) is None:
+        kwargs['training'] = get_current_tower_context().is_training
+
+    return tf.layers.dropout(x, rate=rate, **kwargs)

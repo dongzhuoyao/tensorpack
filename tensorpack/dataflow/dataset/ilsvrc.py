@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # File: ilsvrc.py
-# Author: Yuxin Wu <ppwwyyxxc@gmail.com>
+
 import os
 import tarfile
 import numpy as np
@@ -173,17 +173,17 @@ class ILSVRC12(ILSVRC12Files):
                  shuffle=None, dir_structure=None):
         """
         Args:
-            dir (str): A directory containing a subdir named ``name``, where the
-                original ``ILSVRC12_img_{name}.tar`` gets decompressed.
-            name (str): 'train' or 'val' or 'test'.
+            dir (str): A directory containing a subdir named ``name``,
+                containing the images in a structure described below.
+            name (str): One of 'train' or 'val' or 'test'.
             shuffle (bool): shuffle the dataset.
                 Defaults to True if name=='train'.
-            dir_structure (str): The directory structure of 'val' and 'test' directory.
-                'original' means the original decompressed
-                directory, which only has list of image files (as below).
-                If set to 'train', it expects the same two-level
-                directory structure simlar to 'train/'.
+            dir_structure (str): One of 'original' or 'train'.
+                The directory structure for the 'val' directory.
+                'original' means the original decompressed directory, which only has list of image files (as below).
+                If set to 'train', it expects the same two-level directory structure simlar to 'dir/train/'.
                 By default, it tries to automatically detect the structure.
+                You probably do not need to care about this option because 'original' is what people usually have.
 
         Examples:
 
@@ -213,10 +213,33 @@ class ILSVRC12(ILSVRC12Files):
             mkdir test && tar xvf ILSVRC12_img_test.tar -C test
             mkdir train && tar xvf ILSVRC12_img_train.tar -C train && cd train
             find -type f -name '*.tar' | parallel -P 10 'echo {} && mkdir -p {/.} && tar xf {} -C {/.}'
+
+        When `dir_structure=='train'`, `dir` should have the following structure:
+
+        .. code-block:: none
+
+            dir/
+              train/
+                n02134418/
+                  n02134418_198.JPEG
+                  ...
+                ...
+              val/
+                n01440764/
+                  ILSVRC2012_val_00000293.JPEG
+                  ...
+                ...
+              test/
+                ILSVRC2012_test_00000001.JPEG
+                ...
         """
         super(ILSVRC12, self).__init__(
             dir, name, meta_dir, shuffle, dir_structure)
 
+    """
+    There are some CMYK / png images, but cv2 seems robust to them.
+    https://github.com/tensorflow/models/blob/c0cd713f59cfe44fa049b3120c417cc4079c17e3/research/inception/inception/data/build_imagenet_data.py#L264-L300
+    """
     def get_data(self):
         for fname, label in super(ILSVRC12, self).get_data():
             im = cv2.imread(fname, cv2.IMREAD_COLOR)

@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 # File: stats.py
-# Author: Yuxin Wu <ppwwyyxx@gmail.com>
+
 import numpy as np
 from ..utils.segmentation.segmentation import update_confusion_matrix
 from .import logger

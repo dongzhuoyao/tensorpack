@@ -140,7 +140,7 @@ We can also dump the dataset into one single LMDB file and read it sequentially.
 
 ```python
 from tensorpack.dataflow import *
-class BinaryILSVRC12(dataset.ILSVRCFiles):
+class BinaryILSVRC12(dataset.ILSVRC12Files):
     def get_data(self):
         for fname, label in super(BinaryILSVRC12, self).get_data():
             with open(fname, 'rb') as f:
@@ -229,9 +229,9 @@ Let me summarize what this DataFlow does:
 	 send them through ZMQ IPC pipe.
 3. The main process takes data from the pipe, makes batches.
 
-The two DataFlow mentioned in this tutorial (both random read and sequential read) can run at a speed of 1k ~ 2k images per second if you have good CPUs, RAM, disks.
+The two DataFlow mentioned in this tutorial (both random read and sequential read) can run at a speed of 1k ~ 2.5k images per second if you have good CPUs, RAM, disks.
 As a reference, tensorpack can train ResNet-18 at 1.2k images/s on 4 old TitanX.
-A DGX-1 (8 P100) can train ResNet-50 at 1.7k images/s according to the [official benchmark](https://www.tensorflow.org/performance/benchmarks).
+A DGX-1 (8 P100s) can train ResNet-50 at 1.7k images/s according to the [official benchmark](https://www.tensorflow.org/performance/benchmarks).
 So DataFlow will not be a serious bottleneck if configured properly.
 
 ## Distributed DataFlow
@@ -251,11 +251,11 @@ send_dataflow_zmq(df, 'tcp://1.2.3.4:8877')
 ```python
 # Training Machine, process 1-10:
 df = MyLargeData()
-send_dataflow_zmq(df, 'ipc:///tmp/ipc-socket')
+send_dataflow_zmq(df, 'ipc://@my-socket')
 ```
 ```python
 # Training Machine, training process
-df = RemoteDataZMQ('ipc:///tmp/ipc-socket', 'tcp://0.0.0.0:8877')
+df = RemoteDataZMQ('ipc://@my-socket', 'tcp://0.0.0.0:8877')
 TestDataSpeed(df).start()
 ```
 

@@ -17,7 +17,6 @@ from six.moves import queue
 from tensorpack import *
 from tensorpack.utils.concurrency import ensure_proc_terminate, start_proc_mask_signal
 from tensorpack.utils.serialize import dumps
-from tensorpack.tfutils import symbolic_functions as symbf
 from tensorpack.tfutils.gradproc import MapGradient, SummaryGradient
 from tensorpack.utils.gpu import get_nr_gpu
 
@@ -117,7 +116,7 @@ class Model(ModelDesc):
         value_loss = tf.nn.l2_loss(value - futurereward, name='value_loss')
 
         pred_reward = tf.reduce_mean(value, name='predict_reward')
-        advantage = symbf.rms(advantage, name='rms_advantage')
+        advantage = tf.sqrt(tf.reduce_mean(tf.square(advantage)), name='rms_advantage')
         entropy_beta = tf.get_variable('entropy_beta', shape=[],
                                        initializer=tf.constant_initializer(0.01), trainable=False)
         self.cost = tf.add_n([policy_loss, xentropy_loss * entropy_beta, value_loss])
@@ -234,9 +233,8 @@ def train():
 
     # setup simulator processes
     name_base = str(uuid.uuid1())[:6]
-    PIPE_DIR = os.environ.get('TENSORPACK_PIPEDIR', '.').rstrip('/')
-    namec2s = 'ipc://{}/sim-c2s-{}'.format(PIPE_DIR, name_base)
-    names2c = 'ipc://{}/sim-s2c-{}'.format(PIPE_DIR, name_base)
+    namec2s = 'ipc://@sim-c2s-{}'.format(name_base)
+    names2c = 'ipc://@sim-s2c-{}'.format(name_base)
     procs = [MySimulatorWorker(k, namec2s, names2c) for k in range(SIMULATOR_PROC)]
     ensure_proc_terminate(procs)
     start_proc_mask_signal(procs)

@@ -1,6 +1,13 @@
 #  -*- coding: UTF-8 -*-
 #  File: __init__.py
-#  Author: Yuxin Wu <ppwwyyxx@gmail.com>
+
+if False:
+    from .base import *
+    from .concurrency import *
+    from .config import *
+    from .dataset import *
+    from .multigpu import *
+
 
 from pkgutil import iter_modules
 import os

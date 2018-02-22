@@ -4,7 +4,10 @@
 
 from abc import ABCMeta, abstractmethod
 import tensorflow as tf
+import copy
 import six
+import re
+import pprint
 from six.moves import zip, range
 
 from ..utils import logger
@@ -53,7 +56,19 @@ class DataParallelBuilder(GraphBuilder):
             grad_list: list of list of tuples, shape is Ngpu x Nvar x 2
         """
         nvars = [len(k) for k in grad_list]
-        assert len(set(nvars)) == 1, "Number of gradients from each tower is different! " + str(nvars)
+
+        def basename(x):
+            return re.sub('tower[0-9]+/', '', x.op.name)
+
+        if len(set(nvars)) != 1:
+            names_per_gpu = [set([basename(k[1]) for k in grad_and_vars]) for grad_and_vars in grad_list]
+            inters = copy.copy(names_per_gpu[0])
+            for s in names_per_gpu:
+                inters &= s
+            for s in names_per_gpu:
+                s -= inters
+            logger.error("Unique variables on towers: " + pprint.pformat(names_per_gpu))
+            raise ValueError("Number of gradients from each tower is different! " + str(nvars))
 
     @staticmethod
     def build_on_towers(
@@ -108,6 +123,9 @@ class SyncMultiGPUParameterServerBuilder(DataParallelBuilder):
 
     It is an equivalent of ``--variable_update=parameter_server`` in
     `tensorflow/benchmarks <https://github.com/tensorflow/benchmarks>`_.
+
+    Attribute:
+        grads: list of (g, v). Averaged gradients, available after build()
     """
     def __init__(self, towers, ps_device):
         """
@@ -143,15 +161,15 @@ class SyncMultiGPUParameterServerBuilder(DataParallelBuilder):
         # self.train_op = tf.group(*ops)
         # return
 
-        grads = average_grads(grad_list, colocation=True)
+        self.grads = average_grads(grad_list, colocation=True)
         # grads = grad_list[0]
 
         opt = get_opt_fn()
         if self.ps_device == 'cpu':
             with tf.device('/cpu:0'):
-                train_op = opt.apply_gradients(grads, name='train_op')
+                train_op = opt.apply_gradients(self.grads, name='train_op')
         else:
-            train_op = opt.apply_gradients(grads, name='train_op')
+            train_op = opt.apply_gradients(self.grads, name='train_op')
         return train_op
 
 
@@ -160,11 +178,20 @@ class SyncMultiGPUReplicatedBuilder(DataParallelBuilder):
     Data-parallel training in "replicated" mode,
     where each GPU contains a replicate of the whole model.
     It will build one tower on each GPU under its own variable scope.
-    Each gradient update is averaged across or GPUs through NCCL.
+    Each gradient update is averaged or summed across or GPUs through NCCL.
 
     It is an equivalent of ``--variable_update=replicated`` in
     `tensorflow/benchmarks <https://github.com/tensorflow/benchmarks>`_.
+
+    Attribute:
+        grads: #GPU number of lists of (g, v). Synchronized gradients on each device, available after build()
+            Though on different deviecs, they should contain the same value.
     """
+
+    def __init__(self, towers, average, use_nccl):
+        super(SyncMultiGPUReplicatedBuilder, self).__init__(towers)
+        self._average = average
+        self._use_nccl = use_nccl
 
     def build(self, get_grad_fn, get_opt_fn):
         """
@@ -190,18 +217,32 @@ class SyncMultiGPUReplicatedBuilder(DataParallelBuilder):
             use_vs=[False] + [True] * (len(self.towers) - 1))
 
         DataParallelBuilder._check_grad_list(grad_list)
-        grads = allreduce_grads(grad_list)
+
+        if self._use_nccl:
+            self.grads = allreduce_grads(grad_list, average=self._average)  # #gpu x #param x 2
+        else:
+            agg_grad_and_vars = average_grads(
+                grad_list, colocation=False,
+                devices=['/cpu:0'], average=self._average)    # #param x 2
+            self.grads = []  # #gpu x #param x 2
+            for grad_and_vars in grad_list:   # grad_and_vars: #paramx2
+                # take v from each tower, and g from average.
+                self.grads.append(
+                    [(g, v) for (_, v), (g, _) in zip(grad_and_vars, agg_grad_and_vars)])
 
         train_ops = []
         opt = get_opt_fn()
-        for idx, grad_and_vars in enumerate(grads):
-            with tf.device(raw_devices[idx]):
-                # apply_gradients may create variables. Make them LOCAL_VARIABLES
-                with override_to_local_variable(enable=idx > 0):
-                    train_ops.append(opt.apply_gradients(
-                        grad_and_vars, name='apply_grad_{}'.format(idx)))
+        with tf.name_scope('apply_gradients'):
+            for idx, grad_and_vars in enumerate(self.grads):
+                with tf.device(raw_devices[idx]):
+                    # apply_gradients may create variables. Make them LOCAL_VARIABLES
+                    with override_to_local_variable(enable=idx > 0):
+                        train_ops.append(opt.apply_gradients(
+                            grad_and_vars, name='apply_grad_{}'.format(idx)))
         train_op = tf.group(*train_ops, name='train_op')
-        post_init_op = SyncMultiGPUReplicatedBuilder.get_post_init_ops()
+
+        with tf.name_scope('sync_variables'):
+            post_init_op = SyncMultiGPUReplicatedBuilder.get_post_init_ops()
         return train_op, post_init_op
 
 # Adopt from https://github.com/tensorflow/benchmarks/blob/master/scripts/tf_cnn_benchmarks/variable_mgr.py
@@ -229,8 +270,10 @@ class SyncMultiGPUReplicatedBuilder(DataParallelBuilder):
                 logger.error("[SyncMultiGPUReplicatedBuilder] variable "
                              "{} has its prefix {} appears multiple times in its name!".format(v.name, prefix))
             copy_from = var_by_name.get(realname)
-            assert copy_from is not None, var_by_name.keys()
-            post_init_ops.append(v.assign(copy_from.read_value()))
+            if copy_from is not None:
+                post_init_ops.append(v.assign(copy_from.read_value()))
+            else:
+                logger.warn("[ReplicatedTrainer] Cannot find {} in the graph!".format(realname))
         logger.info(
             "'sync_variables_from_main_tower' includes {} operations.".format(len(post_init_ops)))
         return tf.group(*post_init_ops, name='sync_variables_from_main_tower')

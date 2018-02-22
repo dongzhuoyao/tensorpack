@@ -1,13 +1,15 @@
 # -*- coding: UTF-8 -*-
 # File: base.py
-# Author: Yuxin Wu <ppwwyyxx@gmail.com>
+
 
 import inspect
 import pprint
 from abc import abstractmethod, ABCMeta
-from ...utils.utils import get_rng
 import six
 from six.moves import zip
+
+from ...utils.utils import get_rng
+from ..image import check_dtype
 
 __all__ = ['Augmentor', 'ImageAugmentor', 'AugmentorList']
 
@@ -40,6 +42,7 @@ class Augmentor(object):
 
     def augment_return_params(self, d):
         """
+        Returns:
             augmented data
             augmentaion params
         """
@@ -103,6 +106,10 @@ class Augmentor(object):
 
 
 class ImageAugmentor(Augmentor):
+    """
+    ImageAugmentor should take images of type uint8 in range [0, 255], or
+    floating point images in range [0, 1] or [0, 255].
+    """
     def augment_coords(self, coords, param):
         return self._augment_coords(coords, param)
 
@@ -139,6 +146,7 @@ class AugmentorList(ImageAugmentor):
         raise RuntimeError("Cannot simply get all parameters of a AugmentorList without running the augmentation!")
 
     def _augment_return_params(self, img):
+        check_dtype(img)
         assert img.ndim in [2, 3], img.ndim
 
         prms = []
@@ -148,6 +156,7 @@ class AugmentorList(ImageAugmentor):
         return img, prms
 
     def _augment(self, img, param):
+        check_dtype(img)
         assert img.ndim in [2, 3], img.ndim
         for aug, prm in zip(self.augs, param):
             img = aug._augment(img, prm)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # File: monitor.py
-# Author: Yuxin Wu <ppwwyyxxc@gmail.com>
+
 
 import os
 import numpy as np
@@ -196,15 +196,33 @@ class TFEventWriter(TrainingMonitor):
     """
     Write summaries to TensorFlow event file.
     """
-    def __new__(cls):
-        if logger.get_logger_dir():
+    def __init__(self, logdir=None, max_queue=10, flush_secs=120):
+        """
+        Args:
+            Same as in :class:`tf.summary.FileWriter`.
+            logdir will be ``logger.get_logger_dir()`` by default.
+        """
+        if logdir is None:
+            logdir = logger.get_logger_dir()
+        assert os.path.isdir(logdir), logdir
+        self._logdir = logdir
+        self._max_queue = max_queue
+        self._flush_secs = flush_secs
+
+    def __new__(cls, logdir=None, max_queue=10, flush_secs=120):
+        if logdir is None:
+            logdir = logger.get_logger_dir()
+
+        if logdir is not None:
             return super(TFEventWriter, cls).__new__(cls)
         else:
             logger.warn("logger directory was not set. Ignore TFEventWriter.")
             return NoOpMonitor()
 
     def _setup_graph(self):
-        self._writer = tf.summary.FileWriter(logger.get_logger_dir(), graph=tf.get_default_graph())
+        self._writer = tf.summary.FileWriter(
+            self._logdir, graph=tf.get_default_graph(),
+            max_queue=self._max_queue, flush_secs=self._flush_secs)
 
     def process_summary(self, summary):
         self._writer.add_summary(summary, self.global_step)
@@ -248,7 +266,7 @@ class JSONWriter(TrainingMonitor):
         self._fname = os.path.join(self._dir, self.FILENAME)
 
         if os.path.isfile(self._fname):
-            logger.info("Found existing JSON at {}, will append to it.".format(self._fname))
+            logger.info("Found JSON at {}, will append to it.".format(self._fname))
             with open(self._fname) as f:
                 self._stats = json.load(f)
                 assert isinstance(self._stats, list), type(self._stats)
@@ -259,7 +277,8 @@ class JSONWriter(TrainingMonitor):
                 pass
             else:
                 # TODO is this a good idea?
-                logger.info("Found training history from JSON, now starting from epoch number {}.".format(epoch))
+                logger.info("Found history statistics from JSON. "
+                            "Rename the first epoch of this training to epoch #{}.".format(epoch))
                 self.trainer.loop.starting_epoch = epoch
                 self.trainer.loop._epoch_num = epoch - 1
         else:
@@ -271,16 +290,19 @@ class JSONWriter(TrainingMonitor):
     def _trigger_step(self):
         # will do this in trigger_epoch
         if self.local_step != self.trainer.steps_per_epoch - 1:
-            self._push()
+            self._trigger()
 
     def _trigger_epoch(self):
-        self._push()
+        self._trigger()
 
     def process_scalar(self, name, val):
         self._stat_now[name] = val
 
-    def _push(self):
-        """ Note that this method is idempotent"""
+    def _trigger(self):
+        """
+        Add stats to json and dump to disk.
+        Note that this method is idempotent.
+        """
         if len(self._stat_now):
             self._stat_now['epoch_num'] = self.epoch_num
             self._stat_now['global_step'] = self.global_step
@@ -318,7 +340,7 @@ class ScalarPrinter(TrainingMonitor):
         def compile_regex(rs):
             if rs is None:
                 return None
-            rs = set([r if isinstance(r, re.RegexObject) else re.compile(r) for r in rs])
+            rs = set([re.compile(r) for r in rs])
             return rs
 
         self._whitelist = compile_regex(whitelist)
@@ -336,20 +358,21 @@ class ScalarPrinter(TrainingMonitor):
         if self._enable_step:
             if self.local_step != self.trainer.steps_per_epoch - 1:
                 # not the last step
-                self._print_stat()
+                self._trigger()
             else:
                 if not self._enable_epoch:
-                    self._print_stat()
+                    self._trigger()
                 # otherwise, will print them together
 
     def _trigger_epoch(self):
         if self._enable_epoch:
-            self._print_stat()
+            self._trigger()
 
     def process_scalar(self, name, val):
         self._dic[name] = float(val)
 
-    def _print_stat(self):
+    def _trigger(self):
+        # Print stats here
         def match_regex_list(regexs, name):
             for r in regexs:
                 if r.search(name) is not None:
@@ -420,12 +443,9 @@ class SendMonitorData(TrainingMonitor):
             self.dic[name] = val
 
     def _trigger_step(self):
-        self._try_send()
+        self._trigger()
 
-    def _trigger_epoch(self):
-        self._try_send()
-
-    def _try_send(self):
+    def _trigger(self):
         try:
             v = {k: self.dic[k] for k in self.names}
         except KeyError:

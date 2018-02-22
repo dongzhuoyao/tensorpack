@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # File: remote.py
-# Author: Yuxin Wu <ppwwyyxxc@gmail.com>
+
 
 import time
 import tqdm
@@ -20,7 +20,7 @@ else:
     __all__ = ['send_dataflow_zmq', 'RemoteDataZMQ']
 
 
-def send_dataflow_zmq(df, addr, hwm=50, format=None):
+def send_dataflow_zmq(df, addr, hwm=50, format=None, bind=False):
     """
     Run DataFlow and send data to a ZMQ socket addr.
     It will __connect__ to this addr,
@@ -32,23 +32,28 @@ def send_dataflow_zmq(df, addr, hwm=50, format=None):
         addr: a ZMQ socket endpoint.
         hwm (int): ZMQ high-water mark (buffer size)
         format (str): The serialization format.
-             Default format would use :mod:`tensorpack.utils.serialize` (i.e. msgpack).
-             An alternate format is 'zmq_op'.
+             Default format would use :mod:`tensorpack.utils.serialize`.
+             An alternate format is 'zmq_ops', used by https://github.com/tensorpack/zmq_ops.
+        bind (bool): whether to bind or connect to the endpoint.
     """
-    assert format in [None, 'zmq_op']
+    assert format in [None, 'zmq_op', 'zmq_ops']
     if format is None:
         dump_fn = dumps
     else:
-        from ..user_ops.zmq_recv import dumps_zmq_op
-        dump_fn = dumps_zmq_op
+        from zmq_ops import dump_arrays
+        dump_fn = dump_arrays
 
     ctx = zmq.Context()
     socket = ctx.socket(zmq.PUSH)
     socket.set_hwm(hwm)
-    socket.connect(addr)
+    if bind:
+        socket.bind(addr)
+    else:
+        socket.connect(addr)
     try:
         df.reset_state()
-        logger.info("Serving data to {} ...".format(addr))
+        logger.info("Serving data to {} with {} format ...".format(
+            addr, 'default' if format is None else 'zmq_ops'))
         INTERVAL = 200
         q = deque(maxlen=INTERVAL)
 
@@ -56,7 +61,7 @@ def send_dataflow_zmq(df, addr, hwm=50, format=None):
             total = df.size()
         except NotImplementedError:
             total = 0
-        tqdm_args = get_tqdm_kwargs(leave=True)
+        tqdm_args = get_tqdm_kwargs(leave=True, smoothing=0.8)
         tqdm_args['bar_format'] = tqdm_args['bar_format'] + "{postfix}"
         while True:
             with tqdm.trange(total, **tqdm_args) as pbar:
@@ -83,23 +88,31 @@ class RemoteDataZMQ(DataFlow):
     Attributes:
         cnt1, cnt2 (int): number of data points received from addr1 and addr2
     """
-    def __init__(self, addr1, addr2=None, hwm=50):
+    def __init__(self, addr1, addr2=None, hwm=50, bind=True):
         """
         Args:
-            addr1,addr2 (str): addr of the socket to connect to.
+            addr1,addr2 (str): addr of the zmq endpoint to connect to.
                 Use both if you need two protocols (e.g. both IPC and TCP).
                 I don't think you'll ever need 3.
             hwm (int): ZMQ high-water mark (buffer size)
+            bind (bool): whether to connect or bind the endpoint
         """
         assert addr1
         self._addr1 = addr1
         self._addr2 = addr2
         self._hwm = int(hwm)
         self._guard = DataFlowReentrantGuard()
+        self._bind = bind
 
     def reset_state(self):
         self.cnt1 = 0
         self.cnt2 = 0
+
+    def bind_or_connect(self, socket, addr):
+        if self._bind:
+            socket.bind(addr)
+        else:
+            socket.connect(addr)
 
     def get_data(self):
         with self._guard:
@@ -108,7 +121,7 @@ class RemoteDataZMQ(DataFlow):
                 if self._addr2 is None:
                     socket = ctx.socket(zmq.PULL)
                     socket.set_hwm(self._hwm)
-                    socket.bind(self._addr1)
+                    self.bind_or_connect(socket, self._addr1)
 
                     while True:
                         dp = loads(socket.recv(copy=False).bytes)
@@ -117,11 +130,11 @@ class RemoteDataZMQ(DataFlow):
                 else:
                     socket1 = ctx.socket(zmq.PULL)
                     socket1.set_hwm(self._hwm)
-                    socket1.bind(self._addr1)
+                    self.bind_or_connect(socket1, self._addr1)
 
                     socket2 = ctx.socket(zmq.PULL)
                     socket2.set_hwm(self._hwm)
-                    socket2.bind(self._addr2)
+                    self.bind_or_connect(socket2, self._addr2)
 
                     poller = zmq.Poller()
                     poller.register(socket1, zmq.POLLIN)
@@ -155,7 +168,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # tcp addr like "tcp://127.0.0.1:8877"
-    # ipc addr like "ipc:///tmp/ipc-test"
+    # ipc addr like "ipc://@ipc-test"
     if args.task == 'send':
         # use random=True to make it slow and cpu-consuming
         ds = FakeData([(128, 244, 244, 3)], 1000, random=True)
