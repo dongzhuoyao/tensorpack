@@ -51,7 +51,7 @@ class Model(ModelDesc):
         costs.append(nodecay_loss)
 
         if get_current_tower_context().is_training:
-            wd_w = tf.train.exponential_decay(2e-3, get_global_step_var(),
+            wd_w = tf.train.exponential_decay(2e-4, get_global_step_var(),
                                               80000, 0.7, True)
             wd_cost = tf.multiply(wd_w, regularize_cost('.*/weights', tf.nn.l2_loss), name='wd_cost')
             costs.append(wd_cost)
@@ -127,7 +127,7 @@ class EvalPCKh(Callback):
             # TODO multi scale fusion
             for i in range(nr_skeleton):
                 lb = predict[:, :, i].argmax()
-                x, y = np.unravel_index(lb, predict[:, :, i].shape)
+                y, x = np.unravel_index(lb, predict[:, :, i].shape)  # notice the order of x,y
                 final_result[image_id, i, 0] = x
                 final_result[image_id, i, 1] = y
 

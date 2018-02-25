@@ -127,7 +127,7 @@ class EvalPCKh(Callback):
             # TODO multi scale fusion
             for i in range(nr_skeleton):
                 lb = predict[:, :, i].argmax()
-                x, y = np.unravel_index(lb, predict[:, :, i].shape)
+                y, x = np.unravel_index(lb, predict[:, :, i].shape)  # notice the order of x,y
                 final_result[image_id, i, 0] = x
                 final_result[image_id, i, 1] = y
 
