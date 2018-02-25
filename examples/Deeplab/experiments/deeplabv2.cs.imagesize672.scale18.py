@@ -132,6 +132,7 @@ def get_data(name, meta_dir, batch_size):
     if isTrain:
         ds = MapData(ds,f)
         ds = BatchData(ds, batch_size)
+
         ds = PrefetchDataZMQ(ds, 1)
     else:
         ds = BatchData(ds, 1)

@@ -8,7 +8,6 @@ import string
 import numpy as np
 import argparse
 
-import bob.ap
 from tensorpack.dataflow import dftools, DataFlow, LMDBDataPoint
 from tensorpack.utils.argtools import memoized
 from tensorpack.utils.stats import OnlineMoments

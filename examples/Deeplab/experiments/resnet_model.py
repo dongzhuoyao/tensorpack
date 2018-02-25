@@ -11,7 +11,7 @@ from tensorpack.models import (
     Conv2D, GlobalAvgPooling, BatchNorm, BNReLU, FullyConnected,
     LinearWrap)
 
-from tensorpack.models.common import layer_register, VariableHolder, rename_get_variable
+from tensorpack.models.common import layer_register, VariableHolder
 from tensorpack.utils.argtools import shape2d, shape4d
 
 @layer_register(log_shape=True)

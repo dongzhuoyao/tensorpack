@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: UTF-8 -*-
-# File: hed.py
-# Author: Yuxin Wu <ppwwyyxxc@gmail.com>
-
 import cv2
 import tensorflow as tf
 import argparse
@@ -18,20 +13,19 @@ from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 from tensorpack.utils import logger
 import numpy as np
 from eval_PCKh import pckh
-from pose_util import final_preds
 from tqdm import tqdm
 img_dir, meta_dir = "/data1/dataset/mpii/images", "metadata/mpii_annotations.json"
 nr_skeleton = dataset.mpii.joint_num()
 input_shape =(256, 256)
 output_shape = (64, 64)
 
-init_lr = 1e-4
-lr_schedule = [(6, 5e-5), (9, 1e-5)]
+init_lr = 2.5e-4
+lr_schedule = [(6, 1e-4), (9, 5e-5)]
 max_epoch = 12
-epoch_scale = 1 #10
+epoch_scale = 5 #10
 evaluate_every_n_epoch = 1
-stage = 4
-batch_size = 27
+stage = 8
+batch_size = 16
 
 from hg_model import make_network
 
@@ -116,8 +110,9 @@ class EvalPCKh(Callback):
         _itr = ds.get_data()
         for _ in tqdm(range(len(origin_ds.imglist))):
             image, heatmap, meta = next(_itr)
-            predict = self.pred(image[None, :, :, :])
-            predict = np.squeeze(predict)
+            predicts = self.pred(image[None, :, :, :]) #[(8,1,64,64,16)]
+            predict = predicts[0] # (8,1,64,64,16), 8 means stage, 1 means batch size(in prediction, batch size is 1)
+            predict = np.squeeze(predict,axis=1) #reduce dimension 1
             predict = predict[-1, :, :, :]  # last stage
             final_heatmap[image_id, :, :, :] = np.transpose(predict, [2, 0, 1])
             if False:
@@ -125,7 +120,7 @@ class EvalPCKh(Callback):
                 predict_view = np.sum(predict, axis=2)
                 cv2.imshow("img", image)
                 cv2.imshow("featmap", cv2.resize(heatmap_view, (input_shape[0], input_shape[1])))
-                cv2.imshow("predict", cv2.resize(heatmap_view, (input_shape[0], input_shape[1])))
+                cv2.imshow("predict", cv2.resize(predict_view, (input_shape[0], input_shape[1])))
                 cv2.waitKey()
 
             # TODO flip
@@ -177,25 +172,28 @@ def proceed_validation(args, is_save = False):
     final_heatmap = np.zeros((len(origin_ds.imglist), nr_skeleton, output_shape[0], output_shape[1]), np.float32)
     image_id = 0
     _itr = ds.get_data()
+    is_debug = False
     for _  in tqdm(range(len(origin_ds.imglist))):
         image, heatmap, meta = next(_itr)
-        predict = predictor(image[None, :, :, :])
-        predict = np.squeeze(predict)
-        predict = predict[-1,:,:,:]# last stage
-        final_heatmap[image_id,:,:,:] = np.transpose(predict,[2,0,1])
-        if False:
+        predicts = predictor(image[None, :, :, :])  # [(8,1,64,64,16)]
+        predict = predicts[0]  # (8,1,64,64,16), 8 means stage, 1 means batch size(in prediction, batch size is 1)
+        predict = np.squeeze(predict, axis=1)  # reduce dimension 1
+        predict = predict[-1, :, :, :]  # last stage
+        final_heatmap[image_id, :, :, :] = np.transpose(predict, [2, 0, 1])
+
+        if is_debug:
             heatmap_view = np.sum(heatmap, axis=2)
             predict_view = np.sum(predict, axis=2)
             cv2.imshow("img", image)
             cv2.imshow("featmap", cv2.resize(heatmap_view, (input_shape[0], input_shape[1])))
-            cv2.imshow("predict", cv2.resize(heatmap_view, (input_shape[0], input_shape[1])))
-            cv2.waitKey()
+            cv2.imshow("predict", cv2.resize(predict_view, (input_shape[0], input_shape[1])))
+            #cv2.waitKey()
 
         # TODO flip
         # TODO multi scale fusion
         for i in range(nr_skeleton):
             lb = predict[:,:,i].argmax()
-            x, y = np.unravel_index(lb, predict[:,:,i].shape)
+            y,x = np.unravel_index(lb, predict[:,:,i].shape) # notice the order of x,y
             final_result[image_id, i, 0] = x
             final_result[image_id, i, 1] = y
 
@@ -213,7 +211,7 @@ def proceed_validation(args, is_save = False):
         final_result[image_id, :, 1] = np.maximum(final_result[image_id, :, 1], 0)
 
 
-        if False:
+        if is_debug:
             from utils import draw_skeleton
             big_img = cv2.imread(os.path.join(img_dir,meta['meta']['img_paths']))
             draw_skeleton(big_img,final_result[image_id])
