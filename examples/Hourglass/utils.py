@@ -66,3 +66,21 @@ def visualize(oriImg, points, pa):
     fn = os.path.join(directory, strftime("%Y-%m-%d-%H_%M_%S", gmtime()) + '.jpg')
 
     plt.savefig(fn)
+
+def add_flip(mypredictor, image,predict_heatmap):
+    fliped = cv2.flip(image, 1)
+    fliped_heatmap = mypredictor(fliped)#H,W,C
+    symmetry = [(0, 5), (1, 4), (2, 3), (10, 15), (11, 14), (12, 13)] # for mpii
+    #symmetry = [ (1, 2), (3, 4), (5, 6), (7, 8), (9, 10), (11, 12), (13, 14), (15, 16) ] #for coco
+    for (q, w) in symmetry:# notice
+        fliped_heatmap[:,:,q], fliped_heatmap[:,:,w] = fliped_heatmap[:,:,w], fliped_heatmap[:,:,q]
+    return cv2.flip(fliped_heatmap,1) + predict_heatmap
+
+
+def add_multiscale(mypredictor, image, predict_heatmap,scale):
+    w,h,c = image.shape
+    for sc in scale:
+        resized_image = cv2.resize(image,(int(w*sc),int(h*sc)))
+        resized_heatmap = mypredictor(resized_image)
+        predict_heatmap += cv2.resize(resized_heatmap,(w,h))
+    return predict_heatmap

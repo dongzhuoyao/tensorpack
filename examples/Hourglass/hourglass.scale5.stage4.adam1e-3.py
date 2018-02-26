@@ -28,6 +28,7 @@ stage = 4
 batch_size = 16
 
 from hg_model import make_network
+from utils import add_flip,add_multiscale
 
 class Model(ModelDesc):
     def _get_inputs(self):
@@ -39,13 +40,13 @@ class Model(ModelDesc):
         image = image - tf.constant([104, 116, 122], dtype='float32')
         ctx = get_current_tower_context()
         logger.info("current ctx.is_training: {}".format(ctx.is_training))
-        predict, multi_stage_loss_dict = make_network(image, heatmap, stage, nr_skeleton, ctx.is_training)
-
-        predict = tf.identity(predict,'predict')
-
+        predict = make_network(image, stage, nr_skeleton, ctx.is_training)
+        tmploss =0
         nodecay_loss = 0.
-        for loss in multi_stage_loss_dict.values():
-            nodecay_loss += loss / len(multi_stage_loss_dict)
+        for pre in predict:
+            tmploss += tf.losses.mean_squared_error(heatmap, pre)
+        nodecay_loss += tmploss / len(predict)
+        predict = tf.identity(predict,'predict')
         nodecay_loss = tf.identity(nodecay_loss, 'mse_loss')
         costs =[]
         costs.append(nodecay_loss)
@@ -105,29 +106,36 @@ class EvalPCKh(Callback):
         #ds = BatchData(ds, 1)
 
         final_result = np.zeros((len(origin_ds.imglist), nr_skeleton, 2), np.float32)
-        final_heatmap = np.zeros((len(origin_ds.imglist), nr_skeleton, output_shape[0], output_shape[1]), np.float32)
         image_id = 0
+        is_debug = False
         _itr = ds.get_data()
+
+        def mypredictor(img):
+            predicts = self.pred(img[None, :, :, :])  # [(8,1,64,64,16)]
+            predict = predicts[0]  # (8,1,64,64,16), 8 means stage, 1 means batch size(in prediction, batch size is 1)
+            predict = np.squeeze(predict, axis=1)  # reduce dimension 1
+            return predict[-1, :, :, :]  # last stage,(H,W,C)
+
+
         for _ in tqdm(range(len(origin_ds.imglist))):
             image, heatmap, meta = next(_itr)
-            predicts = self.pred(image[None, :, :, :]) #[(8,1,64,64,16)]
-            predict = predicts[0] # (8,1,64,64,16), 8 means stage, 1 means batch size(in prediction, batch size is 1)
-            predict = np.squeeze(predict,axis=1) #reduce dimension 1
-            predict = predict[-1, :, :, :]  # last stage
-            final_heatmap[image_id, :, :, :] = np.transpose(predict, [2, 0, 1])
-            if False:
+
+            predict_heatmap = mypredictor(image)
+            predict_heatmap = add_flip(mypredictor, image, predict_heatmap)
+            # predict_heatmap = add_multiscale(mypredictor, image, predict_heatmap,scale=[0.5,0.75,1.25,1.5])
+            if is_debug:
                 heatmap_view = np.sum(heatmap, axis=2)
-                predict_view = np.sum(predict, axis=2)
+                predict_view = np.sum(predict_heatmap, axis=2)
                 cv2.imshow("img", image)
                 cv2.imshow("featmap", cv2.resize(heatmap_view, (input_shape[0], input_shape[1])))
                 cv2.imshow("predict", cv2.resize(predict_view, (input_shape[0], input_shape[1])))
-                cv2.waitKey()
+                # cv2.waitKey()
 
             # TODO flip
             # TODO multi scale fusion
             for i in range(nr_skeleton):
-                lb = predict[:, :, i].argmax()
-                y, x = np.unravel_index(lb, predict[:, :, i].shape)  # notice the order of x,y
+                lb = predict_heatmap[:, :, i].argmax()
+                y, x = np.unravel_index(lb, predict_heatmap[:, :, i].shape)  # notice the order of x,y
                 final_result[image_id, i, 0] = x
                 final_result[image_id, i, 1] = y
 
@@ -144,7 +152,7 @@ class EvalPCKh(Callback):
             final_result[image_id, :, 1] = np.minimum(final_result[image_id, :, 1], img_height)
             final_result[image_id, :, 1] = np.maximum(final_result[image_id, :, 1], 0)
 
-            if False:
+            if is_debug:
                 from utils import draw_skeleton
                 big_img = cv2.imread(os.path.join(img_dir, meta['meta']['img_paths']))
                 draw_skeleton(big_img, final_result[image_id])
@@ -155,35 +163,42 @@ class EvalPCKh(Callback):
 
         pckh(final_result)
 
+
 def proceed_validation(args, is_save = False):
     origin_ds = ds = dataset.mpii(img_dir, meta_dir, "val", input_shape, output_shape, shuffle=False)
-    pred_config = PredictConfig(
-        model=Model(),
-        session_init=get_model_loader(args.load),
-        input_names=['image'],
-        output_names=['predict'])
-    predictor = OfflinePredictor(pred_config)
+
 
     from tensorpack.utils.fs import mkdir_p
     result_dir = os.path.join("result_on_val")
     mkdir_p(result_dir)
 
     final_result = np.zeros((len(origin_ds.imglist), nr_skeleton, 2), np.float32)
-    final_heatmap = np.zeros((len(origin_ds.imglist), nr_skeleton, output_shape[0], output_shape[1]), np.float32)
     image_id = 0
     _itr = ds.get_data()
     is_debug = False
-    for _  in tqdm(range(len(origin_ds.imglist))):
-        image, heatmap, meta = next(_itr)
-        predicts = predictor(image[None, :, :, :])  # [(8,1,64,64,16)]
+
+    pred_config = PredictConfig(
+        model=Model(),
+        session_init=get_model_loader(args.load),
+        input_names=['image'],
+        output_names=['predict'])
+
+    def mypredictor(img):
+        predictor = OfflinePredictor(pred_config)
+        predicts = predictor(img[None, :, :, :])  # [(8,1,64,64,16)]
         predict = predicts[0]  # (8,1,64,64,16), 8 means stage, 1 means batch size(in prediction, batch size is 1)
         predict = np.squeeze(predict, axis=1)  # reduce dimension 1
-        predict = predict[-1, :, :, :]  # last stage
-        final_heatmap[image_id, :, :, :] = np.transpose(predict, [2, 0, 1])
+        return predict[-1, :, :, :]  # last stage,(H,W,C)
 
+    for _  in tqdm(range(len(origin_ds.imglist))):
+        image, heatmap, meta = next(_itr)
+
+        predict_heatmap = mypredictor(image)
+        predict_heatmap = add_flip(mypredictor, image,predict_heatmap)
+        #predict_heatmap = add_multiscale(mypredictor, image, predict_heatmap,scale=[0.5,0.75,1.25,1.5])
         if is_debug:
             heatmap_view = np.sum(heatmap, axis=2)
-            predict_view = np.sum(predict, axis=2)
+            predict_view = np.sum(predict_heatmap, axis=2)
             cv2.imshow("img", image)
             cv2.imshow("featmap", cv2.resize(heatmap_view, (input_shape[0], input_shape[1])))
             cv2.imshow("predict", cv2.resize(predict_view, (input_shape[0], input_shape[1])))
@@ -192,8 +207,8 @@ def proceed_validation(args, is_save = False):
         # TODO flip
         # TODO multi scale fusion
         for i in range(nr_skeleton):
-            lb = predict[:,:,i].argmax()
-            y,x = np.unravel_index(lb, predict[:,:,i].shape) # notice the order of x,y
+            lb = predict_heatmap[:,:,i].argmax()
+            y,x = np.unravel_index(lb, predict_heatmap[:,:,i].shape) # notice the order of x,y
             final_result[image_id, i, 0] = x
             final_result[image_id, i, 1] = y
 

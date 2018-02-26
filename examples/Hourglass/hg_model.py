@@ -55,38 +55,38 @@ def add_hourglass(module, module_name, n, num_channels, input_name) :  #n_max = 
         module[module_name] = module[this_name]
     return module[this_name]
 
-def make_network(data,label, stage, nr_skeleton, is_training):
+def make_network(data, stage, nr_skeleton, is_training):
     with slim.arg_scope(resnet_arg_scope()):
-        with slim.arg_scope([slim.batch_norm], is_training=is_training):
-            module = {}
-            output = []
-            multi_stage_loss_dict = {}
-            module['input'] = data
-            add_init(module, 'init_1')
-            last_input = 'init_1'
-            for i in range(stage) :
-                f = add_hourglass(module, 'hg{}_scale'.format(i), 4, 256, last_input)
-                f = create_bottleneck('hg{}_1'.format(i), f, 1, 128, 256, has_proj=False)
-                f = slim.conv2d(f, 256, [1, 1], stride=1,scope='hg{}_2_convbnrelu'.format(i)) #cbr
-                module['hg{}_2'.format(i)] = f
-                module['output_{}'.format(i)] = slim.conv2d(f, nr_skeleton, [1, 1], stride=1,
-                                                            scope='output_{}'.format(i), activation_fn=None,
-                                                            normalizer_fn=None)
-                if is_training:
-                    tmploss = tf.losses.mean_squared_error(label, module['output_{}'.format(i)])
-                    multi_stage_loss_dict["mse{}".format(i)] = tmploss
-                output.append(module['output_'+str(i)])
-
-                if i < stage - 1 :
-                    module['hg{}_3'.format(i)] = slim.conv2d(module['hg{}_2'.format(i)], 256, [1, 1],
-                                                             stride=1,scope='hg{}_3'.format(i),activation_fn=None, normalizer_fn=None)
-                    module['hg{}_4'.format(i)] = slim.conv2d(module['output_{}'.format(i)], 256, [1, 1], stride=1,
-                                                                scope='hg{}_4'.format(i), activation_fn=None,
+            with slim.arg_scope([slim.batch_norm], is_training=is_training):
+                module = {}
+                output = []
+                module['input'] = data
+                add_init(module, 'init_1')
+                last_input = 'init_1'
+                for i in range(stage) :
+                    f = add_hourglass(module, 'hg{}_scale'.format(i), 4, 256, last_input)
+                    f = create_bottleneck('hg{}_1'.format(i), f, 1, 128, 256, has_proj=False)
+                    f = slim.conv2d(f, 256, [1, 1], stride=1,scope='hg{}_2_convbnrelu'.format(i)) #cbr
+                    module['hg{}_2'.format(i)] = f
+                    module['output_{}'.format(i)] = slim.conv2d(f, nr_skeleton, [1, 1], stride=1,
+                                                                scope='output_{}'.format(i), activation_fn=None,
                                                                 normalizer_fn=None)
+                    output.append(module['output_'+str(i)])
 
-                    module['hg{}'.format(i)] = module['hg{}_3'.format(i)] + module['hg{}_4'.format(i)]
-                    module['hg{}'.format(i)] = module['hg{}'.format(i)] + module[last_input]
-                    last_input = 'hg{}'.format(i)
+                    if i < stage - 1 :
+                        module['hg{}_3'.format(i)] = slim.conv2d(module['hg{}_2'.format(i)], 256, [1, 1],
+                                                                 stride=1,scope='hg{}_3'.format(i),activation_fn=None, normalizer_fn=None)
+                        module['hg{}_4'.format(i)] = slim.conv2d(module['output_{}'.format(i)], 256, [1, 1], stride=1,
+                                                                    scope='hg{}_4'.format(i), activation_fn=None,
+                                                                    normalizer_fn=None)
 
-    return output,multi_stage_loss_dict
+                        module['hg{}'.format(i)] = module['hg{}_3'.format(i)] + module['hg{}_4'.format(i)]
+                        module['hg{}'.format(i)] = module['hg{}'.format(i)] + module[last_input]
+                        last_input = 'hg{}'.format(i)
+
+    return output
+
+
+
+
 
