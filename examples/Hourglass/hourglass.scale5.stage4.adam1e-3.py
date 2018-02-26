@@ -129,9 +129,7 @@ class EvalPCKh(Callback):
                 cv2.imshow("img", image)
                 cv2.imshow("featmap", cv2.resize(heatmap_view, (input_shape[0], input_shape[1])))
                 cv2.imshow("predict", cv2.resize(predict_view, (input_shape[0], input_shape[1])))
-                # cv2.waitKey()
 
-            # TODO flip
             # TODO multi scale fusion
             for i in range(nr_skeleton):
                 lb = predict_heatmap[:, :, i].argmax()
@@ -202,9 +200,7 @@ def proceed_validation(args, is_save = False):
             cv2.imshow("img", image)
             cv2.imshow("featmap", cv2.resize(heatmap_view, (input_shape[0], input_shape[1])))
             cv2.imshow("predict", cv2.resize(predict_view, (input_shape[0], input_shape[1])))
-            #cv2.waitKey()
-
-        # TODO flip
+git
         # TODO multi scale fusion
         for i in range(nr_skeleton):
             lb = predict_heatmap[:,:,i].argmax()
