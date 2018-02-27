@@ -15,7 +15,7 @@ import copy
 __all__ = ['mpii']
 
 
-pixel_means = np.array([[[102.9801, 115.9465, 122.7717]]]) # BGR
+
 
 label_type = "Gaussian"
 sigma = 1
@@ -68,105 +68,11 @@ class mpii(RNGDataFlow):
         if self.shuffle:
             self.rng.shuffle(idxs)
         for k in idxs:
-            cur = copy.deepcopy(self.imglist[k]) #copy is important!!!
-            annolist_index = cur["annolist_index"]
-            img_paths = cur["img_paths"]
-            height = cur['img_height']
-            width = cur['img_width']
-            joint_self = cur["joint_self"]
-            #TODO Adjust center/scale slightly to avoid cropping limbs
-            # For single-person pose estimation with a centered/scaled figure
-            center = cur['objpos']
-            scale = cur['scale_provided']*200
-            joint_self = np.array(joint_self)
+            current_skeleton_obj = copy.deepcopy(self.imglist[k]) #copy is important!!!
+            current_skeleton_obj["img_paths"] = os.path.join(self.img_dir, current_skeleton_obj["img_paths"])
+            yield current_skeleton_obj
 
 
-            image, label, transform_dict =self.crop_and_padding(img_path=os.path.join(self.img_dir,img_paths),
-                                                           objcenter=center, scale=scale, joints=joint_self, data_shape = self.data_shape, output_shape= self.output_shape, stage=self.name)
-
-            target = np.zeros((self.nr_skeleton, self.output_shape[0], self.output_shape[1]))
-            for i in range(self.nr_skeleton):
-                # if tpts[i, 2] > 0: # This is evil!!
-                if  label[i,0] < self.output_shape[0] and label[i,1] < self.output_shape[1] \
-                        and label[i, 0]>0 and label[i,1] > 0:
-                        target[i,int(label[i,1]),int(label[i,0])] = 1 #here, notice the order of opencv
-
-
-            target = np.transpose(target, (1, 2, 0))
-            target = cv2.GaussianBlur(target, (7, 7), 0)
-
-            for i in range(nr_skeleton): # normalize to 1, otherwise the peak value may be 0.25, please notice the cv2.GaussianBlur's result.
-                    am = np.amax(target[:,:,i])
-                    if am == 0:
-                        continue
-                    target[:, :, i] /= am / 255  # normalize to 1
-
-            # Meta info
-            meta = {'index': annolist_index, 'center': center, 'scale': scale, 'transform': transform_dict,"meta":cur}
-
-            if self.name == "train":
-                yield [image, target]
-            elif self.name == "val":
-                yield [image, target, meta]
-            else:
-                raise NotImplementedError
-
-
-
-    def crop_and_padding(self, img_path, objcenter, scale, joints, data_shape, output_shape, stage):
-        img = cv2.imread(img_path)
-        add = max(img.shape[0], img.shape[1])
-        big_img = cv2.copyMakeBorder(img, add, add, add, add, borderType=cv2.BORDER_CONSTANT,
-                                  value=pixel_means.reshape(-1))
-
-        zero_index = np.where(joints[:,0]==0)
-        joints[:, 0] += add
-        joints[:, 1] += add
-        objcenter[0] += add
-        objcenter[1] += add
-        ###################################################### here is one cheat
-        if stage == 'train':
-            ext_ratio = 1.25
-        elif stage == 'valid':
-            ext_ratio = 1.25
-        else:
-            ext_ratio = 1.
-
-        delta = int(scale * ext_ratio)//2
-        min_x = int(objcenter[0]  - delta)
-        max_x = int(objcenter[0]  + delta)
-        min_y = int(objcenter[1]  - delta)
-        max_y = int(objcenter[1]  + delta)
-
-        joints[:, 0] =  joints[:, 0] - min_x# (0,0,1) means empty point, just set it zero, otherwise will be negtive
-        joints[:, 1] =  joints[:, 1]- min_y
-
-        x_ratio = float(output_shape[0]) / (max_x - min_x)
-        y_ratio = float(output_shape[1]) / (max_y - min_y)
-
-        joints[:, 0] *= x_ratio
-        joints[:, 1] *= y_ratio
-
-
-        img = cv2.resize(big_img[min_y:max_y, min_x:max_x, :], (data_shape[0], data_shape[1]))
-
-        joints[zero_index] = np.array([0,0,0])# set out-border keypoint to left-top postion ground truth
-
-        label = joints[:, :2]
-
-        if False:
-            from tensorpack.utils.skeleton.visualization import draw_skeleton
-            img = draw_skeleton(img, 4*label.astype(int))
-            print(label)
-            print("scale: {}".format(scale))
-            cv2.imshow('', img)
-            cv2.waitKey(4000)
-
-        transform = {}
-        transform['divide_first'] = (x_ratio, y_ratio)
-        transform['add_second'] = (min_x - add, min_y - add)
-
-        return img, label, transform
 
 
 

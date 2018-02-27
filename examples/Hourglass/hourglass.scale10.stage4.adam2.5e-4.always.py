@@ -20,39 +20,68 @@ input_shape =(256, 256)
 output_shape = (64, 64)
 
 init_lr = 2.5e-4
-lr_schedule = [(6, 1e-4), (9, 5e-5)]
+lr_schedule = [(9, 1e-4)]
 max_epoch = 12
-epoch_scale = 5 #10
+epoch_scale = 10
 evaluate_every_n_epoch = 1
 stage = 4
 batch_size = 16
 
+wd = 1e-8
+
 from hg_model import make_network
-from utils import add_flip,add_multiscale
+from utils import add_flip,add_multiscale, preprocess
+
+
+def get_data(name):
+    global  args
+    isTrain = name == 'train'
+    ds = dataset.mpii(img_dir, meta_dir, name, input_shape, output_shape, shuffle=True)
+    def data_prepare(ds):
+        image, heatmap,metadata = preprocess(ds, input_shape, output_shape, name)
+        if name == "train":
+            return image, heatmap
+        elif name == "val":
+            return image, heatmap, metadata
+        else:
+            raise NotImplementedError
+
+
+    if name=="train":
+        ds = MultiThreadMapData(ds,nr_thread=16,map_func=data_prepare,buffer_size=200,strict=True)
+        ds = BatchData(ds, args.batch_size)
+        ds = PrefetchDataZMQ(ds, 1)
+    else:
+        ds = MapData(ds, data_prepare)
+
+    return ds
+
+
 
 class Model(ModelDesc):
     def _get_inputs(self):
         return [InputDesc(tf.float32, [None, input_shape[0], input_shape[1], 3], 'image'),
                 InputDesc(tf.float32, [None, output_shape[0], output_shape[1], 16], 'heatmap')]
 
+
     def _build_graph(self, inputs):
         image,heatmap = inputs
         image = image - tf.constant([104, 116, 122], dtype='float32')
         ctx = get_current_tower_context()
         logger.info("current ctx.is_training: {}".format(ctx.is_training))
-        predict, multi_stage_loss_dict = make_network(image, heatmap, stage, nr_skeleton, ctx.is_training)
-
-        predict = tf.identity(predict,'predict')
-
+        predict = make_network(image, stage, nr_skeleton, ctx.is_training)
+        tmploss =0
         nodecay_loss = 0.
-        for loss in multi_stage_loss_dict.values():
-            nodecay_loss += loss / len(multi_stage_loss_dict)
+        for pre in predict:
+            tmploss += tf.losses.mean_squared_error(heatmap, pre)
+        nodecay_loss += tmploss / len(predict)
+        predict = tf.identity(predict,'predict')
         nodecay_loss = tf.identity(nodecay_loss, 'mse_loss')
         costs =[]
         costs.append(nodecay_loss)
 
         if get_current_tower_context().is_training:
-            wd_w = tf.train.exponential_decay(2e-4, get_global_step_var(),
+            wd_w = tf.train.exponential_decay(wd, get_global_step_var(),
                                               80000, 0.7, True)
             wd_cost = tf.multiply(wd_w, regularize_cost('.*/weights', tf.nn.l2_loss), name='wd_cost')
             costs.append(wd_cost)
@@ -65,19 +94,6 @@ class Model(ModelDesc):
         return optimizer.apply_grad_processors(
             opt, [gradproc.ScaleGradient(
                 [('nothing.*', 0.1), ('nothing.*', 5)])])
-
-
-def get_data(name):
-    global  args
-    isTrain = name == 'train'
-    ds = dataset.mpii(img_dir, meta_dir, name, input_shape, output_shape, shuffle=True)
-
-    if isTrain:
-        ds = BatchData(ds, args.batch_size)
-        ds = PrefetchDataZMQ(ds, 1)
-    else:
-        ds = BatchData(ds, 1)
-    return ds
 
 
 
@@ -102,8 +118,9 @@ class EvalPCKh(Callback):
 
     def _trigger(self):
         global args
-        origin_ds = ds = dataset.mpii(img_dir, meta_dir, "val", input_shape, output_shape, shuffle=False)
-        #ds = BatchData(ds, 1)
+        origin_ds = dataset.mpii(img_dir, meta_dir, "val", input_shape, output_shape, shuffle=False)
+
+        ds = get_data("val")
 
         final_result = np.zeros((len(origin_ds.imglist), nr_skeleton, 2), np.float32)
         image_id = 0
@@ -259,6 +276,9 @@ def get_config():
     )
 
 
+def test_dataflow():
+        train_dataflow = get_data("train")
+        TestDataSpeed(train_dataflow, size=5000).start()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -268,6 +288,7 @@ if __name__ == '__main__':
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     parser.add_argument('--validation', action='store_true', help='validate model on validation images')
+    parser.add_argument('--test_dataflow', action='store_true', help='test speed')
     parser.add_argument('--test', action='store_true', help='test model on test images')
     args = parser.parse_args()
     if args.gpu:
@@ -275,6 +296,8 @@ if __name__ == '__main__':
 
     if args.view:
         view_data()
+    elif args.test_dataflow:
+        test_dataflow()
     elif args.validation:
         proceed_validation(args)
     else:

@@ -38,7 +38,7 @@ lr_schedule = [(2, 1e-4), (4, 1e-5), (6, 8e-6)]
 epoch_scale = 18
 max_epoch = 10
 lr_multi_schedule = [('aspp.*_conv/W', 5),('aspp.*_conv/b',10)]
-batch_size = 6
+batch_size = 5
 evaluate_every_n_epoch = max_epoch
 
 class Model(ModelDesc):
