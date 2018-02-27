@@ -24,7 +24,7 @@ lr_schedule = [(9, 1e-4)]
 max_epoch = 12
 epoch_scale = 10
 evaluate_every_n_epoch = 1
-stage = 4
+stage = 8
 batch_size = 16
 
 wd = 1e-8
@@ -49,9 +49,6 @@ def get_data(name):
 
     if name=="train":
         ds = MultiThreadMapData(ds,nr_thread=16,map_func=data_prepare,buffer_size=200,strict=True)
-
-        # TODO scale(0.25), rotate augmentation(30 degree)
-
         #ds = FakeData([[input_shape[0], input_shape[1], 3], [output_shape[0], output_shape[1],nr_skeleton]], 5000, random=False, dtype='uint8')
         ds = BatchData(ds, args.batch_size)
         ds = PrefetchDataZMQ(ds, 1)

@@ -108,8 +108,6 @@ def crop_and_padding(img_path, objcenter, scale, joints, data_shape, output_shap
 
     img = cv2.resize(big_img[min_y:max_y, min_x:max_x, :], (data_shape[0], data_shape[1]))
 
-    # TODO scale(0.25), rotate augmentation(30 degree)
-
     joints[zero_index] = np.array([0, 0, 0])  # set out-border keypoint to left-top postion ground truth
 
     label = joints[:, :2]
