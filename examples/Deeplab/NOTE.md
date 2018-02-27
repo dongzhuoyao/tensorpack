@@ -211,3 +211,4 @@ Recognition](https://arxiv.org/abs/1801.07455)
 *  slim deeplabv2 pascal reproduce
 *  slim deeplabv2 Cityscapes reproduce
 *  slim deeplabv2 Mapillary reproduce
+* larger batch size use gradient checkpoint
