@@ -34,15 +34,16 @@ IGNORE_LABEL = 255
 
 first_batch_lr = 2.5e-3
 lr_schedule = [(2, 1e-3), (4, 1e-4), (6, 8e-5)]
-epoch_scale = 320#640
+epoch_scale = 8
 max_epoch = 10
 lr_multi_schedule = [('aspp.*_conv/W', 5),('aspp.*_conv/b',10)]
 batch_size = 15
 evaluate_every_n_epoch = 1
+wd = 2e-5
 
 def get_data(name, data_dir, meta_dir, batch_size):
     isTrain = True if 'train' in name else False
-    ds = dataset.Camvid(data_dir, meta_dir, name, shuffle=True)
+    ds = dataset.PascalVOC12(data_dir, meta_dir, name, shuffle=True)
 
     if isTrain:#special augmentation
         shape_aug = [imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
@@ -116,7 +117,7 @@ class Model(ModelDesc):
         costs.append(cost)
 
         if get_current_tower_context().is_training:
-            wd_w = tf.train.exponential_decay(2e-5, get_global_step_var(),
+            wd_w = tf.train.exponential_decay(wd, get_global_step_var(),
                                               80000, 0.7, True)
             wd_cost = tf.multiply(wd_w, regularize_cost('.*/W', tf.nn.l2_loss), name='wd_cost')
             costs.append(wd_cost)
@@ -136,7 +137,7 @@ class Model(ModelDesc):
 
 
 def view_data(data_dir, meta_dir, batch_size):
-    ds = RepeatedData(get_data('train',data_dir, meta_dir, batch_size), -1)
+    ds = RepeatedData(get_data('train_aug',data_dir, meta_dir, batch_size), -1)
     ds.reset_state()
     for ims, labels in ds.get_data():
         for im, label in zip(ims, labels):
@@ -151,7 +152,7 @@ def view_data(data_dir, meta_dir, batch_size):
 def get_config(data_dir, meta_dir, batch_size):
     logger.auto_set_dir()
     nr_tower = max(get_nr_gpu(), 1)
-    dataset_train = get_data('train', data_dir, meta_dir, batch_size)
+    dataset_train = get_data('train_aug', data_dir, meta_dir, batch_size)
     steps_per_epoch = dataset_train.size() * epoch_scale
     dataset_val = get_data('val', data_dir, meta_dir, batch_size)
 
@@ -195,7 +196,7 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = False, is_densecrf = False):
     import cv2
-    ds = dataset.Camvid(args.data_dir, args.meta_dir, "val")
+    ds = dataset.PascalVOC12(args.data_dir, args.meta_dir, "val")
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
@@ -276,9 +277,9 @@ class CalculateMIoU(Callback):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu', default="0", help='comma separated list of GPU(s) to use.')
-    parser.add_argument('--data_dir', default="/data1/dataset/SegNet-Tutorial",
+    parser.add_argument('--data_dir', default="/data2/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012",
                         help='dataset dir')
-    parser.add_argument('--meta_dir', default="metadata/camvid", help='meta dir')
+    parser.add_argument('--meta_dir', default="../metadata/pascalvoc12", help='meta dir')
     #parser.add_argument('--load', default="../resnet101.npz", help='load model')
     parser.add_argument('--load', help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
