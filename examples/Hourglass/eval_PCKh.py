@@ -91,7 +91,7 @@ def pckh(preds):
     data = [["Hourglass", PCKh[head], 0.5 * (PCKh[lsho] + PCKh[rsho])\
             , 0.5 * (PCKh[lelb] + PCKh[relb]),0.5 * (PCKh[lwri] + PCKh[rwri]),\
              0.5 * (PCKh[lhip] + PCKh[rhip]), 0.5 * (PCKh[lkne] + PCKh[rkne]) \
-            , 0.5 * (PCKh[lank] + PCKh[rank]), "{}%".format(np.mean(PCKh))]]
+            , 0.5 * (PCKh[lank] + PCKh[rank]), "{}".format(np.mean(PCKh))]]
     table = tabulate(data, headers=["Model", "Head", "Shoulder", "Elbow", "Wrist", "Hip" , "Knee", "Ankle", "Mean"])
     logger.info(colored("Validation result:", 'cyan'))
     logger.info(colored("\n"+table, 'cyan'))
