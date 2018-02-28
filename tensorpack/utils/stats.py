@@ -314,7 +314,7 @@ class MIoUStatistics(object):
     def mIoU(self):
         I = np.diag(self._confusion_matrix)
         U = np.sum(self._confusion_matrix, axis=0) + np.sum(self._confusion_matrix, axis=1) - I
-        assert np.min(U) > 0,"sample number is too small.."
+        #assert np.min(U) > 0,"sample number is too small.."
         IOU = I*1.0 / U
         meanIOU = np.mean(IOU)
         return meanIOU
@@ -323,7 +323,7 @@ class MIoUStatistics(object):
     def mIoU_beautify(self):
         I = np.diag(self._confusion_matrix)
         U = np.sum(self._confusion_matrix, axis=0) + np.sum(self._confusion_matrix, axis=1) - I
-        assert np.min(U) > 0, "sample number is too small.."
+        #assert np.min(U) > 0, "sample number is too small.."
         IOU = I * 1.0 / U
         return np.array_str(IOU, precision=5, suppress_small=True)
 
@@ -333,7 +333,7 @@ class MIoUStatistics(object):
 
     @property
     def mean_accuracy(self):
-        assert np.min(np.sum(self._confusion_matrix, axis=1)) > 0, "sample number is too small.."
+        #assert np.min(np.sum(self._confusion_matrix, axis=1)) > 0, "sample number is too small.."
         return np.mean(np.diag(self._confusion_matrix)*1.0 / np.sum(self._confusion_matrix, axis=1))
 
 
