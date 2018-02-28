@@ -218,10 +218,16 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
     i = 0
     stat = MIoUStatistics(CLASS_NUM)
     logger.info("start validation....")
+
+    def mypredictor(input_img):
+        # input image: 1*H*W*3
+        # output : H*W*C
+        output = predictor(input_img)
+        return output[0][0]
     for image, label in tqdm(ds.get_data()):
         label = np.squeeze(label)
         image = np.squeeze(image)
-        prediction = predict_scaler(image, predictor, scales=[0.9, 1, 1.1], classes=CLASS_NUM, tile_size=(IMAGE_H,IMAGE_W), is_densecrf = is_densecrf)
+        prediction = predict_scaler(image, mypredictor, scales=[0.5,0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=(IMAGE_H,IMAGE_W), is_densecrf = is_densecrf)
         prediction = np.argmax(prediction, axis=2)
         stat.feed(prediction, label)
 
@@ -256,10 +262,16 @@ class CalculateMIoU(Callback):
 
         self.stat = MIoUStatistics(self.nb_class)
 
+        def mypredictor(input_img):
+            # input image: 1*H*W*3
+            # output : H*W*C
+            output = self.pred(input_img)
+            return output[0][0]
+
         for image, label in tqdm(self.val_ds.get_data()):
             label = np.squeeze(label)
             image = np.squeeze(image)
-            prediction = predict_scaler(image, self.pred, scales=[0.9, 1, 1.1], classes=CLASS_NUM, tile_size=(IMAGE_H,IMAGE_W),
+            prediction = predict_scaler(image, mypredictor, scales=[0.5,0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=(IMAGE_H,IMAGE_W),
                            is_densecrf=False)
             prediction = np.argmax(prediction, axis=2)
             self.stat.feed(prediction, label)
