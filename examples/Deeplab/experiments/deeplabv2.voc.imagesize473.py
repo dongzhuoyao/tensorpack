@@ -40,6 +40,30 @@ lr_multi_schedule = [('aspp.*_conv/W', 5),('aspp.*_conv/b',10)]
 batch_size = 15
 evaluate_every_n_epoch = max_epoch
 
+def get_data(name, data_dir, meta_dir, batch_size):
+    isTrain = name == 'train'
+    ds = dataset.PascalVOC12(data_dir, meta_dir, name, shuffle=True)
+
+    if isTrain:#special augmentation
+        shape_aug = [imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
+                            aspect_ratio_thres=0.15),
+                     RandomCropWithPadding(CROP_SIZE,IGNORE_LABEL),
+                     imgaug.Flip(horiz=True),
+                     ]
+    else:
+        shape_aug = []
+
+    ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False)
+
+
+    #ds = FakeData([[CROP_SIZE, CROP_SIZE, 3], [CROP_SIZE, CROP_SIZE]], 5000, random=False, dtype='uint8')
+    if isTrain:
+        ds = BatchData(ds, batch_size)
+        ds = PrefetchDataZMQ(ds, 1)
+    else:
+        ds = BatchData(ds, 1)
+    return ds
+
 class Model(ModelDesc):
 
     def _get_inputs(self):
@@ -109,29 +133,6 @@ class Model(ModelDesc):
                 lr_multi_schedule)])
 
 
-def get_data(name, data_dir, meta_dir, batch_size):
-    isTrain = name == 'train'
-    ds = dataset.PascalVOC12(data_dir, meta_dir, name, shuffle=True)
-
-
-    if isTrain:#special augmentation
-        shape_aug = [imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
-                            aspect_ratio_thres=0.15),
-                     RandomCropWithPadding(CROP_SIZE,IGNORE_LABEL),
-                     imgaug.Flip(horiz=True),
-                     ]
-    else:
-        shape_aug = []
-
-    ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False)
-
-
-    if isTrain:
-        ds = BatchData(ds, batch_size)
-        ds = PrefetchDataZMQ(ds, 1)
-    else:
-        ds = BatchData(ds, 1)
-    return ds
 
 
 def view_data(data_dir, meta_dir, batch_size):
@@ -207,10 +208,17 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
     i = 0
     stat = MIoUStatistics(CLASS_NUM)
     logger.info("start validation....")
+
+    def mypredictor(input_img):
+        # input image: 1*H*W*3
+        # output : H*W*C
+        output = predictor(input_img)
+        return output[0][0]
+
     for image, label in tqdm(ds.get_data()):
         label = np.squeeze(label)
         image = np.squeeze(image)
-        prediction = predict_scaler(image, predictor, scales=[0.9, 1, 1.1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
+        prediction = predict_scaler(image, mypredictor, scales=[0.5,0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
         prediction = np.argmax(prediction, axis=2)
         stat.feed(prediction, label)
 
@@ -245,10 +253,16 @@ class CalculateMIoU(Callback):
 
         self.stat = MIoUStatistics(self.nb_class)
 
+        def mypredictor(input_img):
+            # input image: 1*H*W*3
+            # output : H*W*C
+            output = self.pred(input_img)
+            return output[0][0]
+
         for image, label in tqdm(self.val_ds.get_data()):
             label = np.squeeze(label)
             image = np.squeeze(image)
-            prediction = predict_scaler(image, self.pred, scales=[0.9, 1, 1.1], classes=CLASS_NUM, tile_size=CROP_SIZE,
+            prediction = predict_scaler(image, mypredictor, scales=[0.5,0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=CROP_SIZE,
                            is_densecrf=False)
             prediction = np.argmax(prediction, axis=2)
             self.stat.feed(prediction, label)
