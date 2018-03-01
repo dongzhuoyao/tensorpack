@@ -3,6 +3,7 @@
 
 more experimental results on pascalVOC can be seen in [NOTE.md](NOTE.md)
 
+new note: [NOTE2.md](NOTE2.md)
 
 more experimental results on RemoteSense Images can be seen in [aerial/README.md](aerial/README.md)
 
