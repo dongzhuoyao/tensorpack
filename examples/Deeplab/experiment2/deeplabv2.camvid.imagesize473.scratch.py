@@ -12,7 +12,7 @@ import numpy as np
 
 os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
 from tensorpack import *
-from tensorpack.dataflow import dataset
+from tensorpack.dataflow.dataset import Camvid
 from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler
 from tensorpack.utils.stats import MIoUStatistics
@@ -28,21 +28,21 @@ from resnet_model import (
     resnet_backbone_deeplab)
 
 
-CLASS_NUM = 21
-CROP_SIZE = 473
-IGNORE_LABEL = 255
+CLASS_NUM = Camvid.class_num()
+CROP_SIZE = 321
+IGNORE_LABEL = 11
 
 first_batch_lr = 2.5e-3
 lr_schedule = [(2, 1e-3), (4, 1e-4), (6, 8e-5)]
-epoch_scale = 320#640
+epoch_scale = 320 #640
 max_epoch = 10
 lr_multi_schedule = [('aspp.*_conv/W', 5),('aspp.*_conv/b',10)]
-batch_size = 15
+batch_size = 20
 evaluate_every_n_epoch = 1
 
 def get_data(name, data_dir, meta_dir, batch_size):
     isTrain = True if 'train' in name else False
-    ds = dataset.Camvid(data_dir, meta_dir, name, shuffle=True)
+    ds = Camvid(data_dir, meta_dir, name, shuffle=True)
 
     if isTrain:#special augmentation
         shape_aug = [imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
@@ -144,8 +144,8 @@ def view_data(data_dir, meta_dir, batch_size):
             #pass
             cv2.imshow("im", im / 255.0)
             cv2.imshow("raw-label", label)
-            cv2.imshow("color-label", visualize_label(label))
-            cv2.waitKey(0)
+            cv2.imshow("color-label", visualize_label(label,ignore_label=IGNORE_LABEL))
+            cv2.waitKey(3000)
 
 
 def get_config(data_dir, meta_dir, batch_size):
@@ -195,7 +195,7 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = False, is_densecrf = False):
     import cv2
-    ds = dataset.Camvid(args.data_dir, args.meta_dir, "val")
+    ds = Camvid(args.data_dir, args.meta_dir, "val")
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
