@@ -29,6 +29,7 @@ MSF on pascalvoc MSF all tild size: 321*321
 Arch | Val mIoU 
 ------------ | -------------
 deeplabv2.voc.imagesize473|71.5
+deeplabv2.voc.imagesize473.scratch|49.9
 
 
 
