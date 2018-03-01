@@ -34,7 +34,7 @@ IGNORE_LABEL = 255
 
 first_batch_lr = 2.5e-3
 lr_schedule = [(2, 1e-3), (4, 1e-4), (6, 8e-5)]
-epoch_scale = 8
+epoch_scale = 16
 max_epoch = 10
 lr_multi_schedule = [('aspp.*_conv/W', 5),('aspp.*_conv/b',10)]
 batch_size = 15
