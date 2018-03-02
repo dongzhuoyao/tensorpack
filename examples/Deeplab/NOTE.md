@@ -187,7 +187,7 @@ Arch | Pre | After
 deeplabv3.voc.imagesize513.scale4.lrmultfix.noASPP.fortune| 68.9 |59 |
 
 
-## Ideas
+## 
 
 *  Semi Supervised Semantic Segmentation Using Generative Adversarial Network
 *  Embedding human skeleton to furthur optimize human segmentation
@@ -205,6 +205,11 @@ deeplabv3.voc.imagesize513.scale4.lrmultfix.noASPP.fortune| 68.9 |59 |
 Recognition](https://arxiv.org/abs/1801.07455)
 *  [LIFT](https://github.com/cvlab-epfl/tf-lift)
 * use [Pose-Guided-Person-Image-Generation](https://github.com/charliememory/Pose-Guided-Person-Image-Generation) to realize human segmentation
+* deep learning oversegmentation framework
+* --classification and segmentation from scratch, dont make sense--
+*  SEC
+* [Adversarial Learning for Semi-supervised Semantic Segmentation](https://github.com/hfslyc/AdvSemiSeg)
+* [Seed, Expand and Constrain: Three Principles for Weakly-Supervised Image Segmentation](https://github.com/ascust/SEC-MXNet)
 
 ## Target
 
