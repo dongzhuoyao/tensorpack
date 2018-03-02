@@ -21,7 +21,7 @@ from tensorpack.tfutils import optimizer
 from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 import tensorpack.tfutils.symbolic_functions as symbf
 from tqdm import tqdm
-from seg_utils import RandomCropWithPadding
+from seg_utils import RandomCropWithPadding, softmax_cross_entropy_with_ignore_label
 from resnet_model import (
     preresnet_group, preresnet_basicblock, preresnet_bottleneck,
     resnet_group_deeplab, resnet_basicblock, resnet_bottleneck_deeplab, se_resnet_bottleneck,
@@ -32,11 +32,11 @@ CLASS_NUM = 21
 CROP_SIZE = 473
 IGNORE_LABEL = 255
 
-first_batch_lr = 2.5e-3
-lr_schedule = [(2, 1e-3), (4, 1e-4), (6, 8e-5)]
-epoch_scale = 16 # best scale 50
+first_batch_lr = 1e-2
+lr_schedule = [(3, 1e-3), (6, 1e-4), (8, 1e-5)]
+epoch_scale = 8
 max_epoch = 10
-lr_multi_schedule = [('aspp.*_conv/W', 5),('aspp.*_conv/b',10)]
+lr_multi_schedule = [('nothing', 5),('nothing',10)]
 batch_size = 15
 evaluate_every_n_epoch = 1
 wd = 2e-5
@@ -110,7 +110,7 @@ class Model(ModelDesc):
         new_size = prob.get_shape()[1:3]
         #label_resized = tf.image.resize_nearest_neighbor(label4d, new_size)
 
-        cost = symbf.softmax_cross_entropy_with_ignore_label(logits=predict, label=label4d,
+        cost = softmax_cross_entropy_with_ignore_label(logits=predict, label=label4d,
                                                              class_num=CLASS_NUM)
         prediction = tf.argmax(prob, axis=-1,name="prediction")
         cost = tf.reduce_mean(cost, name='cross_entropy_loss')  # the average cross-entropy loss

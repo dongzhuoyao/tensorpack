@@ -3,7 +3,28 @@ from tensorpack.utils import logger
 from tensorpack.dataflow.imgaug.base import ImageAugmentor
 import numpy as np
 import cv2
+import tensorflow as tf
 
+def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
+    """
+    This function accepts logits rather than predictions, and is more numerically stable than
+    :func:`class_balanced_cross_entropy`.
+    """
+    with tf.name_scope('softmax_cross_entropy_with_ignore_label'):
+        #tf.assert_equal(logits.shape[1], label.shape[1])  # shape assert
+        #TODO need assert here
+        raw_prediction = tf.reshape(logits, [-1, class_num])
+        label = tf.reshape(label,[-1,])
+        #label_onehot = tf.one_hot(label, depth=class_num)
+        indices = tf.squeeze(tf.where(tf.less_equal(label, class_num - 1)), axis=1)
+        #raw_gt = tf.reshape(label_onehot, [-1, class_num])
+
+        gt = tf.gather(label, indices)
+        prediction = tf.gather(raw_prediction, indices)
+
+        # Pixel-wise softmax loss.
+        loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=prediction, labels=gt)
+    return loss
 
 def RandomResizeSlight(ds,xrange=(0.9, 1.1), yrange=(0.9, 1.1),aspect_ratio_thres=0.1,minimum=(0,0)):
     image = ds[0]
