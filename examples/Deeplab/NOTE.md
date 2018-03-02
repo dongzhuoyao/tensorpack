@@ -208,6 +208,7 @@ Recognition](https://arxiv.org/abs/1801.07455)
 * deep learning oversegmentation framework
 * --classification and segmentation from scratch, dont make sense--
 *  SEC
+* [Adversarial Learning for Semi-supervised Semantic Segmentation](https://github.com/hfslyc/AdvSemiSeg)
 
 ## Target
 
