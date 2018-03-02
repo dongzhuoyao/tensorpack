@@ -29,15 +29,15 @@ from resnet_model import (
 
 
 CLASS_NUM = Camvid.class_num()
-CROP_SIZE = 321
+CROP_SIZE = 473
 IGNORE_LABEL = 11
 
 first_batch_lr = 2.5e-3
 lr_schedule = [(2, 1e-3), (4, 1e-4), (6, 8e-5)]
 epoch_scale = 320 #640
 max_epoch = 10
-lr_multi_schedule = [('aspp.*_conv/W', 5),('aspp.*_conv/b',10)]
-batch_size = 20
+lr_multi_schedule = [('nothing', 5),('nothing',10)]
+batch_size = 12
 evaluate_every_n_epoch = 1
 
 def get_data(name, data_dir, meta_dir, batch_size):

@@ -49,9 +49,9 @@ class Aerial(RNGDataFlow):
             self.imglist = self.imglist[:1]
         """
 
-
-
-
+    @staticmethod
+    def class_num():
+        return 2
 
     def size(self):
         return len(self.imglist)

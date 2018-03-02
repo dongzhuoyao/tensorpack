@@ -32,14 +32,13 @@ CLASS_NUM = 21
 CROP_SIZE = 473
 IGNORE_LABEL = 255
 
-first_batch_lr = 2.5e-3
-lr_schedule = [(2, 1e-3), (4, 1e-4), (6, 8e-5)]
+first_batch_lr = 2.5e-4
+lr_schedule = [(2, 1e-4), (4, 1e-5), (6, 8e-6)]
 epoch_scale = 8
 max_epoch = 10
-lr_multi_schedule = [('nothing', 5),('nothing',10)]
+lr_multi_schedule = [('aspp.*_conv/W', 5),('aspp.*_conv/b',10)]
 batch_size = 15
-evaluate_every_n_epoch = 1
-wd = 2e-5
+evaluate_every_n_epoch = max_epoch
 
 def get_data(name, data_dir, meta_dir, batch_size):
     isTrain = True if 'train' in name else False
@@ -117,7 +116,7 @@ class Model(ModelDesc):
         costs.append(cost)
 
         if get_current_tower_context().is_training:
-            wd_w = tf.train.exponential_decay(wd, get_global_step_var(),
+            wd_w = tf.train.exponential_decay(2e-4, get_global_step_var(),
                                               80000, 0.7, True)
             wd_cost = tf.multiply(wd_w, regularize_cost('.*/W', tf.nn.l2_loss), name='wd_cost')
             costs.append(wd_cost)
@@ -146,7 +145,7 @@ def view_data(data_dir, meta_dir, batch_size):
             cv2.imshow("im", im / 255.0)
             cv2.imshow("raw-label", label)
             cv2.imshow("color-label", visualize_label(label))
-            cv2.waitKey(5000)
+            cv2.waitKey(0)
 
 
 def get_config(data_dir, meta_dir, batch_size):
@@ -196,6 +195,9 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = False, is_densecrf = False):
     import cv2
+    from skimage.segmentation import slic
+    from skimage.segmentation import mark_boundaries
+
     ds = dataset.PascalVOC12(args.data_dir, args.meta_dir, "val")
     ds = BatchData(ds, 1)
 
@@ -222,6 +224,14 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
         prediction = predict_scaler(image, mypredictor, scales=[0.5,0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
         prediction = np.argmax(prediction, axis=2)
         stat.feed(prediction, label)
+
+        if True:
+            segments = slic(image, n_segments=5000, sigma=5)
+            cv2.imshow("im", image / 255.0)
+            cv2.imshow("superpixel", mark_boundaries(image, segments))
+            cv2.imshow("raw-label", mark_boundaries(visualize_label(label),segments))
+            cv2.imshow("color-label", mark_boundaries(visualize_label(prediction),segments))
+            cv2.waitKey(50000)
 
         if is_save:
             cv2.imwrite("result/{}.png".format(i), np.concatenate((image, visualize_label(label), visualize_label(prediction)), axis=1))
@@ -280,8 +290,7 @@ if __name__ == '__main__':
     parser.add_argument('--data_dir', default="/data2/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012",
                         help='dataset dir')
     parser.add_argument('--meta_dir', default="../metadata/pascalvoc12", help='meta dir')
-    #parser.add_argument('--load', default="../resnet101.npz", help='load model')
-    parser.add_argument('--load', help='load model')
+    parser.add_argument('--load', default="../resnet101.npz", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
     parser.add_argument('--batch_size', type=int, default = batch_size, help='batch_size')
