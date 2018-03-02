@@ -209,6 +209,7 @@ Recognition](https://arxiv.org/abs/1801.07455)
 * --classification and segmentation from scratch, dont make sense--
 *  SEC
 * [Adversarial Learning for Semi-supervised Semantic Segmentation](https://github.com/hfslyc/AdvSemiSeg)
+* [Seed, Expand and Constrain: Three Principles for Weakly-Supervised Image Segmentation](https://github.com/ascust/SEC-MXNet)
 
 ## Target
 
