@@ -8,7 +8,11 @@ Deeplabv2: [http://ethereon.github.io/netscope/#/gist/ff41a61a5384146fc099511a50
 
 Totally, PascalVOC 30K iterations, Cityscapes 45K iterations.
 
+Pascal VOC best scale(500 times/image):
 
+Batch Size | Scale
+------------ | -------------
+15| 50
 
 
 scale ratio 4:9 or 8:18? to be decided.
