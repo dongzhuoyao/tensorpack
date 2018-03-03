@@ -14,29 +14,32 @@ Batch Size | Scale
 ------------ | -------------
 15| 50
 
-
-scale ratio 4:9 or 8:18? to be decided.
-
-Dataset |scale|epoch_iters|image size| batch size| prefetch speed|
------------- | -------------| -------------| -------------| -------------| -------------
-VOC | 4|3020|473*473|14|1.2items/s
-Cityscapes|9|3825|672*672 |7|1.2items/s
+Arch|batch/image_size| #params| size |speed
+--| --| --| ----| ----
+DenseNet(L121-k32)|15/321| 6.9M|26.65MB|2.8iter/s
+DenseNet(L201-k32)|15/321| 18M|69.24MB|1.52iter/s
+DenseNet(L264-k32)|7/321| 30M|117.22MB|2iter/s
 
 
 
 
-
-### Result On Pasal VOC
-![voc.png](voc.png)
-MSF on pascalvoc MSF all tild size: 321*321
 
 Arch | Val mIoU 
 ------------ | -------------
-deeplabv2.voc.imagesize473|71.5
+deeplabv2.voc.imagesize473|70.5
 deeplabv2.voc.imagesize473.scratch|49.9
 deeplabv2.voc.scale16.imagesize473.scratch|54.6
-deeplabv2.camvid.imagesize473.scratch|62.5
 
+Arch | Val mIoU(target: 66) 
+------------ | -------------
+deeplabv2.camvid.imagesize473.scratch|62.5
+deeplabv2.camvid.imagesize473.res50.scratch|56.7
+
+
+Arch | Val mIoU(target: 88.67)
+------------ | -------------
+deeplabv2.aerial.imagesize473.scratch|86.72
+deeplabv2.aerial.imagesize473.res50.scratch|86.9
 
 
 ### Pascal in Slim
