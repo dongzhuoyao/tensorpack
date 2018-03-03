@@ -29,6 +29,7 @@ Arch | Val mIoU
 deeplabv2.voc.imagesize473|70.5
 deeplabv2.voc.imagesize473.scratch|49.9
 deeplabv2.voc.scale16.imagesize473.scratch|54.6
+deeplabv2.voc.imagesize473.scratch.lr1e-2| 44.1
 
 Arch | Val mIoU(target: 66) 
 ------------ | -------------
