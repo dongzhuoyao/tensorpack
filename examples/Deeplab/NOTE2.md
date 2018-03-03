@@ -19,6 +19,7 @@ Arch|batch/image_size| #params| size |speed
 DenseNet(L121-k32)|15/321| 6.9M|26.65MB|2.8iter/s
 DenseNet(L201-k32)|15/321| 18M|69.24MB|1.52iter/s
 DenseNet(L264-k32)|7/321| 30M|117.22MB|2iter/s
+resnet101|25/321|42M|163MB|1.4iter/s|
 
 
 
@@ -29,6 +30,7 @@ Arch | Val mIoU
 deeplabv2.voc.imagesize473|70.5
 deeplabv2.voc.imagesize473.scratch|49.9
 deeplabv2.voc.scale16.imagesize473.scratch|54.6
+deeplabv2.voc.imagesize473.scratch.lr1e-2| 44.1
 
 Arch | Val mIoU(target: 66) 
 ------------ | -------------
