@@ -26,7 +26,7 @@ slim = tf.contrib.slim
 
 CLASS_NUM = 21
 CROP_SIZE = 321
-batch_size = 16
+batch_size = 14
 
 IGNORE_LABEL = 255
 
