@@ -26,6 +26,8 @@ slim = tf.contrib.slim
 
 CLASS_NUM = 21
 CROP_SIZE = 321
+batch_size = 16
+
 IGNORE_LABEL = 255
 
 GROWTH_RATE = 60
@@ -34,7 +36,7 @@ lr_schedule = [(2, 1e-3), (4, 1e-4), (6, 8e-5)]
 epoch_scale = 8
 max_epoch = 10
 lr_multi_schedule = [('nothing', 5),('nothing',10)]
-batch_size = 15
+
 evaluate_every_n_epoch = 1
 wd = 2e-5
 
@@ -81,6 +83,9 @@ class Model(ModelDesc):
             rate = [1, 1, 2, 2]
             stride = [2, 2, 1, 1]
 
+            ctx = get_current_tower_context()
+            logger.info("current ctx.is_training: {}".format(ctx.is_training))
+
             # Training
             net, end_points = densenet(image,
                                        rate = rate,
@@ -91,6 +96,7 @@ class Model(ModelDesc):
                                        weight_decay = 0.00001,
                                        num_classes=CLASS_NUM,
                                        data_name='imagenet',
+                                       is_training = ctx.is_training,
                                        scope='densenet_L{}_k{}'.format(args.num_layers,
                                                                        args.growth_rate))
 
