@@ -202,7 +202,7 @@ def densenet(inputs,
               end_points_collection)
 
           net = slim.conv2d(net, num_outputs=num_classes, kernel_size=1,
-                            stride=1, rate=1, scope='conv2classnum')
+                            stride=1, rate=6, scope='conv2classnum') # dilation 2,4,6
           net = tf.image.resize_bilinear(net, inputs.shape[1:3]) #upsample 4x
 
           return net, end_points

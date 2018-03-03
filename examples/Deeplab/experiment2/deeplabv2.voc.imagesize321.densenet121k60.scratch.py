@@ -80,7 +80,7 @@ class Model(ModelDesc):
             blocks = [6, 12, 24, 16]
             #blocks = [6, 12, 48, 32]
             #blocks = [6, 12, 64, 48]
-            rate = [1, 1, 2, 2]
+            rate = [1, 1, 2, 4]
             stride = [2, 2, 1, 1]
 
             ctx = get_current_tower_context()

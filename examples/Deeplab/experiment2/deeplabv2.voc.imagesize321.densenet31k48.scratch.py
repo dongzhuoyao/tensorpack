@@ -26,7 +26,7 @@ slim = tf.contrib.slim
 
 CLASS_NUM = 21
 CROP_SIZE = 321
-batch_size = 36
+batch_size = 32
 
 IGNORE_LABEL = 255
 
@@ -79,9 +79,9 @@ class Model(ModelDesc):
             #blocks = [6, 12, 24, 16]
             #blocks = [6, 12, 48, 32]
             #blocks = [6, 12, 64, 48]
-            blocks = [6, 6, 15]
-            rate = [1, 1, 2]
-            stride = [2, 2, 1]
+            blocks = [6, 8, 8, 8]
+            rate = [1, 1, 2, 4]
+            stride = [2, 2, 1, 1]
 
             ctx = get_current_tower_context()
             logger.info("current ctx.is_training: {}".format(ctx.is_training))

@@ -26,15 +26,17 @@ slim = tf.contrib.slim
 
 CLASS_NUM = 21
 CROP_SIZE = 321
-batch_size = 17
+batch_size = 16
+
 IGNORE_LABEL = 255
 
-GROWTH_RATE = 48
-first_batch_lr = 2.5e-3
-lr_schedule = [(2, 1e-3), (4, 1e-4), (6, 8e-5)]
+GROWTH_RATE = 60
+first_batch_lr = 1e-1
+lr_schedule = [(2, 1e-2), (4, 1e-3), (6, 1e-4),(8,1e-5)]
 epoch_scale = 8
 max_epoch = 10
 lr_multi_schedule = [('nothing', 5),('nothing',10)]
+
 evaluate_every_n_epoch = 1
 wd = 2e-5
 
