@@ -14,6 +14,13 @@ Batch Size | Scale
 ------------ | -------------
 15| 50
 
+Arch|batch/image_size| #params| size |speed
+--| --| --| ----| ----
+DenseNet(L121-k32)|15/321| 6.9M|26.65MB|2.8iter/s
+DenseNet(L201-k32)|15/321| 18M|69.24MB|1.52iter/s
+DenseNet(L264-k32)|7/321| 30M|117.22MB|2iter/s
+
+
 
 
 
