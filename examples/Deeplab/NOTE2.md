@@ -15,20 +15,7 @@ Batch Size | Scale
 15| 50
 
 
-scale ratio 4:9 or 8:18? to be decided.
 
-Dataset |scale|epoch_iters|image size| batch size| prefetch speed|
------------- | -------------| -------------| -------------| -------------| -------------
-VOC | 4|3020|473*473|14|1.2items/s
-Cityscapes|9|3825|672*672 |7|1.2items/s
-
-
-
-
-
-### Result On Pasal VOC
-![voc.png](voc.png)
-MSF on pascalvoc MSF all tild size: 321*321
 
 Arch | Val mIoU 
 ------------ | -------------
@@ -46,6 +33,7 @@ Arch | Val mIoU(target: 88.67)
 ------------ | -------------
 deeplabv2.aerial.imagesize473.scratch|86.72
 deeplabv2.aerial.imagesize473.res50.scratch|86.9
+
 
 ### Pascal in Slim
 Params | Val mIoU
