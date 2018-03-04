@@ -43,6 +43,8 @@ Arch | #Params(M) |Val mIoU(66)
 ------------ | -------------| -------------
 deeplabv2.camvid.imagesize473.scratch|47|62.5
 deeplabv2.camvid.imagesize473.res50.scratch|23|56.7
+------------ | -------------| -------------
+deeplabv2.camvid.imagesize473.toy.realtest.scratch|2.9|64.1
 
 
 Arch | Val mIoU(target: 88.67)
