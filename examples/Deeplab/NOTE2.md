@@ -38,10 +38,10 @@ deeplabv2.voc.imagesize321.densenet121k48.scratch|15|50.6
 deeplabv2.voc.imagesize321.densenet121k60.scratch|24|50.2
 deeplabv2.voc.imagesize321.scratch|42|50.1
 
-Arch | Val mIoU(target: 66) 
------------- | -------------
-deeplabv2.camvid.imagesize473.scratch|62.5
-deeplabv2.camvid.imagesize473.res50.scratch|56.7
+Arch | #Params(M) |Val mIoU(66)
+------------ | -------------| -------------
+deeplabv2.camvid.imagesize473.scratch|47|62.5
+deeplabv2.camvid.imagesize473.res50.scratch|23|56.7
 
 
 Arch | Val mIoU(target: 88.67)
