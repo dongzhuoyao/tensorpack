@@ -30,6 +30,7 @@ Arch | #Params(M) |Val mIoU
 deeplabv2.voc.imagesize473|42|70.5
 deeplabv2.voc.imagesize473.scratch.lr1e-1||very low
 deeplabv2.voc.imagesize473.scratch.lr1e-2|| 44.1
+deeplabv2.voc_train.imagesize321.scale50.scratch||epoch5:27,terminated
 deeplabv2.voc.imagesize473.scratch|42|49.9
 deeplabv2.voc.scale16.imagesize473.scratch|42|54.6
 deeplabv2.voc.imagesize321.densenet31k48.scratch|5|48.6
