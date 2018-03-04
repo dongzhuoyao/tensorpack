@@ -26,7 +26,7 @@ resnet101|25/321|42M|163MB|1.4iter/s|
 
 
 Arch | #Params(M) |Val mIoU 
------------- | -------------
+------------ | -------------| -------------
 deeplabv2.voc.imagesize473|42|70.5
 deeplabv2.voc.imagesize473.scratch.lr1e-1||very low
 deeplabv2.voc.imagesize473.scratch.lr1e-2|| 44.1
