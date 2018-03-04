@@ -16,7 +16,7 @@ def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
         raw_prediction = tf.reshape(logits, [-1, class_num])
         label = tf.reshape(label,[-1,])
         #label_onehot = tf.one_hot(label, depth=class_num)
-        indices = tf.squeeze(tf.where(tf.less_equal(label, class_num - 1)), axis=1)
+        indices = tf.squeeze(tf.where(tf.less(label, class_num)), axis=1)
         #raw_gt = tf.reshape(label_onehot, [-1, class_num])
 
         gt = tf.gather(label, indices)

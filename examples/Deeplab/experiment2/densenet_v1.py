@@ -61,7 +61,7 @@ def dense(inputs, growth, bottleneck=True, stride=1, rate=1, drop=0,
   return net
 
 @slim.add_arg_scope
-def transition(inputs, bottleneck=True, compress=0.5, stride=1, rate=1, drop=0,
+def transition(inputs,remove_latter_pooling, bottleneck=True, compress=0.5, stride=1, rate=1, drop=0,
                outputs_collections=None, scope=None):
   """Transition layer.
   Args:
@@ -85,7 +85,11 @@ def transition(inputs, bottleneck=True, compress=0.5, stride=1, rate=1, drop=0,
 
   net = unit(net, depth=num_outputs, kernel=[1,1], stride=1,
         rate=rate)
-  net = slim.avg_pool2d(net, kernel_size=[2,2], stride=stride, scope='avg_pool')
+  if stride > 1:
+      net = slim.avg_pool2d(net, kernel_size=[2,2], stride=stride, scope='avg_pool')
+  else:
+    if not remove_latter_pooling:
+      net = slim.avg_pool2d(net, kernel_size=[2, 2], stride=stride, scope='avg_pool')
 
   if drop > 0:
     net = slim.dropout(net, keep_prob=1-drop, scope='dropout')
@@ -93,7 +97,7 @@ def transition(inputs, bottleneck=True, compress=0.5, stride=1, rate=1, drop=0,
   return net
 
 @slim.add_arg_scope
-def stack_dense_blocks(inputs, blocks, growth, bottleneck=True, compress=0.5,
+def stack_dense_blocks(inputs, blocks, growth, remove_latter_pooling, bottleneck=True, compress=0.5,
   stride=1, rate=1, drop=0, outputs_collections=None, scope=None):
   """Dense block.
   Args:
@@ -111,6 +115,7 @@ def stack_dense_blocks(inputs, blocks, growth, bottleneck=True, compress=0.5,
     The dense block's output.
   """
   net = inputs
+  previous_list = []
   for i, num_layer in enumerate(blocks):
     with tf.variable_scope('block%d' %(i+1), [net]) as sc_block:
       for j in range(num_layer):
@@ -125,7 +130,7 @@ def stack_dense_blocks(inputs, blocks, growth, bottleneck=True, compress=0.5,
 
     if i < len(blocks) - 1:
       with tf.variable_scope('trans%d' %(i+1), values=[net]) as sc_trans:
-        net = transition(net, bottleneck, compress, stride[i], rate=1, drop=0)# enable dropout in transition;
+        net = transition(net,remove_latter_pooling, bottleneck, compress, stride[i], rate=1, drop=0)# enable dropout in transition;
         net = slim.utils.collect_named_outputs(outputs_collections, 
           sc_trans.name, net)
 
@@ -144,6 +149,7 @@ def densenet(inputs,
              num_classes=None,
              is_training=True,
              data_name=None,
+             remove_latter_pooling = False,
              reuse=None,
              scope=None):
   """Generator for DenseNet models.
@@ -206,7 +212,7 @@ def densenet(inputs,
             net = slim.conv2d(net, growth*2, kernel_size=[3, 3], stride=2, 
               scope='conv1')
           
-          net = stack_dense_blocks(net, blocks, growth, bottleneck, compress,
+          net = stack_dense_blocks(net, blocks, growth, remove_latter_pooling, bottleneck, compress,
             stride, rate, drop)
 
           net = slim.batch_norm(net, activation_fn=tf.nn.relu, scope='postnorm')

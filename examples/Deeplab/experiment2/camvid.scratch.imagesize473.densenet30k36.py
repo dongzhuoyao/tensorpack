@@ -29,14 +29,14 @@ from seg_utils import RandomCropWithPadding, softmax_cross_entropy_with_ignore_l
 
 CLASS_NUM = Camvid.class_num()
 CROP_SIZE = 473
-batch_size = 12
+batch_size = 22
 
-IGNORE_LABEL = 11
+IGNORE_LABEL = 255
 
-GROWTH_RATE = 32
+GROWTH_RATE = 36
 first_batch_lr = 1e-3
 lr_schedule = [(4, 1e-4), (8, 1e-5)]
-epoch_scale = 32 #640
+epoch_scale = 320 #640
 max_epoch = 10
 lr_multi_schedule = [('nothing', 5),('nothing',10)]
 evaluate_every_n_epoch = 1
@@ -78,9 +78,7 @@ class Model(ModelDesc):
             # assert (args.num_layers - 4) % 3 == 0, 'The number of layers is wrong'
             # num_units = (args.num_layers - 4) // 3
             # blocks = [num_units, num_units, num_units]
-            blocks = [6, 12, 24, 16]
-            #blocks = [6, 8, 8, 8]
-            #
+            blocks = [6, 8, 8, 8]
             # blocks = [6, 12, 48, 32]
             # blocks = [6, 12, 64, 48]
             rate = [1, 1, 2, 4]
