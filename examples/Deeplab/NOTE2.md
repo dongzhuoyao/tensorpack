@@ -25,17 +25,18 @@ resnet101|25/321|42M|163MB|1.4iter/s|
 
 
 
-Arch | Val mIoU 
+Arch | #Params(M) |Val mIoU 
 ------------ | -------------
-deeplabv2.voc.imagesize473|70.5
-deeplabv2.voc.imagesize473.scratch|49.9
-deeplabv2.voc.scale16.imagesize473.scratch|54.6
-deeplabv2.voc.imagesize473.scratch.lr1e-1|very low
-deeplabv2.voc.imagesize473.scratch.lr1e-2| 44.1
-deeplabv2.voc.imagesize321.densenet31k48.scratch|48.6
-deeplabv2.voc.imagesize321.densenet31k60.scratch|49.4
-deeplabv2.voc.imagesize321.densenet121k48.scratch|50.6
-deeplabv2.voc.imagesize321.scratch|50.1
+deeplabv2.voc.imagesize473|42|70.5
+deeplabv2.voc.imagesize473.scratch.lr1e-1||very low
+deeplabv2.voc.imagesize473.scratch.lr1e-2|| 44.1
+deeplabv2.voc.imagesize473.scratch|42|49.9
+deeplabv2.voc.scale16.imagesize473.scratch|42|54.6
+deeplabv2.voc.imagesize321.densenet31k48.scratch|5|48.6
+deeplabv2.voc.imagesize321.densenet31k60.scratch|8|49.4
+deeplabv2.voc.imagesize321.densenet121k48.scratch|15|50.6
+deeplabv2.voc.imagesize321.densenet121k60.scratch|24|50.2
+deeplabv2.voc.imagesize321.scratch|42|50.1
 
 Arch | Val mIoU(target: 66) 
 ------------ | -------------
