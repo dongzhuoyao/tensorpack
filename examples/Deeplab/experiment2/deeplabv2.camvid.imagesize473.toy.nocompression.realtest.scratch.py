@@ -29,7 +29,7 @@ from seg_utils import RandomCropWithPadding, softmax_cross_entropy_with_ignore_l
 
 CLASS_NUM = Camvid.class_num()
 CROP_SIZE = 473
-batch_size = 21
+batch_size = 15
 
 IGNORE_LABEL = 11
 
@@ -97,6 +97,7 @@ class Model(ModelDesc):
                                        drop=0.2,
                                        weight_decay=0.00001,
                                        num_classes=CLASS_NUM,
+                                       compress = 1,
                                        data_name='imagenet',
                                        is_training=ctx.is_training,
                                        scope='densenet_L{}_k{}'.format(args.num_layers,

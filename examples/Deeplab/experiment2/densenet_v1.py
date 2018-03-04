@@ -140,6 +140,7 @@ def densenet(inputs,
              bottleneck=True,
              compress=0.5,
              drop=0,
+             stem = 0,
              num_classes=None,
              is_training=True,
              data_name=None,
@@ -185,10 +186,22 @@ def densenet(inputs,
           net = inputs
             
           if data_name is 'imagenet':
-            net = slim.conv2d(net, growth*2, kernel_size=[7, 7], stride=2, 
-              scope='conv1')
-            net = slim.max_pool2d(net, [3, 3], padding='SAME', stride=2, 
-              scope='pool1')
+            if stem == 0 :
+              net = slim.conv2d(net, growth * 2, kernel_size=[7, 7], stride=2,
+                                scope='conv1')
+              net = slim.max_pool2d(net, [3, 3], padding='SAME', stride=2,
+                                    scope='pool1')
+            elif stem == 1:
+              net = slim.conv2d(net, 64, kernel_size=[3, 3], stride=2,
+                                scope='conv1')
+              net = slim.conv2d(net, 64, kernel_size=[3, 3], stride=1,
+                                scope='conv1_1')
+              net = slim.conv2d(net, 128, kernel_size=[3, 3], stride=1,
+                                scope='conv1_2')
+              net = slim.max_pool2d(net, [2, 2], padding='SAME', stride=2,
+                                    scope='pool1')
+            else:
+              raise
           else:
             net = slim.conv2d(net, growth*2, kernel_size=[3, 3], stride=2, 
               scope='conv1')

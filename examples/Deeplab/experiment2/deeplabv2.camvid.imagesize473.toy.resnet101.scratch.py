@@ -19,26 +19,25 @@ from tensorpack.utils.stats import MIoUStatistics
 from tensorpack.utils import logger
 from tensorpack.tfutils import optimizer
 from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
-from densenet_v1 import densenet
-slim = tf.contrib.slim
 
 from tqdm import tqdm
 from seg_utils import RandomCropWithPadding, softmax_cross_entropy_with_ignore_label
-
+from resnet_model import (
+    preresnet_group, preresnet_basicblock, preresnet_bottleneck,
+    resnet_group_deeplab, resnet_basicblock, resnet_bottleneck_deeplab, se_resnet_bottleneck,
+    resnet_backbone_deeplab)
 
 
 CLASS_NUM = Camvid.class_num()
 CROP_SIZE = 473
-batch_size = 21
-
 IGNORE_LABEL = 11
 
-GROWTH_RATE = 36
-first_batch_lr = 1e-3
-lr_schedule = [(4, 1e-4), (8, 1e-5)]
+first_batch_lr = 2.5e-3
+lr_schedule = [(2, 1e-3), (4, 1e-4), (6, 8e-5)]
 epoch_scale = 32 #640
 max_epoch = 10
 lr_multi_schedule = [('nothing', 5),('nothing',10)]
+batch_size = 12
 evaluate_every_n_epoch = 1
 
 def get_data(name, data_dir, meta_dir, batch_size):
@@ -73,63 +72,56 @@ class Model(ModelDesc):
                 InputDesc(tf.int32, [None, CROP_SIZE, CROP_SIZE], 'gt')]
 
     def _build_graph(self, inputs):
-        def mydensenet(image):
-            # Prepare parameters for DenseNet
-            # assert (args.num_layers - 4) % 3 == 0, 'The number of layers is wrong'
-            # num_units = (args.num_layers - 4) // 3
-            # blocks = [num_units, num_units, num_units]
-            blocks = [6, 8, 8, 8]
-            #
-            # blocks = [6, 12, 48, 32]
-            # blocks = [6, 12, 64, 48]
-            rate = [1, 1, 2, 4]
-            stride = [2, 2, 1, 1]
+        def resnet101(image):
+            mode = 'resnet'
+            depth = 101
+            basicblock = preresnet_basicblock if mode == 'preact' else resnet_basicblock
+            bottleneck = {
+                'resnet': resnet_bottleneck_deeplab,
+                'preact': preresnet_bottleneck,
+                'se': se_resnet_bottleneck}[mode]
+            num_blocks, block_func = {
+                18: ([2, 2, 2, 2], basicblock),
+                34: ([3, 4, 6, 3], basicblock),
+                50: ([3, 4, 6, 3], bottleneck),
+                101: ([3, 4, 23, 3], bottleneck),
+                152: ([3, 8, 36, 3], bottleneck)
+            }[depth]
 
-            ctx = get_current_tower_context()
-            logger.info("current ctx.is_training: {}".format(ctx.is_training))
+            def get_logits(image):
+                with argscope([Conv2D, MaxPooling, GlobalAvgPooling, BatchNorm], data_format="NHWC"):
+                    return resnet_backbone_deeplab(
+                        image, num_blocks,
+                        preresnet_group if mode == 'preact' else resnet_group_deeplab, block_func,CLASS_NUM,ASPP = False)
 
-            # Training
-            net, end_points = densenet(image,
-                                       rate=rate,
-                                       stride=stride,
-                                       blocks=blocks,
-                                       growth=args.growth_rate,
-                                       drop=0.2,
-                                       weight_decay=0.00001,
-                                       num_classes=CLASS_NUM,
-                                       data_name='imagenet',
-                                       is_training=ctx.is_training,
-                                       scope='densenet_L{}_k{}'.format(args.num_layers,
-                                                                       args.growth_rate))
-
-            return net
+            return get_logits(image)
 
         image, label = inputs
         image = image - tf.constant([104, 116, 122], dtype='float32')
         label = tf.identity(label, name="label")
 
-        predict = mydensenet(image)
+        predict = resnet101(image)
 
         costs = []
         prob = tf.nn.softmax(predict, name='prob')
 
         label4d = tf.expand_dims(label, 3, name='label4d')
         new_size = prob.get_shape()[1:3]
-        # label_resized = tf.image.resize_nearest_neighbor(label4d, new_size)
+        #label_resized = tf.image.resize_nearest_neighbor(label4d, new_size)
 
         cost = softmax_cross_entropy_with_ignore_label(logits=predict, label=label4d,
-                                                       class_num=CLASS_NUM)
-        prediction = tf.argmax(prob, axis=-1, name="prediction")
+                                                             class_num=CLASS_NUM)
+        prediction = tf.argmax(prob, axis=-1,name="prediction")
         cost = tf.reduce_mean(cost, name='cross_entropy_loss')  # the average cross-entropy loss
         costs.append(cost)
 
         if get_current_tower_context().is_training:
-            # wd_w = tf.train.exponential_decay(wd, get_global_step_var(),
-            #                                  80000, 0.7, True)
-            # wd_cost = tf.multiply(wd_w, regularize_cost('.*/W', tf.nn.l2_loss), name='wd_cost')
-            wd_cost = tf.add_n(slim.losses.get_regularization_losses(), name='wd_cost')
+            wd_w = tf.train.exponential_decay(2e-5, get_global_step_var(),
+                                              80000, 0.7, True)
+            wd_cost = tf.multiply(wd_w, regularize_cost('.*/W', tf.nn.l2_loss), name='wd_cost')
             costs.append(wd_cost)
 
+            add_param_summary(('.*/W', ['histogram']))   # monitor W
             self.cost = tf.add_n(costs, name='cost')
             add_moving_summary(costs + [self.cost])
 
@@ -159,8 +151,9 @@ def view_data(data_dir, meta_dir, batch_size):
 def get_config(data_dir, meta_dir, batch_size):
     logger.auto_set_dir()
     nr_tower = max(get_nr_gpu(), 1)
-    dataset_train = get_data('train_val', data_dir, meta_dir, batch_size)
+    dataset_train = get_data('train', data_dir, meta_dir, batch_size)
     steps_per_epoch = dataset_train.size() * epoch_scale
+    dataset_val = get_data('val', data_dir, meta_dir, batch_size)
 
     return TrainConfig(
         dataflow=dataset_train,
@@ -255,7 +248,7 @@ class CalculateMIoU(Callback):
 
     def _trigger(self):
         global args
-        self.val_ds = get_data('test', args.data_dir, args.meta_dir, args.batch_size)
+        self.val_ds = get_data('val', args.data_dir, args.meta_dir, args.batch_size)
         self.val_ds.reset_state()
 
         self.stat = MIoUStatistics(self.nb_class)
@@ -287,8 +280,6 @@ if __name__ == '__main__':
                         help='dataset dir')
     parser.add_argument('--meta_dir', default="metadata/camvid", help='meta dir')
     #parser.add_argument('--load', default="../resnet101.npz", help='load model')
-    parser.add_argument('--growth_rate', default= GROWTH_RATE, help='growth_rate')
-    parser.add_argument('--num_layers', default=121, help='num_layers')
     parser.add_argument('--load', help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')

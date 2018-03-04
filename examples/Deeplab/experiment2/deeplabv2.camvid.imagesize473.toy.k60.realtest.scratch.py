@@ -160,7 +160,6 @@ def get_config(data_dir, meta_dir, batch_size):
     nr_tower = max(get_nr_gpu(), 1)
     dataset_train = get_data('train_val', data_dir, meta_dir, batch_size)
     steps_per_epoch = dataset_train.size() * epoch_scale
-    dataset_val = get_data('test', data_dir, meta_dir, batch_size)
 
     return TrainConfig(
         dataflow=dataset_train,
@@ -202,7 +201,7 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = False, is_densecrf = False):
     import cv2
-    ds = Camvid(args.data_dir, args.meta_dir, "val")
+    ds = Camvid(args.data_dir, args.meta_dir, "test")
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
@@ -255,7 +254,7 @@ class CalculateMIoU(Callback):
 
     def _trigger(self):
         global args
-        self.val_ds = get_data('val', args.data_dir, args.meta_dir, args.batch_size)
+        self.val_ds = get_data('test', args.data_dir, args.meta_dir, args.batch_size)
         self.val_ds.reset_state()
 
         self.stat = MIoUStatistics(self.nb_class)
