@@ -23,7 +23,7 @@ resnet101|25/321|42M|163MB|1.4iter/s|
 
 
 
-
+### Pascal VOC
 
 Arch | #Params(M) |Val mIoU 
 ------------ | -------------| -------------
@@ -39,6 +39,8 @@ deeplabv2.voc.imagesize321.densenet121k48.scratch|15|50.6
 deeplabv2.voc.imagesize321.densenet121k60.scratch|24|50.2
 deeplabv2.voc.imagesize321.scratch|42|50.1
 
+### Camvid 
+
 Arch | #Params(M) |Test mIoU(66)
 ------------ | -------------| -------------
 deeplabv2.camvid.imagesize473.scratch_acturally321||(val:62.5) 49
@@ -48,6 +50,7 @@ deeplabv2.camvid.imagesize473.res50.scratch|23|(val:56.7)
 deeplabv2.camvid.imagesize321.toy.realtest.scratch|2.9|47.1
 deeplabv2.camvid.imagesize473.toy.realtest.scratch|2.9|38
 
+### Aerial 
 
 Arch | Val mIoU(target: 88.67)
 ------------ | -------------
