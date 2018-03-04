@@ -45,8 +45,7 @@ deeplabv2.camvid.imagesize473.scratch_acturally321||(val:62.5) 49
 deeplabv2.camvid.imagesize473.scratch|47|(val:62.5)
 deeplabv2.camvid.imagesize473.res50.scratch|23|(val:56.7)
 ------------ | -------------| -------------
-deeplabv2.camvid.imagesize473.toy.realtest.scratch|2.9|64.1
-deeplabv2.camvid.imagesize473.toy.k60.realtest.scratch|68.2
+deeplabv2.camvid.imagesize321.toy.realtest.scratch|2.9|47.1
 
 Arch | Val mIoU(target: 88.67)
 ------------ | -------------
