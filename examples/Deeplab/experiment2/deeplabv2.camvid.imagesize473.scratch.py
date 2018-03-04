@@ -19,9 +19,9 @@ from tensorpack.utils.stats import MIoUStatistics
 from tensorpack.utils import logger
 from tensorpack.tfutils import optimizer
 from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
-import tensorpack.tfutils.symbolic_functions as symbf
+
 from tqdm import tqdm
-from seg_utils import RandomCropWithPadding
+from seg_utils import RandomCropWithPadding, softmax_cross_entropy_with_ignore_label
 from resnet_model import (
     preresnet_group, preresnet_basicblock, preresnet_bottleneck,
     resnet_group_deeplab, resnet_basicblock, resnet_bottleneck_deeplab, se_resnet_bottleneck,
@@ -109,7 +109,7 @@ class Model(ModelDesc):
         new_size = prob.get_shape()[1:3]
         #label_resized = tf.image.resize_nearest_neighbor(label4d, new_size)
 
-        cost = symbf.softmax_cross_entropy_with_ignore_label(logits=predict, label=label4d,
+        cost = softmax_cross_entropy_with_ignore_label(logits=predict, label=label4d,
                                                              class_num=CLASS_NUM)
         prediction = tf.argmax(prob, axis=-1,name="prediction")
         cost = tf.reduce_mean(cost, name='cross_entropy_loss')  # the average cross-entropy loss
@@ -195,7 +195,7 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = False, is_densecrf = False):
     import cv2
-    ds = Camvid(args.data_dir, args.meta_dir, "val")
+    ds = Camvid(args.data_dir, args.meta_dir, "test")
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(

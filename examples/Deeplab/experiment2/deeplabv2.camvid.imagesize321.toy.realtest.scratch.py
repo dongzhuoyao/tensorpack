@@ -28,15 +28,15 @@ from seg_utils import RandomCropWithPadding, softmax_cross_entropy_with_ignore_l
 
 
 CLASS_NUM = Camvid.class_num()
-CROP_SIZE = 473
-batch_size = 6
+CROP_SIZE = 321
+batch_size = 45
 
 IGNORE_LABEL = 11
 
-GROWTH_RATE = 60
+GROWTH_RATE = 36
 first_batch_lr = 1e-3
 lr_schedule = [(4, 1e-4), (8, 1e-5)]
-epoch_scale = 320 #640
+epoch_scale = 32 #640
 max_epoch = 10
 lr_multi_schedule = [('nothing', 5),('nothing',10)]
 evaluate_every_n_epoch = 1
@@ -78,7 +78,7 @@ class Model(ModelDesc):
             # assert (args.num_layers - 4) % 3 == 0, 'The number of layers is wrong'
             # num_units = (args.num_layers - 4) // 3
             # blocks = [num_units, num_units, num_units]
-            blocks = [6, 12, 24, 16]
+            blocks = [6, 8, 8, 8]
             # blocks = [6, 12, 48, 32]
             # blocks = [6, 12, 64, 48]
             rate = [1, 1, 2, 4]
@@ -160,7 +160,7 @@ def get_config(data_dir, meta_dir, batch_size):
     nr_tower = max(get_nr_gpu(), 1)
     dataset_train = get_data('train_val', data_dir, meta_dir, batch_size)
     steps_per_epoch = dataset_train.size() * epoch_scale
-
+    dataset_val = get_data('test', data_dir, meta_dir, batch_size)
 
     return TrainConfig(
         dataflow=dataset_train,
@@ -202,7 +202,7 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = False, is_densecrf = False):
     import cv2
-    ds = Camvid(args.data_dir, args.meta_dir, "test")
+    ds = Camvid(args.data_dir, args.meta_dir, "val")
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
@@ -255,7 +255,7 @@ class CalculateMIoU(Callback):
 
     def _trigger(self):
         global args
-        self.val_ds = get_data('test', args.data_dir, args.meta_dir, args.batch_size)
+        self.val_ds = get_data('val', args.data_dir, args.meta_dir, args.batch_size)
         self.val_ds.reset_state()
 
         self.stat = MIoUStatistics(self.nb_class)
