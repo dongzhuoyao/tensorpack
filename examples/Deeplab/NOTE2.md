@@ -49,7 +49,7 @@ deeplabv2.camvid.imagesize473.res50.scratch|23|(val:56.7)
 ------------ | -------------| -------------
 deeplabv2.camvid.imagesize473.toy.realtest.scratch|2.9|**38**
 deeplabv2.camvid.imagesize321.toy.realtest.scratch|2.9|47.1
-deeplabv2.camvid.imagesize473.toy.resnet101.scratch|42.7|?
+deeplabv2.camvid.imagesize473.toy.resnet101.scratch|42.7|49.1
 deeplabv2.camvid.imagesize473.toy.nocompression.realtest.scratch|5.2|44.1
 deeplabv2.camvid.imagesize473.toy.stem.realtest.scratch|3.2|42.9
 deeplabv2.camvid.imagesize473.toy.k60.realtest.scratch|8.2|38
