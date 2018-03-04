@@ -34,6 +34,7 @@ deeplabv2.voc.imagesize473.scratch.lr1e-1|very low
 deeplabv2.voc.imagesize473.scratch.lr1e-2| 44.1
 deeplabv2.voc.imagesize321.densenet31k48.scratch|48.6
 deeplabv2.voc.imagesize321.densenet31k60.scratch|49.4
+deeplabv2.voc.imagesize321.densenet121k48.scratch|50.6
 deeplabv2.voc.imagesize321.scratch|50.1
 
 Arch | Val mIoU(target: 66) 
