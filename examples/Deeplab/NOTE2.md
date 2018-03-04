@@ -41,7 +41,7 @@ deeplabv2.voc.imagesize321.scratch|42|50.1
 
 Arch | #Params(M) |Test mIoU(66)
 ------------ | -------------| -------------
-deeplabv2.camvid.imagesize473.scratch_acturally321|(val:62.5)
+deeplabv2.camvid.imagesize473.scratch_acturally321|(val:62.5) 49
 deeplabv2.camvid.imagesize473.scratch|47|(val:62.5)
 deeplabv2.camvid.imagesize473.res50.scratch|23|(val:56.7)
 ------------ | -------------| -------------
