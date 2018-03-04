@@ -16,7 +16,7 @@ class Camvid(RNGDataFlow):
     def __init__(self, dir, meta_dir, name,
                  shuffle=None):
 
-        assert name in ['train', 'val','test'], name
+        assert name in ['train', 'val', 'train_val', 'test'], name
         assert os.path.isdir(dir), dir
         self.reset_state()
         self.dir = dir
@@ -31,6 +31,8 @@ class Camvid(RNGDataFlow):
             f = open(os.path.join(meta_dir,"train.txt"),"r")
         elif name =="val":
             f = open(os.path.join(meta_dir, "val.txt"), "r")
+        elif name =="train_val":
+            f = open(os.path.join(meta_dir, "train_val.txt"), "r")
         elif name == "test":
             f = open(os.path.join(meta_dir, "test.txt"), "r")
         else:
