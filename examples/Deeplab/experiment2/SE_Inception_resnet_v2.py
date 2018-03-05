@@ -74,3 +74,4 @@ def squeeze_excitation_layer(input_x, out_dim, ratio, layer_name):
         excitation = tf.reshape(excitation, [-1, 1, 1, out_dim])
         scale = input_x * excitation
         return scale
+

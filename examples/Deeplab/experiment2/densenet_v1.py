@@ -6,10 +6,27 @@ import math
 import tensorflow as tf
 
 import densenet_utils
-from SE_Inception_resnet_v2 import squeeze_excitation_layer
 
 slim = tf.contrib.slim
 dense_arg_scope = densenet_utils.dense_arg_scope
+
+
+def my_squeeze_excitation_layer(input_x, out_dim, ratio, layer_name):
+  with tf.variable_scope(layer_name):
+    squeeze = tf.reduce_mean(input_x, [1, 2], name='gap', keep_dims=False)
+
+    with tf.variable_scope('fc1'):
+      excitation = tf.layers.dense(inputs=squeeze, use_bias=True, units=int(out_dim / ratio))
+
+    excitation = tf.nn.relu(excitation)
+
+    with tf.variable_scope('fc2'):
+      excitation = tf.layers.dense(inputs=excitation, use_bias=True, units=out_dim)
+    excitation = tf.nn.sigmoid(excitation)
+
+    excitation = tf.reshape(excitation, [-1, 1, 1, out_dim])
+    scale = input_x * excitation
+    return scale
 
 @slim.add_arg_scope
 def unit(inputs, depth, kernel, stride=1, rate=1, drop=0):
@@ -116,16 +133,16 @@ def stack_dense_blocks(inputs, blocks, growth, remove_latter_pooling, senet, bot
     The dense block's output.
   """
   net = inputs
-  previous_list = []
   for i, num_layer in enumerate(blocks):
     with tf.variable_scope('block%d' %(i+1), [net]) as sc_block:
       for j in range(num_layer):
         with tf.variable_scope('dense%d' %(j+1), values=[net]) as sc_layer:
           identity = tf.identity(net)
           dense_output= dense(net, growth, bottleneck, stride = 1, rate= rate[i], drop = 0) # disable dropout in dense conv;
+
           if senet==1:
             output_dim = identity.get_shape().as_list()[-1]
-            identity = squeeze_excitation_layer(identity,output_dim,ratio=4,layer_name='seblock{}'.format(j+1))#TODO SENet
+            identity = my_squeeze_excitation_layer(identity,output_dim,ratio=8,layer_name='seblock{}'.format(j+1))#TODO SENet
 
           net = tf.concat([identity, dense_output], axis=3,
             name='concat%d' %(j+1))

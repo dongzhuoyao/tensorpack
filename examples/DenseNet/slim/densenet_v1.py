@@ -10,6 +10,9 @@ import densenet_utils
 slim = tf.contrib.slim
 dense_arg_scope = densenet_utils.dense_arg_scope
 
+
+
+
 @slim.add_arg_scope
 def unit(inputs, depth, kernel, stride=1, rate=1, drop=0):
   """Basic unit. BN -> RELU -> CONV
@@ -231,3 +234,6 @@ if __name__ == "__main__":
 
   for i in end_points:
     print(end_points[i])
+
+
+
