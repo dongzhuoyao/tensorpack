@@ -115,7 +115,7 @@ def transition(inputs,remove_latter_pooling, bottleneck=True, compress=0.5, stri
   return net
 
 @slim.add_arg_scope
-def stack_dense_blocks(inputs, blocks, growth, remove_latter_pooling, senet, bottleneck=True, compress=0.5,
+def stack_dense_blocks(inputs, blocks, growth, remove_latter_pooling, senet, denseindense, bottleneck=True, compress=0.5,
   stride=1, rate=1, drop=0, outputs_collections=None, scope=None):
   """Dense block.
   Args:
@@ -133,6 +133,7 @@ def stack_dense_blocks(inputs, blocks, growth, remove_latter_pooling, senet, bot
     The dense block's output.
   """
   net = inputs
+  denseindense_list = []
   for i, num_layer in enumerate(blocks):
     with tf.variable_scope('block%d' %(i+1), [net]) as sc_block:
       for j in range(num_layer):
@@ -140,9 +141,9 @@ def stack_dense_blocks(inputs, blocks, growth, remove_latter_pooling, senet, bot
           identity = tf.identity(net)
           dense_output= dense(net, growth, bottleneck, stride = 1, rate= rate[i], drop = 0) # disable dropout in dense conv;
 
-          if senet==1:
-            output_dim = identity.get_shape().as_list()[-1]
-            identity = my_squeeze_excitation_layer(identity,output_dim,ratio=8,layer_name='seblock{}'.format(j+1))#TODO SENet
+          if senet > 0:
+            output_dim = dense_output.get_shape().as_list()[-1]
+            dense_output = my_squeeze_excitation_layer(dense_output,output_dim,ratio=senet,layer_name='seblock{}'.format(j+1))#TODO SENet
 
           net = tf.concat([identity, dense_output], axis=3,
             name='concat%d' %(j+1))
@@ -151,12 +152,19 @@ def stack_dense_blocks(inputs, blocks, growth, remove_latter_pooling, senet, bot
         sc_block.name, net)
 
     if i < len(blocks) - 1: # last block doesn't have transition
+      denseindense_list.append(net)
       with tf.variable_scope('trans%d' %(i+1), values=[net]) as sc_trans:
         net = transition(net,remove_latter_pooling, bottleneck, compress, stride[i], rate=1, drop=0)# enable dropout in transition;
         net = slim.utils.collect_named_outputs(outputs_collections, 
           sc_trans.name, net)
 
-  return net
+  if denseindense:
+    for ii,did in enumerate(denseindense_list):
+      did = tf.image.resize_bilinear(did, net.shape[1:3])
+      did = my_squeeze_excitation_layer(did,did.get_shape().as_list()[-1],4,"denseindense{}".format(ii+1))
+    return
+  else:
+    return net
 
 def densenet(inputs,
              blocks,
@@ -169,6 +177,7 @@ def densenet(inputs,
              drop=0,
              stem = 0,
              senet = 0,
+             denseindense = 0,
              num_classes=None,
              is_training=True,
              data_name=None,
@@ -235,7 +244,7 @@ def densenet(inputs,
             net = slim.conv2d(net, growth*2, kernel_size=[3, 3], stride=2, 
               scope='conv1')
           
-          net = stack_dense_blocks(net, blocks, growth, remove_latter_pooling, senet, bottleneck, compress,
+          net = stack_dense_blocks(net, blocks, growth, remove_latter_pooling, senet,denseindense, bottleneck, compress,
             stride, rate, drop)
 
           net = slim.batch_norm(net, activation_fn=tf.nn.relu, scope='postnorm')
