@@ -1,12 +1,4 @@
-<style>
-table:nth-of-type(1) {
-    display:table;
-    width:100%;
-}
-table:nth-of-type(1) th:nth-of-type(2) {
-    width:10%;
-}
-</style>
+
 
 ## DeepLab
 
@@ -74,7 +66,7 @@ deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dens
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k36.senet(ratio=4)|13.5|?
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k36.senet1|5.8|52.7
 deeplabv2.camvid.imagesize321.toy.resnet50.scratch|23.7|51.7
-deeplabv2.camvid.imagesize321.toy.baselline.stem.nocompression.nopooling.dense121k24.senet4|7.6|52.4
+deeplabv2.camvid.imagesize321.toy.baselline.stem.nocompression.nopooling.dense121k24.senet4|7.6|53.4
 ------------ | -------------| -------------
 camvid.scratch.imagesize473.stem.nocompression.nopooling.dense30k36||50,termiated
 camvid.scratch.imagesize473.densenet30k48||50,terminated
