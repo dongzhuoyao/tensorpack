@@ -56,6 +56,8 @@ deeplabv2.camvid.imagesize473.toy.stem.realtest.scratch|3.2|42.9
 deeplabv2.camvid.imagesize473.toy.k60.realtest.scratch|8.2|38
 ------------ | -------------| -------------
 deeplabv2.camvid.imagesize473.toy.newbaseline.realtest.scratch|2.9|**38**
+deeplabv2.camvid.imagesize473.toy.newbaseline.removeLatterPooling.realtest.scratch|2.9|44.1
+------------ | -------------| -------------
 camvid.scratch.imagesize321.densenet30k36|2.9|56
 ### Aerial 
 
