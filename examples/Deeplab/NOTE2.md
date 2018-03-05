@@ -60,6 +60,7 @@ deeplabv2.camvid.imagesize321.toy.realtest.scratch|2.9|?
 deeplabv2.camvid.imagesize473.toy.newbaseline.removeLatterPooling.realtest.scratch|2.9|44.1
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k36|5.7|52
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48|9.6|54.8
+deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k36.senet|13.5|?
 ------------ | -------------| -------------
 camvid.scratch.imagesize473.stem.nocompression.nopooling.dense30k36||50,termiated
 camvid.scratch.imagesize473.densenet30k48||50,terminated
