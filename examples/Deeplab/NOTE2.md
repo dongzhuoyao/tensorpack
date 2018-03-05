@@ -81,6 +81,7 @@ camvid.scratch.imagesize473.densenet30k36||50,terminated
 camvid.scratch.imagesize321.densenet30k36|2.9|56
 camvid.scratch.imagesize321.stem.nocompression.nopooling.dense121k60|7.6|?
 camvid.scratch.imagesize321.stem.nocompression.nopooling.dense30k36|5.7|60
+camvid.scratch.imagesize321.stem.compression.nopooling.dense30k36|3.2|58.8
 
 
 ### Aerial 
