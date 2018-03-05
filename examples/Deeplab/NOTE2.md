@@ -39,6 +39,7 @@ deeplabv2.voc.imagesize321.densenet121k48.scratch|15|50.6
 deeplabv2.voc.imagesize321.densenet121k60.scratch|24|50.2
 deeplabv2.voc.imagesize321.scratch|42|50.1
 
+
 ### Camvid 
 
 Arch | #Params(M) |Test mIoU(66)
@@ -55,7 +56,7 @@ deeplabv2.camvid.imagesize473.toy.stem.realtest.scratch|3.2|42.9
 deeplabv2.camvid.imagesize473.toy.k60.realtest.scratch|8.2|38
 ------------ | -------------| -------------
 deeplabv2.camvid.imagesize473.toy.newbaseline.realtest.scratch|2.9|**38**
-
+camvid.scratch.imagesize321.densenet30k36|2.9|56
 ### Aerial 
 
 Arch | Val mIoU(target: 88.67)
