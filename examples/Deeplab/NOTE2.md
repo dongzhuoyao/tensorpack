@@ -1,3 +1,12 @@
+<style>
+table:nth-of-type(1) {
+    display:table;
+    width:100%;
+}
+table:nth-of-type(1) th:nth-of-type(2) {
+    width:10%;
+}
+</style>
 
 ## DeepLab
 
@@ -43,11 +52,11 @@ deeplabv2.voc.imagesize321.scratch|42|50.1
 ### Camvid 
 
 Arch | #Params(M) |Test mIoU(66)
------------- | -------------| -------------
+| -------- | -------- | -------- |
 deeplabv2.camvid.imagesize473.scratch_acturally321||(val:62.5) 49
 deeplabv2.camvid.imagesize473.scratch|47|(val:62.5)
 deeplabv2.camvid.imagesize473.res50.scratch|23|(val:56.7)
------------- | -------------| -------------
+-------- | -------------| -------------
 deeplabv2.camvid.imagesize473.toy.realtest.scratch|2.9|**38**
 deeplabv2.camvid.imagesize473.toy.resnet101.scratch|42.7|49.1
 deeplabv2.camvid.imagesize473.toy.densenet121k32.realtest.scratch|6.9|44.3
@@ -56,17 +65,19 @@ deeplabv2.camvid.imagesize473.toy.stem.realtest.scratch|3.2|42.9
 deeplabv2.camvid.imagesize473.toy.k60.realtest.scratch|8.2|38
 ------------ | -------------| -------------
 deeplabv2.camvid.imagesize473.toy.newbaseline.realtest.scratch|2.9|38
-deeplabv2.camvid.imagesize321.toy.realtest.scratch|2.9|?
+deeplabv2.camvid.imagesize321.toy.realtest.scratch|2.9|50
 deeplabv2.camvid.imagesize473.toy.newbaseline.removeLatterPooling.realtest.scratch|2.9|44.1
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k36|5.7|52
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48|9.6|54.8
+deeplabv2.camvid.imagesize321.toy.resnet50.scratch|23.7|51.7
+deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k36.senet(ratio=4)|13.5|?
 ------------ | -------------| -------------
 camvid.scratch.imagesize473.stem.nocompression.nopooling.dense30k36||50,termiated
 camvid.scratch.imagesize473.densenet30k48||50,terminated
 camvid.scratch.imagesize473.densenet30k36||50,terminated
 camvid.scratch.imagesize321.densenet30k36|2.9|56
 camvid.scratch.imagesize321.stem.nocompression.nopooling.dense121k60|7.6|?
-camvid.scratch.imagesize321.stem.nocompression.nopooling.dense30k36||?
+camvid.scratch.imagesize321.stem.nocompression.nopooling.dense30k36|5.7|60
 
 
 ### Aerial 
