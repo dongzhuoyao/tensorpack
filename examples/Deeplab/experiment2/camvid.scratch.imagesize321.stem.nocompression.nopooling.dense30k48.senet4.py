@@ -97,6 +97,7 @@ class Model(ModelDesc):
                                        weight_decay=0.00001,
                                        num_classes=CLASS_NUM,
                                        compress = 1,
+                                       senet=4,
                                        stem = 1,
                                        remove_latter_pooling=True,
                                        data_name='imagenet',
