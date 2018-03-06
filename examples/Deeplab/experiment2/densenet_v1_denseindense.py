@@ -160,86 +160,23 @@ def stack_dense_blocks(inputs, blocks, growth, remove_latter_pooling, senet,tran
         net = slim.utils.collect_named_outputs(outputs_collections, 
           sc_trans.name, net)
 
-  if denseindense == 1:
+  if denseindense > 0:
     with tf.variable_scope('denseindense'):
-        denseindense_list[0] = smoothen(denseindense_list[0],'0')
-        denseindense_list[0] = slim.avg_pool2d(denseindense_list[0], kernel_size=[2, 2], stride=2, scope='avg_pool0')
-
-        denseindense_list[1] = smoothen(denseindense_list[1], '1')
-
-        denseindense_list[2] = smoothen(denseindense_list[2], '2')
-
-        fpn = tf.concat([denseindense_list[0],denseindense_list[1]], axis=3,name='concat')
-        fpn = slim.conv2d(fpn, num_outputs=fpn.get_shape().as_list()[-1],
-                                 kernel_size=1,stride=1, rate=1, scope='conv1') #smooth
-        fpn = slim.avg_pool2d(fpn, kernel_size=[2, 2], stride=2, scope='avg_pool')
-
-        fpn = tf.concat([fpn,denseindense_list[2]],axis=3,name='concat2')
-        fpn = slim.conv2d(fpn, num_outputs=fpn.get_shape().as_list()[-1],
-                          kernel_size=1, stride=1, rate=1, scope='conv2')  # smooth
-        return tf.concat([fpn,net],axis=3,name='concat2')
-  elif denseindense == 2:
-    with tf.variable_scope('denseindense'):
-        denseindense_list[0] = smoothen(denseindense_list[0],'0')
-        denseindense_list[0] = slim.avg_pool2d(denseindense_list[0], kernel_size=[2, 2], stride=2, scope='avg_pool0')
-
-        denseindense_list[1] = smoothen(denseindense_list[1], '1')
-
-        denseindense_list[2] = smoothen(denseindense_list[2], '2')
-
-        fpn = tf.concat([denseindense_list[0],denseindense_list[1]], axis=3,name='concat')
-        fpn = slim.batch_norm(fpn, activation_fn=tf.nn.relu, scope='preact1')
-        fpn = slim.conv2d(fpn, num_outputs=fpn.get_shape().as_list()[-1],
-                                 kernel_size=1,stride=1, rate=1, scope='conv1') #smooth
-        fpn = slim.avg_pool2d(fpn, kernel_size=[2, 2], stride=2, scope='avg_pool')
-
-        fpn = tf.concat([fpn,denseindense_list[2]],axis=3,name='concat2')
-
-        fpn = slim.batch_norm(fpn, activation_fn=tf.nn.relu, scope='preact2')
-        fpn = slim.conv2d(fpn, num_outputs=fpn.get_shape().as_list()[-1],
-                          kernel_size=1, stride=1, rate=1, scope='conv2')  # smooth
-        fpn = tf.concat([fpn,net],axis=3,name='concat2')
-
-        fpn = my_squeeze_excitation_layer(fpn,fpn.get_shape().as_list()[-1],4,'final_se')
-        return fpn
-
-  elif denseindense == 3:
-    with tf.variable_scope('denseindense'):
-      channel = 800
-      denseindense_list[0] = smoothen(denseindense_list[0], '0',output_num=channel)
-      denseindense_list[0] = slim.avg_pool2d(denseindense_list[0], kernel_size=[2, 2], stride=2, scope='avg_pool0')
-
-      denseindense_list[1] = smoothen(denseindense_list[1], '1',output_num=channel)
-
-      denseindense_list[2] = smoothen(denseindense_list[2], '2',output_num=channel)
-
-      fpn = denseindense_list[0]+denseindense_list[1]
-      fpn = slim.conv2d(fpn, num_outputs=fpn.get_shape().as_list()[-1],
-                        kernel_size=1, stride=1, rate=1, scope='conv1')  # smooth
-      fpn = slim.avg_pool2d(fpn, kernel_size=[2, 2], stride=2, scope='avg_pool')
-
-      fpn = fpn + denseindense_list[2]
-
-      fpn = slim.conv2d(fpn, num_outputs=fpn.get_shape().as_list()[-1],
-                        kernel_size=1, stride=1, rate=1, scope='conv2')  # smooth
-      return fpn + net #TODO buggy
-
-  elif denseindense == 0:
-    return net
+      to_be_concated = []
+      to_be_concated.append(net) #main stream
+      for ii,did in enumerate(denseindense_list):
+        did = tf.image.resize_bilinear(did, net.shape[1:3])
+        did = slim.batch_norm(did, activation_fn=tf.nn.relu, scope='preact{}'.format(ii+1))
+        did = slim.conv2d(did, num_outputs=did.get_shape().as_list()[-1]//denseindense, kernel_size=1,
+                          stride=1, rate=1, scope='conv{}'.format(ii+1))
+        did = my_squeeze_excitation_layer(did,did.get_shape().as_list()[-1],4,"se{}".format(ii+1))
+        to_be_concated.append(did)
+      net = tf.concat(to_be_concated, axis=3,
+                      name='concat')
+      return net
   else:
-    raise
-
-def smoothen(net,name, dense_ratio = 4,output_num=0):
-  with tf.variable_scope(name):
-    if output_num == 0:
-      output_num = net.get_shape().as_list()[-1] // dense_ratio
-
-    net = slim.batch_norm(net, activation_fn=tf.nn.relu, scope='preact')
-    net = slim.conv2d(net, num_outputs=output_num, kernel_size=1,
-                      stride=1, rate=1, scope='conv')
-
-    net = my_squeeze_excitation_layer(net, net.get_shape().as_list()[-1], 4, "se")
     return net
+
 def densenet(inputs,
              blocks,
              rate,
