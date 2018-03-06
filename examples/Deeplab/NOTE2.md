@@ -62,8 +62,9 @@ deeplabv2.camvid.imagesize321.toy.realtest.scratch|2.9|50
 deeplabv2.camvid..imagesize321.toy.newbaseline.dense30k36.py|2.9|:question:
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k36|5.7|52
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k36.senet(ratio=8)|5.7|52.3
-deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k36.senet(ratio=4)|13.5|?
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k36.senet1|5.8|52.7
+deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k36.senet4|5.7|53.6
+deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k36.senet4.did|5.9|54.3
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48|9.6|54.8
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k36(actually48).senet4|5.7|53.1
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k36(actually48).senet4.did|12.1|54.4
