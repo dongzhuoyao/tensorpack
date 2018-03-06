@@ -94,29 +94,70 @@ def transition(inputs,transition_senet, remove_latter_pooling, bottleneck=True, 
   Returns:
     The transition layer's output.
   """
-  net = inputs
+  if transition_senet == 1:
+    net = inputs
 
-  if compress < 1:
-    num_outputs = math.floor(inputs.get_shape().as_list()[3] * compress)
-  else:
-    num_outputs = inputs.get_shape().as_list()[3]
+    if compress < 1:
+      num_outputs = math.floor(inputs.get_shape().as_list()[3] * compress)
+    else:
+      num_outputs = inputs.get_shape().as_list()[3]
 
-  net = unit(net, depth=num_outputs, kernel=[1,1], stride=1,
-        rate=rate)
-  if stride > 1:
-      net = slim.avg_pool2d(net, kernel_size=[2,2], stride=stride, scope='avg_pool')
-  else:
-    if not remove_latter_pooling:
-      net = slim.avg_pool2d(net, kernel_size=[2, 2], stride=stride, scope='avg_pool')
+    net = unit(net, depth=num_outputs, kernel=[1,1], stride=1,
+          rate=rate)
+    if stride > 1:
+        net = slim.avg_pool2d(net, kernel_size=[2,2], stride=stride, scope='avg_pool')
+    else:
+      if not remove_latter_pooling:
+        net = slim.avg_pool2d(net, kernel_size=[2, 2], stride=stride, scope='avg_pool')
 
-  if transition_senet > 0:
+
     net = my_squeeze_excitation_layer(net, net.get_shape().as_list()[-1], transition_senet,
-                                      "transition_se")
+                                        "transition_se")
 
-  if drop > 0:
-    net = slim.dropout(net, keep_prob=1-drop, scope='dropout')
+    if drop > 0:
+      net = slim.dropout(net, keep_prob=1-drop, scope='dropout')
+    return net
 
-  return net
+  elif transition_senet == 2:
+    net = inputs
+
+    if compress < 1:
+      num_outputs = math.floor(inputs.get_shape().as_list()[3] * compress)
+    else:
+      num_outputs = inputs.get_shape().as_list()[3]
+
+    net = unit(net, depth=num_outputs, kernel=[1,1], stride=stride,
+          rate=rate)
+
+    net = my_squeeze_excitation_layer(net, net.get_shape().as_list()[-1], transition_senet,
+                                        "transition_se")
+
+    net = net + inputs # skip layer
+
+    if drop > 0:
+      net = slim.dropout(net, keep_prob=1-drop, scope='dropout')
+    return net
+
+  else:
+    net = inputs
+
+    if compress < 1:
+      num_outputs = math.floor(inputs.get_shape().as_list()[3] * compress)
+    else:
+      num_outputs = inputs.get_shape().as_list()[3]
+
+    net = unit(net, depth=num_outputs, kernel=[1, 1], stride=1,
+               rate=rate)
+    if stride > 1:
+      net = slim.avg_pool2d(net, kernel_size=[2, 2], stride=stride, scope='avg_pool')
+    else:
+      if not remove_latter_pooling:
+        net = slim.avg_pool2d(net, kernel_size=[2, 2], stride=stride, scope='avg_pool')
+
+    if drop > 0:
+      net = slim.dropout(net, keep_prob=1 - drop, scope='dropout')
+    return net
+
 
 @slim.add_arg_scope
 def stack_dense_blocks(inputs, blocks, growth, remove_latter_pooling, senet,transition_senet, denseindense, bottleneck=True, compress=0.5,

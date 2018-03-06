@@ -98,7 +98,7 @@ class Model(ModelDesc):
                                        num_classes=CLASS_NUM,
                                        compress = 1,
                                        stem = 1,
-                                       transition_senet=1,
+                                       transition_senet=2,
                                        remove_latter_pooling=True,
                                        data_name='imagenet',
                                        is_training=ctx.is_training,
