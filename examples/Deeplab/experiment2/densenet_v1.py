@@ -161,6 +161,7 @@ def stack_dense_blocks(inputs, blocks, growth, remove_latter_pooling, senet, den
   if denseindense > 0:
     with tf.variable_scope('denseindense'):
       to_be_concated = []
+      to_be_concated.append(net) #main stream
       for ii,did in enumerate(denseindense_list):
         did = tf.image.resize_bilinear(did, net.shape[1:3])
         did = slim.batch_norm(did, activation_fn=tf.nn.relu, scope='preact{}'.format(ii+1))
