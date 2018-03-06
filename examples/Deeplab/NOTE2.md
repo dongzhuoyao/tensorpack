@@ -68,6 +68,8 @@ deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dens
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48|9.6|54.8
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.nodropout|9.6|54
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.senet4|9.69|53.7
+deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.newdid|10.7|55.1
+deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.newdid2|13.6|54.6
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.transitionsenet4|10.76|:question:
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k36(actually48).senet4|5.7|53.1
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k36(actually48).senet4.did|12.1|54.4
