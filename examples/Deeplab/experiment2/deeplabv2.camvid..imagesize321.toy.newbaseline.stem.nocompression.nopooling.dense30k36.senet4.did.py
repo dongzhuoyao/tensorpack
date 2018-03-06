@@ -33,7 +33,7 @@ batch_size = 24
 
 IGNORE_LABEL = 255
 
-GROWTH_RATE = 48
+GROWTH_RATE = 36
 first_batch_lr = 1e-3
 lr_schedule = [(4, 1e-4), (8, 1e-5)]
 epoch_scale = 32 #640
