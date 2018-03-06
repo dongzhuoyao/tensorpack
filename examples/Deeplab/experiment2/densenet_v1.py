@@ -125,12 +125,19 @@ def transition(inputs,transition_senet, remove_latter_pooling, bottleneck=True, 
       num_outputs = math.floor(inputs.get_shape().as_list()[3] * compress)
     else:
       num_outputs = inputs.get_shape().as_list()[3]
-
-    net = unit(net, depth=num_outputs, kernel=[1,1], stride=stride,
-          rate=rate)
+    with tf.variable_scope('unit1'):
+      net = unit(net, depth=num_outputs//4, kernel=[1,1], stride=1, rate=rate)
+    with tf.variable_scope('unit2'):
+      net = unit(net, depth=num_outputs//4, kernel=[3,3], stride=stride, rate=rate)
+    with tf.variable_scope('unit3'):
+      net = unit(net, depth=num_outputs, kernel=[1,1], stride= 1, rate=rate)
 
     net = my_squeeze_excitation_layer(net, net.get_shape().as_list()[-1], transition_senet,
                                         "transition_se")
+
+    if stride > 1:
+      with tf.variable_scope('unit_skip'):
+        inputs = unit(inputs,depth=num_outputs,kernel=[1,1],stride=stride,rate=rate)
 
     net = net + inputs # skip layer
 
@@ -222,6 +229,7 @@ def stack_dense_blocks(inputs, blocks, growth, remove_latter_pooling, senet,tran
         fpn = slim.conv2d(fpn, num_outputs=fpn.get_shape().as_list()[-1],
                           kernel_size=1, stride=1, rate=1, scope='conv2')  # smooth
         return tf.concat([fpn,net],axis=3,name='concat2')
+
   elif denseindense == 2:
     with tf.variable_scope('denseindense'):
         denseindense_list[0] = smoothen(denseindense_list[0],'0')
