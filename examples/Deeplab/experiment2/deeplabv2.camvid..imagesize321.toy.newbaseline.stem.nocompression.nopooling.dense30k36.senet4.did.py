@@ -36,7 +36,7 @@ IGNORE_LABEL = 255
 GROWTH_RATE = 48
 first_batch_lr = 1e-3
 lr_schedule = [(4, 1e-4), (8, 1e-5)]
-epoch_scale = 320
+epoch_scale = 32 #640
 max_epoch = 10
 lr_multi_schedule = [('nothing', 5),('nothing',10)]
 evaluate_every_n_epoch = 1
@@ -98,6 +98,8 @@ class Model(ModelDesc):
                                        num_classes=CLASS_NUM,
                                        compress = 1,
                                        stem = 1,
+                                       senet=4,
+                                       denseindense = 1,
                                        remove_latter_pooling=True,
                                        data_name='imagenet',
                                        is_training=ctx.is_training,

@@ -29,11 +29,11 @@ from seg_utils import RandomCropWithPadding, softmax_cross_entropy_with_ignore_l
 
 CLASS_NUM = Camvid.class_num()
 CROP_SIZE = 321
-batch_size = 32
+batch_size = 24
 
 IGNORE_LABEL = 255
 
-GROWTH_RATE = 36
+GROWTH_RATE = 48
 first_batch_lr = 1e-3
 lr_schedule = [(4, 1e-4), (8, 1e-5)]
 epoch_scale = 1000

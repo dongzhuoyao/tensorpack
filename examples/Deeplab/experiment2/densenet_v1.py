@@ -159,10 +159,18 @@ def stack_dense_blocks(inputs, blocks, growth, remove_latter_pooling, senet, den
           sc_trans.name, net)
 
   if denseindense:
-    for ii,did in enumerate(denseindense_list):
-      did = tf.image.resize_bilinear(did, net.shape[1:3])
-      did = my_squeeze_excitation_layer(did,did.get_shape().as_list()[-1],4,"denseindense{}".format(ii+1))
-    return
+    with tf.variable_scope('denseindense'):
+      to_be_concated = []
+      for ii,did in enumerate(denseindense_list):
+        did = tf.image.resize_bilinear(did, net.shape[1:3])
+        did = slim.batch_norm(did, activation_fn=tf.nn.relu, scope='preact{}'.format(ii+1))
+        did = slim.conv2d(did, num_outputs=did.get_shape().as_list()[-1]//8, kernel_size=3,
+                          stride=1, rate=1, scope='conv{}'.format(ii+1))
+        did = my_squeeze_excitation_layer(did,did.get_shape().as_list()[-1],4,"se{}".format(ii+1))
+        to_be_concated.append(did)
+      net = tf.concat(to_be_concated, axis=3,
+                      name='concat')
+      return net
   else:
     return net
 
