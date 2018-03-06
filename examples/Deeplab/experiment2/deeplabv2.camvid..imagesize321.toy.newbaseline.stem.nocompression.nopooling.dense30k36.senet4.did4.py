@@ -99,7 +99,7 @@ class Model(ModelDesc):
                                        compress = 1,
                                        stem = 1,
                                        senet=4,
-                                       denseindense = 8,
+                                       denseindense = 4,
                                        remove_latter_pooling=True,
                                        data_name='imagenet',
                                        is_training=ctx.is_training,
