@@ -79,7 +79,7 @@ def dense(inputs, growth, bottleneck=True, stride=1, rate=1, drop=0,
   return net
 
 @slim.add_arg_scope
-def transition(inputs,remove_latter_pooling, bottleneck=True, compress=0.5, stride=1, rate=1, drop=0,
+def transition(inputs,transition_senet, remove_latter_pooling, bottleneck=True, compress=0.5, stride=1, rate=1, drop=0,
                outputs_collections=None, scope=None):
   """Transition layer.
   Args:
@@ -109,6 +109,10 @@ def transition(inputs,remove_latter_pooling, bottleneck=True, compress=0.5, stri
     if not remove_latter_pooling:
       net = slim.avg_pool2d(net, kernel_size=[2, 2], stride=stride, scope='avg_pool')
 
+  if transition_senet > 0:
+    net = my_squeeze_excitation_layer(net, net.get_shape().as_list()[-1], transition_senet,
+                                      "transition_se")
+
   if drop > 0:
     net = slim.dropout(net, keep_prob=1-drop, scope='dropout')
 
@@ -116,7 +120,7 @@ def transition(inputs,remove_latter_pooling, bottleneck=True, compress=0.5, stri
 
 @slim.add_arg_scope
 def stack_dense_blocks(inputs, blocks, growth, remove_latter_pooling, senet,transition_senet, denseindense, bottleneck=True, compress=0.5,
-  stride=1, rate=1, drop=0, outputs_collections=None, scope=None):
+  stride=11, rate=1, drop=0, outputs_collections=None, scope=None):
   """Dense block.
   Args:
     inputs: A tensor of size [batch, height, width, channels].
@@ -154,9 +158,8 @@ def stack_dense_blocks(inputs, blocks, growth, remove_latter_pooling, senet,tran
     if i < len(blocks) - 1: # last block doesn't have transition
       denseindense_list.append(net)
       with tf.variable_scope('trans%d' %(i+1), values=[net]) as sc_trans:
-        net = transition(net,remove_latter_pooling, bottleneck, compress, stride[i], rate=1, drop=0)# enable dropout in transition;
-        if transition_senet > 0:
-          net = my_squeeze_excitation_layer(net,net.get_shape().as_list()[-1],transition_senet,"transition_se{}".format(i+1))
+        net = transition(net,transition_senet,remove_latter_pooling, bottleneck, compress, stride[i], rate=1, drop=0)# enable dropout in transition;
+
         net = slim.utils.collect_named_outputs(outputs_collections, 
           sc_trans.name, net)
 
