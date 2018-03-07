@@ -28,16 +28,16 @@ from seg_utils import RandomCropWithPadding, softmax_cross_entropy_with_ignore_l
 
 
 CLASS_NUM = Camvid.class_num()
-CROP_SIZE = 321
-batch_size = 24
+CROP_SIZE = [360,480]
+batch_size = 12 #16
 
 IGNORE_LABEL = 255
 
 GROWTH_RATE = 48
-first_batch_lr = 2.5e-3
-lr_schedule = [(40, 2.5e-4), (80, 2.5e-5)]
-epoch_scale = 100 #640
-max_epoch = 100
+first_batch_lr = 1e-3
+lr_schedule = [(4, 1e-4), (8, 1e-5)]
+epoch_scale = 32 #640
+max_epoch = 10
 lr_multi_schedule = [('nothing', 5),('nothing',10)]
 evaluate_every_n_epoch = 1
 
@@ -59,8 +59,8 @@ def get_data(name, data_dir, meta_dir, batch_size):
 
     #ds = FakeData([[CROP_SIZE, CROP_SIZE, 3], [CROP_SIZE, CROP_SIZE]], 5000, random=False, dtype='uint8')
     if isTrain:
-        ds = PrefetchDataZMQ(ds, 10)
         ds = BatchData(ds, batch_size)
+        ds = PrefetchDataZMQ(ds, 1)
     else:
         ds = BatchData(ds, 1)
     return ds
@@ -69,8 +69,8 @@ class Model(ModelDesc):
 
     def _get_inputs(self):
         ## Set static shape so that tensorflow knows shape at compile time.
-        return [InputDesc(tf.float32, [None, CROP_SIZE, CROP_SIZE, 3], 'image'),
-                InputDesc(tf.int32, [None, CROP_SIZE, CROP_SIZE], 'gt')]
+        return [InputDesc(tf.float32, [None, CROP_SIZE[0], CROP_SIZE[1], 3], 'image'),
+                InputDesc(tf.int32, [None, CROP_SIZE[0], CROP_SIZE[1]], 'gt')]
 
     def _build_graph(self, inputs):
         def mydensenet(image):
