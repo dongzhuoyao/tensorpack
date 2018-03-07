@@ -49,7 +49,9 @@ class Camvid(RNGDataFlow):
 
     @staticmethod
     def class_num():
-        return 11 #webdemo have 12 classes
+        return 11 #
+        #Sky, Building, Pole, Road, Pavement, Tree, SignSymbol, Fence, Car, Pedestrian, Bicyclist, Unlabelled
+        #0,1,2,3,4,5,6,7,8,9,10,11
 
     def get_data(self):
         idxs = np.arange(len(self.imglist))

@@ -29,11 +29,11 @@ from seg_utils import RandomCropWithPadding, softmax_cross_entropy_with_ignore_l
 
 CLASS_NUM = Camvid.class_num()
 CROP_SIZE = 321
-batch_size = 32
+batch_size = 20
 
 IGNORE_LABEL = 255
 
-GROWTH_RATE = 36
+GROWTH_RATE = 48
 first_batch_lr = 1e-3
 lr_schedule = [(4, 1e-4), (8, 1e-5)]
 epoch_scale = 32 #640
@@ -78,7 +78,7 @@ class Model(ModelDesc):
             # assert (args.num_layers - 4) % 3 == 0, 'The number of layers is wrong'
             # num_units = (args.num_layers - 4) // 3
             # blocks = [num_units, num_units, num_units]
-            blocks = [6, 8, 8, 8]
+            blocks = [6, 8, 16, 12]
             # blocks = [6, 12, 48, 32]
             # blocks = [6, 12, 64, 48]
             rate = [1, 1, 2, 4]
@@ -96,6 +96,9 @@ class Model(ModelDesc):
                                        drop=0.2,
                                        weight_decay=0.00001,
                                        num_classes=CLASS_NUM,
+                                       compress = 1,
+                                       stem = 1,
+                                       remove_latter_pooling=True,
                                        data_name='imagenet',
                                        is_training=ctx.is_training,
                                        scope='densenet_L{}_k{}'.format(args.num_layers,
@@ -151,8 +154,7 @@ def view_data(data_dir, meta_dir, batch_size):
             #pass
             cv2.imshow("im", im / 255.0)
             cv2.imshow("raw-label", label)
-            print(np.unique(label))
-            cv2.imshow("color-label", visualize_label(label,ignore_label=11))
+            cv2.imshow("color-label", visualize_label(label,ignore_label=IGNORE_LABEL))
             cv2.waitKey(3000)
 
 
