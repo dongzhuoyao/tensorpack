@@ -34,9 +34,9 @@ batch_size = 16
 IGNORE_LABEL = 255
 
 GROWTH_RATE = 48
-first_batch_lr = 2.5e-3
-lr_schedule = [(40, 2.5e-4), (80, 2.5e-5)]
-epoch_scale = 1000 #640
+first_batch_lr = 7.5e-3
+lr_schedule = [(5, 7.5e-4), (8, 7.5e-5)]
+epoch_scale = 500 #640
 max_epoch = 10
 lr_multi_schedule = [('nothing', 5),('nothing',10)]
 evaluate_every_n_epoch = 1
@@ -59,7 +59,7 @@ def get_data(name, data_dir, meta_dir, batch_size):
 
     #ds = FakeData([[CROP_SIZE, CROP_SIZE, 3], [CROP_SIZE, CROP_SIZE]], 5000, random=False, dtype='uint8')
     if isTrain:
-        ds = PrefetchDataZMQ(ds, 10)
+        ds = PrefetchDataZMQ(ds, 4)
         ds = BatchData(ds, batch_size)
     else:
         ds = BatchData(ds, 1)
