@@ -13,6 +13,7 @@ import numpy as np
 os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
 from tensorpack import *
 from tensorpack.dataflow.dataset import Camvid, CamvidFiles
+import multiprocessing
 from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler
 from tensorpack.utils.stats import MIoUStatistics
@@ -24,7 +25,7 @@ slim = tf.contrib.slim
 
 from tqdm import tqdm
 from seg_utils import RandomCropWithPadding, softmax_cross_entropy_with_ignore_label
-import multiprocessing
+
 
 
 CLASS_NUM = Camvid.class_num()
@@ -34,13 +35,18 @@ batch_size = 16
 IGNORE_LABEL = 255
 
 GROWTH_RATE = 48
-first_batch_lr = 7.5e-3
-lr_schedule = [(5, 7.5e-4), (8, 7.5e-5)]
-epoch_scale = 500 #640
+first_batch_lr = 0.5e-3
+lr_schedule = [(5, 0.5e-4), (8, 0.5e-5)]
+epoch_scale = 2#110 #1000
 max_epoch = 10
 lr_multi_schedule = [('nothing', 5),('nothing',10)]
 evaluate_every_n_epoch = 1
 
+def imgread(ds):
+    img, label = ds
+    img = cv2.imread(img, cv2.IMREAD_COLOR)
+    label = cv2.imread(label, cv2.IMREAD_GRAYSCALE)
+    return img, label
 
 
 def get_data(name, data_dir, meta_dir, batch_size):
@@ -80,35 +86,6 @@ def get_data(name, data_dir, meta_dir, batch_size):
     return ds
     #ds = FakeData([[CROP_SIZE[0], CROP_SIZE[1], 3], [CROP_SIZE[0], CROP_SIZE[1]]], 5000, random=False, dtype='uint8')
 
-
-
-
-
-
-def get_data_single_gpu(name, data_dir, meta_dir, batch_size):
-    isTrain = True if 'train' in name else False
-    ds = Camvid(data_dir, meta_dir, name, shuffle=True)
-
-    if isTrain:#special augmentation
-        shape_aug = [imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
-                            aspect_ratio_thres=0.15),
-                     RandomCropWithPadding(CROP_SIZE,IGNORE_LABEL),
-                     imgaug.Flip(horiz=True),
-                     ]
-    else:
-        shape_aug = []
-
-    ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False)
-
-
-    #ds = FakeData([[CROP_SIZE[0], CROP_SIZE[1], 3], [CROP_SIZE[0], CROP_SIZE[1]]], 5000, random=False, dtype='uint8')
-
-    if isTrain:
-        ds = PrefetchDataZMQ(ds, 4)
-        ds = BatchData(ds, batch_size)
-    else:
-        ds = BatchData(ds, 1)
-    return ds
 
 class Model(ModelDesc):
 

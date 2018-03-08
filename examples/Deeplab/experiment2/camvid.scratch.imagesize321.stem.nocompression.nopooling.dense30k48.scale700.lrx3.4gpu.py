@@ -12,7 +12,7 @@ import numpy as np
 
 os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
 from tensorpack import *
-from tensorpack.dataflow.dataset import Camvid, CamvidFiles
+from tensorpack.dataflow.dataset import Camvid,CamvidFiles
 from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler
 from tensorpack.utils.stats import MIoUStatistics
@@ -20,33 +20,35 @@ from tensorpack.utils import logger
 from tensorpack.tfutils import optimizer
 from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 from densenet_v1 import densenet
+import multiprocessing
+
+
 slim = tf.contrib.slim
 
 from tqdm import tqdm
 from seg_utils import RandomCropWithPadding, softmax_cross_entropy_with_ignore_label
-import multiprocessing
+
 
 
 CLASS_NUM = Camvid.class_num()
-CROP_SIZE = [360,480]
-batch_size = 16
+CROP_SIZE = 321
+batch_size = 24
 
 IGNORE_LABEL = 255
 
 GROWTH_RATE = 48
-first_batch_lr = 7.5e-3
-lr_schedule = [(5, 7.5e-4), (8, 7.5e-5)]
-epoch_scale = 500 #640
+first_batch_lr = 3e-3
+lr_schedule = [(5, 3e-4), (8, 3e-5)]
+epoch_scale = 700 #200 #640
 max_epoch = 10
 lr_multi_schedule = [('nothing', 5),('nothing',10)]
 evaluate_every_n_epoch = 1
-
-
 
 def get_data(name, data_dir, meta_dir, batch_size):
     isTrain = True if 'train' in name else False
 
     if isTrain:#special augmentation
+
         ds = CamvidFiles(data_dir, meta_dir, name, shuffle=True)
         parallel = min(3, multiprocessing.cpu_count())
         shape_aug = [imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
@@ -64,8 +66,12 @@ def get_data(name, data_dir, meta_dir, batch_size):
             return img, label
 
         ds = MultiThreadMapData(ds, parallel, mapf, buffer_size=200, strict=True)
+
+        #ds = FakeData([[CROP_SIZE, CROP_SIZE, 3], [CROP_SIZE, CROP_SIZE]], 5000, random=False,
+        #              dtype='uint8')
+
         ds = BatchData(ds, batch_size)
-        #ds = PrefetchDataZMQ(ds, 4)
+        ds = PrefetchDataZMQ(ds, 4)
     else:
         ds = CamvidFiles(data_dir, meta_dir, name, shuffle=False)
         def imgread(ds):
@@ -79,8 +85,6 @@ def get_data(name, data_dir, meta_dir, batch_size):
 
     return ds
     #ds = FakeData([[CROP_SIZE[0], CROP_SIZE[1], 3], [CROP_SIZE[0], CROP_SIZE[1]]], 5000, random=False, dtype='uint8')
-
-
 
 
 
@@ -101,11 +105,10 @@ def get_data_single_gpu(name, data_dir, meta_dir, batch_size):
     ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False)
 
 
-    #ds = FakeData([[CROP_SIZE[0], CROP_SIZE[1], 3], [CROP_SIZE[0], CROP_SIZE[1]]], 5000, random=False, dtype='uint8')
-
+    #ds = FakeData([[CROP_SIZE, CROP_SIZE, 3], [CROP_SIZE, CROP_SIZE]], 5000, random=False, dtype='uint8')
     if isTrain:
-        ds = PrefetchDataZMQ(ds, 4)
         ds = BatchData(ds, batch_size)
+        ds = PrefetchDataZMQ(ds, 1)
     else:
         ds = BatchData(ds, 1)
     return ds
@@ -114,8 +117,8 @@ class Model(ModelDesc):
 
     def _get_inputs(self):
         ## Set static shape so that tensorflow knows shape at compile time.
-        return [InputDesc(tf.float32, [None, CROP_SIZE[0], CROP_SIZE[1], 3], 'image'),
-                InputDesc(tf.int32, [None, CROP_SIZE[0], CROP_SIZE[1]], 'gt')]
+        return [InputDesc(tf.float32, [None, CROP_SIZE, CROP_SIZE, 3], 'image'),
+                InputDesc(tf.int32, [None, CROP_SIZE, CROP_SIZE], 'gt')]
 
     def _build_graph(self, inputs):
         def mydensenet(image):
