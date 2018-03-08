@@ -12,7 +12,7 @@ import numpy as np
 
 os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
 from tensorpack import *
-from tensorpack.dataflow.dataset import Camvid,CamvidFiles
+from tensorpack.dataflow.dataset import Aerial
 from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler
 from tensorpack.utils.stats import MIoUStatistics
@@ -20,9 +20,6 @@ from tensorpack.utils import logger
 from tensorpack.tfutils import optimizer
 from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 from densenet_v1 import densenet
-import multiprocessing
-
-
 slim = tf.contrib.slim
 
 from tqdm import tqdm
@@ -30,68 +27,23 @@ from seg_utils import RandomCropWithPadding, softmax_cross_entropy_with_ignore_l
 
 
 
-CLASS_NUM = Camvid.class_num()
-CROP_SIZE = 321
-batch_size = 24
+CLASS_NUM = Aerial.class_num()
+CROP_SIZE = 473
+batch_size = 12
 
 IGNORE_LABEL = 255
 
 GROWTH_RATE = 48
-first_batch_lr = 3e-3
-lr_schedule = [(5, 3e-4), (8, 3e-5)]
-epoch_scale = 700 #200 #640
+first_batch_lr = 1e-3
+lr_schedule = [(4, 1e-4), (8, 1e-5)]
+epoch_scale = 32 #640
 max_epoch = 10
 lr_multi_schedule = [('nothing', 5),('nothing',10)]
 evaluate_every_n_epoch = 1
 
 def get_data(name, data_dir, meta_dir, batch_size):
     isTrain = True if 'train' in name else False
-
-    if isTrain:#special augmentation
-
-        ds = CamvidFiles(data_dir, meta_dir, name, shuffle=True)
-        parallel = min(4, multiprocessing.cpu_count())
-        shape_aug = [imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
-                            aspect_ratio_thres=0.15),
-                     RandomCropWithPadding(CROP_SIZE,IGNORE_LABEL),
-                     imgaug.Flip(horiz=True),
-                     ]
-        aug = imgaug.AugmentorList(shape_aug)
-        def mapf(ds):
-            img, label = ds
-            img = cv2.imread(img, cv2.IMREAD_COLOR)
-            label = cv2.imread(label, cv2.IMREAD_GRAYSCALE)
-            img, params = aug.augment_return_params(img)
-            label = aug._augment(label, params)
-            return img, label
-
-        #ds = MultiThreadMapData(ds, parallel, mapf, buffer_size=200, strict=True)
-
-        #ds = FakeData([[CROP_SIZE, CROP_SIZE, 3], [CROP_SIZE, CROP_SIZE]], 5000, random=False,
-        #              dtype='uint8')
-        ds = MapData(ds, mapf)
-        ds = PrefetchDataZMQ(ds, 4)
-        ds = BatchData(ds, batch_size)
-    else:
-        ds = CamvidFiles(data_dir, meta_dir, name, shuffle=False)
-        def imgread(ds):
-            img, label = ds
-            img = cv2.imread(img, cv2.IMREAD_COLOR)
-            label = cv2.imread(label, cv2.IMREAD_GRAYSCALE)
-            return [img, label]
-
-        ds = MapData(ds, imgread)
-        ds = BatchData(ds, 1)
-
-    return ds
-    #ds = FakeData([[CROP_SIZE[0], CROP_SIZE[1], 3], [CROP_SIZE[0], CROP_SIZE[1]]], 5000, random=False, dtype='uint8')
-
-
-
-
-def get_data_single_gpu(name, data_dir, meta_dir, batch_size):
-    isTrain = True if 'train' in name else False
-    ds = Camvid(data_dir, meta_dir, name, shuffle=True)
+    ds = Aerial(meta_dir, name, shuffle=True)
 
     if isTrain:#special augmentation
         shape_aug = [imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
@@ -209,7 +161,7 @@ def view_data(data_dir, meta_dir, batch_size):
 def get_config(data_dir, meta_dir, batch_size):
     logger.auto_set_dir()
     nr_tower = max(get_nr_gpu(), 1)
-    dataset_train = get_data('train_val', data_dir, meta_dir, batch_size)
+    dataset_train = get_data('train', data_dir, meta_dir, batch_size)
     steps_per_epoch = dataset_train.size() * epoch_scale
 
     return TrainConfig(
@@ -252,7 +204,7 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = False, is_densecrf = False):
     import cv2
-    ds = Camvid(args.data_dir, args.meta_dir, "test")
+    ds = Aerial(args.data_dir, args.meta_dir, "val")
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
@@ -305,7 +257,7 @@ class CalculateMIoU(Callback):
 
     def _trigger(self):
         global args
-        self.val_ds = get_data('test', args.data_dir, args.meta_dir, args.batch_size)
+        self.val_ds = get_data('val', args.data_dir, args.meta_dir, args.batch_size)
         self.val_ds.reset_state()
 
         self.stat = MIoUStatistics(self.nb_class)
@@ -335,7 +287,7 @@ if __name__ == '__main__':
     parser.add_argument('--gpu', default="0", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--data_dir', default="/data1/dataset/SegNet-Tutorial",
                         help='dataset dir')
-    parser.add_argument('--meta_dir', default="metadata/camvid", help='meta dir')
+    parser.add_argument('--meta_dir', default="../metadata/aerial", help='meta dir')
     #parser.add_argument('--load', default="../resnet101.npz", help='load model')
     parser.add_argument('--growth_rate', default= GROWTH_RATE, help='growth_rate')
     parser.add_argument('--num_layers', default=121, help='num_layers')
