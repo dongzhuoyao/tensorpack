@@ -89,6 +89,8 @@ camvid.scratch.imagesize321.stem.nocompression.nopooling.dense30k36|5.7|60
 camvid.scratch.imagesize321.stem.compression.nopooling.dense30k36|3.2|58.8
 
 
+321 model result is  61.2, when validation with 360x480 the result is only 56.1
+
 ### Aerial 
 
 Arch | Val mIoU(target: 88.67)
