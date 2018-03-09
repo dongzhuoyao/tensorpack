@@ -94,10 +94,11 @@ camvid.scratch.imagesize321.stem.compression.nopooling.dense30k36|3.2|58.8
 
 ### Aerial 
 
-Arch | Val mIoU(target: 88.67)
------------- | -------------
-deeplabv2.aerial.imagesize473.scratch|86.72
-deeplabv2.aerial.imagesize473.res50.scratch|86.9
+Arch |#Params| Val mIoU(target: 88.67)
+------------ | -------------| -------------
+deeplabv2.aerial.imagesize473.scratch||86.72
+deeplabv2.aerial.imagesize473.res50.scratch||86.9
+camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48|88.3|
 
 
 
