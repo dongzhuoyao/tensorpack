@@ -88,6 +88,7 @@ camvid.scratch.imagesize321.densenet30k36|2.9|56
 camvid.scratch.imagesize321.stem.nocompression.nopooling.dense121k60|7.6|?
 camvid.scratch.imagesize321.stem.nocompression.nopooling.dense30k36|5.7|60
 camvid.scratch.imagesize321.stem.compression.nopooling.dense30k36|3.2|58.8
+camvid.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.scale320.lrx1.4gpu||57~，very low
 
 
 321 model result is  61.2, when validation with 360x480 the result is only 56.1
