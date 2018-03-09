@@ -276,6 +276,66 @@ def stack_dense_blocks(inputs, blocks, growth, remove_latter_pooling, senet,tran
                         kernel_size=1, stride=1, rate=1, scope='conv2')  # smooth
       return fpn + net #TODO buggy
 
+  elif denseindense == 4:
+      #https://github.com/kuangliu/pytorch-fpn/blob/master/fpn.py
+      def _upsamle_add(x,y,upsample = True):
+          if upsample:
+            return tf.image.resize_bilinear(x, y.shape[1:3]) + y
+          else:
+              return x+y
+      def _smooth(x, output_channel, name):
+          return slim.conv2d(x, num_outputs=output_channel, kernel_size=3,
+                                             stride=1, rate=1, scope=name)
+
+      with tf.variable_scope('denseindense'):
+          output_channel = 416
+
+          net = slim.conv2d(net, num_outputs=output_channel, kernel_size=1,
+                                             stride=1, rate=1, scope='net_conv')
+          denseindense_list[2] = slim.conv2d(denseindense_list[2], num_outputs=output_channel, kernel_size=1,
+                                             stride=1, rate=1, scope='conv2')
+          denseindense_list[1] = slim.conv2d(denseindense_list[1], num_outputs=output_channel, kernel_size=1,
+                                             stride=1, rate=1, scope='conv1')
+          denseindense_list[0] = slim.conv2d(denseindense_list[0], num_outputs=output_channel, kernel_size=1,
+                      stride=1, rate=1, scope='conv0')
+
+          fpn = _upsamle_add(net, denseindense_list[2],upsample=False)
+          fpn = _smooth(fpn,output_channel,'smooth1')
+          fpn = _upsamle_add(fpn,denseindense_list[1],upsample=True)
+          fpn = _smooth(fpn, output_channel, 'smooth2')
+          fpn = _upsamle_add(fpn, denseindense_list[0], upsample=True)
+          #fpn = _smooth(fpn, output_channel, 'smooth3') directly upsample to origin image size, don't need smooth any more
+          return fpn
+  elif denseindense == 5:
+      #https://github.com/kuangliu/pytorch-fpn/blob/master/fpn.py
+      def _upsamle_add(x,y,upsample = True):
+          if upsample:
+            return tf.image.resize_bilinear(x, y.shape[1:3]) + y
+          else:
+              return x+y
+      def _smooth(x, output_channel, name):
+          return slim.conv2d(x, num_outputs=output_channel, kernel_size=1,
+                                             stride=1, rate=1, scope=name)
+
+      with tf.variable_scope('denseindense'):
+          output_channel = 416
+
+          net = slim.conv2d(net, num_outputs=output_channel, kernel_size=1,
+                                             stride=1, rate=1, scope='net_conv')
+          denseindense_list[2] = slim.conv2d(denseindense_list[2], num_outputs=output_channel, kernel_size=1,
+                                             stride=1, rate=1, scope='conv2')
+          denseindense_list[1] = slim.conv2d(denseindense_list[1], num_outputs=output_channel, kernel_size=1,
+                                             stride=1, rate=1, scope='conv1')
+          denseindense_list[0] = slim.conv2d(denseindense_list[0], num_outputs=output_channel, kernel_size=1,
+                      stride=1, rate=1, scope='conv0')
+
+          fpn = _upsamle_add(net, denseindense_list[2],upsample=False)
+          fpn = _smooth(fpn,output_channel,'smooth1')
+          fpn = _upsamle_add(fpn,denseindense_list[1],upsample=True)
+          fpn = _smooth(fpn, output_channel, 'smooth2')
+          fpn = _upsamle_add(fpn, denseindense_list[0], upsample=True)
+          #fpn = _smooth(fpn, output_channel, 'smooth3') directly upsample to origin image size, don't need smooth any more
+          return fpn
   elif denseindense == 0:
     return net
   else:
