@@ -67,11 +67,13 @@ deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dens
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k36.senet4.did4|6.1|52.2
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48|9.6|54.8
 deeplabv2.camvid..imagesize360x480.toy.newbaseline.stem.nocompression.nopooling.dense30k48|9.6|57.2
+deeplabv2.camvid..imagesize360x480.toy.newbaseline.stem.nocompression.nopooling.dense30k48.batchsize16|9.6|56.8
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense42k48|15.9|55
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.nodropout|9.6|54
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.senet4|9.69|53.7
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.newdid|10.7|55.1
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.newdid2|13.6|54.6
+deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.newdid4|14|57.9
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.transitionsenet2|12.8|54.8
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.transitionsenet4|10.76|53.5
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k36(actually48).senet4|5.7|53.1
@@ -86,14 +88,18 @@ camvid.scratch.imagesize321.densenet30k36|2.9|56
 camvid.scratch.imagesize321.stem.nocompression.nopooling.dense121k60|7.6|?
 camvid.scratch.imagesize321.stem.nocompression.nopooling.dense30k36|5.7|60
 camvid.scratch.imagesize321.stem.compression.nopooling.dense30k36|3.2|58.8
+camvid.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.scale320.lrx1.4gpu||57~，very low
 
+
+321 model result is  61.2, when validation with 360x480 the result is only 56.1
 
 ### Aerial 
 
-Arch | Val mIoU(target: 88.67)
------------- | -------------
-deeplabv2.aerial.imagesize473.scratch|86.72
-deeplabv2.aerial.imagesize473.res50.scratch|86.9
+Arch |#Params| Val mIoU(target: 88.67)
+------------ | -------------| -------------
+deeplabv2.aerial.imagesize473.scratch||86.72
+deeplabv2.aerial.imagesize473.res50.scratch||86.9
+camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48|88.3|
 
 
 
