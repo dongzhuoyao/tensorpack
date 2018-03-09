@@ -14,7 +14,7 @@ deeplabv2res101.aerial.shk(88.34)|?
 deeplabv2res101.aerial.4gpu（88.67)|74.95
 deeplabv2res101.aerial.shk.crop513.4gpu,(0.9,1,1.1 multi scale)(88.98)|?
 deeplabv2res101.aerial.shk.crop513.4gpu,(0.7,0.9,1,1.1,1.3 multi scale)(89.14)|?
-deeplabv2res101.aerial.shk.crop513.4gpu,(0.5,0.75,1,1.25,1.5 multi scale)(89.18)|?
+deeplabv2res101.aerial.shk.crop513.4gpu,(0.5,0.75,1,1.25,1.5 multi scale)(89.18)|75.33	
 ### models
 
 Arch | Val mIoU
