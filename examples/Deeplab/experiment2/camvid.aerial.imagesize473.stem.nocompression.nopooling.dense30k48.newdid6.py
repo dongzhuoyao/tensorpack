@@ -29,7 +29,7 @@ from seg_utils import RandomCropWithPadding, softmax_cross_entropy_with_ignore_l
 
 CLASS_NUM = Aerial.class_num()
 CROP_SIZE = 473
-batch_size = 11
+batch_size = 10
 
 IGNORE_LABEL = 255
 
