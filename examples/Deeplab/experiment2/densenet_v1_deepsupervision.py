@@ -167,7 +167,7 @@ def transition(inputs,transition_senet, remove_latter_pooling, bottleneck=True, 
 
 
 @slim.add_arg_scope
-def stack_dense_blocks(inputs, blocks, growth, remove_latter_pooling, senet,transition_senet, denseindense, bottleneck=True, compress=0.5,
+def stack_dense_blocks(inputs,num_classes, blocks, growth, remove_latter_pooling, senet,transition_senet, denseindense, bottleneck=True, compress=0.5,
   stride=11, rate=1, drop=0, outputs_collections=None, scope=None):
   """Dense block.
   Args:
@@ -356,7 +356,7 @@ def stack_dense_blocks(inputs, blocks, growth, remove_latter_pooling, senet,tran
 
       with tf.variable_scope('denseindense'):
           output_channel = 416
-          class_num = 11
+          class_num = num_classes
 
           net = slim.conv2d(net, num_outputs=output_channel, kernel_size=1,
                                              stride=1, rate=1, scope='net_conv')
@@ -474,7 +474,7 @@ def densenet(inputs,
             net = slim.conv2d(net, growth*2, kernel_size=[3, 3], stride=2, 
               scope='conv1')
           
-          net_list = stack_dense_blocks(net, blocks, growth, remove_latter_pooling, senet,transition_senet,denseindense, bottleneck, compress,
+          net_list = stack_dense_blocks(net,num_classes, blocks, growth, remove_latter_pooling, senet,transition_senet,denseindense, bottleneck, compress,
             stride, rate, drop)
 
           return net_list,None
