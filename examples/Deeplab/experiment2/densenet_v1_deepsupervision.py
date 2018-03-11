@@ -379,6 +379,60 @@ def stack_dense_blocks(inputs,num_classes, blocks, growth, remove_latter_pooling
           #fpn = _smooth(fpn, output_channel, 'smooth3') directly upsample to origin image size, don't need smooth any more
           return fpn_list
 
+  elif denseindense == 7:
+      #https://github.com/kuangliu/pytorch-fpn/blob/master/fpn.py
+      def _upsamle_add(x,y,upsample = True):
+          if upsample:
+            return tf.image.resize_bilinear(x, y.shape[1:3]) + y
+          else:
+              return x+y
+      def _smooth(x, output_channel, name):
+          return slim.conv2d(x, num_outputs=output_channel, kernel_size=1,
+                                             stride=1, rate=1, scope=name)
+
+      def _finalconv(x, output_channel, name):
+          with tf.variable_scope(name):
+              x = slim.batch_norm(x, activation_fn=tf.nn.relu, scope='postnorm')
+              x = slim.conv2d(x, num_outputs=output_channel, kernel_size=1,
+                                stride=1, rate=6, scope='conv2classnum')  # dilation 2,4,6
+              return x
+
+      with tf.variable_scope('denseindense'):
+          output_channel = 416
+          class_num = num_classes
+
+          net = slim.conv2d(net, num_outputs=output_channel, kernel_size=1,
+                                             stride=1, rate=1, scope='net_conv')
+          denseindense_list[2] = slim.conv2d(denseindense_list[2], num_outputs=output_channel, kernel_size=1,
+                                             stride=1, rate=1, scope='conv2')
+          denseindense_list[1] = slim.conv2d(denseindense_list[1], num_outputs=output_channel, kernel_size=1,
+                                             stride=1, rate=1, scope='conv1')
+          denseindense_list[0] = slim.conv2d(denseindense_list[0], num_outputs=output_channel, kernel_size=1,
+                      stride=1, rate=1, scope='conv0')
+
+          net = my_squeeze_excitation_layer(net,
+                                            net.get_shape().as_list()[-1], 4,
+                                                             "net_conv_se")
+          denseindense_list[2] = my_squeeze_excitation_layer(denseindense_list[2],denseindense_list[2].get_shape().as_list()[-1], 4, "conv2_se")
+          denseindense_list[1] = my_squeeze_excitation_layer(denseindense_list[1],
+                                                             denseindense_list[1].get_shape().as_list()[-1], 4,
+                                                             "conv1_se")
+          denseindense_list[0] = my_squeeze_excitation_layer(denseindense_list[0],
+                                                             denseindense_list[0].get_shape().as_list()[-1], 4,
+                                                             "conv0_se")
+
+          fpn_list = []
+          fpn = _upsamle_add(net, denseindense_list[2],upsample=False)
+          fpn_list.append(_finalconv(fpn,class_num,'ds0'))
+          fpn = _smooth(fpn,output_channel,'smooth1')
+          fpn = _upsamle_add(fpn,denseindense_list[1],upsample=True)
+          fpn_list.append(_finalconv(fpn, class_num, 'ds1'))
+          fpn = _smooth(fpn, output_channel, 'smooth2')
+          fpn = _upsamle_add(fpn, denseindense_list[0], upsample=True)
+          fpn_list.append(_finalconv(fpn, class_num, 'ds2'))
+          #fpn = _smooth(fpn, output_channel, 'smooth3') directly upsample to origin image size, don't need smooth any more
+          return fpn_list
+
   elif denseindense == 0:
     return net
   else:
