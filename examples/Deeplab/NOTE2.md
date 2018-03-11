@@ -69,6 +69,7 @@ deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dens
 deeplabv2.camvid..imagesize360x480.toy.newbaseline.stem.nocompression.nopooling.dense30k48|9.6|57.2
 deeplabv2.camvid..imagesize360x480.toy.newbaseline.stem.nocompression.nopooling.dense30k48.batchsize16|9.6|56.8
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense42k48|15.9|55
+deeplabv2.camvid..imagesize225.toy.newbaseline.stem.nocompression.nopooling.dense30k48||52.6
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.nodropout|9.6|54
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.senet4|9.69|53.7
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.newdid|10.7|55.1
