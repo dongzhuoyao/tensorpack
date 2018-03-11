@@ -77,6 +77,7 @@ deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dens
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.newdid4|14|57.9
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.newdid4_1|?|59
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.newdid6|11.6|59.2|
+deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.newdid6_senet||59.1
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.transitionsenet2|12.8|54.8
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.transitionsenet4|10.76|53.5
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k36(actually48).senet4|5.7|53.1
@@ -103,7 +104,9 @@ Arch |#Params| Val mIoU(target: 88.67)
 deeplabv2.aerial.imagesize473.scratch||86.72
 deeplabv2.aerial.imagesize473.res50.scratch||86.9
 camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48|88.3|
+camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.scale50|88.8|
 camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.newdid4|89.1|
+
 
 
 
