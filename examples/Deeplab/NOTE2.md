@@ -93,6 +93,7 @@ camvid.scratch.imagesize321.stem.nocompression.nopooling.dense121k60|7.6|?
 camvid.scratch.imagesize321.stem.nocompression.nopooling.dense30k36|5.7|60
 camvid.scratch.imagesize321.stem.compression.nopooling.dense30k36|3.2|58.8
 camvid.scratch.imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.newdid6.scale640||65.6
+camvid.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.3gpu||61.7(why)
 camvid.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.scale320.lrx1.4gpu||57~，very low
 
 
