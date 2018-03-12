@@ -216,9 +216,9 @@ class Trainer(object):
             session_init (sessinit.SessionInit):
         """
 
-        # reset global step by dongzhuoyao
-        from tensorpack.tfutils.common import get_global_step_var
-        self.reset_global_step_op = get_global_step_var().assign(0)
+        ## reset global step by dongzhuoyao
+        #from tensorpack.tfutils.common import get_global_step_var
+        #self.reset_global_step_op = get_global_step_var().assign(0)
 
         session_init._setup_graph()
 
@@ -257,8 +257,8 @@ class Trainer(object):
             steps_per_epoch, starting_epoch, max_epoch (int):
         """
         with self.sess.as_default():
-            self.sess.run(self.reset_global_step_op)  # dongzhuoyao
-            logger.info("reset global_step to {}".format(get_global_step_value()))
+            #self.sess.run(self.reset_global_step_op)  # dongzhuoyao
+            #logger.info("reset global_step to {}".format(get_global_step_value()))
 
             self.loop.config(steps_per_epoch, starting_epoch, max_epoch)
             self.loop.update_global_step()

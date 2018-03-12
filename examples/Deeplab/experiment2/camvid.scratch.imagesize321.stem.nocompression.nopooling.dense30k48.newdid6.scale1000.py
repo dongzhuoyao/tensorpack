@@ -29,14 +29,14 @@ from seg_utils import RandomCropWithPadding, softmax_cross_entropy_with_ignore_l
 
 CLASS_NUM = Camvid.class_num()
 CROP_SIZE = 321
-batch_size = 21
+batch_size = 22
 
 IGNORE_LABEL = 255
 
 GROWTH_RATE = 48
 first_batch_lr = 1e-3
 lr_schedule = [(4, 1e-4), (8, 1e-5)]
-epoch_scale = 32 #640
+epoch_scale = 1000 #640
 max_epoch = 10
 lr_multi_schedule = [('nothing', 5),('nothing',10)]
 evaluate_every_n_epoch = 1
@@ -98,7 +98,7 @@ class Model(ModelDesc):
                                        num_classes=CLASS_NUM,
                                        compress = 1,
                                        stem = 1,
-                                       denseindense=7,
+                                       denseindense=6,
                                        remove_latter_pooling=True,
                                        data_name='imagenet',
                                        is_training=ctx.is_training,
