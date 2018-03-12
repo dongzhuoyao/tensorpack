@@ -282,6 +282,11 @@ def proceed_validation(args, is_save = True, is_densecrf = False):
 
         if is_save:
             cv2.imwrite("result/{}.png".format(i), np.concatenate((image, visualize_label(label), visualize_label(prediction0), visualize_label(prediction1), visualize_label(prediction2)), axis=1))
+            cv2.imwrite("result/{}-img.png".format(i), image)
+            cv2.imwrite("result/{}-label.png".format(i),visualize_label(label))
+            cv2.imwrite("result/{}-predict0.png".format(i),visualize_label(prediction0))
+            cv2.imwrite("result/{}-predict1.png".format(i),visualize_label(prediction1))
+            cv2.imwrite("result/{}-predict2.png".format(i),visualize_label(prediction2))
 
         i += 1
 

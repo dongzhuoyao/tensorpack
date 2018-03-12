@@ -261,25 +261,36 @@ def proceed_validation(args, is_save = True, is_densecrf = False):
                                             visualize_label(prediction0[start_i:end_i, start_j:end_j]),
                                             visualize_label(prediction1[start_i:end_i, start_j:end_j]),
                                             visualize_label(prediction2[start_i:end_i, start_j:end_j])), axis=1))
+                cv2.imwrite(os.path.join(prefix_dir, "out{}_patch{}_{}_origin.png".format(imageId, i, j)),image[start_i:end_i, start_j:end_j])
+                cv2.imwrite(os.path.join(prefix_dir, "out{}_patch{}_{}_label.png".format(imageId, i, j)),visualize_label(label[start_i:end_i, start_j:end_j]))
+                cv2.imwrite(os.path.join(prefix_dir, "out{}_patch{}_{}_predict0.png".format(imageId, i, j)),
+                            visualize_label(prediction0[start_i:end_i, start_j:end_j]))
+                cv2.imwrite(os.path.join(prefix_dir, "out{}_patch{}_{}_predict1.png".format(imageId, i, j)),
+                            visualize_label(prediction1[start_i:end_i, start_j:end_j]))
+                cv2.imwrite(os.path.join(prefix_dir, "out{}_patch{}_{}_predict2.png".format(imageId, i, j)),
+                            visualize_label(prediction2[start_i:end_i, start_j:end_j]))
+
+
 
     for image, label in tqdm(ds.get_data()):
-        label = np.squeeze(label)
-        image = np.squeeze(image)
-        prediction0 = predict_scaler(image, mypredictor0, scales=[0.5, 0.75, 1, 1.25, 1.5], classes=CLASS_NUM,
-                                     tile_size=CROP_SIZE, is_densecrf=is_densecrf)
-        prediction1 = predict_scaler(image, mypredictor1, scales=[0.5, 0.75, 1, 1.25, 1.5], classes=CLASS_NUM,
-                                     tile_size=CROP_SIZE, is_densecrf=is_densecrf)
-        prediction2 = predict_scaler(image, mypredictor2, scales=[0.5, 0.75, 1, 1.25, 1.5], classes=CLASS_NUM,
-                                     tile_size=CROP_SIZE, is_densecrf=is_densecrf)
+        if i in [4,6,7]:
+            label = np.squeeze(label)
+            image = np.squeeze(image)
+            prediction0 = predict_scaler(image, mypredictor0, scales=[0.5, 0.75, 1, 1.25, 1.5], classes=CLASS_NUM,
+                                         tile_size=CROP_SIZE, is_densecrf=is_densecrf)
+            prediction1 = predict_scaler(image, mypredictor1, scales=[0.5, 0.75, 1, 1.25, 1.5], classes=CLASS_NUM,
+                                         tile_size=CROP_SIZE, is_densecrf=is_densecrf)
+            prediction2 = predict_scaler(image, mypredictor2, scales=[0.5, 0.75, 1, 1.25, 1.5], classes=CLASS_NUM,
+                                         tile_size=CROP_SIZE, is_densecrf=is_densecrf)
 
-        prediction0 = np.argmax(prediction0, axis=2)
-        prediction1 = np.argmax(prediction1, axis=2)
-        prediction2 = np.argmax(prediction2, axis=2)
+            prediction0 = np.argmax(prediction0, axis=2)
+            prediction1 = np.argmax(prediction1, axis=2)
+            prediction2 = np.argmax(prediction2, axis=2)
 
-        stat.feed(prediction2, label)
+            stat.feed(prediction2, label)
 
-        if is_save:
-            imwrite_grid(image, label, prediction0, prediction1,prediction2, border=256, prefix_dir="result_aerial_256", imageId=i)
+            if is_save:
+                imwrite_grid(image, label, prediction0, prediction1,prediction2, border=256, prefix_dir="result_aerial_256_small", imageId=i)
 
         i += 1
 
