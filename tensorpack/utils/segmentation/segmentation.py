@@ -12,7 +12,7 @@ from tensorpack.utils import logger
 
 __all__ = ['update_confusion_matrix', 'predict_slider']
 
-# Colour map.
+# Colour map. #BGR order.
 label_colours = [(0,0,0)
                 # 0=background
                 ,(128,0,0),(0,128,0),(128,128,0),(0,0,128),(128,0,128)
@@ -78,14 +78,15 @@ def pad_edge(img, target_size):
     return padded_img, [0,target_size[0]-rows_missing,0,target_size[1] - cols_missing]
 
 
-def visualize_label(label,ignore_label = 255):
+def visualize_label(label,class_num=21, ignore_label = 255):
     """Color classes a good distance away from each other."""
     h, w = label.shape
     img_color = np.zeros((h, w, 3)).astype('uint8')
-    for i in range(0,21):
+    for i in range(0,class_num):
         img_color[label == i] = label_colours[i]
 
     img_color[label==ignore_label] = ignore_color#highlight ignore label
+
     return img_color
 
 
