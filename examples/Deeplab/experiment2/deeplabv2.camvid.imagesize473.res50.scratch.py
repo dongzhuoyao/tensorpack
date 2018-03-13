@@ -230,6 +230,7 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
     logger.info("mIoU: {}".format(stat.mIoU))
     logger.info("mean_accuracy: {}".format(stat.mean_accuracy))
     logger.info("accuracy: {}".format(stat.accuracy))
+    logger.info("iou: {}".format(stat.mIoU_beautify))
 
 
 
