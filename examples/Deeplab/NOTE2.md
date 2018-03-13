@@ -95,6 +95,9 @@ camvid.scratch.imagesize321.stem.compression.nopooling.dense30k36|3.2|58.8
 camvid.scratch.imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.newdid6.scale640||65.6
 camvid.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.3gpu||61.7(why)
 camvid.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.scale320.lrx1.4gpu||57~，very low
+------------ | -------------| -------------
+deeplabv2.camvid.imagesize321.res100.scratch.on_trainval.scale32||55.7|
+deeplabv2.camvid.imagesize321.res100.scratch.on_trainval.scale160||58.6|
 
 
 321 model result is  61.2, when validation with 360x480 the result is only 56.1
@@ -109,7 +112,7 @@ camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48||88.3|
 camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.scale50||88.8|
 camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.newdid4||89.1|
 camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.newdid4_1||89.0|
-
+camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.newdid6.4gpu_bugfix||90.0
 
 
 
