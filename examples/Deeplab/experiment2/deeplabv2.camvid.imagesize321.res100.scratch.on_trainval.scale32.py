@@ -193,7 +193,7 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = False, is_densecrf = False):
     import cv2
-    ds = Camvid(args.data_dir, args.meta_dir, "val")
+    ds = Camvid(args.data_dir, args.meta_dir, "test")
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
@@ -247,7 +247,7 @@ class CalculateMIoU(Callback):
 
     def _trigger(self):
         global args
-        self.val_ds = get_data('val', args.data_dir, args.meta_dir, args.batch_size)
+        self.val_ds = get_data('test', args.data_dir, args.meta_dir, args.batch_size)
         self.val_ds.reset_state()
 
         self.stat = MIoUStatistics(self.nb_class)
