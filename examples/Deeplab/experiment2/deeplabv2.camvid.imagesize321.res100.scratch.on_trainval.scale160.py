@@ -11,38 +11,37 @@ import os
 import numpy as np
 
 from tensorpack import *
-from tensorpack.dataflow.dataset import Aerial
+from tensorpack.dataflow.dataset import Camvid
 from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler
 from tensorpack.utils.stats import MIoUStatistics
 from tensorpack.utils import logger
 from tensorpack.tfutils import optimizer
 from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
-from densenet_v1_deepsupervision import densenet
-slim = tf.contrib.slim
 
 from tqdm import tqdm
 from seg_utils import RandomCropWithPadding, softmax_cross_entropy_with_ignore_label
+from resnet_model import (
+    preresnet_group, preresnet_basicblock, preresnet_bottleneck,
+    resnet_group_deeplab, resnet_basicblock, resnet_bottleneck_deeplab, se_resnet_bottleneck,
+    resnet_backbone_deeplab)
 
 
+CLASS_NUM = Camvid.class_num()
+CROP_SIZE = 321
+IGNORE_LABEL = 28
 
-CLASS_NUM = Aerial.class_num()
-CROP_SIZE = 473
-batch_size = 10
-
-IGNORE_LABEL = 255
-
-GROWTH_RATE = 48
-first_batch_lr = 3e-3
-lr_schedule = [(4, 3e-4), (8, 3e-5)]
-epoch_scale = 32 #640
+first_batch_lr = 2.5e-3
+lr_schedule = [(2, 1e-3), (4, 1e-4), (6, 8e-5)]
+epoch_scale = 160
 max_epoch = 10
 lr_multi_schedule = [('nothing', 5),('nothing',10)]
+batch_size = 12
 evaluate_every_n_epoch = 1
 
 def get_data(name, data_dir, meta_dir, batch_size):
     isTrain = True if 'train' in name else False
-    ds = Aerial(meta_dir, name, shuffle=True)
+    ds = Camvid(data_dir, meta_dir, name, shuffle=True)
 
     if isTrain:#special augmentation
         shape_aug = [imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
@@ -59,7 +58,7 @@ def get_data(name, data_dir, meta_dir, batch_size):
     #ds = FakeData([[CROP_SIZE, CROP_SIZE, 3], [CROP_SIZE, CROP_SIZE]], 5000, random=False, dtype='uint8')
     if isTrain:
         ds = BatchData(ds, batch_size)
-        ds = PrefetchDataZMQ(ds, 4)
+        ds = PrefetchDataZMQ(ds, 1)
     else:
         ds = BatchData(ds, 1)
     return ds
@@ -72,74 +71,56 @@ class Model(ModelDesc):
                 InputDesc(tf.int32, [None, CROP_SIZE, CROP_SIZE], 'gt')]
 
     def _build_graph(self, inputs):
-        def mydensenet(image):
-            # Prepare parameters for DenseNet
-            # assert (args.num_layers - 4) % 3 == 0, 'The number of layers is wrong'
-            # num_units = (args.num_layers - 4) // 3
-            # blocks = [num_units, num_units, num_units]
-            blocks = [6, 8, 8, 8]
-            # blocks = [6, 12, 48, 32]
-            # blocks = [6, 12, 64, 48]
-            rate = [1, 1, 2, 4]
-            stride = [2, 2, 1, 1]
+        def resnet101(image):
+            mode = 'resnet'
+            depth = 101
+            basicblock = preresnet_basicblock if mode == 'preact' else resnet_basicblock
+            bottleneck = {
+                'resnet': resnet_bottleneck_deeplab,
+                'preact': preresnet_bottleneck,
+                'se': se_resnet_bottleneck}[mode]
+            num_blocks, block_func = {
+                18: ([2, 2, 2, 2], basicblock),
+                34: ([3, 4, 6, 3], basicblock),
+                50: ([3, 4, 6, 3], bottleneck),
+                101: ([3, 4, 23, 3], bottleneck),
+                152: ([3, 8, 36, 3], bottleneck)
+            }[depth]
 
-            ctx = get_current_tower_context()
-            logger.info("current ctx.is_training: {}".format(ctx.is_training))
+            def get_logits(image):
+                with argscope([Conv2D, MaxPooling, GlobalAvgPooling, BatchNorm], data_format="NHWC"):
+                    return resnet_backbone_deeplab(
+                        image, num_blocks,
+                        preresnet_group if mode == 'preact' else resnet_group_deeplab, block_func,CLASS_NUM,ASPP = False)
 
-            # Training
-            net, end_points = densenet(image,
-                                       rate=rate,
-                                       stride=stride,
-                                       blocks=blocks,
-                                       growth=args.growth_rate,
-                                       drop=0.2,
-                                       weight_decay=0.00001,
-                                       num_classes=CLASS_NUM,
-                                       compress = 1,
-                                       stem = 1,
-                                       denseindense=6,
-                                       remove_latter_pooling=True,
-                                       data_name='imagenet',
-                                       is_training=ctx.is_training,
-                                       scope='densenet_L{}_k{}'.format(args.num_layers,
-                                                                       args.growth_rate))
-
-            return net
+            return get_logits(image)
 
         image, label = inputs
         image = image - tf.constant([104, 116, 122], dtype='float32')
         label = tf.identity(label, name="label")
 
-        predict_list = mydensenet(image)
-        for ii, p in enumerate(predict_list):
-            predict_list[ii] = tf.image.resize_bilinear(predict_list[ii], image.shape[1:3])
+        predict = resnet101(image)
 
-        predict = predict_list[-1]
         costs = []
         prob = tf.nn.softmax(predict, name='prob')
 
         label4d = tf.expand_dims(label, 3, name='label4d')
         new_size = prob.get_shape()[1:3]
-        # label_resized = tf.image.resize_nearest_neighbor(label4d, new_size)
+        #label_resized = tf.image.resize_nearest_neighbor(label4d, new_size)
 
-        cost = 0
-        for jj,p in enumerate(predict_list):
-            current_predict = predict_list[jj]
-            cost += softmax_cross_entropy_with_ignore_label(logits=current_predict, label=label4d,
-                                                       class_num=CLASS_NUM)
-        cost = cost/len(predict_list)
-
-        prediction = tf.argmax(prob, axis=-1, name="prediction")
+        cost = softmax_cross_entropy_with_ignore_label(logits=predict, label=label4d,
+                                                             class_num=CLASS_NUM)
+        prediction = tf.argmax(prob, axis=-1,name="prediction")
         cost = tf.reduce_mean(cost, name='cross_entropy_loss')  # the average cross-entropy loss
         costs.append(cost)
 
         if get_current_tower_context().is_training:
-            # wd_w = tf.train.exponential_decay(wd, get_global_step_var(),
-            #                                  80000, 0.7, True)
-            # wd_cost = tf.multiply(wd_w, regularize_cost('.*/W', tf.nn.l2_loss), name='wd_cost')
-            wd_cost = tf.add_n(slim.losses.get_regularization_losses(), name='wd_cost')
+            wd_w = tf.train.exponential_decay(2e-5, get_global_step_var(),
+                                              80000, 0.7, True)
+            wd_cost = tf.multiply(wd_w, regularize_cost('.*/W', tf.nn.l2_loss), name='wd_cost')
             costs.append(wd_cost)
 
+            add_param_summary(('.*/W', ['histogram']))   # monitor W
             self.cost = tf.add_n(costs, name='cost')
             add_moving_summary(costs + [self.cost])
 
@@ -169,7 +150,7 @@ def view_data(data_dir, meta_dir, batch_size):
 def get_config(data_dir, meta_dir, batch_size):
     logger.auto_set_dir()
     nr_tower = max(get_nr_gpu(), 1)
-    dataset_train = get_data('train', data_dir, meta_dir, batch_size)
+    dataset_train = get_data('train_val', data_dir, meta_dir, batch_size)
     steps_per_epoch = dataset_train.size() * epoch_scale
 
     return TrainConfig(
@@ -212,7 +193,7 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = False, is_densecrf = False):
     import cv2
-    ds = Aerial(args.data_dir, args.meta_dir, "val")
+    ds = Camvid(args.data_dir, args.meta_dir, "test")
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
@@ -247,51 +228,9 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
     logger.info("mIoU: {}".format(stat.mIoU))
     logger.info("mean_accuracy: {}".format(stat.mean_accuracy))
     logger.info("accuracy: {}".format(stat.accuracy))
+    logger.info("iou: {}".format(stat.mIoU_beautify))
 
-def proceed_test(args,is_densecrf = False):
-    import cv2
-    ds = dataset.Aerial( args.meta_dir, "test")
-    imglist = ds.imglist
-    ds = BatchData(ds, 1)
 
-    pred_config = PredictConfig(
-        model=Model(),
-        session_init=get_model_loader(args.load),
-        input_names=['image'],
-        output_names=['prob'])
-    predictor = OfflinePredictor(pred_config)
-
-    from tensorpack.utils.fs import mkdir_p
-    result_dir = "test-{}".format(os.path.basename(__file__).rstrip(".py"))
-    import shutil
-    shutil.rmtree(result_dir, ignore_errors=True)
-    mkdir_p(result_dir)
-    mkdir_p(os.path.join(result_dir,"compressed"))
-
-    import subprocess
-
-    logger.info("start validation....")
-    _itr = ds.get_data()
-    for i in tqdm(range(len(imglist))):
-        image = next(_itr)
-        name = os.path.basename(imglist[i]).rstrip(".tif")
-        image = np.squeeze(image)
-
-        def mypredictor(input_img):
-            # input image: 1*H*W*3
-            # output : H*W*C
-            output = predictor(input_img)
-            return output[0][0]
-
-        prediction = predict_scaler(image, mypredictor, scales=[0.5,0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
-        prediction = np.argmax(prediction, axis=2)
-        prediction = prediction*255 # to 0-255
-        file_path = os.path.join(result_dir,"{}.tif".format(name))
-        compressed_file_path = os.path.join(result_dir, "compressed","{}.tif".format(name))
-        cv2.imwrite(file_path, prediction)
-        command = "gdal_translate --config GDAL_PAM_ENABLED NO -co COMPRESS=CCITTFAX4 -co NBITS=1 " + file_path + " " + compressed_file_path
-        print command
-        subprocess.call(command, shell=True)
 
 
 
@@ -308,7 +247,7 @@ class CalculateMIoU(Callback):
 
     def _trigger(self):
         global args
-        self.val_ds = get_data('val', args.data_dir, args.meta_dir, args.batch_size)
+        self.val_ds = get_data('test', args.data_dir, args.meta_dir, args.batch_size)
         self.val_ds.reset_state()
 
         self.stat = MIoUStatistics(self.nb_class)
@@ -338,17 +277,14 @@ if __name__ == '__main__':
     parser.add_argument('--gpu', default="0", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--data_dir', default="/data1/dataset/SegNet-Tutorial",
                         help='dataset dir')
-    parser.add_argument('--meta_dir', default="../metadata/aerial", help='meta dir')
+    parser.add_argument('--meta_dir', default="metadata/camvid", help='meta dir')
     #parser.add_argument('--load', default="../resnet101.npz", help='load model')
-    parser.add_argument('--growth_rate', default= GROWTH_RATE, help='growth_rate')
-    parser.add_argument('--num_layers', default=121, help='num_layers')
     parser.add_argument('--load', help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
     parser.add_argument('--batch_size', type=int, default = batch_size, help='batch_size')
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     parser.add_argument('--validation', action='store_true', help='validate model on validation images')
-    parser.add_argument('--test', action='store_true', help='test model on test images')
     args = parser.parse_args()
     if args.gpu:
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
@@ -360,8 +296,6 @@ if __name__ == '__main__':
         run(args.load, args.run, args.output)
     elif args.validation:
         proceed_validation(args)
-    elif args.test:
-        proceed_test(args)
     else:
         config = get_config(args.data_dir,args.meta_dir,args.batch_size)
         if args.load:

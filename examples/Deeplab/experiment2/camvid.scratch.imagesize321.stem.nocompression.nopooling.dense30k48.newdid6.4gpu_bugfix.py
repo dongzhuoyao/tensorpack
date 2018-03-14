@@ -11,7 +11,7 @@ import os
 import numpy as np
 
 from tensorpack import *
-from tensorpack.dataflow.dataset import Aerial
+from tensorpack.dataflow.dataset import Camvid
 from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler
 from tensorpack.utils.stats import MIoUStatistics
@@ -26,23 +26,23 @@ from seg_utils import RandomCropWithPadding, softmax_cross_entropy_with_ignore_l
 
 
 
-CLASS_NUM = Aerial.class_num()
-CROP_SIZE = 473
-batch_size = 10
+CLASS_NUM = Camvid.class_num()
+CROP_SIZE = 321
+batch_size = 22
 
 IGNORE_LABEL = 255
 
 GROWTH_RATE = 48
 first_batch_lr = 3e-3
 lr_schedule = [(4, 3e-4), (8, 3e-5)]
-epoch_scale = 32 #640
+epoch_scale = 320 #640
 max_epoch = 10
 lr_multi_schedule = [('nothing', 5),('nothing',10)]
 evaluate_every_n_epoch = 1
 
 def get_data(name, data_dir, meta_dir, batch_size):
     isTrain = True if 'train' in name else False
-    ds = Aerial(meta_dir, name, shuffle=True)
+    ds = Camvid(data_dir, meta_dir, name, shuffle=True)
 
     if isTrain:#special augmentation
         shape_aug = [imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
@@ -169,7 +169,7 @@ def view_data(data_dir, meta_dir, batch_size):
 def get_config(data_dir, meta_dir, batch_size):
     logger.auto_set_dir()
     nr_tower = max(get_nr_gpu(), 1)
-    dataset_train = get_data('train', data_dir, meta_dir, batch_size)
+    dataset_train = get_data('train_val', data_dir, meta_dir, batch_size)
     steps_per_epoch = dataset_train.size() * epoch_scale
 
     return TrainConfig(
@@ -212,7 +212,7 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = False, is_densecrf = False):
     import cv2
-    ds = Aerial(args.data_dir, args.meta_dir, "val")
+    ds = Camvid(args.data_dir, args.meta_dir, "test")
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
@@ -248,50 +248,7 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
     logger.info("mean_accuracy: {}".format(stat.mean_accuracy))
     logger.info("accuracy: {}".format(stat.accuracy))
 
-def proceed_test(args,is_densecrf = False):
-    import cv2
-    ds = dataset.Aerial( args.meta_dir, "test")
-    imglist = ds.imglist
-    ds = BatchData(ds, 1)
 
-    pred_config = PredictConfig(
-        model=Model(),
-        session_init=get_model_loader(args.load),
-        input_names=['image'],
-        output_names=['prob'])
-    predictor = OfflinePredictor(pred_config)
-
-    from tensorpack.utils.fs import mkdir_p
-    result_dir = "test-{}".format(os.path.basename(__file__).rstrip(".py"))
-    import shutil
-    shutil.rmtree(result_dir, ignore_errors=True)
-    mkdir_p(result_dir)
-    mkdir_p(os.path.join(result_dir,"compressed"))
-
-    import subprocess
-
-    logger.info("start validation....")
-    _itr = ds.get_data()
-    for i in tqdm(range(len(imglist))):
-        image = next(_itr)
-        name = os.path.basename(imglist[i]).rstrip(".tif")
-        image = np.squeeze(image)
-
-        def mypredictor(input_img):
-            # input image: 1*H*W*3
-            # output : H*W*C
-            output = predictor(input_img)
-            return output[0][0]
-
-        prediction = predict_scaler(image, mypredictor, scales=[0.5,0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
-        prediction = np.argmax(prediction, axis=2)
-        prediction = prediction*255 # to 0-255
-        file_path = os.path.join(result_dir,"{}.tif".format(name))
-        compressed_file_path = os.path.join(result_dir, "compressed","{}.tif".format(name))
-        cv2.imwrite(file_path, prediction)
-        command = "gdal_translate --config GDAL_PAM_ENABLED NO -co COMPRESS=CCITTFAX4 -co NBITS=1 " + file_path + " " + compressed_file_path
-        print command
-        subprocess.call(command, shell=True)
 
 
 
@@ -308,7 +265,7 @@ class CalculateMIoU(Callback):
 
     def _trigger(self):
         global args
-        self.val_ds = get_data('val', args.data_dir, args.meta_dir, args.batch_size)
+        self.val_ds = get_data('test', args.data_dir, args.meta_dir, args.batch_size)
         self.val_ds.reset_state()
 
         self.stat = MIoUStatistics(self.nb_class)
@@ -338,7 +295,7 @@ if __name__ == '__main__':
     parser.add_argument('--gpu', default="0", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--data_dir', default="/data1/dataset/SegNet-Tutorial",
                         help='dataset dir')
-    parser.add_argument('--meta_dir', default="../metadata/aerial", help='meta dir')
+    parser.add_argument('--meta_dir', default="metadata/camvid", help='meta dir')
     #parser.add_argument('--load', default="../resnet101.npz", help='load model')
     parser.add_argument('--growth_rate', default= GROWTH_RATE, help='growth_rate')
     parser.add_argument('--num_layers', default=121, help='num_layers')
@@ -348,7 +305,6 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, default = batch_size, help='batch_size')
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     parser.add_argument('--validation', action='store_true', help='validate model on validation images')
-    parser.add_argument('--test', action='store_true', help='test model on test images')
     args = parser.parse_args()
     if args.gpu:
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
@@ -360,8 +316,6 @@ if __name__ == '__main__':
         run(args.load, args.run, args.output)
     elif args.validation:
         proceed_validation(args)
-    elif args.test:
-        proceed_test(args)
     else:
         config = get_config(args.data_dir,args.meta_dir,args.batch_size)
         if args.load:
