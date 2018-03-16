@@ -214,7 +214,7 @@ def proceed_validation(args, is_save = True, is_densecrf = False):
     for image, label in tqdm(ds.get_data()):
         label = np.squeeze(label)
         image = np.squeeze(image)
-        prediction = predict_scaler(image, predictor, scales=[0.9,1,1.1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
+        prediction = predict_scaler(image, predictor, scales=[0.5,0.75,1,1.25,1.5], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
         prediction = np.argmax(prediction, axis=2)
         stat.feed(prediction, label)
 
@@ -293,7 +293,7 @@ class CalculateMIoU(Callback):
         for image, label in tqdm(self.val_ds.get_data()):
             label = np.squeeze(label)
             image = np.squeeze(image)
-            prediction = predict_scaler(image, self.pred, scales=[0.9,1,1.1], classes=CLASS_NUM, tile_size=CROP_SIZE,
+            prediction = predict_scaler(image, self.pred, scales=[0.5,0.75,1,1.25,1.5], classes=CLASS_NUM, tile_size=CROP_SIZE,
                            is_densecrf=False)
             prediction = np.argmax(prediction, axis=2)
             self.stat.feed(prediction, label)
@@ -308,7 +308,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu', default="0", help='comma separated list of GPU(s) to use.')
     parser.add_argument('--base_dir', default="/data1/dataset/m1-mar16-55-cropped", help='base dir')
-    parser.add_argument('--meta_dir', default="../metadata/aerial", help='meta dir')
+    parser.add_argument('--meta_dir', default="../metadata/pssd-m1-mar16-55", help='meta dir')
     parser.add_argument('--load', default="../resnet101.npz", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
