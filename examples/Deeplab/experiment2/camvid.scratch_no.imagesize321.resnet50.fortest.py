@@ -199,7 +199,7 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = False, is_densecrf = False):
     import cv2
-    ds = Camvid(args.data_dir, args.meta_dir, "val")
+    ds = Camvid(args.data_dir, args.meta_dir, "test")
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(

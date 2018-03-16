@@ -19,30 +19,26 @@ from tensorpack.utils.stats import MIoUStatistics
 from tensorpack.utils import logger
 from tensorpack.tfutils import optimizer
 from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
-from densenet_v1 import densenet
+from densenet_v1_deepsupervision import densenet
 slim = tf.contrib.slim
 
 from tqdm import tqdm
 from seg_utils import RandomCropWithPadding, softmax_cross_entropy_with_ignore_label
 
-from resnet_model import (
-    preresnet_group, preresnet_basicblock, preresnet_bottleneck,
-    resnet_group_deeplab, resnet_basicblock, resnet_bottleneck_deeplab, se_resnet_bottleneck,
-    resnet_backbone_deeplab)
 
 
 CLASS_NUM = Camvid.class_num()
 CROP_SIZE = 321
-batch_size = 40
+batch_size = 21
 
-IGNORE_LABEL = 11
+IGNORE_LABEL = 255
 
-GROWTH_RATE = 36
-first_batch_lr = 2.5e-4
-lr_schedule = [(2, 1e-4), (4, 1e-5), (6, 8e-6)]
-epoch_scale = 90 #640
+GROWTH_RATE = 48
+first_batch_lr = 3e-3
+lr_schedule = [(4, 3e-4), (8, 3e-5)]
+epoch_scale = 640 #640
 max_epoch = 10
-lr_multi_schedule = [('aspp.*_conv/W', 5),('aspp.*_conv/b',10)]
+lr_multi_schedule = [('nothing', 5),('nothing',10)]
 evaluate_every_n_epoch = 1
 
 def get_data(name, data_dir, meta_dir, batch_size):
@@ -77,56 +73,74 @@ class Model(ModelDesc):
                 InputDesc(tf.int32, [None, CROP_SIZE, CROP_SIZE], 'gt')]
 
     def _build_graph(self, inputs):
-        def resnet101(image):
-            mode = 'resnet'
-            depth = 50
-            basicblock = preresnet_basicblock if mode == 'preact' else resnet_basicblock
-            bottleneck = {
-                'resnet': resnet_bottleneck_deeplab,
-                'preact': preresnet_bottleneck,
-                'se': se_resnet_bottleneck}[mode]
-            num_blocks, block_func = {
-                18: ([2, 2, 2, 2], basicblock),
-                34: ([3, 4, 6, 3], basicblock),
-                50: ([3, 4, 6, 3], bottleneck),
-                101: ([3, 4, 23, 3], bottleneck),
-                152: ([3, 8, 36, 3], bottleneck)
-            }[depth]
+        def mydensenet(image):
+            # Prepare parameters for DenseNet
+            # assert (args.num_layers - 4) % 3 == 0, 'The number of layers is wrong'
+            # num_units = (args.num_layers - 4) // 3
+            # blocks = [num_units, num_units, num_units]
+            blocks = [6, 8, 8, 8]
+            # blocks = [6, 12, 48, 32]
+            # blocks = [6, 12, 64, 48]
+            rate = [1, 1, 2, 4]
+            stride = [2, 2, 1, 1]
 
-            def get_logits(image):
-                with argscope([Conv2D, MaxPooling, GlobalAvgPooling, BatchNorm], data_format="NHWC"):
-                    return resnet_backbone_deeplab(
-                        image, num_blocks,
-                        preresnet_group if mode == 'preact' else resnet_group_deeplab, block_func,CLASS_NUM,ASPP = False)
+            ctx = get_current_tower_context()
+            logger.info("current ctx.is_training: {}".format(ctx.is_training))
 
-            return get_logits(image)
+            # Training
+            net, end_points = densenet(image,
+                                       rate=rate,
+                                       stride=stride,
+                                       blocks=blocks,
+                                       growth=args.growth_rate,
+                                       drop=0.2,
+                                       weight_decay=2e-4,
+                                       num_classes=CLASS_NUM,
+                                       compress = 1,
+                                       stem = 1,
+                                       denseindense=6,
+                                       remove_latter_pooling=True,
+                                       data_name='imagenet',
+                                       is_training=ctx.is_training,
+                                       scope='densenet_L{}_k{}'.format(args.num_layers,
+                                                                       args.growth_rate))
+
+            return net
 
         image, label = inputs
         image = image - tf.constant([104, 116, 122], dtype='float32')
         label = tf.identity(label, name="label")
 
-        predict = resnet101(image)
+        predict_list = mydensenet(image)
+        for ii, p in enumerate(predict_list):
+            predict_list[ii] = tf.image.resize_bilinear(predict_list[ii], image.shape[1:3])
 
+        predict = predict_list[-1]
         costs = []
         prob = tf.nn.softmax(predict, name='prob')
 
         label4d = tf.expand_dims(label, 3, name='label4d')
         new_size = prob.get_shape()[1:3]
-        #label_resized = tf.image.resize_nearest_neighbor(label4d, new_size)
+        # label_resized = tf.image.resize_nearest_neighbor(label4d, new_size)
 
-        cost = softmax_cross_entropy_with_ignore_label(logits=predict, label=label4d,
-                                                             class_num=CLASS_NUM)
-        prediction = tf.argmax(prob, axis=-1,name="prediction")
+        cost = 0
+        for jj,p in enumerate(predict_list):
+            current_predict = predict_list[jj]
+            cost += softmax_cross_entropy_with_ignore_label(logits=current_predict, label=label4d,
+                                                       class_num=CLASS_NUM)
+        cost = cost/len(predict_list)
+
+        prediction = tf.argmax(prob, axis=-1, name="prediction")
         cost = tf.reduce_mean(cost, name='cross_entropy_loss')  # the average cross-entropy loss
         costs.append(cost)
 
         if get_current_tower_context().is_training:
-            wd_w = tf.train.exponential_decay(2e-4, get_global_step_var(),
-                                              80000, 0.7, True)
-            wd_cost = tf.multiply(wd_w, regularize_cost('.*/W', tf.nn.l2_loss), name='wd_cost')
+            # wd_w = tf.train.exponential_decay(wd, get_global_step_var(),
+            #                                  80000, 0.7, True)
+            # wd_cost = tf.multiply(wd_w, regularize_cost('.*/W', tf.nn.l2_loss), name='wd_cost')
+            wd_cost = tf.add_n(slim.losses.get_regularization_losses(), name='wd_cost')
             costs.append(wd_cost)
 
-            add_param_summary(('.*/W', ['histogram']))   # monitor W
             self.cost = tf.add_n(costs, name='cost')
             add_moving_summary(costs + [self.cost])
 
@@ -199,7 +213,7 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = False, is_densecrf = False):
     import cv2
-    ds = Camvid(args.data_dir, args.meta_dir, "val")
+    ds = Camvid(args.data_dir, args.meta_dir, "test")
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
@@ -234,7 +248,6 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
     logger.info("mIoU: {}".format(stat.mIoU))
     logger.info("mean_accuracy: {}".format(stat.mean_accuracy))
     logger.info("accuracy: {}".format(stat.accuracy))
-    logger.info("IoU: {}".format(stat.mIoU_beautify))
 
 
 
@@ -284,9 +297,10 @@ if __name__ == '__main__':
     parser.add_argument('--data_dir', default="/data1/dataset/SegNet-Tutorial",
                         help='dataset dir')
     parser.add_argument('--meta_dir', default="metadata/camvid", help='meta dir')
-    parser.add_argument('--load', default="ImageNet-ResNet50.npz", help='load model')
+    #parser.add_argument('--load', default="../resnet101.npz", help='load model')
     parser.add_argument('--growth_rate', default= GROWTH_RATE, help='growth_rate')
     parser.add_argument('--num_layers', default=121, help='num_layers')
+    parser.add_argument('--load', help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
     parser.add_argument('--batch_size', type=int, default = batch_size, help='batch_size')
