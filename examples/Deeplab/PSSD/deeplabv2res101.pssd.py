@@ -160,7 +160,7 @@ def get_config( base_dir, meta_dir, batch_size):
             ModelSaver(),
             ScheduledHyperParamSetter('learning_rate', lr_schedule),
             HumanHyperParamSetter('learning_rate'),
-            PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
+            #PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
             ProgressBar(["cross_entropy_loss","cost","wd_cost"])#uncomment it to debug for every step
         ],
         model=Model(),
@@ -285,7 +285,7 @@ class CalculateMIoU(Callback):
 
     def _trigger(self):
         global args
-        self.val_ds = get_data('val', args.meta_dir, 1)
+        self.val_ds = get_data('val', args.base_dir, args.meta_dir, 1)
         self.val_ds.reset_state()
 
         self.stat = MIoUStatistics(self.nb_class)
