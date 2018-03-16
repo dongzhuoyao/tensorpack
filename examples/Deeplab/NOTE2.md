@@ -97,6 +97,7 @@ camvid.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.3gpu
 camvid.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.scale320.lrx1.4gpu||57~，very low
 camvid.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.4gpu.2ndtime.regularization2e-4.scale640||epoch5:21,very low
 camvid.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.3gpu.2ndtime.regularization2e-4||65.8
+deeplabv2.camvid.imagesize321.res100.noscratch.on_trainval.scale160||61.6
 ------------ | -------------| -------------
 deeplabv2.camvid.imagesize321.res100.scratch.on_trainval.scale32||55.7|
 deeplabv2.camvid.imagesize321.res100.scratch.on_trainval.scale160||58.6|
