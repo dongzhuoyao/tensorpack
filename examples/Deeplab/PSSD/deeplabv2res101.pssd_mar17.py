@@ -31,8 +31,8 @@ CROP_SIZE = 513
 IGNORE_LABEL = 255
 
 first_batch_lr = 2.5e-4
-lr_schedule = [(2, 1e-4), (4, 1e-5), (6, 8e-6)]
-epoch_scale = 15
+lr_schedule = [(3, 1e-4), (7, 1e-5)]
+epoch_scale = 30
 max_epoch = 10
 lr_multi_schedule = [('aspp.*_conv/W', 5),('aspp.*_conv/b',10)]
 batch_size = 12
@@ -41,10 +41,15 @@ evaluate_every_n_epoch = 1
 
 class Model(ModelDesc):
 
+    def __init__(self, height=CROP_SIZE, width=CROP_SIZE):
+        super(Model, self).__init__()
+        self.height = height
+        self.width = width
+
     def _get_inputs(self):
         ## Set static shape so that tensorflow knows shape at compile time.
-        return [InputDesc(tf.float32, [None, CROP_SIZE, CROP_SIZE, 3], 'image'),
-                InputDesc(tf.int32, [None, CROP_SIZE, CROP_SIZE], 'gt')]
+        return [InputDesc(tf.float32, [None, self.height, self.width, 3], 'image'),
+                InputDesc(tf.int32, [None, self.height, self.width], 'gt')]
 
     def _build_graph(self, inputs):
         def resnet101(image):
@@ -336,8 +341,8 @@ class CalculateMIoU(Callback):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu', default="0", help='comma separated list of GPU(s) to use.')
-    parser.add_argument('--base_dir', default="/data1/dataset/m1-mar16-55-cropped", help='base dir')
-    parser.add_argument('--meta_dir', default="../metadata/pssd-m1-mar16-55", help='meta dir')
+    parser.add_argument('--base_dir', default="/data1/dataset/m1-mar17-all", help='base dir')
+    parser.add_argument('--meta_dir', default="../metadata/pssd-m1-mar17", help='meta dir')
     parser.add_argument('--load', default="../resnet101.npz", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')

@@ -26,12 +26,12 @@ from resnet_model import (
     resnet_backbone)
 
 
-CLASS_NUM = dataset.PSSD.class_num()
+CLASS_NUM = dataset.PSSDFromModel.class_num()
 CROP_SIZE = 513
 IGNORE_LABEL = 255
 
 first_batch_lr = 2.5e-4
-lr_schedule = [(2, 1e-4), (4, 1e-5), (6, 8e-6)]
+lr_schedule = [(4, 1e-4), (8, 1e-5)]
 epoch_scale = 15
 max_epoch = 10
 lr_multi_schedule = [('aspp.*_conv/W', 5),('aspp.*_conv/b',10)]
@@ -110,7 +110,7 @@ class Model(ModelDesc):
 
 def get_data(name, base_dir, meta_dir, batch_size):
     isTrain = True if 'train' in name else False
-    ds = dataset.PSSD(base_dir, meta_dir, name, shuffle=True)
+    ds = dataset.PSSDFromModel(base_dir, meta_dir, name, shuffle=True)
 
 
     if isTrain:#special augmentation
@@ -195,7 +195,7 @@ def proceed_validation(args, is_save = True, is_densecrf = False):
     import cv2
     #name = "ningbo_val"
     name = "val"
-    ds = dataset.PSSD( args.base_dir, args.meta_dir, name)
+    ds = dataset.PSSDFromModel( args.base_dir, args.meta_dir, name)
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
@@ -268,35 +268,6 @@ def proceed_test(args,is_densecrf = False):
         subprocess.call(command, shell=True)
 
 
-def proceed_test_from_directory(args):
-    import cv2
-    ll = os.listdir(args.test_from_dir)
-
-    pred_config = PredictConfig(
-        model=Model(),
-        session_init=get_model_loader(args.load),
-        input_names=['image'],
-        output_names=['prob'])
-    predictor = OfflinePredictor(pred_config)
-
-    from tensorpack.utils.fs import mkdir_p
-    result_dir = "test-{}".format(os.path.basename(__file__).rstrip(".py"))
-    import shutil
-    shutil.rmtree(result_dir, ignore_errors=True)
-    mkdir_p(result_dir)
-
-
-    logger.info("start validation....")
-
-    for i in tqdm(range(len(ll))):
-        name = os.path.basename(ll[i]).rstrip(".JPG")
-        image = np.squeeze(image)
-        prediction = predict_scaler(image, predictor, scales=[0.9,1,1.1], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
-        prediction = np.argmax(prediction, axis=2)
-        prediction = prediction*255 # to 0-255
-        file_path = os.path.join(result_dir,"{}.jpg".format(name))
-        cv2.imwrite(file_path, prediction)
-
 
 
 
@@ -336,8 +307,8 @@ class CalculateMIoU(Callback):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu', default="0", help='comma separated list of GPU(s) to use.')
-    parser.add_argument('--base_dir', default="/data1/dataset/m1-mar16-55-cropped", help='base dir')
-    parser.add_argument('--meta_dir', default="../metadata/pssd-m1-mar16-55", help='meta dir')
+    parser.add_argument('--base_dir', default="/data1/dataset/m1-from-model", help='base dir')
+    parser.add_argument('--meta_dir', default="../metadata/pssd-from-model", help='meta dir')
     parser.add_argument('--load', default="../resnet101.npz", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
@@ -345,8 +316,6 @@ if __name__ == '__main__':
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     parser.add_argument('--validation', action='store_true', help='validate model on validation images')
     parser.add_argument('--test', action='store_true', help='generate test result')
-    parser.add_argument('--test_dir', action='store_true', help='generate test result')
-    parser.add_argument('--test_from_dir', action='store_true', help='generate test result')
     args = parser.parse_args()
     if args.gpu:
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu

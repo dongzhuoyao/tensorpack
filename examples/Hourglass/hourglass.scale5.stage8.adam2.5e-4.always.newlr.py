@@ -24,7 +24,7 @@ lr_schedule = [(14, 1e-4), (20,5e-5)]
 max_epoch = 24
 epoch_scale = 5
 evaluate_every_n_epoch = 1
-stage = 4
+stage = 8
 batch_size = 16
 
 wd = 1e-5
@@ -184,9 +184,8 @@ class EvalPCKh(Callback):
 
 
 def proceed_validation(args, is_save = False):
-    origin_ds  = dataset.mpii(img_dir, meta_dir, "val", input_shape, output_shape, shuffle=False)
+    origin_ds = ds = dataset.mpii(img_dir, meta_dir, "val", input_shape, output_shape, shuffle=False)
 
-    ds = get_data("val")
 
     from tensorpack.utils.fs import mkdir_p
     result_dir = os.path.join("result_on_val")
