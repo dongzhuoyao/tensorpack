@@ -20,3 +20,4 @@ hourglass.scale10.stage4.adam2.5e-4.always.newlr|79.6|
 
 * why PCKh is unstable during training?
 * why shoulder pckh larger than 1?
+* why cannot validation after training?
