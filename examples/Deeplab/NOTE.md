@@ -210,7 +210,7 @@ Recognition](https://arxiv.org/abs/1801.07455)
 *  SEC
 * [Adversarial Learning for Semi-supervised Semantic Segmentation](https://github.com/hfslyc/AdvSemiSeg)
 * [Seed, Expand and Constrain: Three Principles for Weakly-Supervised Image Segmentation](https://github.com/ascust/SEC-MXNet)
-
+*  [Scene Parsing with Global Context Embedding](https://github.com/hfslyc/GCPNet)
 ## Target
 
 *  slim deeplabv2 pascal reproduce
