@@ -19,6 +19,9 @@ Recognition](https://arxiv.org/abs/1801.07455)
 * deep learning oversegmentation framework
 * --classification and segmentation from scratch, dont make sense--
 *  SEC
+*  [Scene Parsing with Global Context Embedding](https://github.com/hfslyc/GCPNet)
+* [ESPNet: Efficient Spatial Pyramid of Dilated
+Convolutions for Semantic Segmentation](https://github.com/sacmehta/ESPNet) to hourglass
+## current focus
 * [Adversarial Learning for Semi-supervised Semantic Segmentation](https://github.com/hfslyc/AdvSemiSeg)
 * [Seed, Expand and Constrain: Three Principles for Weakly-Supervised Image Segmentation](https://github.com/ascust/SEC-MXNet)
-*  [Scene Parsing with Global Context Embedding](https://github.com/hfslyc/GCPNet)
