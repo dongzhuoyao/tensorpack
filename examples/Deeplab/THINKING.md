@@ -22,7 +22,9 @@ Recognition](https://arxiv.org/abs/1801.07455)
 *  [Scene Parsing with Global Context Embedding](https://github.com/hfslyc/GCPNet)
 * [ESPNet: Efficient Spatial Pyramid of Dilated
 Convolutions for Semantic Segmentation](https://github.com/sacmehta/ESPNet) to hourglass
-* [Prototypical Networks for Few-shot Learning]()
+
 ## current focus
 * [Adversarial Learning for Semi-supervised Semantic Segmentation](https://github.com/hfslyc/AdvSemiSeg)
 * [Seed, Expand and Constrain: Three Principles for Weakly-Supervised Image Segmentation](https://github.com/ascust/SEC-MXNet)
+* [Prototypical Networks for Few-shot Learning]()
+* Hourglass
