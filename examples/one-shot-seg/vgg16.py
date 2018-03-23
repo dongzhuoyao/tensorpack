@@ -7,12 +7,13 @@ import os,cv2
 import numpy as np
 
 import tensorflow as tf
-
+from tqdm import tqdm
 from tensorpack import *
 from tensorpack.tfutils import argscope, get_model_loader
+from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler
 from tensorpack.tfutils.summary import *
 from tensorpack.utils.gpu import get_nr_gpu
-
+from tensorpack.utils.stats import MIoUStatistics
 import OneShotDataset
 
 max_epoch = 6
@@ -20,6 +21,7 @@ weight_decay = 5e-4
 batch_size = 1
 LR = 1e-10
 CLASS_NUM = 2
+evaluate_every_n_epoch = 1
 support_image_size =(224,224)
 query_image_size = (500, 500)
 
@@ -60,6 +62,35 @@ def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
     return loss
 
 
+def network(img):
+    logits = (LinearWrap(img)
+              .apply(convnormrelu, 'conv1_1', 64)
+              .apply(convnormrelu, 'conv1_2', 64)
+              .MaxPooling('pool1', 2)
+              # 112
+              .apply(convnormrelu, 'conv2_1', 128)
+              .apply(convnormrelu, 'conv2_2', 128)
+              .MaxPooling('pool2', 2)
+              # 56
+              .apply(convnormrelu, 'conv3_1', 256)
+              .apply(convnormrelu, 'conv3_2', 256)
+              .apply(convnormrelu, 'conv3_3', 256)
+              .MaxPooling('pool3', 2)
+              # 28
+              .apply(convnormrelu, 'conv4_1', 512)
+              .apply(convnormrelu, 'conv4_2', 512)
+              .apply(convnormrelu, 'conv4_3', 512)
+              .MaxPooling('pool4', 2)
+              # 14
+              .apply(convnormrelu, 'conv5_1', 512)
+              .apply(convnormrelu, 'conv5_2', 512)
+              .apply(convnormrelu, 'conv5_3', 512)())
+
+    # TODO smoothen
+    logits = Conv2D("smooth", logits, CLASS_NUM, 3)
+    logits = tf.image.resize_bilinear(logits, img.shape[1:3])
+    return logits
+
 class Model(ModelDesc):
     def inputs(self):
         return [tf.placeholder(tf.float32, [None, support_image_size[0], support_image_size[1], 3], 'first_image'),
@@ -69,43 +100,30 @@ class Model(ModelDesc):
                 ]
 
 
+
     def build_graph(self, first_image, first_label, second_image, second_label):
-        first_label = tf.expand_dims(first_label, 3, name='first_label')
+        first_label = tf.expand_dims(first_label, 3, name='first_label_ee')
         with argscope(Conv2D, kernel_size=3,
                       kernel_initializer=tf.variance_scaling_initializer(scale=2.)), \
              argscope([Conv2D, MaxPooling, BatchNorm], data_format="NHWC"):
-                logits = (LinearWrap(first_image)
-                      .apply(convnormrelu, 'conv1_1', 64)
-                      .apply(convnormrelu, 'conv1_2', 64)
-                      .MaxPooling('pool1', 2)
-                      # 112
-                      .apply(convnormrelu, 'conv2_1', 128)
-                      .apply(convnormrelu, 'conv2_2', 128)
-                      .MaxPooling('pool2', 2)
-                      # 56
-                      .apply(convnormrelu, 'conv3_1', 256)
-                      .apply(convnormrelu, 'conv3_2', 256)
-                      .apply(convnormrelu, 'conv3_3', 256)
-                      .MaxPooling('pool3', 2)
-                      # 28
-                      .apply(convnormrelu, 'conv4_1', 512)
-                      .apply(convnormrelu, 'conv4_2', 512)
-                      .apply(convnormrelu, 'conv4_3', 512)
-                      .MaxPooling('pool4', 2)
-                      # 14
-                      .apply(convnormrelu, 'conv5_1', 512)
-                      .apply(convnormrelu, 'conv5_2', 512)
-                      .apply(convnormrelu, 'conv5_3', 512)())
+                 with tf.variable_scope("support"):
+                     support_logits = network(first_image)
+                 with tf.variable_scope("query"):
+                     query_logits = network(second_image)
 
-                # TODO smoothen
-                logits = Conv2D("smooth", logits, CLASS_NUM, 3)
-                logits = tf.image.resize_bilinear(logits, first_image.shape[1:3])
 
         costs = []
 
-        cost = softmax_cross_entropy_with_ignore_label(logits, first_label, class_num=CLASS_NUM)
-        cost = tf.reduce_mean(cost, name='cross_entropy_loss')
-        costs.append(cost)
+        prob = tf.nn.softmax(query_logits, name='prob')
+
+        support_cost = softmax_cross_entropy_with_ignore_label(support_logits, first_label, class_num=CLASS_NUM)
+        support_cost = tf.reduce_mean(support_cost, name='support_cross_entropy_loss')
+
+        query_cost = softmax_cross_entropy_with_ignore_label(query_logits, second_label, class_num=CLASS_NUM)
+        query_cost = tf.reduce_mean(query_cost, name='query_cross_entropy_loss')
+
+        costs.append(support_cost)
+        costs.append(query_cost)
 
         if get_current_tower_context().is_training:
             wd_w = tf.train.exponential_decay(2e-4, get_global_step_var(),
@@ -127,6 +145,7 @@ class Model(ModelDesc):
 
 
 def get_config():
+    logger.auto_set_dir()
     nr_tower = max(get_nr_gpu(), 1)
     total_batch = batch_size * nr_tower
 
@@ -139,10 +158,8 @@ def get_config():
         ModelSaver(),
         GPUUtilizationTracker(),
         EstimatedTimeLeft(),
-        ProgressBar(["cross_entropy_loss", "cost", "wd_cost"])  # uncomment it to debug for every step
-        #ScheduledHyperParamSetter(
-        #    'learning_rate',
-        #    [(0, 0.01), (3, max(BASE_LR, 0.01))], interp='linear'),
+        PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
+        ProgressBar(["support_cross_entropy_loss","query_cross_entropy_loss", "cost", "wd_cost"])  # uncomment it to debug for every step
     ]
 
     input = QueueInput(dataset_train)
@@ -151,9 +168,48 @@ def get_config():
         model=Model(),
         data=input,
         callbacks=callbacks,
-        steps_per_epoch=  10000 // total_batch,
+        steps_per_epoch=  10 // total_batch,
         max_epoch=max_epoch,
     )
+
+
+class CalculateMIoU(Callback):
+    def __init__(self, nb_class):
+        self.nb_class = nb_class
+
+    def _setup_graph(self):
+        self.pred = self.trainer.get_predictor(
+            ['first_image','first_label','second_image'], ['prob'])
+
+    def _before_train(self):
+        pass
+
+    def _trigger(self):
+        global args
+        self.val_ds = get_data('fold0_1shot_test')
+        self.val_ds.reset_state()
+
+        self.stat = MIoUStatistics(self.nb_class)
+
+        for first_image, first_label,second_image, second_label in tqdm(self.val_ds.get_data()):
+            #first_image = np.squeeze(first_image)
+            #first_label = np.squeeze(first_label)
+            second_image = np.squeeze(second_image)
+            second_label = np.squeeze(second_label)
+
+            def mypredictor(input_img):
+                # input image: 1*H*W*3
+                # output : H*W*C
+                output = self.pred(first_image,first_label,input_img)
+                return output[0][0]
+            prediction = predict_scaler(second_image, mypredictor, scales=[0.5,0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=query_image_size,
+                           is_densecrf=False)
+            prediction = np.argmax(prediction, axis=2)
+            self.stat.feed(prediction, second_label)
+
+        self.trainer.monitors.put_scalar("mIoU", self.stat.mIoU)
+        self.trainer.monitors.put_scalar("mean_accuracy", self.stat.mean_accuracy)
+        self.trainer.monitors.put_scalar("accuracy", self.stat.accuracy)
 
 
 def view(args):
@@ -185,11 +241,11 @@ if __name__ == '__main__':
     if args.view:
         view(args)
 
-    logger.set_logger_dir(os.path.join('train_log', 'vgg16-norm={}'.format(args.norm)))
 
     config = get_config()
     if args.load:
-        config.session_init = get_model_loader(args.load)
+        from sess_utils import my_get_model_loader
+        config.session_init = my_get_model_loader(args.load)
 
 
     nr_tower = max(get_nr_gpu(), 1)
