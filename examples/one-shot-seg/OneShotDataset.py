@@ -9,15 +9,16 @@ import cv2
 from tensorpack.utils import logger
 from tensorpack.dataflow.base import RNGDataFlow
 
-from test import LoaderOfPairs, compute_net_inputs
+from test import LoaderOfPairs
 
 __all__ = ['OneShotDataset']
 
 
 class OneShotDataset(RNGDataFlow):
-    def __init__(self,):
+    def __init__(self,name):
         settings = __import__('ss_settings')
-        profile = getattr(settings, "fold0_1shot_test")
+        self.name = name
+        profile = getattr(settings, name)
         self.loader = LoaderOfPairs(profile)
 
     def size(self):

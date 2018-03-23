@@ -14,12 +14,15 @@ from tensorpack.tfutils.summary import *
 from tensorpack.utils.gpu import get_nr_gpu
 
 from imagenet_utils import (
-    ImageNetModel, get_imagenet_dataflow, fbresnet_augmentor)
+    ImageNetModel)
 import OneShotDataset
 
+max_epoch = 6
+weight_decay = 5e-4
+
 def get_data(name, batch=1):
-    isTrain = name == 'train'
-    dataset = OneShotDataset.OneShotDataset()
+    isTrain = True if 'train' in name else False
+    dataset = OneShotDataset.OneShotDataset(name)
     dataset = BatchData(dataset, 1)
     return dataset
 
@@ -32,10 +35,12 @@ def convnormrelu(x, name, chan):
     return x
 
 
-class Model(ImageNetModel):
-    weight_decay = 5e-4
+class Model(ModelDesc):
+    def inputs(self):
+        return [tf.placeholder(tf.float32, [None, None, None, 3], 'image'),
+                tf.placeholder(tf.int32, [None, None, None], 'edgemap')]
 
-    def get_logits(self, image):
+    def get_logits(self, image,edgemap):
         with argscope(Conv2D, kernel_size=3,
                       kernel_initializer=tf.variance_scaling_initializer(scale=2.)), \
                 argscope([Conv2D, MaxPooling, BatchNorm], data_format='channels_first'):
@@ -74,8 +79,8 @@ def get_config():
     BASE_LR = 0.01 * (total_batch / 256.)
 
     logger.info("Running on {} towers. Batch size per tower: {}".format(nr_tower, batch))
-    dataset_train = get_data('train', batch)
-    dataset_val = get_data('val', batch)
+    dataset_train = get_data('fold0_train', batch)
+    dataset_val = get_data('fold0_1shot_test', batch)
 
     infs = [ClassificationError('wrong-top1', 'val-error-top1'),
             ClassificationError('wrong-top5', 'val-error-top5')]
@@ -99,22 +104,22 @@ def get_config():
         model=Model(),
         data=input,
         callbacks=callbacks,
-        steps_per_epoch=60000 // total_batch,
-        max_epoch=100,
+        steps_per_epoch=  10000 // total_batch,
+        max_epoch=max_epoch,
     )
 
 
 def view(args):
-    ds = RepeatedData(get_data('train'), -1)
+    ds = RepeatedData(get_data('fold0_train'), -1)
     ds.reset_state()
     for inputs in ds.get_data():
-        """
+        ##"""
         cv2.imshow("first_img",inputs[0][0]+np.array([104, 116, 122], dtype='float32'))
         cv2.imshow("first_label",inputs[1][0])
         cv2.imshow("second_img", inputs[2][0]+np.array([104, 116, 122], dtype='float32'))
         cv2.imshow("second_label", inputs[3][0])
         cv2.waitKey(10000)
-        """
+        ##"""
         print "ssss"
         pass
 

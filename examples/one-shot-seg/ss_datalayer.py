@@ -7,16 +7,9 @@ import sys
 import traceback
 import util
 from util import cprint, bcolors
-from operator import itemgetter 
-from functools import partial
 from skimage.transform import resize
 import copy
 
-import os.path as osp
-import os
-import multiprocessing
-import multiprocessing.pool
-from skimage.io import imsave
 
 class DBInterface():
     def __init__(self, params):
@@ -94,7 +87,7 @@ class DBInterface():
                     raise Exception
             cprint('Total of ' + str(len(self.db_items)) + ' db items loaded!', bcolors.OKBLUE)
             
-            #reads pair of images from one semantic class and and with binary labels
+            #reads pair of images from one semantic class and with binary labels
             if self.params['output_type'] == 'image_pair':
                 items = self.db_items
                 
