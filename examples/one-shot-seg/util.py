@@ -566,25 +566,25 @@ class COCO:
             dataType = 'val2014'
         else:
             raise Exception('split \'' + dataType + '\' is not valid! Valid splits: training/test')
-        
+
         self.db_path = db_path
         self.dataType = dataType
-        
+
     def getItems(self, cats=[], areaRng=[], iscrowd=False):
-        
+
         annFile='%s/annotations/instances_%s.json' % (self.db_path, self.dataType)
-        
+
         coco = self.pycocotools.coco.COCO(annFile)
         catIds = coco.getCatIds(catNms=cats);
         anns = coco.getAnnIds(catIds=catIds, areaRng=areaRng, iscrowd=iscrowd)
         cprint(str(len(anns)) + ' annotations read from coco', bcolors.OKGREEN)
-        
+
         items = []
         for i in range(len(anns)):
             ann = anns[i]
             item = DBCOCOItem('coco-'  + self.dataType + str(i), self.db_path, self.dataType, ann, coco, self.pycocotools)
             items.append(item)
-        return items    
+        return items
         
 class PASCAL_READ_MODES:
     #Returns list of DBImageItem each has the image and one object instance in the mask
@@ -743,42 +743,6 @@ class DBVideoItem:
     def read_mask(self, img_id):
         pass
 
-class DBDAVISItem(DBVideoItem):
-    def __init__(self, name, img_root, ann_root, length):
-        DBVideoItem.__init__(self, name, length)
-        self.img_root = img_root
-        self.ann_root = ann_root
-    
-    def read_img(self, img_id):
-        file_name = osp.join(self.img_root, '%05d.jpg' % (img_id))
-        return read_img(file_name)
-        
-    def read_mask(self, img_id):
-        file_name = osp.join(self.ann_root, '%05d.png' % (img_id))
-        mask = read_mask(file_name)
-        return mask 
-        
-    def read_iflow(self, img_id, step, method):
-        if method == 'LDOF':
-            if step == 1:
-                flow_name = osp.join(self.ann_root, '%05d_inv_LDOF.flo' % (img_id))
-            elif step == -1:
-                flow_name = osp.join(self.ann_root, '%05d_LDOF.flo' % (img_id))
-            else:
-                raise Exception('unsupported flow step for LDOF')
-        elif method == 'EPIC':
-            if step == 1:
-                flow_name = osp.join(self.ann_root, '%05d_inv.flo' % (img_id))
-            elif step == -1:
-                flow_name = osp.join(self.ann_root, '%05d.flo' % (img_id))
-            else:
-                raise Exception('unsupported flow step for EPIC')
-        else:
-            raise Exception('unsupported flow algorithm')
-        try:
-            return read_flo_file(flow_name)
-        except IOError as e:
-            print "Unable to open file", str(e)#Does not exist OR no read permissions
 
 class DBImageSetItem(DBVideoItem):
     def __init__(self, name, image_items = []):
@@ -810,22 +774,22 @@ class DBCOCOItem(DBImageItem):
         self.dataType = dataType
         self.coco_db = coco_db
         self.pycocotools = pycocotools
-        
+
     def read_mask(self):
         ann = self.coco_db.loadAnns(self.ann_info)[0]
         img_cur = self.coco_db.loadImgs(ann['image_id'])[0]
-        
+
         rle = self.pycocotools.mask.frPyObjects(ann['segmentation'], img_cur['height'], img_cur['width'])
         m_uint = self.pycocotools.mask.decode(rle)
         m = np.array(m_uint[:, :, 0], dtype=np.float32)
         return m
-    
+
     def read_img(self):
         ann = self.coco_db.loadAnns(self.ann_info)[0]
         img_cur = self.coco_db.loadImgs(ann['image_id'])[0]
         img_path = '%s/images/%s/%s' % (self.db_path, self.dataType, img_cur['file_name'])
         return read_img(img_path)
-    
+
     
 class DBPascalItem(DBImageItem):
     def __init__(self, name, img_path, mask_path, obj_ids, ids_map = None):
