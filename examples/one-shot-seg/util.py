@@ -593,6 +593,7 @@ class PASCAL_READ_MODES:
     SEMANTIC_ALL = 1
     #Returns list of DBImageSetItem each has set of images and corresponding masks for each semantic label
     SEMANTIC = 2
+
 class PASCAL:
     def __init__(self, db_path, dataType):
         if dataType == 'training':
@@ -632,7 +633,10 @@ class PASCAL:
             return ids
     
     def create_anns(self, read_mode):
-        with open(osp.join(self.db_path, 'ImageSets', 'Segmentation', self.dataType + '.txt'), 'r') as f:
+        list_dir = 'metadata/pascalvoc12/train_aug_id.txt'
+        if self.dataType == "val":
+            list_dir = 'metadata/pascalvoc12/val_id.txt'
+        with open(list_dir, 'r') as f:
             lines = f.readlines()    
             names = []
             for line in lines:
@@ -642,24 +646,18 @@ class PASCAL:
                     names.append(line)
         anns = []
         for item in names:
-            mclass_path = osp.join(self.db_path, 'SegmentationClass', item + '.png')
-            mobj_path = osp.join(self.db_path, 'SegmentationObject', item + '.png')
+            mclass_path = osp.join(self.db_path, 'SegmentationClassAug', item + '.png')
             mclass_uint = np.array(Image.open(mclass_path))
-            mobj_uint = np.array(Image.open(mobj_path))
             class_ids = self.get_unique_ids(mclass_uint)
-            obj_ids, obj_sizes = self.get_unique_ids(mobj_uint, return_counts = True)
 
-            if read_mode == PASCAL_READ_MODES.INSTANCE:  
-                for obj_idx in xrange(len(obj_ids)):
-                    class_id = int(np.median(mclass_uint[mobj_uint == obj_ids[obj_idx]]))
-                    assert( class_id != 0 and class_id != 255 and obj_ids[obj_idx] != 0 and obj_ids[obj_idx] != 255)
-                    anns.append(dict(image_name=item, mask_name=item, object_ids=[obj_ids[obj_idx]], class_ids=[class_id], object_sizes = [obj_sizes[obj_idx]]))
-            elif read_mode == PASCAL_READ_MODES.SEMANTIC:
+            if read_mode == PASCAL_READ_MODES.SEMANTIC:
                 for class_id in class_ids:
-                    assert(class_id != 0 or class_id != 255)
+                    assert(class_id != 0 or class_id != 255) # 0 is background,255 is ignore
                     anns.append(dict(image_name=item, mask_name=item, class_ids=[class_id]))
             elif read_mode == PASCAL_READ_MODES.SEMANTIC_ALL:  
                 anns.append(dict(image_name=item, mask_name=item, class_ids=class_ids))
+            else:
+                raise
         with open(self.get_anns_path(read_mode), 'w') as f:
             pickle.dump(anns, f)
             
@@ -712,12 +710,8 @@ class PASCAL:
         for i in range(len(anns)):
             ann = anns[i]
             img_path = osp.join(self.db_path, 'JPEGImages', ann['image_name'] + '.jpg')
-            if read_mode == PASCAL_READ_MODES.INSTANCE:
-                mask_path = osp.join(self.db_path, 'SegmentationObject', ann['mask_name'] + '.png')
-                item = DBPascalItem('pascal-'  + self.dataType + '_' + ann['image_name'] + '_' + str(i), img_path, mask_path, ann['object_ids'])
-            else:
-                mask_path = osp.join(self.db_path, 'SegmentationClass', ann['mask_name'] + '.png')
-                item = DBPascalItem('pascal-'  + self.dataType + '_' + ann['image_name'] + '_' + str(i), img_path, mask_path, ann['class_ids'], ids_map)
+            mask_path = osp.join(self.db_path, 'SegmentationClassAug', ann['mask_name'] + '.png')
+            item = DBPascalItem('pascal-'  + self.dataType + '_' + ann['image_name'] + '_' + str(i), img_path, mask_path, ann['class_ids'], ids_map)
             items.append(item)
         return items
     @staticmethod

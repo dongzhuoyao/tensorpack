@@ -114,9 +114,9 @@ def view(args):
     ds.reset_state()
     for inputs in ds.get_data():
         ##"""
-        cv2.imshow("first_img",inputs[0][0]+np.array([104, 116, 122], dtype='float32'))
+        cv2.imshow("first_img",(inputs[0][0]+np.array([104, 116, 122], dtype='float32')).astype(np.uint8))
         cv2.imshow("first_label",inputs[1][0])
-        cv2.imshow("second_img", inputs[2][0]+np.array([104, 116, 122], dtype='float32'))
+        cv2.imshow("second_img", (inputs[2][0]+np.array([104, 116, 122], dtype='float32')).astype(np.uint8))
         cv2.imshow("second_label", inputs[3][0])
         cv2.waitKey(10000)
         ##"""
