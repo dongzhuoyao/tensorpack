@@ -56,7 +56,7 @@ def add_hourglass(module, module_name, n, num_channels, input_name) :  #n_max = 
     return module[this_name]
 
 def make_network(data, stage, nr_skeleton, is_training):
-    with slim.arg_scope(resnet_arg_scope()):
+    with slim.arg_scope(resnet_arg_scope(weight_decay=1e-4)):
             with slim.arg_scope([slim.batch_norm], is_training=is_training):
                 module = {}
                 output = []

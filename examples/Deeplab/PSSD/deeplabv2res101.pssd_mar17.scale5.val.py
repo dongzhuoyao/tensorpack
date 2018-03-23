@@ -27,12 +27,12 @@ from resnet_model import (
 
 
 CLASS_NUM = dataset.PSSD.class_num()
-CROP_SIZE = 1025#513
+CROP_SIZE = 513
 IGNORE_LABEL = 255
 
 first_batch_lr = 2.5e-4
 lr_schedule = [(3, 1e-4), (7, 1e-5)]
-epoch_scale = 30
+epoch_scale = 5
 max_epoch = 10
 lr_multi_schedule = [('aspp.*_conv/W', 5),('aspp.*_conv/b',10)]
 batch_size = 12
@@ -141,14 +141,23 @@ def get_data(name, base_dir, meta_dir, batch_size):
 def view_data(base_dir,meta_dir, batch_size):
     ds = RepeatedData(get_data('train',base_dir, meta_dir, batch_size), -1)
     ds.reset_state()
+    from tensorpack.utils.fs import mkdir_p
+    result_dir = "result/pssd_mar17_view"
+    mkdir_p(result_dir)
+    i = 0
     for ims, labels in ds.get_data():
         for im, label in zip(ims, labels):
             #aa = visualize_label(label)
             #pass
-            cv2.imshow("im", im / 255.0)
-            cv2.imshow("raw-label", label)
-            cv2.imshow("color-label", visualize_label(label))
-            cv2.waitKey(0)
+            #cv2.imshow("im", im / 255.0)
+            #cv2.imshow("raw-label", label)
+            #cv2.imshow("color-label", visualize_label(label))
+            cv2.imwrite(os.path.join(result_dir, "{}.png".format(i)),
+                        np.concatenate((image, visualize_label(label)), axis=1))
+
+            #cv2.waitKey(3000)
+            print i
+            i += 1
 
 
 def get_config( base_dir, meta_dir, batch_size):
@@ -165,7 +174,7 @@ def get_config( base_dir, meta_dir, batch_size):
             ModelSaver(),
             ScheduledHyperParamSetter('learning_rate', lr_schedule),
             HumanHyperParamSetter('learning_rate'),
-            #PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
+            PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
             ProgressBar(["cross_entropy_loss","cost","wd_cost"])#uncomment it to debug for every step
         ],
         model=Model(),
@@ -290,7 +299,7 @@ def proceed_test_dir(args):
     predictor = OfflinePredictor(pred_config)
 
     from tensorpack.utils.fs import mkdir_p
-    result_dir = "test-from-dir-other"
+    result_dir = "test-from-dir"
     visual_dir = os.path.join(result_dir,"visualization")
     final_dir = os.path.join(result_dir,"final")
     import shutil
@@ -338,10 +347,16 @@ class CalculateMIoU(Callback):
 
         self.stat = MIoUStatistics(self.nb_class)
 
+        def mypredictor(input_img):
+            # input image: 1*H*W*3
+            # output : H*W*C
+            output = self.pred(input_img)
+            return output[0][0]
+
         for image, label in tqdm(self.val_ds.get_data()):
             label = np.squeeze(label)
             image = np.squeeze(image)
-            prediction = predict_scaler(image, self.pred, scales=[0.5,0.75,1,1.25,1.5], classes=CLASS_NUM, tile_size=CROP_SIZE,
+            prediction = predict_scaler(image, mypredictor, scales=[0.5,0.75,1,1.25,1.5], classes=CLASS_NUM, tile_size=CROP_SIZE,
                            is_densecrf=False)
             prediction = np.argmax(prediction, axis=2)
             self.stat.feed(prediction, label)
@@ -364,7 +379,8 @@ if __name__ == '__main__':
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     parser.add_argument('--validation', action='store_true', help='validate model on validation images')
     parser.add_argument('--test', action='store_true', help='generate test result')
-    parser.add_argument('--test_dir', default='/data1/dataset/m1-mar22-inference', help='generate test result')
+    parser.add_argument('--test_dir', action='store_true', help='generate test result')
+    parser.add_argument('--test_dir_path', default="/data1/slam", help='generate test result')
     args = parser.parse_args()
     if args.gpu:
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu

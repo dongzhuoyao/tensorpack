@@ -234,7 +234,7 @@ def resnet_arg_scope(weight_decay=0.0001,
 
   with slim.arg_scope(
       [slim.conv2d],
-      #weights_regularizer=slim.l2_regularizer(weight_decay),
+      weights_regularizer=slim.l2_regularizer(weight_decay),
       weights_initializer=slim.variance_scaling_initializer(),
       activation_fn=activation_fn,
       normalizer_fn=slim.batch_norm if use_batch_norm else None,

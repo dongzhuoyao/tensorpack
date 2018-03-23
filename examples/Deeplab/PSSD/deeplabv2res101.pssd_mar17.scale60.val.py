@@ -27,12 +27,12 @@ from resnet_model import (
 
 
 CLASS_NUM = dataset.PSSD.class_num()
-CROP_SIZE = 1025#513
+CROP_SIZE = 513
 IGNORE_LABEL = 255
 
 first_batch_lr = 2.5e-4
 lr_schedule = [(3, 1e-4), (7, 1e-5)]
-epoch_scale = 30
+epoch_scale = 60
 max_epoch = 10
 lr_multi_schedule = [('aspp.*_conv/W', 5),('aspp.*_conv/b',10)]
 batch_size = 12
@@ -165,7 +165,7 @@ def get_config( base_dir, meta_dir, batch_size):
             ModelSaver(),
             ScheduledHyperParamSetter('learning_rate', lr_schedule),
             HumanHyperParamSetter('learning_rate'),
-            #PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
+            PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
             ProgressBar(["cross_entropy_loss","cost","wd_cost"])#uncomment it to debug for every step
         ],
         model=Model(),
@@ -280,7 +280,7 @@ def proceed_test(args,is_densecrf = False):
 
 def proceed_test_dir(args):
     import cv2
-    ll = os.listdir(args.test_dir)
+    ll = os.listdir(args.test_dir_path)
 
     pred_config = PredictConfig(
         model=Model(),
@@ -310,7 +310,7 @@ def proceed_test_dir(args):
 
     for i in tqdm(range(len(ll))):
         filename = ll[i]
-        image = cv2.imread(os.path.join(args.test_dir,filename))
+        image = cv2.imread(os.path.join(args.test_dir_path,filename))
         prediction = predict_scaler(image, mypredictor, scales=[0.5,0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = False)
         prediction = np.argmax(prediction, axis=2)
         cv2.imwrite(os.path.join(final_dir,"{}".format(filename)), prediction)
@@ -338,10 +338,16 @@ class CalculateMIoU(Callback):
 
         self.stat = MIoUStatistics(self.nb_class)
 
+        def mypredictor(input_img):
+            # input image: 1*H*W*3
+            # output : H*W*C
+            output = self.pred(input_img)
+            return output[0][0]
+
         for image, label in tqdm(self.val_ds.get_data()):
             label = np.squeeze(label)
             image = np.squeeze(image)
-            prediction = predict_scaler(image, self.pred, scales=[0.5,0.75,1,1.25,1.5], classes=CLASS_NUM, tile_size=CROP_SIZE,
+            prediction = predict_scaler(image, mypredictor, scales=[0.5,0.75,1,1.25,1.5], classes=CLASS_NUM, tile_size=CROP_SIZE,
                            is_densecrf=False)
             prediction = np.argmax(prediction, axis=2)
             self.stat.feed(prediction, label)
@@ -364,7 +370,8 @@ if __name__ == '__main__':
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     parser.add_argument('--validation', action='store_true', help='validate model on validation images')
     parser.add_argument('--test', action='store_true', help='generate test result')
-    parser.add_argument('--test_dir', default='/data1/dataset/m1-mar22-inference', help='generate test result')
+    parser.add_argument('--test_dir', action='store_true', help='generate test result')
+    parser.add_argument('--test_dir_path', default="/data1/dataset/m1-mar22-inference", help='generate test result')
     args = parser.parse_args()
     if args.gpu:
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu

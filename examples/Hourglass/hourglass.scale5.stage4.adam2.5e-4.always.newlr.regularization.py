@@ -5,6 +5,8 @@ from six.moves import zip
 import os
 
 
+slim = tf.contrib.slim
+
 from tensorpack import *
 from tensorpack.dataflow import dataset
 from tensorpack.utils.gpu import get_nr_gpu
@@ -36,9 +38,9 @@ from utils import add_flip,add_multiscale, preprocess
 def get_data(name):
     global  args
     isTrain = name == 'train'
-    ds = dataset.mpii(img_dir, meta_dir, name, input_shape, output_shape, shuffle=isTrain)
+    ds = dataset.mpii(img_dir, meta_dir, name, input_shape, output_shape, shuffle=True)
     def data_prepare(ds):
-        image, heatmap,metadata = preprocess(ds, input_shape, output_shape, name)
+        image, heatmap, metadata = preprocess(ds, input_shape, output_shape, name)
         if name == "train":
             return image, heatmap
         elif name == "val":
@@ -63,45 +65,36 @@ def get_data(name):
 
 
 class Model(ModelDesc):
-    def __init__(self, height=input_shape[0], width=input_shape[1]):
-        super(Model, self).__init__()
-        self.height = height
-        self.width = width
-
     def _get_inputs(self):
-        return [InputDesc(tf.float32, [None, self.height, self.width, 3], 'image'),
-                InputDesc(tf.float32, [None, self.height, self.width, 16], 'heatmap')]
+        return [InputDesc(tf.float32, [None, input_shape[0], input_shape[1], 3], 'image'),
+                InputDesc(tf.float32, [None, output_shape[0], output_shape[1], 16], 'heatmap')]
 
 
     def _build_graph(self, inputs):
-        image, heatmap = inputs
+        image,heatmap = inputs
         image = image - tf.constant([104, 116, 122], dtype='float32')
         ctx = get_current_tower_context()
         logger.info("current ctx.is_training: {}".format(ctx.is_training))
         predict = make_network(image, stage, nr_skeleton, ctx.is_training)
-        predict = tf.identity(predict, 'predict')
+        tmploss =0
+        nodecay_loss = 0.
+        for pre in predict:
+            tmploss += tf.losses.mean_squared_error(heatmap, pre)
+        nodecay_loss += tmploss / len(predict)
+        predict = tf.identity(predict,'predict')
+        nodecay_loss = tf.identity(nodecay_loss, 'mse_loss')
+        costs =[]
+        costs.append(nodecay_loss)
 
         if get_current_tower_context().is_training:
-            tmploss = 0
-            nodecay_loss = 0.
-            for pre in predict:
-                tmploss += tf.losses.mean_squared_error(heatmap, pre)
-            nodecay_loss += tmploss / len(predict)
-            nodecay_loss = tf.identity(nodecay_loss, 'mse_loss')
-
-            costs = []
-            costs.append(nodecay_loss)
-
-            wd_w = tf.train.exponential_decay(wd, get_global_step_var(),
-                                              80000, 0.7, True)
-            wd_cost = tf.multiply(wd_w, regularize_cost('.*/weights', tf.nn.l2_loss), name='wd_cost')
+            wd_cost = tf.add_n(slim.losses.get_regularization_losses(), name='wd_cost')
             costs.append(wd_cost)
             self.cost = tf.add_n(costs, name='cost')
 
 
     def _get_optimizer(self):
         lr = tf.get_variable('learning_rate', initializer=init_lr, trainable=False)
-        opt = tf.train.AdamOptimizer(lr, epsilon=1e-3)
+        opt = tf.train.AdamOptimizer(lr)
         return optimizer.apply_grad_processors(
             opt, [gradproc.ScaleGradient(
                 [('nothing.*', 0.1), ('nothing.*', 5)])])
@@ -190,83 +183,76 @@ class EvalPCKh(Callback):
         pckh(final_result)
 
 
-def proceed_validation(args, is_save = False, scales=[0.5, 0.75, 1, 1.25, 1.5]):
+def proceed_validation(args, is_save = False):
     origin_ds  = dataset.mpii(img_dir, meta_dir, "val", input_shape, output_shape, shuffle=False)
-    ds = get_data("val")
 
+    ds = get_data("val")
 
     from tensorpack.utils.fs import mkdir_p
     result_dir = os.path.join("result_on_val")
     mkdir_p(result_dir)
 
-    final_result = np.zeros((len(scales), len(origin_ds.imglist), nr_skeleton, 2), np.float32)
+    final_result = np.zeros((len(origin_ds.imglist), nr_skeleton, 2), np.float32)
+    image_id = 0
+    _itr = ds.get_data()
     is_debug = False
 
-    for scale_id,scale in enumerate([1]):
-        ds.reset_state()
-        image_id = 0
-        _itr = ds.get_data()
+    pred_config = PredictConfig(
+        model=Model(),
+        session_init=get_model_loader(args.load),
+        input_names=['image'],
+        output_names=['predict'])
 
-        current_scale_input_shape = (int(input_shape[0]*scale),int(input_shape[1]*scale))
+    def mypredictor(img):
+        predictor = OfflinePredictor(pred_config)
+        predicts = predictor(img[None, :, :, :])  # [(8,1,64,64,16)]
+        predict = predicts[0]  # (8,1,64,64,16), 8 means stage, 1 means batch size(in prediction, batch size is 1)
+        predict = np.squeeze(predict, axis=1)  # reduce dimension 1
+        return predict[-1, :, :, :]  # last stage,(H,W,C)
 
-        pred_config = PredictConfig(
-            model=Model(current_scale_input_shape[0],current_scale_input_shape[1]),
-            session_init=get_model_loader(args.load),
-            input_names=['image'],
-            output_names=['predict'])
+    for _  in tqdm(range(len(origin_ds.imglist))):
+        image, heatmap, meta = next(_itr)
 
-        def mypredictor(img):
-            predictor = OfflinePredictor(pred_config)
-            predicts = predictor(img[None, :, :, :])  # [(8,1,64,64,16)]
-            predict = predicts[0]  # (8,1,64,64,16), 8 means stage, 1 means batch size(in prediction, batch size is 1)
-            predict = np.squeeze(predict, axis=1)  # reduce dimension 1
-            return predict[-1, :, :, :]  # last stage,(H,W,C)
+        predict_heatmap = mypredictor(image)
+        predict_heatmap = add_flip(mypredictor, image,predict_heatmap)
+        #predict_heatmap = add_multiscale(mypredictor, image, predict_heatmap,scale=[0.5,0.75,1.25,1.5])
+        if is_debug:
+            heatmap_view = np.sum(heatmap, axis=2)
+            predict_view = np.sum(predict_heatmap, axis=2)
+            cv2.imshow("img", image)
+            cv2.imshow("featmap", cv2.resize(heatmap_view, (input_shape[0], input_shape[1])))
+            cv2.imshow("predict", cv2.resize(predict_view, (input_shape[0], input_shape[1])))
 
-        for _  in tqdm(range(len(origin_ds.imglist))):
-            image, heatmap, meta = next(_itr)
+        # TODO multi scale fusion
+        for i in range(nr_skeleton):
+            lb = predict_heatmap[:,:,i].argmax()
+            y,x = np.unravel_index(lb, predict_heatmap[:,:,i].shape) # notice the order of x,y
+            final_result[image_id, i, 0] = x
+            final_result[image_id, i, 1] = y
 
-            image = cv2.resize(image,current_scale_input_shape)
-            predict_heatmap = mypredictor(image)
-            predict_heatmap = add_flip(mypredictor, image,predict_heatmap)
-            predict_heatmap = cv2.resize(predict_heatmap,input_shape)#rescale back to original size
+        final_result[image_id, :, 0] /= meta['transform']['divide_first'][0]
+        final_result[image_id, :, 1] /= meta['transform']['divide_first'][1]
+        final_result[image_id, :, 0] += meta['transform']['add_second'][0]
+        final_result[image_id, :, 1] += meta['transform']['add_second'][1]
 
-            if is_debug:
-                heatmap_view = np.sum(heatmap, axis=2)
-                predict_view = np.sum(predict_heatmap, axis=2)
-                cv2.imshow("img", image)
-                cv2.imshow("featmap", cv2.resize(heatmap_view, (input_shape[0], input_shape[1])))
-                cv2.imshow("predict", cv2.resize(predict_view, (input_shape[0], input_shape[1])))
-
-            for i in range(nr_skeleton):
-                lb = predict_heatmap[:,:,i].argmax()
-                y,x = np.unravel_index(lb, predict_heatmap[:,:,i].shape) # notice the order of x,y
-                final_result[scale_id, image_id, i, 0] = x
-                final_result[scale_id, image_id, i, 1] = y
-
-            final_result[scale_id, image_id, :, 0] /= meta['transform']['divide_first'][0]
-            final_result[scale_id, image_id, :, 1] /= meta['transform']['divide_first'][1]
-            final_result[scale_id, image_id, :, 0] += meta['transform']['add_second'][0]
-            final_result[scale_id, image_id, :, 1] += meta['transform']['add_second'][1]
-
-            # some coordinate may be negative after the transformation.
-            img_height = meta['meta']['img_height']
-            img_width = meta['meta']['img_width']
-            final_result[scale_id, image_id, :, 0] = np.minimum(final_result[scale_id, image_id, :, 0],img_width)
-            final_result[scale_id, image_id, :, 0] = np.maximum(final_result[scale_id, image_id, :, 0], 0)
-            final_result[scale_id, image_id, :, 1] = np.minimum(final_result[scale_id, image_id, :, 1], img_height)
-            final_result[scale_id, image_id, :, 1] = np.maximum(final_result[scale_id, image_id, :, 1], 0)
+        # some coordinate may be negative after the transformation.
+        img_height = meta['meta']['img_height']
+        img_width = meta['meta']['img_width']
+        final_result[image_id, :, 0] = np.minimum(final_result[image_id, :, 0],img_width)
+        final_result[image_id, :, 0] = np.maximum(final_result[image_id, :, 0], 0)
+        final_result[image_id, :, 1] = np.minimum(final_result[image_id, :, 1], img_height)
+        final_result[image_id, :, 1] = np.maximum(final_result[image_id, :, 1], 0)
 
 
-            if is_debug:
-                from utils import draw_skeleton
-                big_img = cv2.imread(os.path.join(img_dir,meta['meta']['img_paths']))
-                draw_skeleton(big_img,final_result[image_id])
-                cv2.imshow("result", big_img)
-                cv2.waitKey(3000) #3s
+        if is_debug:
+            from utils import draw_skeleton
+            big_img = cv2.imread(os.path.join(img_dir,meta['meta']['img_paths']))
+            draw_skeleton(big_img,final_result[image_id])
+            cv2.imshow("result", big_img)
+            cv2.waitKey(3000) #3s
 
-            image_id += 1
+        image_id += 1
 
-    final_result = np.mean(final_result,axis=0)
     pckh(final_result)
 
 

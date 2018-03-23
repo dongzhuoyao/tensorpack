@@ -136,14 +136,22 @@ def get_data(name, base_dir, meta_dir, batch_size):
 def view_data(base_dir,meta_dir, batch_size):
     ds = RepeatedData(get_data('train',base_dir, meta_dir, batch_size), -1)
     ds.reset_state()
+    from tensorpack.utils.fs import mkdir_p
+    result_dir = "result/view"
+    #result_dir = "ningbo_validation"
+    mkdir_p(result_dir)
+    i = 0
     for ims, labels in ds.get_data():
         for im, label in zip(ims, labels):
             #aa = visualize_label(label)
             #pass
-            cv2.imshow("im", im / 255.0)
-            cv2.imshow("raw-label", label)
-            cv2.imshow("color-label", visualize_label(label))
-            cv2.waitKey(0)
+            #cv2.imshow("im", im / 255.0)
+            #cv2.imshow("raw-label", label)
+            #cv2.imshow("color-label", visualize_label(label))
+            cv2.imwrite(os.path.join(result_dir, "{}.png".format(i)),np.concatenate((im, visualize_label(label)), axis=1))
+            #cv2.waitKey(0)
+            i += 1
+            print i
 
 
 def get_config( base_dir, meta_dir, batch_size):

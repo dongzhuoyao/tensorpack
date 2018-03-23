@@ -290,7 +290,7 @@ def proceed_test_dir(args):
     predictor = OfflinePredictor(pred_config)
 
     from tensorpack.utils.fs import mkdir_p
-    result_dir = "test-from-dir-other"
+    result_dir = "test-from-dir"
     visual_dir = os.path.join(result_dir,"visualization")
     final_dir = os.path.join(result_dir,"final")
     import shutil
@@ -364,7 +364,7 @@ if __name__ == '__main__':
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     parser.add_argument('--validation', action='store_true', help='validate model on validation images')
     parser.add_argument('--test', action='store_true', help='generate test result')
-    parser.add_argument('--test_dir', default='/data1/dataset/m1-mar22-inference', help='generate test result')
+    parser.add_argument('--test_dir', default='/data1/slam', help='generate test result')
     args = parser.parse_args()
     if args.gpu:
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu

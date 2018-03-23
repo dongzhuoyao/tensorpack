@@ -58,9 +58,9 @@ def process(img_list, gt_list):
         h, w, _ = img.shape
         assert h==3000, w==4000
         cv2.imwrite(os.path.join(base_dir, "val/src", "{}.jpg".format(base_name)),
-                    img[start_i:end_i, start_j:end_j])
+                    img)
         cv2.imwrite(os.path.join(base_dir, "val/gt", "{}.png".format(base_name)),
-                    gt[start_i:end_i, start_j:end_j])
+                    gt)
 
         f_val.write("{} {}\n".format(os.path.join("val/src", "{}.jpg".format(base_name))
                                               ,os.path.join("val/gt", "{}.png".format(base_name))))

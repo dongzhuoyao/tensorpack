@@ -135,7 +135,7 @@ def crop_and_padding(img_path, objcenter, scale, joints, data_shape, output_shap
         am = np.amax(final_label[:, :, i])
         if am == 0:
             continue
-        final_label[:, :, i] /= am / 1  # normalize to 1
+        final_label[:, :, i] /= am / 255  # normalize to 1
 
     transform = {}
     transform['divide_first'] = (x_ratio, y_ratio)

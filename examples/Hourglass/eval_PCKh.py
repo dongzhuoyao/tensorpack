@@ -17,15 +17,15 @@ debug = 0
 def pckh(preds):
     threshold = 0.5
     SC_BIAS = 0.6
-    pa = [2, 3, 7, 7, 4, 5, 8, 9, 10, 0, 12, 13, 8, 8, 14, 15]
+
 
 
     dict = loadmat('evaluation/detections_our_format.mat')
-    dataset_joints = dict['dataset_joints']
-    jnt_missing = dict['jnt_missing']
-    pos_gt_src = dict['pos_gt_src']
+    dataset_joints = dict['dataset_joints'] #shape
+    jnt_missing = dict['jnt_missing'] #shape
+    pos_gt_src = dict['pos_gt_src'] #shape
 
-    headboxes_src = dict['headboxes_src']
+    headboxes_src = dict['headboxes_src'] #shape
 
     '''
     debug_length = 200
@@ -35,7 +35,7 @@ def pckh(preds):
     '''
 
 
-    pos_pred_src = transpose(preds, [1, 2, 0])
+    pos_pred_src = transpose(preds, [1, 2, 0]) # shape 2,14, 2970?
 
     """
     if debug:
@@ -64,14 +64,14 @@ def pckh(preds):
     rhip = np.where(dataset_joints == 'rhip')[1][0]
 
     jnt_visible = 1 - jnt_missing
-    uv_error = pos_pred_src - pos_gt_src
+    uv_error = pos_pred_src - pos_gt_src # key setence
     uv_err = np.linalg.norm(uv_error, axis=1)
     headsizes = headboxes_src[1, :, :] - headboxes_src[0, :, :]
     headsizes = np.linalg.norm(headsizes, axis=0)
     headsizes *= SC_BIAS
     scale = np.multiply(headsizes, np.ones((len(uv_err), 1)))
-    scaled_uv_err = np.divide(uv_err, scale)
-    scaled_uv_err = np.multiply(scaled_uv_err, jnt_visible)
+    scaled_uv_err = np.divide(uv_err, scale) # divide an uniform scale
+    scaled_uv_err = np.multiply(scaled_uv_err, jnt_visible) # only consider visible points
     jnt_count = np.sum(jnt_visible, axis=1)
     less_than_threshold = np.multiply((scaled_uv_err < threshold), jnt_visible)
     PCKh = np.divide(100. * np.sum(less_than_threshold, axis=1), jnt_count)
