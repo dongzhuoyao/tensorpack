@@ -13,12 +13,15 @@ from tensorpack.tfutils import argscope, get_model_loader
 from tensorpack.tfutils.summary import *
 from tensorpack.utils.gpu import get_nr_gpu
 
-from imagenet_utils import (
-    ImageNetModel)
 import OneShotDataset
 
 max_epoch = 6
 weight_decay = 5e-4
+batch_size = 1
+LR = 1e-10
+CLASS_NUM = 2
+support_image_size =(224,224)
+query_image_size = (500, 500)
 
 def get_data(name, batch=1):
     isTrain = True if 'train' in name else False
@@ -35,16 +38,43 @@ def convnormrelu(x, name, chan):
     return x
 
 
+def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
+    """
+    This function accepts logits rather than predictions, and is more numerically stable than
+    :func:`class_balanced_cross_entropy`.
+    """
+    with tf.name_scope('softmax_cross_entropy_with_ignore_label'):
+        #tf.assert_equal(logits.shape[1], label.shape[1])  # shape assert
+        #TODO need assert here
+        raw_prediction = tf.reshape(logits, [-1, class_num])
+        label = tf.reshape(label,[-1,])
+        #label_onehot = tf.one_hot(label, depth=class_num)
+        indices = tf.squeeze(tf.where(tf.less(label, class_num)), axis=1)
+        #raw_gt = tf.reshape(label_onehot, [-1, class_num])
+
+        gt = tf.gather(label, indices)
+        prediction = tf.gather(raw_prediction, indices)
+
+        # Pixel-wise softmax loss.
+        loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=prediction, labels=gt)
+    return loss
+
+
 class Model(ModelDesc):
     def inputs(self):
-        return [tf.placeholder(tf.float32, [None, None, None, 3], 'image'),
-                tf.placeholder(tf.int32, [None, None, None], 'edgemap')]
+        return [tf.placeholder(tf.float32, [None, support_image_size[0], support_image_size[1], 3], 'first_image'),
+                tf.placeholder(tf.int32, [None, support_image_size[0], support_image_size[1]], 'first_label'),
+                tf.placeholder(tf.float32, [None, query_image_size[0], query_image_size[1], 3], 'second_image'),
+                tf.placeholder(tf.int32, [None, query_image_size[0], query_image_size[1]], 'second_label')
+                ]
 
-    def get_logits(self, image,edgemap):
+
+    def build_graph(self, first_image, first_label, second_image, second_label):
+        first_label = tf.expand_dims(first_label, 3, name='first_label')
         with argscope(Conv2D, kernel_size=3,
                       kernel_initializer=tf.variance_scaling_initializer(scale=2.)), \
-                argscope([Conv2D, MaxPooling, BatchNorm], data_format='channels_first'):
-            logits = (LinearWrap(image)
+             argscope([Conv2D, MaxPooling, BatchNorm], data_format="NHWC"):
+                logits = (LinearWrap(first_image)
                       .apply(convnormrelu, 'conv1_1', 64)
                       .apply(convnormrelu, 'conv1_2', 64)
                       .MaxPooling('pool1', 2)
@@ -67,35 +97,52 @@ class Model(ModelDesc):
                       .apply(convnormrelu, 'conv5_2', 512)
                       .apply(convnormrelu, 'conv5_3', 512)())
 
+                # TODO smoothen
+                logits = Conv2D("smooth", logits, CLASS_NUM, 3)
+                logits = tf.image.resize_bilinear(logits, first_image.shape[1:3])
 
-        add_param_summary(('.*', ['histogram', 'rms']))
-        return logits
+        costs = []
+
+        cost = softmax_cross_entropy_with_ignore_label(logits, first_label, class_num=CLASS_NUM)
+        cost = tf.reduce_mean(cost, name='cross_entropy_loss')
+        costs.append(cost)
+
+        if get_current_tower_context().is_training:
+            wd_w = tf.train.exponential_decay(2e-4, get_global_step_var(),
+                                              80000, 0.7, True)
+            wd_cost = tf.multiply(wd_w, regularize_cost('.*/W', tf.nn.l2_loss), name='wd_cost')
+            costs.append(wd_cost)
+
+            add_param_summary(('.*', ['histogram', 'rms']))
+            total_cost = tf.add_n(costs, name='cost')
+            return total_cost
+
+    def optimizer(self):
+        lr = tf.get_variable('learning_rate', initializer=LR, trainable=False)
+        opt = tf.train.AdamOptimizer(lr, epsilon=1e-3) #TODO,change to SGD
+        return optimizer.apply_grad_processors(
+            opt, [gradproc.ScaleGradient(
+                [('nothing.*', 0.1), ('nothing.*', 5)])])
+
 
 
 def get_config():
     nr_tower = max(get_nr_gpu(), 1)
-    batch = 1
-    total_batch = batch * nr_tower
-    BASE_LR = 0.01 * (total_batch / 256.)
+    total_batch = batch_size * nr_tower
 
-    logger.info("Running on {} towers. Batch size per tower: {}".format(nr_tower, batch))
-    dataset_train = get_data('fold0_train', batch)
-    dataset_val = get_data('fold0_1shot_test', batch)
 
-    infs = [ClassificationError('wrong-top1', 'val-error-top1'),
-            ClassificationError('wrong-top5', 'val-error-top5')]
+    logger.info("Running on {} towers. Batch size per tower: {}".format(nr_tower, batch_size))
+    dataset_train = get_data('fold0_train', batch_size)
+    dataset_val = get_data('fold0_1shot_test', batch_size)
+
     callbacks = [
         ModelSaver(),
         GPUUtilizationTracker(),
         EstimatedTimeLeft(),
-        ScheduledHyperParamSetter(
-            'learning_rate',
-            [(0, 0.01), (3, max(BASE_LR, 0.01))], interp='linear'),
-        ScheduledHyperParamSetter(
-            'learning_rate',
-            [(30, BASE_LR * 1e-1), (60, BASE_LR * 1e-2), (80, BASE_LR * 1e-3)]),
-        DataParallelInferenceRunner(
-            dataset_val, infs, list(range(nr_tower))),
+        ProgressBar(["cross_entropy_loss", "cost", "wd_cost"])  # uncomment it to debug for every step
+        #ScheduledHyperParamSetter(
+        #    'learning_rate',
+        #    [(0, 0.01), (3, max(BASE_LR, 0.01))], interp='linear'),
     ]
 
     input = QueueInput(dataset_train)
@@ -125,10 +172,10 @@ def view(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default='3',help='comma separated list of GPU(s) to use.')
     parser.add_argument('--data', help='ILSVRC dataset dir')
     parser.add_argument('--norm', choices=['none', 'bn'], default='none')
-    parser.add_argument('--load', help='load model')
+    parser.add_argument('--load',default="vgg16.npz", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     args = parser.parse_args()
 

@@ -86,7 +86,7 @@ fold0_train = Map(empty_profile,
     #image_sets=['pascal_training'],
     pascal_cats = get_cats('train',0),
     first_shape=[224,224],
-    second_shape=None)
+    second_shape=[500,500]) # original code is second_shape=None),TODO
 
 # Setting for testing on **test images** in unseen image classes (in total 5 classes), 5-shot
 fold0_5shot_test = Map(empty_profile,
