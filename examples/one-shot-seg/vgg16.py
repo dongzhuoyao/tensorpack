@@ -4,6 +4,7 @@
 
 import argparse
 import os,cv2
+import numpy as np
 
 import tensorflow as tf
 
@@ -107,11 +108,15 @@ def view(args):
     ds = RepeatedData(get_data('train'), -1)
     ds.reset_state()
     for inputs in ds.get_data():
-        cv2.imshow("first_img",inputs[0][0])
+        """
+        cv2.imshow("first_img",inputs[0][0]+np.array([104, 116, 122], dtype='float32'))
         cv2.imshow("first_label",inputs[1][0])
-        cv2.imshow("second_img", inputs[2][0])
+        cv2.imshow("second_img", inputs[2][0]+np.array([104, 116, 122], dtype='float32'))
         cv2.imshow("second_label", inputs[3][0])
         cv2.waitKey(10000)
+        """
+        print "ssss"
+        pass
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

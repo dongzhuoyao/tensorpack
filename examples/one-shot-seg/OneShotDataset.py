@@ -16,7 +16,9 @@ __all__ = ['OneShotDataset']
 
 class OneShotDataset(RNGDataFlow):
     def __init__(self,):
-        pass
+        settings = __import__('ss_settings')
+        profile = getattr(settings, "fold0_1shot_test")
+        self.loader = LoaderOfPairs(profile)
 
     def size(self):
         return 1e10
@@ -26,12 +28,8 @@ class OneShotDataset(RNGDataFlow):
         return 2
 
     def get_data(self): # only for one-shot learning
-        settings = __import__('ss_settings')
-        profile = getattr(settings, "fold0_1shot_test")
-        loader = LoaderOfPairs(profile)
-
-        loader.get_items_no_return()
-        yield [loader.out['first_img'][0],loader.out['first_label'][0],loader.out['second_img'][0],loader.out['second_label'][0]]
+        self.loader.get_items_no_return()
+        yield [self.loader.out['first_img'][0],self.loader.out['first_label'][0],self.loader.out['second_img'][0],self.loader.out['second_label'][0]]
 
 
 

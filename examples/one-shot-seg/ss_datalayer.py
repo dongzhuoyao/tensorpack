@@ -37,7 +37,7 @@ class DBInterface():
     
     def update_seq_index(self):
         self.seq_index += 1
-        if self.seq_index >= len(self.db_items):
+        if self.seq_index >= len(self.db_items):# reset status when full
             self.db_items = copy.copy(self.orig_db_items)
             self.rand_gen.shuffle(self.db_items)
             self.seq_index = 0
@@ -46,39 +46,34 @@ class DBInterface():
         with self.lock:
             end_of_cycle = self.params.has_key('db_cycle') and self.cycle >= self.params['db_cycle']
             if end_of_cycle:
-                assert(self.params['db_cycle'] > 0)
+                assert(self.params['db_cycle'] > 0) # full, reset status
                 self.cycle = 0
                 self.seq_index = len(self.db_items)
                 self.init_randget(self.params['read_mode'])
                 
             self.cycle += 1
-            base_trans = None if self.params['image_base_trans'] is None else self.params['image_base_trans'].sample()
             self.update_seq_index()
-            if self.params['output_type'] == 'single_image': #useless
-                db_item = self.db_items[self.seq_index]
-                assert(isinstance(db_item, util.DBImageItem))
-                player = util.ImagePlayer(db_item, base_trans, None, None, length = 1)
-                return player, [0], None
-            elif self.params['output_type'] == 'image_pair':
+            if self.params['output_type'] == 'image_pair':
                 imgset, second_index = self.db_items[self.seq_index] # query image index
-                player = util.VideoPlayer(imgset, base_trans, self.params['image_frame_trans'])
+                player = util.VideoPlayer(imgset)
                 set_indices = range(second_index) + range(second_index+1, player.length) # exclude second_index
                 assert(len(set_indices) >= self.params['k_shot'])
                 self.rand_gen.shuffle(set_indices)
                 first_index = set_indices[:self.params['k_shot']] # support set image indexes(may be multi-shot~)
                 return player, first_index, second_index
             else:
-                raise Exception('Only single_image and image_pair mode are supported')
-    
-    def _remove_small_objects(self, items):
-        filtered_item = []
-        for item in items:
-            mask = item.read_mask()
-            if util.change_coordinates(mask, 32.0, 0.0).sum() > 2:
-                filtered_item.append(item)
-        return filtered_item
+                raise Exception('Only image_pair mode are supported, single_image please refer to the original code')
+
     
     def load_items(self):
+        def _remove_small_objects(items):
+            filtered_item = []
+            for item in items:
+                mask = item.read_mask()
+                if util.change_coordinates(mask, 32.0, 0.0).sum() > 2:
+                    filtered_item.append(item)
+            return filtered_item
+
         self.db_items = []
         if self.params.has_key('image_sets'):
             for image_set in self.params['image_sets']:
@@ -87,16 +82,13 @@ class DBInterface():
                         pascal_db = util.PASCAL(self.params['pascal_path'], image_set[7:])  # train or test
                     elif image_set.startswith('sbd'):
                         pascal_db = util.PASCAL(self.params['sbd_path'], image_set[4:])   # train or test
-                    #reads single image and all semantic classes are presented in the label
-                    
-                    if self.params['output_type'] == 'single_image':
-                        items = pascal_db.getItems(self.params['pascal_cats'], self.params['areaRng'], read_mode = util.PASCAL_READ_MODES.SEMANTIC_ALL)
+
                     #reads pair of images from one semantic class and and with binary labels
-                    elif self.params['output_type'] == 'image_pair':
+                    if self.params['output_type'] == 'image_pair':
                         items = pascal_db.getItems(self.params['pascal_cats'], self.params['areaRng'], read_mode = util.PASCAL_READ_MODES.SEMANTIC)
-                        items = self._remove_small_objects(items)
+                        items = _remove_small_objects(items)
                     else:
-                        raise Exception('Only single_image and image_pair mode are supported')
+                        raise Exception('Only image_pair mode are supported, single_image please refer to the original code')
                     self.db_items.extend(items)
                 else:
                     raise Exception
