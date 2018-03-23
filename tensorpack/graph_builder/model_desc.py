@@ -3,11 +3,10 @@
 # File: model_desc.py
 
 
-from abc import ABCMeta, abstractmethod
 from collections import namedtuple
 import tensorflow as tf
-import six
 
+from ..utils import logger
 from ..utils.argtools import memoized
 from ..utils.develop import log_deprecated
 from ..tfutils.gradproc import FilterNoneGrad
@@ -38,9 +37,10 @@ class InputDesc(
         if any(k in name for k in [':', '/', ' ']):
             raise ValueError("Invalid InputDesc name: '{}'".format(name))
         self = super(InputDesc, cls).__new__(cls, type, shape, name)
-        self._cached_placeholder = None
+        self._cached_placeholder = {}
         return self
 
+    # TODO this method seems unused outside this class
     def build_placeholder(self):
         """
         Build a tf.placeholder from the metadata.
@@ -51,8 +51,7 @@ class InputDesc(
         with tf.name_scope(None):   # clear any name scope it might get called in
             ret = tf.placeholder(
                 self.type, shape=self.shape, name=self.name)
-        if self._cached_placeholder is None:
-            self._cached_placeholder = ret  # cached_placeholder only caches the prefix='' case
+        self._register_cached_placeholder(ret)
         return ret
 
     # cannot memoize here, because InputDesc is hashed by its fields.
@@ -63,38 +62,84 @@ class InputDesc(
         Returns:
             tf.Tensor:
         """
-        if self._cached_placeholder is not None:
-            return self._cached_placeholder
-        return self.build_placeholder()
+        g = tf.get_default_graph()
+        if g in self._cached_placeholder:
+            return self._cached_placeholder[g]
+        else:
+            return self.build_placeholder()
+
+    def _register_cached_placeholder(self, placeholder):
+        graph = placeholder.graph
+        assert graph not in self._cached_placeholder, \
+            "Placeholder for this InputDesc had been created before! This is a bug."
+        self._cached_placeholder[graph] = placeholder
+
+    @staticmethod
+    def from_placeholder(placeholder):
+        name = placeholder.op.name
+        if name.endswith('_1') or name.endswith('_2'):
+            logger.error("Creating InputDesc from a placeholder named {}.".format(name))
+            logger.error("You might have mistakenly created this placeholder multiple times!")
+        ret = InputDesc(
+            placeholder.dtype,
+            tuple(placeholder.shape.as_list()),
+            name)
+        ret._register_cached_placeholder(placeholder)
+        return ret
 
 
-@six.add_metaclass(ABCMeta)
 class ModelDescBase(object):
-    """ Base class for a model description.
     """
+    Base class for a model description.
+    """
+
     @memoized
     def get_inputs_desc(self):
         """
         Returns:
-            list[:class:`InputDesc`]: list of the underlying :class:`InputDesc`.
+            a list of :class:`InputDesc`.
         """
-        return self._get_inputs()
+        try:
+            return self._get_inputs()
+        except NotImplementedError:
+            with tf.Graph().as_default() as G:   # create these placeholder in a temporary graph
+                inputs = self.inputs()
+                for p in inputs:
+                    assert p.graph == G, "Placeholders returned by inputs() sholud be created inside inputs()!"
+                return [InputDesc.from_placeholder(p) for p in inputs]
 
-    @abstractmethod
     def _get_inputs(self):
+        raise NotImplementedError()
+
+    def inputs(self):
         """
-        :returns: a list of InputDesc
+        __Create__ and returns a list of placeholders.
+        A subclass is expected to implement this method.
+
+        The placeholders __have to__ be created inside this method.
+        Don't return placeholders created in other methods.
+        Also, you should not call this method by yourself.
+
+        Returns:
+            a list of `tf.placeholder`, to be converted to :class:`InputDesc`.
         """
+        raise NotImplementedError()
 
     def build_graph(self, *args):
         """
         Build the whole symbolic graph.
-        This is supposed to be the "tower function" when used with :class:`TowerTrainer`.
-        By default it will call :meth:`_build_graph` with a list of input tensors, for backward-compatibility.
+        This is supposed to be part of the "tower function" when used with :class:`TowerTrainer`.
+        By default it will call :meth:`_build_graph` with a list of input tensors.
+
+        A subclass is expected to overwrite this method or the :meth:`_build_graph` method.
 
         Args:
-            args ([tf.Tensor]): tensors that matches the list of
-                :class:`InputDesc` defined by ``_get_inputs``.
+            args ([tf.Tensor]): tensors that matches the list of inputs defined by ``inputs()``.
+
+        Returns:
+            In general it returns nothing, but a subclass (e.g.
+            :class:`ModelDesc`) may require it to return necessary information
+            (e.g. cost) to build the trainer.
         """
         if len(args) == 1:
             arg = args[0]
@@ -113,34 +158,41 @@ class ModelDescBase(object):
         assert len(inputs) == len(self.get_inputs_desc()), \
             "Number of inputs passed to the graph != number of inputs defined " \
             "in ModelDesc! ({} != {})".format(len(inputs), len(self.get_inputs_desc()))
-        self._build_graph(inputs)
+        return self._build_graph(inputs)
 
     def _build_graph(self, inputs):
         """
-        This is an old interface which takes a list of tensors, instead of positional arguments.
+        This is an alternative interface which takes a list of tensors, instead of positional arguments.
+        By default :meth:`build_graph` will call this method.
         """
         pass
 
 
 class ModelDesc(ModelDescBase):
     """
-    A ModelDesc with single cost and single optimizer.
-    It contains information about InputDesc, how to get cost, and how to get optimizer.
+    A ModelDesc with **single cost** and **single optimizer**.
+    It has the following constraints in addition to :class:`ModelDescBase`:
+
+    1. :meth:`build_graph(...)` method should return a cost when called under a training context.
+      The cost will be the final cost to be optimized by the optimizer.
+      Therefore it should include necessary regularization.
+    2. Subclass is expected to implement :meth:`optimizer()` method.
     """
 
     def get_cost(self):
         """
-        Return the cost tensor in the graph.
+        Being deprecated.
+        You're recommended to return a cost tensor in :meth:`build_graph` method directly.
 
-        It calls :meth:`ModelDesc._get_cost()` which by default returns
-        ``self.cost``. You can override :meth:`_get_cost()` if needed.
-
-        This function also applies the collection
+        This function takes the `self.cost` tensor defined by :meth:`build_graph`,
+        and applies the collection
         ``tf.GraphKeys.REGULARIZATION_LOSSES`` to the cost automatically.
         """
         cost = self._get_cost()
         reg_cost = regularize_cost_from_collection()
-        if reg_cost is not None:
+        if reg_cost.op.type != 'Const':
+            logger.warn("Regularization losses found in collection, and a 'cost' tensor was "
+                        "not returned by `build_graph`. Therefore applying regularization automatically!")
             return tf.add(cost, reg_cost, name='cost_with_regularizer')
         else:
             return cost
@@ -151,22 +203,43 @@ class ModelDesc(ModelDescBase):
     @memoized
     def get_optimizer(self):
         """
-        Return the memoized optimizer returned by `_get_optimizer`.
+        Return the memoized optimizer returned by `optimizer()`.
 
-        Users of :class:`ModelDesc` will need to implement `_get_optimizer()`,
+        Users of :class:`ModelDesc` will need to implement `optimizer()`,
         which will only be called once per each model.
 
         Returns:
             a :class:`tf.train.Optimizer` instance.
         """
-        return self._get_optimizer()
+        try:
+            return self._get_optimizer()
+        except NotImplementedError:
+            pass
+        return self.optimizer()
 
     def _get_optimizer(self):
         raise NotImplementedError()
 
+    def optimizer(self):
+        """
+        Returns a `tf.train.Optimizer` instance.
+        A subclass is expected to implement this method.
+        """
+        raise NotImplementedError()
+
     def _build_graph_get_cost(self, *inputs):
-        self.build_graph(*inputs)
-        return self.get_cost()
+        """
+        Used internally by trainers to get the final cost for optimization.
+        """
+        ret = self.build_graph(*inputs)
+        if not get_current_tower_context().is_training:
+            return None     # this is the tower function, could be called for inference
+        if isinstance(ret, tf.Tensor):  # the preferred way
+            assert ret.shape.ndims == 0, "Cost must be a scalar, but found a tensor of shape {}!".format(ret.shape)
+            _check_unused_regularization()
+            return ret
+        else:   # the old way
+            return self.get_cost()
 
     # TODO this is deprecated and only used for v1 trainers
     def _build_graph_get_grads(self, *inputs):
@@ -179,6 +252,9 @@ class ModelDesc(ModelDescBase):
         ctx = get_current_tower_context()
         cost = self._build_graph_get_cost(*inputs)
 
+        if not ctx.is_training:
+            return None     # this is the tower function, could be called for inference
+
         if ctx.has_own_variables:
             varlist = ctx.get_collection_in_tower(tf.GraphKeys.TRAINABLE_VARIABLES)
         else:
@@ -189,3 +265,15 @@ class ModelDesc(ModelDescBase):
             gate_gradients=False, colocate_gradients_with_ops=True)
         grads = FilterNoneGrad().process(grads)
         return grads
+
+
+def _check_unused_regularization():
+    coll = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
+    unconsumed_reg = []
+    for c in coll:
+        if len(c.consumers()) == 0:
+            unconsumed_reg.append(c)
+    if unconsumed_reg:
+        logger.warn("The following tensors appear in REGULARIZATION_LOSSES collection but has no "
+                    "consumers! You may have forgotten to add regularization to total cost.")
+        logger.warn("Unconsumed regularization: {}".format(', '.join([x.name for x in unconsumed_reg])))

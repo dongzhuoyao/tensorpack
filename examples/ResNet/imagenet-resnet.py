@@ -77,9 +77,10 @@ def get_config(model, fake=False):
         BASE_LR = 0.1 * (args.batch / 256.0)
         callbacks = [
             ModelSaver(),
+            EstimatedTimeLeft(),
             ScheduledHyperParamSetter(
                 'learning_rate', [(30, BASE_LR * 1e-1), (60, BASE_LR * 1e-2),
-                                  (85, BASE_LR * 1e-3), (95, BASE_LR * 1e-4), (105, BASE_LR * 1e-5)]),
+                                  (90, BASE_LR * 1e-3), (100, BASE_LR * 1e-4)]),
         ]
         if BASE_LR > 0.1:
             callbacks.append(
@@ -101,25 +102,25 @@ def get_config(model, fake=False):
         dataflow=dataset_train,
         callbacks=callbacks,
         steps_per_epoch=100 if args.fake else 1280000 // args.batch,
-        max_epoch=110,
+        max_epoch=105,
     )
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default="0,1,2,4", help='comma separated list of GPU(s) to use.')
-    parser.add_argument('--data', default="/data1/dataset/imagenet", help='ILSVRC dataset dir')
+    parser.add_argument('--gpu', help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--data', help='ILSVRC dataset dir')
     parser.add_argument('--load', help='load model')
     parser.add_argument('--fake', help='use fakedata to test or benchmark this model', action='store_true')
     parser.add_argument('--data_format', help='specify NCHW or NHWC',
                         type=str, default='NCHW')
     parser.add_argument('-d', '--depth', help='resnet depth',
-                        type=int, default=101, choices=[18, 34, 50, 101, 152])
+                        type=int, default=50, choices=[18, 34, 50, 101, 152])
     parser.add_argument('--eval', action='store_true')
     parser.add_argument('--batch', default=256, type=int,
                         help='total batch size. 32 per GPU gives best accuracy, higher values should be similarly good')
     parser.add_argument('--mode', choices=['resnet', 'preact', 'se'],
-                        help='variants of resnet to use', default='se')
+                        help='variants of resnet to use', default='resnet')
     args = parser.parse_args()
 
     if args.gpu:

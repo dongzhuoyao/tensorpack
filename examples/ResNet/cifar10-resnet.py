@@ -40,12 +40,11 @@ class Model(ModelDesc):
         super(Model, self).__init__()
         self.n = n
 
-    def _get_inputs(self):
-        return [InputDesc(tf.float32, [None, 32, 32, 3], 'input'),
-                InputDesc(tf.int32, [None], 'label')]
+    def inputs(self):
+        return [tf.placeholder(tf.float32, [None, 32, 32, 3], 'input'),
+                tf.placeholder(tf.int32, [None], 'label')]
 
-    def _build_graph(self, inputs):
-        image, label = inputs
+    def build_graph(self, image, label):
         image = image / 128.0
         assert tf.test.is_gpu_available()
         image = tf.transpose(image, [0, 3, 1, 2])
@@ -63,7 +62,7 @@ class Model(ModelDesc):
 
             with tf.variable_scope(name):
                 b1 = l if first else BNReLU(l)
-                c1 = Conv2D('conv1', b1, out_channel, stride=stride1, nl=BNReLU)
+                c1 = Conv2D('conv1', b1, out_channel, strides=stride1, activation=BNReLU)
                 c2 = Conv2D('conv2', c1, out_channel)
                 if increase_dim:
                     l = AvgPooling('pool', l, 2)
@@ -72,10 +71,10 @@ class Model(ModelDesc):
                 l = c2 + l
                 return l
 
-        with argscope([Conv2D, AvgPooling, BatchNorm, GlobalAvgPooling], data_format='NCHW'), \
-                argscope(Conv2D, nl=tf.identity, use_bias=False, kernel_shape=3,
-                         W_init=tf.variance_scaling_initializer(scale=2.0, mode='fan_out')):
-            l = Conv2D('conv0', image, 16, nl=BNReLU)
+        with argscope([Conv2D, AvgPooling, BatchNorm, GlobalAvgPooling], data_format='channels_first'), \
+                argscope(Conv2D, use_bias=False, kernel_size=3,
+                         kernel_initializer=tf.variance_scaling_initializer(scale=2.0, mode='fan_out')):
+            l = Conv2D('conv0', image, 16, activation=BNReLU)
             l = residual('res1.0', l, first=True)
             for k in range(1, self.n):
                 l = residual('res1.{}'.format(k), l)
@@ -93,7 +92,7 @@ class Model(ModelDesc):
             # 8,c=64
             l = GlobalAvgPooling('gap', l)
 
-        logits = FullyConnected('linear', l, out_dim=10, nl=tf.identity)
+        logits = FullyConnected('linear', l, 10)
         tf.nn.softmax(logits, name='output')
 
         cost = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=label)
@@ -110,9 +109,9 @@ class Model(ModelDesc):
         add_moving_summary(cost, wd_cost)
 
         add_param_summary(('.*/W', ['histogram']))   # monitor W
-        self.cost = tf.add_n([cost, wd_cost], name='cost')
+        return tf.add_n([cost, wd_cost], name='cost')
 
-    def _get_optimizer(self):
+    def optimizer(self):
         lr = tf.get_variable('learning_rate', initializer=0.01, trainable=False)
         opt = tf.train.MomentumOptimizer(lr, 0.9)
         return opt

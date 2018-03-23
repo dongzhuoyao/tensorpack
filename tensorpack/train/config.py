@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 # File: config.py
 
+import os
+import tensorflow as tf
+
 from ..callbacks import (
     MovingAverageSummary,
     ProgressBar, MergeAllSummaries,
@@ -9,11 +12,11 @@ from ..callbacks import (
 from ..dataflow.base import DataFlow
 from ..graph_builder.model_desc import ModelDescBase
 from ..utils import logger
-from ..tfutils import (JustCurrentSession, SessionInit)
+from ..tfutils.sessinit import SessionInit, SaverRestore, JustCurrentSession
 from ..tfutils.sesscreate import NewSessionCreator
 from ..input_source import InputSource
 
-__all__ = ['TrainConfig', 'DEFAULT_CALLBACKS', 'DEFAULT_MONITORS']
+__all__ = ['TrainConfig', 'AutoResumeTrainConfig', 'DEFAULT_CALLBACKS', 'DEFAULT_MONITORS']
 
 
 def DEFAULT_CALLBACKS():
@@ -49,21 +52,21 @@ def DEFAULT_MONITORS():
 
 class TrainConfig(object):
     """
-    A collection of options to be used for trainers.
+    A collection of options to be used for single-cost trainers.
     """
 
     def __init__(self,
-                 dataflow=None, data=None, model=None,
+                 dataflow=None, data=None,
+                 model=None,
                  callbacks=None, extra_callbacks=None, monitors=None,
                  session_creator=None, session_config=None, session_init=None,
                  starting_epoch=1, steps_per_epoch=None, max_epoch=99999,
-                 nr_tower=1, tower=None,
                  **kwargs):
         """
         Args:
             dataflow (DataFlow):
             data (InputSource):
-            model (ModelDescBase):
+            model (ModelDesc):
 
             callbacks (list): a list of :class:`Callback` to perform during training.
             extra_callbacks (list): the same as ``callbacks``. This argument
@@ -104,20 +107,18 @@ class TrainConfig(object):
             assert_type(model, ModelDescBase)
         self.model = model
 
-        if callbacks is None:
-            callbacks = []
-        assert_type(callbacks, list)
+        if callbacks is not None:
+            assert_type(callbacks, list)
+        self.callbacks = callbacks
         if extra_callbacks is not None:
-            self._callbacks = callbacks + extra_callbacks
-        else:
-            self._callbacks = callbacks + DEFAULT_CALLBACKS()
-
-        self.monitors = monitors if monitors is not None else DEFAULT_MONITORS()
-
-        if session_init is None:
-            session_init = JustCurrentSession()
+            assert_type(extra_callbacks, list)
+        self.extra_callbacks = extra_callbacks
+        if monitors is not None:
+            assert_type(monitors, list)
+        self.monitors = monitors
+        if session_init is not None:
+            assert_type(session_init, SessionInit)
         self.session_init = session_init
-        assert_type(self.session_init, SessionInit)
 
         if session_creator is None:
             if session_config is not None:
@@ -145,25 +146,96 @@ class TrainConfig(object):
 
         self.starting_epoch = int(starting_epoch)
         self.max_epoch = int(max_epoch)
-        assert self.steps_per_epoch > 0 and self.max_epoch > 0
 
-        # Tower stuff are for Trainer v1 only:
-        nr_tower = max(nr_tower, 1)
-        self.nr_tower = nr_tower
-        if tower is not None:
-            assert self.nr_tower == 1, "Cannot set both nr_tower and tower in TrainConfig!"
-            self.tower = tower
-
-        assert len(kwargs) == 0, 'Unknown arguments: {}'.format(str(kwargs.keys()))
+        if 'nr_tower' in kwargs:
+            self.nr_tower = kwargs.pop('nr_tower')
+        if 'tower' in kwargs:
+            self.tower = kwargs.pop('tower')
+        else:
+            self.tower = [0]
+        assert len(kwargs) == 0, "Unknown arguments: {}".format(kwargs.keys())
 
     @property
     def nr_tower(self):
+        logger.warn("TrainConfig.nr_tower was deprecated! Set the number of GPUs on the trainer instead!")
+        logger.warn("See https://github.com/ppwwyyxx/tensorpack/issues/458 for more information.")
         return len(self.tower)
 
     @nr_tower.setter
     def nr_tower(self, value):
+        logger.warn("TrainConfig.nr_tower was deprecated! Set the number of GPUs on the trainer instead!")
+        logger.warn("See https://github.com/ppwwyyxx/tensorpack/issues/458 for more information.")
         self.tower = list(range(value))
 
-    @property
-    def callbacks(self):        # disable setter
-        return self._callbacks
+    def _deprecated_parsing(self):
+        self.callbacks = self.callbacks or []
+        self.extra_callbacks = DEFAULT_CALLBACKS() if self.extra_callbacks is None else self.extra_callbacks
+        self.callbacks.extend(self.extra_callbacks)
+        self.monitors = DEFAULT_MONITORS() if self.monitors is None else self.monitors
+        self.session_init = self.session_init or JustCurrentSession()
+
+
+class AutoResumeTrainConfig(TrainConfig):
+    """
+    Same as :class:`TrainConfig`, but does the following to automatically
+    resume from training:
+
+    1. If a checkpoint was found in :meth:`logger.get_logger_dir()`, set
+       `session_init` option to load it.
+    2. If a JSON history was found in :meth:`logger.get_logger_dir()`, try to
+       load the epoch number from it and set the `starting_epoch` option to
+       continue training.
+
+    You can choose to let the above two option to either overwrite or
+    not overwrite user-provided arguments, as explained below.
+    """
+    def __init__(self, always_resume=True, **kwargs):
+        """
+        Args:
+            always_resume (bool): If False, user-provided arguments
+                `session_init` and `starting_epoch` will take priority.
+                Otherwise, resume will take priority.
+            kwargs: same as in :class:`TrainConfig`.
+
+        Notes:
+            The main goal of this class is to let a training job to resume
+            without changing any line of code or command line arguments.
+            So it's useful to let resume take priority over user-provided arguments sometimes:
+
+            If your training starts from a pretrained model,
+            you would want it to use user-provided model loader at the
+            beginning, but a "resume" model loader when the job was
+            interrupted and restarted.
+        """
+        if always_resume or 'session_init' not in kwargs:
+            sessinit = self._get_sessinit_resume()
+            if sessinit is not None:
+                path = sessinit.path
+                if 'session_init' in kwargs:
+                    logger.info("Found checkpoint at {}. "
+                                "session_init arguments will be overwritten.".format(path))
+                else:
+                    logger.info("Will load checkpoint at {}.".format(path))
+                kwargs['session_init'] = sessinit
+
+        if always_resume or 'starting_epoch' not in kwargs:
+            last_epoch = self._get_last_epoch()
+            if last_epoch is not None:
+                now_epoch = last_epoch + 1
+                logger.info("Found history statistics from JSON. "
+                            "Overwrite the starting epoch to epoch #{}.".format(now_epoch))
+                kwargs['starting_epoch'] = now_epoch
+
+        super(AutoResumeTrainConfig, self).__init__(**kwargs)
+
+    def _get_sessinit_resume(self):
+        logdir = logger.get_logger_dir()
+        if not logdir:
+            return None
+        path = os.path.join(logdir, 'checkpoint')
+        if not tf.gfile.Exists(path):
+            return None
+        return SaverRestore(path)
+
+    def _get_last_epoch(self):
+        return JSONWriter.load_existing_epoch_number()

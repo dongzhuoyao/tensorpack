@@ -10,7 +10,8 @@ from ..utils.argtools import graph_memoized
 from ..tfutils.tower import get_current_tower_context
 from .common import layer_register
 
-__all__ = ['regularize_cost', 'l2_regularizer', 'l1_regularizer', 'Dropout']
+__all__ = ['regularize_cost', 'regularize_cost_from_collection',
+           'l2_regularizer', 'l1_regularizer', 'Dropout']
 
 
 @graph_memoized
@@ -34,7 +35,7 @@ def regularize_cost(regex, func, name='regularize_cost'):
             E.g., ``tf.contrib.layers.l2_regularizer``.
 
     Returns:
-        tf.Tensor: the total regularization cost.
+        tf.Tensor: a scalar, the total regularization cost.
 
     Example:
         .. code-block:: python
@@ -78,8 +79,8 @@ def regularize_cost(regex, func, name='regularize_cost'):
                 return name[prefixlen:]
             return name
         names = list(map(f, names))
-    logger.info("regularize_cost() found {} tensors.".format(len(names)))
-    _log_once("Applying regularizer for {}".format(', '.join(names)))
+    logger.info("regularize_cost() found {} variables to regularize.".format(len(names)))
+    _log_once("The following tensors will be regularized: {}".format(', '.join(names)))
 
     return tf.add_n(costs, name=name)
 
@@ -87,30 +88,34 @@ def regularize_cost(regex, func, name='regularize_cost'):
 def regularize_cost_from_collection(name='regularize_cost'):
     """
     Get the cost from the regularizers in ``tf.GraphKeys.REGULARIZATION_LOSSES``.
-    In replicated mode, will only regularize variables within the current tower.
+    If in replicated mode, will only regularize variables created within the current tower.
+
+    Args:
+        name (str): the name of the returned tensor
 
     Returns:
-        a scalar tensor, the regularization loss, or None
+        tf.Tensor: a scalar, the total regularization cost.
     """
     ctx = get_current_tower_context()
     if not ctx.is_training:
         # TODO Currently cannot build the wd_cost correctly at inference,
         # because ths vs_name used in inference can be '', therefore the
         # variable filter will fail
-        return None
+        return tf.constant(0, dtype=tf.float32, name='empty_' + name)
 
     # NOTE: this collection doesn't always grow with towers.
-    # It is only added with variables that are newly created.
+    # It only grows with actual variable creation, but not get_variable call.
     if ctx.has_own_variables:   # be careful of the first tower (name='')
         losses = ctx.get_collection_in_tower(tf.GraphKeys.REGULARIZATION_LOSSES)
     else:
         losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
     if len(losses) > 0:
-        logger.info("regularize_cost_from_collection() found {} tensors in REGULARIZATION_LOSSES.".format(len(losses)))
+        logger.info("regularize_cost_from_collection() found {} regularizers "
+                    "in REGULARIZATION_LOSSES collection.".format(len(losses)))
         reg_loss = tf.add_n(losses, name=name)
         return reg_loss
     else:
-        return None
+        return tf.constant(0, dtype=tf.float32, name='empty_' + name)
 
 
 @layer_register(use_scope=None)
@@ -124,10 +129,11 @@ def Dropout(x, *args, **kwargs):
     if 'is_training' in kwargs:
         kwargs['training'] = kwargs.pop('is_training')
     if len(args) > 0:
-        logger.warn(
-            "The first positional argument to tensorpack.Dropout is the probability to keep rather than to drop. "
-            "This is different from the rate argument in tf.layers.Dropout due to historical reasons. "
-            "To mimic tf.layers.Dropout, explicitly use keyword argument 'rate' instead")
+        if args[0] != 0.5:
+            logger.warn(
+                "The first positional argument to tensorpack.Dropout is the probability to keep, rather than to drop. "
+                "This is different from the rate argument in tf.layers.Dropout due to historical reasons. "
+                "To mimic tf.layers.Dropout, explicitly use keyword argument 'rate' instead")
         rate = 1 - args[0]
     elif 'keep_prob' in kwargs:
         assert 'rate' not in kwargs, "Cannot set both keep_prob and rate!"

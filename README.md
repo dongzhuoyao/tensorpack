@@ -13,20 +13,20 @@ It's Yet Another TF wrapper, but different in:
 
 1. Focus on __training speed__.
 	+	Speed comes for free with tensorpack -- it uses TensorFlow in the __efficient way__ with no extra overhead.
-	  On various CNNs, it runs 1.5~1.7x faster than the equivalent Keras code.
+	  On different CNNs, it runs [1.2~5x faster](https://github.com/tensorpack/benchmarks/tree/master/other-wrappers) than the equivalent Keras code.
 
-	+ Data-parallel multi-GPU training is off-the-shelf to use. It runs as fast as Google's [official benchmark](https://www.tensorflow.org/performance/benchmarks).
+	+ Data-parallel multi-GPU training is off-the-shelf to use. It scales as well as Google's [official benchmark](https://www.tensorflow.org/performance/benchmarks).
 
 	+ See [tensorpack/benchmarks](https://github.com/tensorpack/benchmarks) for the benchmark scripts.
 
 2. Focus on __large datasets__.
-	+ It's painful to read/preprocess data through TF.
+	+ It's unnecessary to read/preprocess data with a new language called TF.
 		Tensorpack helps you load large datasets (e.g. ImageNet) in __pure Python__ with autoparallelization.
 
 3. It's not a model wrapper.
-	+ There are too many symbolic function wrappers.
+	+ There are too many symbolic function wrappers in the world.
 		Tensorpack includes only a few common models.
-	  You can use any symbolic function library inside tensorpack, including tflayers/Keras/slim/tflearn/tensorlayer/....
+	  But you can use any symbolic function library inside tensorpack, including tf.layers/Keras/slim/tflearn/tensorlayer/....
 
 See [tutorials](http://tensorpack.readthedocs.io/en/latest/tutorial/index.html) to know more about these features.
 
@@ -37,7 +37,7 @@ Instead of showing you 10 random networks with random accuracy,
 And everything runs on multiple GPUs. Some highlights:
 
 ### Vision:
-+ [Train ResNet on ImageNet](examples/ResNet)
++ [Train ResNet](examples/ResNet) and [other models](examples/ImageNetModels) on ImageNet.
 + [Train Faster-RCNN / Mask-RCNN on COCO object detection](examples/FasterRCNN)
 + [Generative Adversarial Network(GAN) variants](examples/GAN), including DCGAN, InfoGAN, Conditional GAN, WGAN, BEGAN, DiscoGAN, Image to Image, CycleGAN.
 + [DoReFa-Net: train binary / low-bitwidth CNN on ImageNet](examples/DoReFa-Net)

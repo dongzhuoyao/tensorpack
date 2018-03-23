@@ -8,6 +8,7 @@ import functools
 from contextlib import contextmanager
 
 from ..utils.argtools import graph_memoized
+from .common import get_tf_version_number
 
 __all__ = ['auto_reuse_variable_scope', 'cached_name_scope', 'under_name_scope']
 
@@ -39,8 +40,14 @@ def auto_reuse_variable_scope(func):
         h = hash((tf.get_default_graph(), scope.name))
         # print("Entering " + scope.name + " reuse: " + str(h in used_scope))
         if h in used_scope:
-            with tf.variable_scope(scope, reuse=True):
-                return func(*args, **kwargs)
+            if get_tf_version_number() >= 1.5:
+                with tf.variable_scope(scope, reuse=True, auxiliary_name_scope=False):
+                    return func(*args, **kwargs)
+            else:
+                ns = tf.get_default_graph().get_name_scope()
+                with tf.variable_scope(scope, reuse=True), \
+                        tf.name_scope(ns + '/' if ns else ''):
+                    return func(*args, **kwargs)
         else:
             used_scope.add(h)
             return func(*args, **kwargs)
@@ -48,11 +55,11 @@ def auto_reuse_variable_scope(func):
     return wrapper
 
 
-def under_name_scope():
+def under_name_scope(name=None):
     """
     Returns:
-        A decorator which makes the function happen under a name scope,
-        which is named by the function itself.
+        A decorator which makes the function happen under a name scope.
+        The default name is the function itself.
 
     Examples:
 
@@ -70,8 +77,11 @@ def under_name_scope():
     def _impl(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            name = func.__name__
-            with tf.name_scope(name):
+            if name is None:
+                scopename = func.__name__
+            else:
+                scopename = name
+            with tf.name_scope(scopename):
                 return func(*args, **kwargs)
         return wrapper
     return _impl

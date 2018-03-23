@@ -26,15 +26,15 @@ GAMMA = 0.5
 
 
 class Model(GANModelDesc):
-    def _get_inputs(self):
-        return [InputDesc(tf.float32, (None, args.final_size, args.final_size, 3), 'input')]
+    def inputs(self):
+        return [tf.placeholder(tf.float32, (None, args.final_size, args.final_size, 3), 'input')]
 
     @auto_reuse_variable_scope
     def decoder(self, z):
-        l = FullyConnected('fc', z, NF * 8 * 8, nl=tf.identity)
+        l = FullyConnected('fc', z, NF * 8 * 8)
         l = tf.reshape(l, [-1, 8, 8, NF])
 
-        with argscope(Conv2D, nl=tf.nn.elu, kernel_shape=3, stride=1):
+        with argscope(Conv2D, activation=tf.nn.elu, kernel_size=3, strides=1):
             l = (LinearWrap(l)
                  .Conv2D('conv1.1', NF)
                  .Conv2D('conv1.2', NF)
@@ -47,12 +47,12 @@ class Model(GANModelDesc):
                  .tf.image.resize_nearest_neighbor([64, 64], align_corners=True)
                  .Conv2D('conv4.1', NF)
                  .Conv2D('conv4.2', NF)
-                 .Conv2D('conv4.3', 3, nl=tf.identity)())
+                 .Conv2D('conv4.3', 3, activation=tf.identity)())
         return l
 
     @auto_reuse_variable_scope
     def encoder(self, imgs):
-        with argscope(Conv2D, nl=tf.nn.elu, kernel_shape=3, stride=1):
+        with argscope(Conv2D, activation=tf.nn.elu, kernel_size=3, strides=1):
             l = (LinearWrap(imgs)
                  .Conv2D('conv1.1', NF)
                  .Conv2D('conv1.2', NF)
@@ -70,11 +70,10 @@ class Model(GANModelDesc):
                  .Conv2D('conv4.1', NF * 4)
                  .Conv2D('conv4.2', NF * 4)
 
-                 .FullyConnected('fc', NH, nl=tf.identity)())
+                 .FullyConnected('fc', NH)())
         return l
 
-    def _build_graph(self, inputs):
-        image_pos = inputs[0]
+    def build_graph(self, image_pos):
         image_pos = image_pos / 128.0 - 1
 
         z = tf.random_uniform([args.batch, args.z_dim], minval=-1, maxval=1, name='z_train')
@@ -86,7 +85,7 @@ class Model(GANModelDesc):
             tf.summary.image(name, tf.cast(x, tf.uint8), max_outputs=30)
 
         with argscope([Conv2D, FullyConnected],
-                      W_init=tf.truncated_normal_initializer(stddev=0.02)):
+                      kernel_initializer=tf.truncated_normal_initializer(stddev=0.02)):
             with tf.variable_scope('gen'):
                 image_gen = self.decoder(z)
 
@@ -123,7 +122,7 @@ class Model(GANModelDesc):
 
         self.collect_variables()
 
-    def _get_optimizer(self):
+    def optimizer(self):
         lr = tf.get_variable('learning_rate', initializer=1e-4, trainable=False)
         opt = tf.train.AdamOptimizer(lr, beta1=0.5, beta2=0.9)
         return opt

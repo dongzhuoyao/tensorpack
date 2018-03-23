@@ -46,13 +46,12 @@ def get_PennTreeBank(data_dir=None):
 
 
 class Model(ModelDesc):
-    def _get_inputs(self):
-        return [InputDesc(tf.int32, (None, SEQ_LEN), 'input'),
-                InputDesc(tf.int32, (None, SEQ_LEN), 'nextinput')]
+    def inputs(self):
+        return [tf.placeholder(tf.int32, (None, SEQ_LEN), 'input'),
+                tf.placeholder(tf.int32, (None, SEQ_LEN), 'nextinput')]
 
-    def _build_graph(self, inputs):
+    def build_graph(self, input, nextinput):
         is_training = get_current_tower_context().is_training
-        input, nextinput = inputs
         initializer = tf.random_uniform_initializer(-0.05, 0.05)
 
         def get_basic_cell():
@@ -74,7 +73,7 @@ class Model(ModelDesc):
 
         embeddingW = tf.get_variable('embedding', [VOCAB_SIZE, HIDDEN_SIZE], initializer=initializer)
         input_feature = tf.nn.embedding_lookup(embeddingW, input)  # B x seqlen x hiddensize
-        input_feature = Dropout(input_feature, DROPOUT)
+        input_feature = Dropout(input_feature, rate=DROPOUT)
 
         with tf.variable_scope('LSTM', initializer=initializer):
             input_list = tf.unstack(input_feature, num=SEQ_LEN, axis=1)  # seqlen x (Bxhidden)
@@ -89,16 +88,19 @@ class Model(ModelDesc):
 
         # seqlen x (Bxrnnsize)
         output = tf.reshape(tf.concat(outputs, 1), [-1, HIDDEN_SIZE])  # (Bxseqlen) x hidden
-        logits = FullyConnected('fc', output, VOCAB_SIZE, nl=tf.identity, W_init=initializer, b_init=initializer)
+        logits = FullyConnected('fc', output, VOCAB_SIZE,
+                                activation=tf.identity, kernel_initializer=initializer,
+                                bias_initializer=initializer)
         xent_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(
             logits=logits, labels=tf.reshape(nextinput, [-1]))
 
         with tf.control_dependencies(update_state_ops):
-            self.cost = tf.truediv(tf.reduce_sum(xent_loss),
-                                   tf.cast(BATCH, tf.float32), name='cost')  # log-perplexity
+            cost = tf.truediv(tf.reduce_sum(xent_loss),
+                              tf.cast(BATCH, tf.float32), name='cost')  # log-perplexity
 
-        perpl = tf.exp(self.cost / SEQ_LEN, name='perplexity')
-        summary.add_moving_summary(perpl, self.cost)
+        perpl = tf.exp(cost / SEQ_LEN, name='perplexity')
+        summary.add_moving_summary(perpl, cost)
+        return cost
 
     def reset_lstm_state(self):
         s = self.state
@@ -109,7 +111,7 @@ class Model(ModelDesc):
             ops.append(s[k].h.assign(z))
         return tf.group(*ops, name='reset_lstm_state')
 
-    def _get_optimizer(self):
+    def optimizer(self):
         lr = tf.get_variable('learning_rate', initializer=1.0, trainable=False)
         opt = tf.train.GradientDescentOptimizer(lr)
         return optimizer.apply_grad_processors(

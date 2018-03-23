@@ -10,7 +10,7 @@ def train(self):
   # start training:
   with sess.as_default():
     callbacks.before_train()
-    for epoch in range(epoch_start, epoch_end):
+    for epoch in range(starting_epoch, max_epoch + 1):
       callbacks.before_epoch()
       for step in range(steps_per_epoch):
         self.run_step()  # callbacks.{before,after}_run are hooked with session
@@ -57,8 +57,9 @@ You can overwrite any of the following methods to define a new callback:
 
 * `_before_epoch(self)`, `_after_epoch(self)`
 
-  Use them __only__ when you really need something to happen __immediately__ before/after an epoch.
-  Otherwise, `_trigger_epoch` should be enough.
+  `_trigger_epoch` should be enough for most cases, as can be seen from the scheduling snippet above.
+  Use these two methods __only__ when you really need something to happen __immediately__ before/after an epoch.
+	And when you do need to use them, make sure they are very very fast to avoid affecting other callbacks which use them.
 
 * `_before_run(self, ctx)`, `_after_run(self, ctx, values)`
 

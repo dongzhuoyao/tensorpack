@@ -31,12 +31,11 @@ DEPTH = None
 
 
 class Model(ModelDesc):
-    def _get_inputs(self):
-        return [InputDesc(tf.uint8, [None, INPUT_SHAPE, INPUT_SHAPE, 3], 'input'),
-                InputDesc(tf.int32, [None], 'label')]
+    def inputs(self):
+        return [tf.placeholder(tf.uint8, [None, INPUT_SHAPE, INPUT_SHAPE, 3], 'input'),
+                tf.placeholder(tf.int32, [None], 'label')]
 
-    def _build_graph(self, inputs):
-        image, label = inputs
+    def build_graph(self, image, label):
         image = image_preprocess(image, bgr=True)
         image = tf.transpose(image, [0, 3, 1, 2])
 
@@ -46,12 +45,12 @@ class Model(ModelDesc):
         }
         defs, block_func = cfg[DEPTH]
 
-        with argscope(Conv2D, nl=tf.identity, use_bias=False,
-                      W_init=tf.variance_scaling_initializer(scale=2.0, mode='fan_out')), \
-                argscope([Conv2D, MaxPooling, GlobalAvgPooling, BatchNorm], data_format='NCHW'):
+        with argscope(Conv2D, use_bias=False,
+                      kernel_initializer=tf.variance_scaling_initializer(scale=2.0, mode='fan_out')), \
+                argscope([Conv2D, MaxPooling, GlobalAvgPooling, BatchNorm], data_format='channels_first'):
             convmaps = (LinearWrap(image)
-                        .Conv2D('conv0', 64, 7, stride=2, nl=BNReLU)
-                        .MaxPooling('pool0', shape=3, stride=2, padding='SAME')
+                        .Conv2D('conv0', 64, 7, strides=2, activation=BNReLU)
+                        .MaxPooling('pool0', 3, strides=2, padding='SAME')
                         .apply(preresnet_group, 'group0', block_func, 64, defs[0], 1)
                         .apply(preresnet_group, 'group1', block_func, 128, defs[1], 2)
                         .apply(preresnet_group, 'group2', block_func, 256, defs[2], 2)
@@ -59,14 +58,14 @@ class Model(ModelDesc):
             print(convmaps)
             logits = (LinearWrap(convmaps)
                       .GlobalAvgPooling('gap')
-                      .FullyConnected('linearnew', 1000, nl=tf.identity)())
+                      .FullyConnected('linearnew', 1000)())
 
         loss = compute_loss_and_error(logits, label)
         wd_cost = regularize_cost('.*/W', l2_regularizer(1e-4), name='l2_regularize_loss')
         add_moving_summary(loss, wd_cost)
-        self.cost = tf.add_n([loss, wd_cost], name='cost')
+        return tf.add_n([loss, wd_cost], name='cost')
 
-    def _get_optimizer(self):
+    def optimizer(self):
         lr = tf.get_variable('learning_rate', initializer=0.1, trainable=False)
         opt = tf.train.MomentumOptimizer(lr, 0.9, use_nesterov=True)
         gradprocs = [gradproc.ScaleGradient(

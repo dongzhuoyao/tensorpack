@@ -7,6 +7,7 @@ import weakref
 import time
 from six.moves import range
 import six
+import copy
 
 from ..callbacks import (
     Callback, Callbacks, Monitors, TrainingMonitor)
@@ -16,7 +17,7 @@ from ..utils.argtools import call_only_once
 from ..tfutils import get_global_step_value
 from ..tfutils.tower import TowerFuncWrapper
 from ..tfutils.model_utils import describe_trainable_vars
-from ..tfutils.sessinit import JustCurrentSession
+from ..tfutils.sessinit import SessionInit, JustCurrentSession
 from ..tfutils.sesscreate import ReuseSessionCreator, NewSessionCreator
 from ..callbacks.steps import MaintainStepCounter
 
@@ -46,9 +47,10 @@ class TrainLoop(object):
         """
         Configure the loop given the settings.
         """
-        self.starting_epoch = starting_epoch
-        self.max_epoch = max_epoch
-        self.steps_per_epoch = steps_per_epoch
+        self.starting_epoch = int(starting_epoch)
+        self.max_epoch = int(max_epoch)
+        self.steps_per_epoch = int(steps_per_epoch)
+        assert self.steps_per_epoch > 0 and self.max_epoch > 0
 
         self._epoch_num = starting_epoch - 1
 
@@ -115,6 +117,7 @@ class Trainer(object):
             logger.warn("This could happen if you wrote a custom trainer before.")
             logger.warn("It may work now through some hacks, but please switch to the new API!")
             logger.warn("See https://github.com/ppwwyyxx/tensorpack/issues/458 for more information.")
+            config._deprecated_parsing()
             self._config = config
             self.inputs_desc = config.model.get_inputs_desc()
             self.tower_func = TowerFuncWrapper(
@@ -186,6 +189,8 @@ class Trainer(object):
             callbacks ([Callback]):
             monitors ([TrainingMonitor]):
         """
+        assert isinstance(callbacks, list), callbacks
+        assert isinstance(monitors, list), monitors
         describe_trainable_vars()   # TODO weird
 
         self.register_callback(MaintainStepCounter())
@@ -215,11 +220,8 @@ class Trainer(object):
             session_creator (tf.train.SessionCreator):
             session_init (sessinit.SessionInit):
         """
-
-        ## reset global step by dongzhuoyao
-        #from tensorpack.tfutils.common import get_global_step_var
-        #self.reset_global_step_op = get_global_step_var().assign(0)
-
+        assert isinstance(session_creator, tf.train.SessionCreator), session_creator
+        assert isinstance(session_init, SessionInit), session_init
         session_init._setup_graph()
 
         logger.info("Creating the session ...")
@@ -228,7 +230,6 @@ class Trainer(object):
         self.sess = session_creator.create_session()
         self.hooked_sess = tf.train.MonitoredSession(
             session_creator=ReuseSessionCreator(self.sess), hooks=hooks)
-
 
         if self.is_chief:
             logger.info("Initializing the session ...")
@@ -240,14 +241,6 @@ class Trainer(object):
         self.sess.graph.finalize()
         logger.info("Graph Finalized.")
 
-        #vars = tf.global_variables()
-        #for v in vars:
-        #    print v.name
-
-
-
-
-
     @call_only_once
     def main_loop(self, steps_per_epoch, starting_epoch, max_epoch):
         """
@@ -257,9 +250,6 @@ class Trainer(object):
             steps_per_epoch, starting_epoch, max_epoch (int):
         """
         with self.sess.as_default():
-            #self.sess.run(self.reset_global_step_op)  # dongzhuoyao
-            #logger.info("reset global_step to {}".format(get_global_step_value()))
-
             self.loop.config(steps_per_epoch, starting_epoch, max_epoch)
             self.loop.update_global_step()
             try:
@@ -270,8 +260,8 @@ class Trainer(object):
                 for self.loop._epoch_num in range(
                         self.loop.starting_epoch, self.loop.max_epoch + 1):
                     logger.info("Start Epoch {} ...".format(self.loop.epoch_num))
-                    start_time = time.time()
                     self._callbacks.before_epoch()
+                    start_time = time.time()
                     for self.loop._local_step in range(self.loop.steps_per_epoch):
                         if self.hooked_sess.should_stop():
                             return
@@ -284,8 +274,8 @@ class Trainer(object):
                     # trigger epoch outside the timing region.
                     self._callbacks.trigger_epoch()
                 logger.info("Training has finished!")
-            except (StopTraining, tf.errors.OutOfRangeError):
-                logger.info("Training was stopped.")
+            except (StopTraining, tf.errors.OutOfRangeError) as e:
+                logger.info("Training was stopped by exception {}.".format(str(e)))
             except KeyboardInterrupt:
                 logger.info("Detected Ctrl-C and exiting main loop.")
                 raise
@@ -298,7 +288,7 @@ class Trainer(object):
               session_creator, session_init,
               steps_per_epoch, starting_epoch=1, max_epoch=9999999):
         """
-        Implemented by:
+        Implemented by three lines:
 
         .. code-block:: python
 
@@ -313,18 +303,24 @@ class Trainer(object):
         self.main_loop(steps_per_epoch, starting_epoch, max_epoch)
 
     def train_with_defaults(
-            self, callbacks=None, monitors=None,
+            self, _sentinel=None,
+            callbacks=None, monitors=None,
             session_creator=None, session_init=None,
-            steps_per_epoch=None, starting_epoch=1, max_epoch=9999999):
+            steps_per_epoch=None, starting_epoch=1, max_epoch=9999999,
+            extra_callbacks=None):
         """
-        Same as :meth:`train()`, but will:
+        Same as :meth:`train()`, except:
 
-        1. Append :meth:`DEFAULT_CALLBACKS()` to callbacks.
-        2. Append :meth:`DEFAULT_MONITORS()` to monitors.
+        1. Add `extra_callbacks` to callbacks. The default value for
+           `extra_callbacks` is :meth:`DEFAULT_CALLBACKS()`.
+        2. Default value for `monitors` is :meth:`DEFAULT_MONITORS()`.
         3. Provide default values for every option except `steps_per_epoch`.
         """
-        callbacks = (callbacks or []) + DEFAULT_CALLBACKS()
-        monitors = (monitors or []) + DEFAULT_MONITORS()
+        assert _sentinel is None, "Please call `train_with_defaults` with keyword arguments only!"
+        callbacks = copy.copy(callbacks or [])
+        monitors = DEFAULT_MONITORS() if monitors is None else monitors
+        extra_callbacks = DEFAULT_CALLBACKS() if extra_callbacks is None else extra_callbacks
+        callbacks.extend(extra_callbacks)
 
         assert steps_per_epoch is not None
         session_creator = session_creator or NewSessionCreator()

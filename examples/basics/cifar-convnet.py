@@ -26,13 +26,11 @@ class Model(ModelDesc):
         super(Model, self).__init__()
         self.cifar_classnum = cifar_classnum
 
-    def _get_inputs(self):
-        return [InputDesc(tf.float32, (None, 30, 30, 3), 'input'),
-                InputDesc(tf.int32, (None,), 'label')
-                ]
+    def inputs(self):
+        return [tf.placeholder(tf.float32, (None, 30, 30, 3), 'input'),
+                tf.placeholder(tf.int32, (None,), 'label')]
 
-    def _build_graph(self, inputs):
-        image, label = inputs
+    def build_graph(self, image, label):
         is_training = get_current_tower_context().is_training
         keep_prob = tf.constant(0.5 if is_training else 1.0)
 
@@ -40,26 +38,26 @@ class Model(ModelDesc):
             tf.summary.image("train_image", image, 10)
         if tf.test.is_gpu_available():
             image = tf.transpose(image, [0, 3, 1, 2])
-            data_format = 'NCHW'
+            data_format = 'channels_first'
         else:
-            data_format = 'NHWC'
+            data_format = 'channels_last'
 
         image = image / 4.0     # just to make range smaller
-        with argscope(Conv2D, nl=BNReLU, use_bias=False, kernel_shape=3), \
+        with argscope(Conv2D, activation=BNReLU, use_bias=False, kernel_size=3), \
                 argscope([Conv2D, MaxPooling, BatchNorm], data_format=data_format):
             logits = LinearWrap(image) \
-                .Conv2D('conv1.1', out_channel=64) \
-                .Conv2D('conv1.2', out_channel=64) \
+                .Conv2D('conv1.1', filters=64) \
+                .Conv2D('conv1.2', filters=64) \
                 .MaxPooling('pool1', 3, stride=2, padding='SAME') \
-                .Conv2D('conv2.1', out_channel=128) \
-                .Conv2D('conv2.2', out_channel=128) \
+                .Conv2D('conv2.1', filters=128) \
+                .Conv2D('conv2.2', filters=128) \
                 .MaxPooling('pool2', 3, stride=2, padding='SAME') \
-                .Conv2D('conv3.1', out_channel=128, padding='VALID') \
-                .Conv2D('conv3.2', out_channel=128, padding='VALID') \
-                .FullyConnected('fc0', 1024 + 512, nl=tf.nn.relu) \
+                .Conv2D('conv3.1', filters=128, padding='VALID') \
+                .Conv2D('conv3.2', filters=128, padding='VALID') \
+                .FullyConnected('fc0', 1024 + 512, activation=tf.nn.relu) \
                 .tf.nn.dropout(keep_prob) \
-                .FullyConnected('fc1', 512, nl=tf.nn.relu) \
-                .FullyConnected('linear', out_dim=self.cifar_classnum, nl=tf.identity)()
+                .FullyConnected('fc1', 512, activation=tf.nn.relu) \
+                .FullyConnected('linear', out_dim=self.cifar_classnum)()
 
         cost = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=label)
         cost = tf.reduce_mean(cost, name='cross_entropy_loss')
@@ -73,9 +71,9 @@ class Model(ModelDesc):
         add_moving_summary(cost, wd_cost)
 
         add_param_summary(('.*/W', ['histogram']))   # monitor W
-        self.cost = tf.add_n([cost, wd_cost], name='cost')
+        return tf.add_n([cost, wd_cost], name='cost')
 
-    def _get_optimizer(self):
+    def optimizer(self):
         lr = tf.get_variable('learning_rate', initializer=1e-2, trainable=False)
         tf.summary.scalar('lr', lr)
         return tf.train.AdamOptimizer(lr, epsilon=1e-3)

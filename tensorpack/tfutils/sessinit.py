@@ -98,14 +98,14 @@ class SaverRestore(SessionInit):
         """
         Args:
             model_path (str): a model name (model-xxxx) or a ``checkpoint`` file.
-            prefix (str): during restore, add a ``prefix/`` for every variable in this checkpoint
+            prefix (str): during restore, add a ``prefix/`` for every variable in this checkpoint.
             ignore (list[str]): list of tensor names that should be ignored during loading, e.g. learning-rate
         """
         if model_path.endswith('.npy') or model_path.endswith('.npz'):
             logger.warn("SaverRestore expect a TF checkpoint, but got a model path '{}'.".format(model_path) +
                         " To load from a dict, use 'DictRestore'.")
         model_path = get_checkpoint_path(model_path)
-        self.path = model_path
+        self.path = model_path  # attribute used by AutoResumeTrainConfig!
         self.prefix = prefix
         self.ignore = [i if i.endswith(':0') else i + ':0' for i in ignore]
 
@@ -134,7 +134,7 @@ class SaverRestore(SessionInit):
         for v in graph_vars:
             name = get_savename_from_varname(v.name, varname_prefix=self.prefix)
             if name in self.ignore and reader.has_tensor(name):
-                logger.info("Variable {} in the graph will be not loaded from the checkpoint!".format(name))
+                logger.info("Variable {} in the graph will not be loaded from the checkpoint!".format(name))
             else:
                 if reader.has_tensor(name):
                     func(reader, name, v)
@@ -262,7 +262,7 @@ def get_model_loader(filename):
         return SaverRestore(filename)
 
 
-@deprecated("Write the logic yourself!", "2018-06-01")
+@deprecated("Write the logic yourself or use AutoResumeTrainConfig!", "2018-06-01")
 def TryResumeTraining():
     """
     Try loading latest checkpoint from ``logger.get_logger_dir()``, only if there is one.

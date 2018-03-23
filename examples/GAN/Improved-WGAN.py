@@ -26,9 +26,9 @@ class Model(DCGAN.Model):
     @auto_reuse_variable_scope
     def discriminator(self, imgs):
         nf = 64
-        with argscope(Conv2D, nl=tf.identity, kernel_shape=4, stride=2):
+        with argscope(Conv2D, activation=tf.identity, kernel_size=4, strides=2):
             l = (LinearWrap(imgs)
-                 .Conv2D('conv0', nf, nl=tf.nn.leaky_relu)
+                 .Conv2D('conv0', nf, activation=tf.nn.leaky_relu)
                  .Conv2D('conv1', nf * 2)
                  .LayerNorm('ln1')
                  .tf.nn.leaky_relu()
@@ -38,18 +38,17 @@ class Model(DCGAN.Model):
                  .Conv2D('conv3', nf * 8)
                  .LayerNorm('ln3')
                  .tf.nn.leaky_relu()
-                 .FullyConnected('fct', 1, nl=tf.identity)())
+                 .FullyConnected('fct', 1, activation=tf.identity)())
         return tf.reshape(l, [-1])
 
-    def _build_graph(self, inputs):
-        image_pos = inputs[0]
+    def build_graph(self, image_pos):
         image_pos = image_pos / 128.0 - 1
 
         z = tf.random_normal([self.batch, self.zdim], name='z_train')
         z = tf.placeholder_with_default(z, [None, self.zdim], name='z')
 
-        with argscope([Conv2D, Deconv2D, FullyConnected],
-                      W_init=tf.truncated_normal_initializer(stddev=0.02)):
+        with argscope([Conv2D, Conv2DTranspose, FullyConnected],
+                      kernel_initializer=tf.truncated_normal_initializer(stddev=0.02)):
             with tf.variable_scope('gen'):
                 image_gen = self.generator(z)
             tf.summary.image('generated-samples', image_gen, max_outputs=30)
@@ -78,7 +77,7 @@ class Model(DCGAN.Model):
 
         self.collect_variables()
 
-    def _get_optimizer(self):
+    def optimizer(self):
         opt = tf.train.AdamOptimizer(1e-4, beta1=0.5, beta2=0.9)
         return opt
 

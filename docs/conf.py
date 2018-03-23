@@ -362,22 +362,31 @@ def autodoc_skip_member(app, what, name, obj, skip, options):
             # include_init_with_doc doesn't work well for decorated init
             # https://github.com/sphinx-doc/sphinx/issues/4258
             return False
-    # hide deprecated stuff
+    # Hide some names that are deprecated or not intended to be used
     if name in [
-        'get_predictors',
+        # deprecated stuff:
         'GaussianDeform',
-        'dump_chkpt_vars',
-        'DumpTensor',
-        'StagingInputWrapper',
         'set_tower_func',
         'TryResumeTraining',
-        'LeakyReLU',
-        'PrefetchOnGPUs',
-        'PeriodicRunHooks',
-        'apply_default_prefetch',
 
+        # renamed stuff:
+        'dump_chkpt_vars',
+        'DumpTensor',
+        'DumpParamAsImage',
+        'StagingInputWrapper',
+        'PeriodicRunHooks',
+
+        # deprecated or renamed symbolic code
+        'Deconv2D', 'LeakyReLU',
         'saliency_map', 'get_scalar_var', 'psnr',
         'prediction_incorrect', 'huber_loss', 'SoftMax'
+
+        # internal only
+        'apply_default_prefetch',
+        'average_grads',
+        'aggregate_grads',
+        'allreduce_grads',
+        'PrefetchOnGPUs',
         ]:
         return True
     if name in ['get_data', 'size', 'reset_state']:

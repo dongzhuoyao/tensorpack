@@ -22,12 +22,11 @@ IMAGE_SIZE = 28
 
 
 class Model(ModelDesc):
-    def _get_inputs(self):
-        return [InputDesc(tf.float32, (None, IMAGE_SIZE, IMAGE_SIZE), 'input'),
-                InputDesc(tf.int32, (None,), 'label')]
+    def inputs(self):
+        return [tf.placeholder(tf.float32, (None, IMAGE_SIZE, IMAGE_SIZE), 'input'),
+                tf.placeholder(tf.int32, (None,), 'label')]
 
-    def _build_graph(self, inputs):
-        image, label = inputs
+    def build_graph(self, image, label):
         image = tf.expand_dims(image, 3)
 
         image = image * 2 - 1
@@ -56,11 +55,11 @@ class Model(ModelDesc):
         acc = tf.reduce_mean(acc, name='accuracy')
         summary.add_moving_summary(acc)
 
-        self.cost = cost
         summary.add_moving_summary(cost)
         summary.add_param_summary(('.*/weights', ['histogram', 'rms']))  # slim uses different variable names
+        return cost + regularize_cost_from_collection()
 
-    def _get_optimizer(self):
+    def optimizer(self):
         lr = tf.train.exponential_decay(
             learning_rate=1e-3,
             global_step=get_global_step_var(),

@@ -38,7 +38,7 @@ class TowerTrainer(Trainer):
         assert isinstance(tower_func, TowerFuncWrapper), tower_func
         self._tower_func = tower_func
 
-    @deprecated("Just use tower_func = xxx instead!")
+    @deprecated("Just use tower_func = xxx instead!", "2018-06-01")
     def set_tower_func(self, tower_func):
         self._set_tower_func(tower_func)
 
@@ -89,7 +89,11 @@ class TowerTrainer(Trainer):
 
         try:
             tower = self.tower_func.towers[tower_name]
+            assert tower is not None, "This is a bug!"
         except KeyError:
+            tower = None
+
+        if tower is None:
             input = PlaceholderInput()
             input.setup(self.inputs_desc)
 
@@ -186,6 +190,8 @@ class SingleCostTrainer(TowerTrainer):
         def get_grad_fn():
             ctx = get_current_tower_context()
             cost = get_cost_fn(*input.get_input_tensors())
+            if not ctx.is_training:
+                return None     # this is the tower function, could be called for inference
 
             if ctx.has_own_variables:
                 varlist = ctx.get_collection_in_tower(tf.GraphKeys.TRAINABLE_VARIABLES)

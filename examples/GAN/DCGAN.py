@@ -40,20 +40,20 @@ class Model(GANModelDesc):
         self.batch = batch
         self.zdim = z_dim
 
-    def _get_inputs(self):
-        return [InputDesc(tf.float32, (None, self.shape, self.shape, 3), 'input')]
+    def inputs(self):
+        return [tf.placeholder(tf.float32, (None, self.shape, self.shape, 3), 'input')]
 
     def generator(self, z):
         """ return an image generated from z"""
         nf = 64
-        l = FullyConnected('fc0', z, nf * 8 * 4 * 4, nl=tf.identity)
+        l = FullyConnected('fc0', z, nf * 8 * 4 * 4, activation=tf.identity)
         l = tf.reshape(l, [-1, 4, 4, nf * 8])
         l = BNReLU(l)
-        with argscope(Deconv2D, nl=BNReLU, kernel_shape=4, stride=2):
-            l = Deconv2D('deconv1', l, nf * 4)
-            l = Deconv2D('deconv2', l, nf * 2)
-            l = Deconv2D('deconv3', l, nf)
-            l = Deconv2D('deconv4', l, 3, nl=tf.identity)
+        with argscope(Conv2DTranspose, activation=BNReLU, kernel_size=4, strides=2):
+            l = Conv2DTranspose('deconv1', l, nf * 4)
+            l = Conv2DTranspose('deconv2', l, nf * 2)
+            l = Conv2DTranspose('deconv3', l, nf)
+            l = Conv2DTranspose('deconv4', l, 3, activation=tf.identity)
             l = tf.tanh(l, name='gen')
         return l
 
@@ -61,9 +61,9 @@ class Model(GANModelDesc):
     def discriminator(self, imgs):
         """ return a (b, 1) logits"""
         nf = 64
-        with argscope(Conv2D, nl=tf.identity, kernel_shape=4, stride=2):
+        with argscope(Conv2D, kernel_size=4, strides=2):
             l = (LinearWrap(imgs)
-                 .Conv2D('conv0', nf, nl=tf.nn.leaky_relu)
+                 .Conv2D('conv0', nf, activation=tf.nn.leaky_relu)
                  .Conv2D('conv1', nf * 2)
                  .BatchNorm('bn1')
                  .tf.nn.leaky_relu()
@@ -73,18 +73,17 @@ class Model(GANModelDesc):
                  .Conv2D('conv3', nf * 8)
                  .BatchNorm('bn3')
                  .tf.nn.leaky_relu()
-                 .FullyConnected('fct', 1, nl=tf.identity)())
+                 .FullyConnected('fct', 1)())
         return l
 
-    def _build_graph(self, inputs):
-        image_pos = inputs[0]
+    def build_graph(self, image_pos):
         image_pos = image_pos / 128.0 - 1
 
         z = tf.random_uniform([self.batch, self.zdim], -1, 1, name='z_train')
         z = tf.placeholder_with_default(z, [None, self.zdim], name='z')
 
-        with argscope([Conv2D, Deconv2D, FullyConnected],
-                      W_init=tf.truncated_normal_initializer(stddev=0.02)):
+        with argscope([Conv2D, Conv2DTranspose, FullyConnected],
+                      kernel_initializer=tf.truncated_normal_initializer(stddev=0.02)):
             with tf.variable_scope('gen'):
                 image_gen = self.generator(z)
             tf.summary.image('generated-samples', image_gen, max_outputs=30)
@@ -95,7 +94,7 @@ class Model(GANModelDesc):
         self.build_losses(vecpos, vecneg)
         self.collect_variables()
 
-    def _get_optimizer(self):
+    def optimizer(self):
         lr = tf.get_variable('learning_rate', initializer=2e-4, trainable=False)
         return tf.train.AdamOptimizer(lr, beta1=0.5, epsilon=1e-3)
 

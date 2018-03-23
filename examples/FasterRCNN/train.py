@@ -57,16 +57,16 @@ def get_model_output_names():
 
 
 class Model(ModelDesc):
-    def _get_inputs(self):
+    def inputs(self):
         ret = [
-            InputDesc(tf.float32, (None, None, 3), 'image'),
-            InputDesc(tf.int32, (None, None, config.NUM_ANCHOR), 'anchor_labels'),
-            InputDesc(tf.float32, (None, None, config.NUM_ANCHOR, 4), 'anchor_boxes'),
-            InputDesc(tf.float32, (None, 4), 'gt_boxes'),
-            InputDesc(tf.int64, (None,), 'gt_labels')]  # all > 0
+            tf.placeholder(tf.float32, (None, None, 3), 'image'),
+            tf.placeholder(tf.int32, (None, None, config.NUM_ANCHOR), 'anchor_labels'),
+            tf.placeholder(tf.float32, (None, None, config.NUM_ANCHOR, 4), 'anchor_boxes'),
+            tf.placeholder(tf.float32, (None, 4), 'gt_boxes'),
+            tf.placeholder(tf.int64, (None,), 'gt_labels')]  # all > 0
         if config.MODE_MASK:
             ret.append(
-                InputDesc(tf.uint8, (None, None, None), 'gt_masks')
+                tf.placeholder(tf.uint8, (None, None, None), 'gt_masks')
             )   # NR_GT x height x width
         return ret
 
@@ -90,7 +90,7 @@ class Model(ModelDesc):
                     -1, -1]), name='fm_anchors')
             return fm_anchors
 
-    def _build_graph(self, inputs):
+    def build_graph(self, *inputs):
         is_training = get_current_tower_context().is_training
         if config.MODE_MASK:
             image, anchor_labels, anchor_boxes, gt_boxes, gt_labels, gt_masks = inputs
@@ -180,13 +180,14 @@ class Model(ModelDesc):
                 '(?:group1|group2|group3|rpn|fastrcnn|maskrcnn)/.*W',
                 l2_regularizer(1e-4), name='wd_cost')
 
-            self.cost = tf.add_n([
+            total_cost = tf.add_n([
                 rpn_label_loss, rpn_box_loss,
                 fastrcnn_label_loss, fastrcnn_box_loss,
                 mrcnn_loss,
                 wd_cost], 'total_cost')
 
-            add_moving_summary(self.cost, wd_cost)
+            add_moving_summary(total_cost, wd_cost)
+            return total_cost
         else:
             label_probs = tf.nn.softmax(fastrcnn_label_logits, name='fastrcnn_all_probs')  # #proposal x #Class
             anchors = tf.tile(tf.expand_dims(proposal_boxes, 1), [1, config.NUM_CLASS - 1, 1])   # #proposal x #Cat x 4
@@ -215,7 +216,7 @@ class Model(ModelDesc):
                 final_masks = tf.cond(tf.size(final_probs) > 0, f1, lambda: tf.zeros([0, 14, 14]))
                 tf.identity(final_masks, name='final_masks')
 
-    def _get_optimizer(self):
+    def optimizer(self):
         lr = tf.get_variable('learning_rate', initializer=0.003, trainable=False)
         tf.summary.scalar('learning_rate', lr)
 
@@ -299,8 +300,7 @@ def predict(pred_func, input_file):
 class EvalCallback(Callback):
     def _setup_graph(self):
         self.pred = self.trainer.get_predictor(
-            ['image'],
-            get_model_output_names())
+            ['image'], get_model_output_names())
         self.df = get_eval_dataflow()
 
     def _before_train(self):
@@ -383,13 +383,16 @@ if __name__ == '__main__':
             model=Model(),
             data=QueueInput(get_train_dataflow(add_mask=config.MODE_MASK)),
             callbacks=[
-                ModelSaver(max_to_keep=10, keep_checkpoint_every_n_hours=1),
+                PeriodicCallback(
+                    ModelSaver(max_to_keep=10, keep_checkpoint_every_n_hours=1),
+                    every_k_epochs=20),
                 # linear warmup
                 ScheduledHyperParamSetter(
                     'learning_rate', warmup_schedule, interp='linear', step_based=True),
                 ScheduledHyperParamSetter('learning_rate', lr_schedule),
                 EvalCallback(),
                 GPUUtilizationTracker(),
+                EstimatedTimeLeft(),
             ],
             steps_per_epoch=stepnum,
             max_epoch=config.LR_SCHEDULE[2] * factor // stepnum,

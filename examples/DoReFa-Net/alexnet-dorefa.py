@@ -77,12 +77,11 @@ BATCH_SIZE = None
 
 
 class Model(ModelDesc):
-    def _get_inputs(self):
-        return [InputDesc(tf.float32, [None, 224, 224, 3], 'input'),
-                InputDesc(tf.int32, [None], 'label')]
+    def inputs(self):
+        return [tf.placeholder(tf.float32, [None, 224, 224, 3], 'input'),
+                tf.placeholder(tf.int32, [None], 'label')]
 
-    def _build_graph(self, inputs):
-        image, label = inputs
+    def build_graph(self, image, label):
         image = image / 255.0
 
         fw, fa, fg = get_dorefa(BITW, BITA, BITG)
@@ -106,10 +105,10 @@ class Model(ModelDesc):
             return fa(nonlin(x))
 
         with remap_variables(new_get_variable), \
-                argscope(BatchNorm, decay=0.9, epsilon=1e-4), \
-                argscope([Conv2D, FullyConnected], use_bias=False, nl=tf.identity):
+                argscope(BatchNorm, momentum=0.9, epsilon=1e-4), \
+                argscope(Conv2D, use_bias=False):
             logits = (LinearWrap(image)
-                      .Conv2D('conv0', 96, 12, stride=4, padding='VALID')
+                      .Conv2D('conv0', 96, 12, strides=4, padding='VALID')
                       .apply(activate)
                       .Conv2D('conv1', 256, 5, padding='SAME', split=2)
                       .apply(fg)
@@ -139,7 +138,7 @@ class Model(ModelDesc):
                       .BatchNorm('bnfc0')
                       .apply(activate)
 
-                      .FullyConnected('fc1', 4096)
+                      .FullyConnected('fc1', 4096, use_bias=False)
                       .apply(fg)
                       .BatchNorm('bnfc1')
                       .apply(nonlin)
@@ -159,10 +158,11 @@ class Model(ModelDesc):
         wd_cost = regularize_cost('fc.*/W', l2_regularizer(5e-6), name='regularize_cost')
 
         add_param_summary(('.*/W', ['histogram', 'rms']))
-        self.cost = tf.add_n([cost, wd_cost], name='cost')
-        add_moving_summary(cost, wd_cost, self.cost)
+        total_cost = tf.add_n([cost, wd_cost], name='cost')
+        add_moving_summary(cost, wd_cost, total_cost)
+        return total_cost
 
-    def _get_optimizer(self):
+    def optimizer(self):
         lr = tf.get_variable('learning_rate', initializer=1e-4, trainable=False)
         return tf.train.AdamOptimizer(lr, epsilon=1e-5)
 

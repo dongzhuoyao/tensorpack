@@ -12,12 +12,12 @@ from six.moves import zip, range
 
 from ..utils import logger
 from ..tfutils.tower import TowerContext
-from ..tfutils.common import get_tf_version_number
 from ..tfutils.gradproc import ScaleGradient
 
 from .utils import (
     LeastLoadedDeviceSetter, override_to_local_variable,
-    allreduce_grads, average_grads)
+    allreduce_grads, aggregate_grads, allreduce_grads_hierarchical,
+    split_grad_list, merge_grad_list, GradientPacker)
 
 
 __all__ = ['GraphBuilder',
@@ -39,15 +39,9 @@ class DataParallelBuilder(GraphBuilder):
             towers(list[int]): list of GPU ids.
         """
         if len(towers) > 1:
-            logger.info("Training a model of {} towers".format(len(towers)))
-            DataParallelBuilder._check_tf_version()
+            logger.info("[DataParallel] Training a model of {} towers.".format(len(towers)))
 
         self.towers = towers
-
-    @staticmethod
-    def _check_tf_version():
-        assert get_tf_version_number() >= 1.1, \
-            "TF version {} is too old to run multi GPU training!".format(tf.VERSION)
 
     @staticmethod
     def _check_grad_list(grad_list):
@@ -67,7 +61,7 @@ class DataParallelBuilder(GraphBuilder):
                 inters &= s
             for s in names_per_gpu:
                 s -= inters
-            logger.error("Unique variables on towers: " + pprint.pformat(names_per_gpu))
+            logger.error("Unique trainable variables on towers: " + pprint.pformat(names_per_gpu))
             raise ValueError("Number of gradients from each tower is different! " + str(nvars))
 
     @staticmethod
@@ -103,7 +97,7 @@ class DataParallelBuilder(GraphBuilder):
                     index=idx,
                     vs_name=tower_names[idx] if usevs else ''):
                 if len(str(device)) < 10:   # a device function doesn't have good string description
-                    logger.info("Building graph for training tower {} on device {}...".format(idx, device))
+                    logger.info("Building graph for training tower {} on device {} ...".format(idx, device))
                 else:
                     logger.info("Building graph for training tower {} ...".format(idx))
 
@@ -161,7 +155,7 @@ class SyncMultiGPUParameterServerBuilder(DataParallelBuilder):
         # self.train_op = tf.group(*ops)
         # return
 
-        self.grads = average_grads(grad_list, colocation=True)
+        self.grads = aggregate_grads(grad_list, colocation=True)
         # grads = grad_list[0]
 
         opt = get_opt_fn()
@@ -188,10 +182,11 @@ class SyncMultiGPUReplicatedBuilder(DataParallelBuilder):
             Though on different deviecs, they should contain the same value.
     """
 
-    def __init__(self, towers, average, use_nccl):
+    def __init__(self, towers, average, mode):
         super(SyncMultiGPUReplicatedBuilder, self).__init__(towers)
         self._average = average
-        self._use_nccl = use_nccl
+        assert mode in ['nccl', 'cpu', 'hierarchical'], mode
+        self._mode = mode
 
     def build(self, get_grad_fn, get_opt_fn):
         """
@@ -210,6 +205,7 @@ class SyncMultiGPUReplicatedBuilder(DataParallelBuilder):
         """
         raw_devices = ['/gpu:{}'.format(k) for k in self.towers]
 
+        # #GPU x #VAR x 2
         grad_list = DataParallelBuilder.build_on_towers(
             self.towers,
             get_grad_fn,
@@ -218,10 +214,28 @@ class SyncMultiGPUReplicatedBuilder(DataParallelBuilder):
 
         DataParallelBuilder._check_grad_list(grad_list)
 
-        if self._use_nccl:
-            self.grads = allreduce_grads(grad_list, average=self._average)  # #gpu x #param x 2
-        else:
-            agg_grad_and_vars = average_grads(
+        if self._mode == 'hierarchical' and len(raw_devices) < 8:
+            logger.warn("mode='hierarchical' require >= 8 GPUs. Fallback to mode='cpu'.")
+            self._mode = 'cpu'
+
+        if self._mode in ['nccl', 'hierarchical']:
+            all_grads, all_vars = split_grad_list(grad_list)
+            if self._mode == 'nccl':
+                all_grads = allreduce_grads(all_grads, average=self._average)  # #gpu x #param x 2
+            else:
+                packer = GradientPacker(len(raw_devices))
+                succ = packer.compute_strategy(all_grads[0])
+                if succ:
+                    packed_grads = packer.pack_all(all_grads, raw_devices)
+                    packed_grads_aggr = allreduce_grads_hierarchical(
+                        packed_grads, raw_devices, average=self._average)
+                    all_grads = packer.unpack_all(packed_grads_aggr, raw_devices)
+                else:
+                    all_grads = allreduce_grads_hierarchical(all_grads, raw_devices, average=self._average)
+
+            self.grads = merge_grad_list(all_grads, all_vars)
+        elif self._mode == 'cpu':
+            agg_grad_and_vars = aggregate_grads(
                 grad_list, colocation=False,
                 devices=['/cpu:0'], average=self._average)    # #param x 2
             self.grads = []  # #gpu x #param x 2

@@ -22,16 +22,14 @@ Speed is about 43 it/s on TitanX.
 
 
 class Model(ModelDesc):
-    def _get_inputs(self):
-        return [InputDesc(tf.float32, [None, 40, 40, 3], 'input'),
-                InputDesc(tf.int32, [None], 'label')]
+    def inputs(self):
+        return [tf.placeholder(tf.float32, [None, 40, 40, 3], 'input'),
+                tf.placeholder(tf.int32, [None], 'label')]
 
-    def _build_graph(self, inputs):
-        image, label = inputs
-
+    def build_graph(self, image, label):
         image = image / 128.0 - 1
 
-        with argscope(Conv2D, nl=BNReLU, use_bias=False):
+        with argscope(Conv2D, activation=BNReLU, use_bias=False):
             logits = (LinearWrap(image)
                       .Conv2D('conv1', 24, 5, padding='VALID')
                       .MaxPooling('pool1', 2, padding='SAME')
@@ -39,10 +37,11 @@ class Model(ModelDesc):
                       .Conv2D('conv3', 32, 3, padding='VALID')
                       .MaxPooling('pool2', 2, padding='SAME')
                       .Conv2D('conv4', 64, 3, padding='VALID')
-                      .Dropout('drop', 0.5)
+                      .Dropout('drop', rate=0.5)
                       .FullyConnected('fc0', 512,
-                                      b_init=tf.constant_initializer(0.1), nl=tf.nn.relu)
-                      .FullyConnected('linear', out_dim=10, nl=tf.identity)())
+                                      bias_initializer=tf.constant_initializer(0.1),
+                                      activation=tf.nn.relu)
+                      .FullyConnected('linear', units=10)())
         tf.nn.softmax(logits, name='output')
 
         accuracy = tf.to_float(tf.nn.in_top_k(logits, label, 1))
@@ -55,9 +54,9 @@ class Model(ModelDesc):
         add_moving_summary(cost, wd_cost)
 
         add_param_summary(('.*/W', ['histogram', 'rms']))   # monitor W
-        self.cost = tf.add_n([cost, wd_cost], name='cost')
+        return tf.add_n([cost, wd_cost], name='cost')
 
-    def _get_optimizer(self):
+    def optimizer(self):
         lr = tf.train.exponential_decay(
             learning_rate=1e-3,
             global_step=get_global_step_var(),

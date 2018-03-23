@@ -14,19 +14,9 @@ from tensorpack.tfutils.symbolic_functions import *
 from tensorpack.tfutils.summary import *
 from tensorpack.dataflow.dataset import ILSVRCMeta
 
-"""
-Usage:
-    python -m tensorpack.utils.loadcaffe \
-            PATH/TO/VGG/{VGG_ILSVRC_19_layers_deploy.prototxt,VGG_ILSVRC_16_layers.caffemodel} vgg19.npz
-    ./load-vgg19.py --load vgg19.npz --input cat.png
-
-    Or download a converted caffe model from http://models.tensorpack.com/caffe/
-    ./load-vgg19.py --load vgg19.npz --input cat.png
-"""
-
 
 def tower_func(image):
-    with argscope(Conv2D, kernel_shape=3, nl=tf.nn.relu):
+    with argscope(Conv2D, kernel_size=3, activation=tf.nn.relu):
         logits = (LinearWrap(image)
                   .Conv2D('conv1_1', 64)
                   .Conv2D('conv1_2', 64)
@@ -54,11 +44,11 @@ def tower_func(image):
                   .Conv2D('conv5_4', 512)
                   .MaxPooling('pool5', 2)
                   # 7
-                  .FullyConnected('fc6', 4096, nl=tf.nn.relu)
+                  .FullyConnected('fc6', 4096, activation=tf.nn.relu)
                   .Dropout('drop0', 0.5)
-                  .FullyConnected('fc7', 4096, nl=tf.nn.relu)
+                  .FullyConnected('fc7', 4096, activation=tf.nn.relu)
                   .Dropout('drop1', 0.5)
-                  .FullyConnected('fc8', out_dim=1000, nl=tf.identity)())
+                  .FullyConnected('fc8', 1000)())
     tf.nn.softmax(logits, name='prob')
 
 

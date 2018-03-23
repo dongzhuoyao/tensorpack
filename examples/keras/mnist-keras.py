@@ -40,12 +40,11 @@ def get_keras_model():
 
 
 class Model(ModelDesc):
-    def _get_inputs(self):
-        return [InputDesc(tf.float32, (None, IMAGE_SIZE, IMAGE_SIZE), 'input'),
-                InputDesc(tf.int32, (None,), 'label')]
+    def inputs(self):
+        return [tf.placeholder(tf.float32, (None, IMAGE_SIZE, IMAGE_SIZE), 'input'),
+                tf.placeholder(tf.int32, (None,), 'label')]
 
-    def _build_graph(self, inputs):
-        image, label = inputs
+    def build_graph(self, image, label):
         image = tf.expand_dims(image, 3) * 2 - 1
 
         M = get_keras_model()
@@ -60,10 +59,11 @@ class Model(ModelDesc):
         summary.add_moving_summary(acc)
 
         wd_cost = tf.add_n(M.losses, name='regularize_loss')    # this is how Keras manage regularizers
-        self.cost = tf.add_n([wd_cost, cost], name='total_cost')
-        summary.add_moving_summary(self.cost, wd_cost)
+        cost = tf.add_n([wd_cost, cost], name='total_cost')
+        summary.add_moving_summary(cost, wd_cost)
+        return cost
 
-    def _get_optimizer(self):
+    def optimizer(self):
         lr = tf.train.exponential_decay(
             learning_rate=1e-3,
             global_step=get_global_step_var(),

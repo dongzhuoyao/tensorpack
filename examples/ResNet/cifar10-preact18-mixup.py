@@ -27,26 +27,24 @@ def preactivation_block(input, num_filters, stride=1):
 
     # residual
     net = BNReLU(input)
-    residual = Conv2D('conv1', net, num_filters, kernel_shape=3, stride=stride, use_bias=False, nl=BNReLU)
-    residual = Conv2D('conv2', residual, num_filters, kernel_shape=3, stride=1, use_bias=False, nl=tf.identity)
+    residual = Conv2D('conv1', net, num_filters, kernel_size=3, strides=stride, use_bias=False, activation=BNReLU)
+    residual = Conv2D('conv2', residual, num_filters, kernel_size=3, strides=1, use_bias=False)
 
     # identity
     shortcut = input
     if stride != 1 or num_filters_in != num_filters:
-        shortcut = Conv2D('shortcut', net, num_filters, kernel_shape=1, stride=stride, use_bias=False,
-                          nl=tf.identity)
+        shortcut = Conv2D('shortcut', net, num_filters, kernel_size=1, strides=stride, use_bias=False)
 
     return shortcut + residual
 
 
 class ResNet_Cifar(ModelDesc):
-    def _get_inputs(self):
-        return [InputDesc(tf.float32, [None, 32, 32, 3], 'input'),
-                InputDesc(tf.float32, [None, CLASS_NUM], 'label')]
+    def inputs(self):
+        return [tf.placeholder(tf.float32, [None, 32, 32, 3], 'input'),
+                tf.placeholder(tf.float32, [None, CLASS_NUM], 'label')]
 
-    def _build_graph(self, inputs):
+    def build_graph(self, image, label):
         assert tf.test.is_gpu_available()
-        image, label = inputs
 
         MEAN_IMAGE = tf.constant([0.4914, 0.4822, 0.4465], dtype=tf.float32)
         STD_IMAGE = tf.constant([0.2023, 0.1994, 0.2010], dtype=tf.float32)
@@ -54,17 +52,17 @@ class ResNet_Cifar(ModelDesc):
         image = tf.transpose(image, [0, 3, 1, 2])
 
         pytorch_default_init = tf.variance_scaling_initializer(scale=1.0 / 3, mode='fan_in', distribution='uniform')
-        with argscope([Conv2D, BatchNorm, GlobalAvgPooling], data_format='NCHW'), \
-                argscope(Conv2D, W_init=pytorch_default_init):
-            net = Conv2D('conv0', image, 64, kernel_shape=3, stride=1, use_bias=False)
+        with argscope([Conv2D, BatchNorm, GlobalAvgPooling], data_format='channels_first'), \
+                argscope(Conv2D, kernel_initializer=pytorch_default_init):
+            net = Conv2D('conv0', image, 64, kernel_size=3, strides=1, use_bias=False)
             for i, blocks_in_module in enumerate(MODULE_SIZES):
                 for j in range(blocks_in_module):
                     stride = 2 if j == 0 and i > 0 else 1
                     with tf.variable_scope("res%d.%d" % (i, j)):
                         net = preactivation_block(net, FILTER_SIZES[i], stride)
             net = GlobalAvgPooling('gap', net)
-            logits = FullyConnected('linear', net, out_dim=CLASS_NUM,
-                                    nl=tf.identity, W_init=tf.random_normal_initializer(stddev=1e-3))
+            logits = FullyConnected('linear', net, CLASS_NUM,
+                                    kernel_initializer=tf.random_normal_initializer(stddev=1e-3))
 
         ce_cost = tf.nn.softmax_cross_entropy_with_logits(labels=label, logits=logits)
         ce_cost = tf.reduce_mean(ce_cost, name='cross_entropy_loss')
@@ -78,9 +76,9 @@ class ResNet_Cifar(ModelDesc):
         # weight decay on all W matrixes. including convolutional layers
         wd_cost = tf.multiply(WEIGHT_DECAY, regularize_cost('.*', tf.nn.l2_loss), name='wd_cost')
 
-        self.cost = tf.add_n([ce_cost, wd_cost], name='cost')
+        return tf.add_n([ce_cost, wd_cost], name='cost')
 
-    def _get_optimizer(self):
+    def optimizer(self):
         lr = tf.get_variable('learning_rate', initializer=0.1, trainable=False)
         opt = tf.train.MomentumOptimizer(lr, 0.9)
         return opt

@@ -95,11 +95,11 @@ class OnlineTensorboardExport(Callback):
 
 
 class Model(ModelDesc):
-    def _get_inputs(self):
-        return [InputDesc(tf.float32, (BATCH, ), 'theta'),
-                InputDesc(tf.float32, (BATCH, SHAPE, SHAPE), 'image'),
-                InputDesc(tf.float32, (BATCH, SHAPE, SHAPE), 'gt_image'),
-                InputDesc(tf.float32, (BATCH, 9, 9), 'gt_filter')]
+    def inputs(self):
+        return [tf.placeholder(tf.float32, (BATCH, ), 'theta'),
+                tf.placeholder(tf.float32, (BATCH, SHAPE, SHAPE), 'image'),
+                tf.placeholder(tf.float32, (BATCH, SHAPE, SHAPE), 'gt_image'),
+                tf.placeholder(tf.float32, (BATCH, 9, 9), 'gt_filter')]
 
     def _parameter_net(self, theta, kernel_shape=9):
         """Estimate filters for convolution layers
@@ -120,9 +120,8 @@ class Model(ModelDesc):
         logger.info('Parameter net output: {}'.format(pred_filter.get_shape().as_list()))
         return pred_filter
 
-    def _build_graph(self, inputs):
+    def build_graph(self, theta, image, gt_image, gt_filter):
         kernel_size = 9
-        theta, image, gt_image, gt_filter = inputs
 
         image = image
         gt_image = gt_image
@@ -143,10 +142,11 @@ class Model(ModelDesc):
         tf.summary.image('pred_gt_filters', filters, max_outputs=20)
         tf.summary.image('pred_gt_images', images, max_outputs=20)
 
-        self.cost = tf.reduce_mean(tf.squared_difference(pred_image, gt_image), name="cost")
-        summary.add_moving_summary(self.cost)
+        cost = tf.reduce_mean(tf.squared_difference(pred_image, gt_image), name="cost")
+        summary.add_moving_summary(cost)
+        return cost
 
-    def _get_optimizer(self):
+    def optimizer(self):
         return tf.train.AdamOptimizer(1e-3)
 
 

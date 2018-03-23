@@ -41,7 +41,7 @@ class PlaceholderInput(InputSource):
     Just produce placeholders as input tensors.
     """
     def _setup(self, inputs):
-        self._all_placehdrs = [v.build_placeholder() for v in inputs]
+        self._all_placehdrs = [v.build_placeholder_reuse() for v in inputs]
 
     def _get_input_tensors(self):
         return self._all_placehdrs
@@ -456,11 +456,17 @@ class TFDatasetInput(FeedfreeInput):
     def dataflow_to_dataset(df, types):
         """
         Wrap a dataflow to tf.data.Dataset.
-        Will reset df.
+        Will also reset the dataflow.
+
+        If for training, you'll need to add `.repeat()` on the returned
+        dataset, if the dataflow iterator can terminate.
 
         Args:
             df (DataFlow)
             types([tf.DType])
+
+        Returns:
+            (tf.data.Dataset)
         """
         assert isinstance(df, DataFlow), df
         assert isinstance(types, (list, tuple)), types
@@ -511,11 +517,11 @@ class StagingInput(FeedfreeInput):
         Args:
             input (FeedfreeInput):
             nr_stage: number of elements to prefetch into each StagingArea, at the beginning.
-                Since enqueue and dequeue are synchronized, prefetching 1
-                    element should be sufficient.
+                Since enqueue and dequeue are synchronized, prefetching 1 element should be sufficient.
             towers: deprecated
             device (str or None): if not None, place the StagingArea on a specific device. e.g., '/cpu:0'.
-                Otherwise, they are placed under where `get_inputs_tensors` gets called.
+                Otherwise, they are placed under where `get_inputs_tensors`
+                gets called, which could be unspecified in case of simple trainers.
         """
         assert isinstance(input, FeedfreeInput), input
         self._input = input

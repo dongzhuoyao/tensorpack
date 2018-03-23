@@ -54,7 +54,7 @@ ENV_NAME = None
 def get_player(train=False, dumpdir=None):
     env = gym.make(ENV_NAME)
     if dumpdir:
-        env = gym.wrappers.Monitor(env, dumpdir)
+        env = gym.wrappers.Monitor(env, dumpdir, video_callable=lambda _: True)
     env = FireResetEnv(env)
     env = MapState(env, lambda im: cv2.resize(im, IMAGE_SIZE))
     env = FrameStack(env, 4)
@@ -69,33 +69,32 @@ class MySimulatorWorker(SimulatorProcess):
 
 
 class Model(ModelDesc):
-    def _get_inputs(self):
+    def inputs(self):
         assert NUM_ACTIONS is not None
-        return [InputDesc(tf.uint8, (None,) + IMAGE_SHAPE3, 'state'),
-                InputDesc(tf.int64, (None,), 'action'),
-                InputDesc(tf.float32, (None,), 'futurereward'),
-                InputDesc(tf.float32, (None,), 'action_prob'),
+        return [tf.placeholder(tf.uint8, (None,) + IMAGE_SHAPE3, 'state'),
+                tf.placeholder(tf.int64, (None,), 'action'),
+                tf.placeholder(tf.float32, (None,), 'futurereward'),
+                tf.placeholder(tf.float32, (None,), 'action_prob'),
                 ]
 
     def _get_NN_prediction(self, image):
         image = tf.cast(image, tf.float32) / 255.0
-        with argscope(Conv2D, nl=tf.nn.relu):
-            l = Conv2D('conv0', image, out_channel=32, kernel_shape=5)
+        with argscope(Conv2D, activation=tf.nn.relu):
+            l = Conv2D('conv0', image, 32, 5)
             l = MaxPooling('pool0', l, 2)
-            l = Conv2D('conv1', l, out_channel=32, kernel_shape=5)
+            l = Conv2D('conv1', l, 32, 5)
             l = MaxPooling('pool1', l, 2)
-            l = Conv2D('conv2', l, out_channel=64, kernel_shape=4)
+            l = Conv2D('conv2', l, 64, 4)
             l = MaxPooling('pool2', l, 2)
-            l = Conv2D('conv3', l, out_channel=64, kernel_shape=3)
+            l = Conv2D('conv3', l, 64, 3)
 
-        l = FullyConnected('fc0', l, 512, nl=tf.identity)
+        l = FullyConnected('fc0', l, 512)
         l = PReLU('prelu', l)
-        logits = FullyConnected('fc-pi', l, out_dim=NUM_ACTIONS, nl=tf.identity)    # unnormalized policy
-        value = FullyConnected('fc-v', l, 1, nl=tf.identity)
+        logits = FullyConnected('fc-pi', l, NUM_ACTIONS)    # unnormalized policy
+        value = FullyConnected('fc-v', l, 1)
         return logits, value
 
-    def _build_graph(self, inputs):
-        state, action, futurereward, action_prob = inputs
+    def build_graph(self, state, action, futurereward, action_prob):
         logits, value = self._get_NN_prediction(state)
         value = tf.squeeze(value, [1], name='pred_value')  # (B,)
         policy = tf.nn.softmax(logits, name='policy')
@@ -119,15 +118,14 @@ class Model(ModelDesc):
         advantage = tf.sqrt(tf.reduce_mean(tf.square(advantage)), name='rms_advantage')
         entropy_beta = tf.get_variable('entropy_beta', shape=[],
                                        initializer=tf.constant_initializer(0.01), trainable=False)
-        self.cost = tf.add_n([policy_loss, xentropy_loss * entropy_beta, value_loss])
-        self.cost = tf.truediv(self.cost,
-                               tf.cast(tf.shape(futurereward)[0], tf.float32),
-                               name='cost')
+        cost = tf.add_n([policy_loss, xentropy_loss * entropy_beta, value_loss])
+        cost = tf.truediv(cost, tf.cast(tf.shape(futurereward)[0], tf.float32), name='cost')
         summary.add_moving_summary(policy_loss, xentropy_loss,
                                    value_loss, pred_reward, advantage,
-                                   self.cost, tf.reduce_mean(importance, name='importance'))
+                                   cost, tf.reduce_mean(importance, name='importance'))
+        return cost
 
-    def _get_optimizer(self):
+    def optimizer(self):
         lr = tf.get_variable('learning_rate', initializer=0.001, trainable=False)
         opt = tf.train.AdamOptimizer(lr, epsilon=1e-3)
 
@@ -272,7 +270,7 @@ if __name__ == '__main__':
     parser.add_argument('--load', help='load model')
     parser.add_argument('--env', help='env', required=True)
     parser.add_argument('--task', help='task to perform',
-                        choices=['play', 'eval', 'train', 'gen_submit'], default='train')
+                        choices=['play', 'eval', 'train', 'dump_video'], default='train')
     parser.add_argument('--output', help='output directory for submission', default='output_dir')
     parser.add_argument('--episode', help='number of episode to eval', default=100, type=int)
     args = parser.parse_args()
@@ -297,10 +295,9 @@ if __name__ == '__main__':
                             args.episode, render=True)
         elif args.task == 'eval':
             eval_model_multithread(pred, args.episode, get_player)
-        elif args.task == 'gen_submit':
+        elif args.task == 'dump_video':
             play_n_episodes(
                 get_player(train=False, dumpdir=args.output),
                 pred, args.episode)
-            # gym.upload(args.output, api_key='xxx')
     else:
         train()

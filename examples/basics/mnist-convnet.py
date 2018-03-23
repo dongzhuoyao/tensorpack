@@ -20,20 +20,16 @@ IMAGE_SIZE = 28
 
 
 class Model(ModelDesc):
-    def _get_inputs(self):
+    def inputs(self):
         """
-        Define all the inputs (with type, shape, name) that
-        the graph will need.
+        Define all the inputs (with type, shape, name) that the graph will need.
         """
-        return [InputDesc(tf.float32, (None, IMAGE_SIZE, IMAGE_SIZE), 'input'),
-                InputDesc(tf.int32, (None,), 'label')]
+        return [tf.placeholder(tf.float32, (None, IMAGE_SIZE, IMAGE_SIZE), 'input'),
+                tf.placeholder(tf.int32, (None,), 'label')]
 
-    def _build_graph(self, inputs):
+    def build_graph(self, image, label):
         """This function should build the model which takes the input variables
-        and define self.cost at the end"""
-
-        # inputs contains a list of input variables defined above
-        image, label = inputs
+        and return cost at the end"""
 
         # In tensorflow, inputs to convolution function are assumed to be
         # NHWC. Add a single channel here.
@@ -42,7 +38,7 @@ class Model(ModelDesc):
         image = image * 2 - 1   # center the pixels values at zero
         # The context manager `argscope` sets the default option for all the layers under
         # this context. Here we use 32 channel convolution with shape 3x3
-        with argscope(Conv2D, kernel_shape=3, nl=tf.nn.relu, out_channel=32):
+        with argscope(Conv2D, kernel_size=3, activation=tf.nn.relu, filters=32):
             logits = (LinearWrap(image)
                       .Conv2D('conv0')
                       .MaxPooling('pool0', 2)
@@ -75,13 +71,14 @@ class Model(ModelDesc):
         wd_cost = tf.multiply(1e-5,
                               regularize_cost('fc.*/W', tf.nn.l2_loss),
                               name='regularize_loss')
-        self.cost = tf.add_n([wd_cost, cost], name='total_cost')
-        summary.add_moving_summary(cost, wd_cost, self.cost)
+        total_cost = tf.add_n([wd_cost, cost], name='total_cost')
+        summary.add_moving_summary(cost, wd_cost, total_cost)
 
         # monitor histogram of all weight (of conv and fc layers) in tensorboard
         summary.add_param_summary(('.*/W', ['histogram', 'rms']))
+        return total_cost
 
-    def _get_optimizer(self):
+    def optimizer(self):
         lr = tf.train.exponential_decay(
             learning_rate=1e-3,
             global_step=get_global_step_var(),

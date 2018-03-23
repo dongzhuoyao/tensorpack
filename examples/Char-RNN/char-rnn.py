@@ -70,13 +70,11 @@ class CharRNNData(RNGDataFlow):
 
 
 class Model(ModelDesc):
-    def _get_inputs(self):
-        return [InputDesc(tf.int32, (None, param.seq_len), 'input'),
-                InputDesc(tf.int32, (None, param.seq_len), 'nextinput')]
+    def inputs(self):
+        return [tf.placeholder(tf.int32, (None, param.seq_len), 'input'),
+                tf.placeholder(tf.int32, (None, param.seq_len), 'nextinput')]
 
-    def _build_graph(self, inputs):
-        input, nextinput = inputs
-
+    def build_graph(self, input, nextinput):
         cell = rnn.MultiRNNCell([rnn.LSTMBlockCell(num_units=param.rnn_size)
                                 for _ in range(param.num_rnn_layer)])
 
@@ -99,16 +97,17 @@ class Model(ModelDesc):
 
         # seqlen x (Bxrnnsize)
         output = tf.reshape(tf.concat(outputs, 1), [-1, param.rnn_size])  # (Bxseqlen) x rnnsize
-        logits = FullyConnected('fc', output, param.vocab_size, nl=tf.identity)
+        logits = FullyConnected('fc', output, param.vocab_size, activation=tf.identity)
         tf.nn.softmax(logits / param.softmax_temprature, name='prob')
 
         xent_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(
             logits=logits, labels=tf.reshape(nextinput, [-1]))
-        self.cost = tf.reduce_mean(xent_loss, name='cost')
+        cost = tf.reduce_mean(xent_loss, name='cost')
         summary.add_param_summary(('.*/W', ['histogram']))   # monitor histogram of all W
-        summary.add_moving_summary(self.cost)
+        summary.add_moving_summary(cost)
+        return cost
 
-    def _get_optimizer(self):
+    def optimizer(self):
         lr = tf.get_variable('learning_rate', initializer=2e-3, trainable=False)
         opt = tf.train.AdamOptimizer(lr)
         return optimizer.apply_grad_processors(opt, [GlobalNormClip(5)])

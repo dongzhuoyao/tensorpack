@@ -68,13 +68,11 @@ def visualize_conv_activations(activation, name):
 
 
 class Model(ModelDesc):
-    def _get_inputs(self):
-        return [InputDesc(tf.float32, (None, IMAGE_SIZE, IMAGE_SIZE), 'input'),
-                InputDesc(tf.int32, (None,), 'label')]
+    def inputs(self):
+        return [tf.placeholder(tf.float32, (None, IMAGE_SIZE, IMAGE_SIZE), 'input'),
+                tf.placeholder(tf.int32, (None,), 'label')]
 
-    def _build_graph(self, inputs):
-
-        image, label = inputs
+    def build_graph(self, image, label):
         image = tf.expand_dims(image * 2 - 1, 3)
 
         with argscope(Conv2D, kernel_shape=3, nl=tf.nn.relu, out_channel=32):
@@ -103,17 +101,14 @@ class Model(ModelDesc):
         cost = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=label)
         cost = tf.reduce_mean(cost, name='cross_entropy_loss')
 
-        accuracy = tf.reduce_mean(tf.to_float(tf.nn.in_top_k(logits, label, 1)), name='accuracy')
+        tf.reduce_mean(tf.to_float(tf.nn.in_top_k(logits, label, 1)), name='accuracy')
 
         wd_cost = tf.multiply(1e-5,
                               regularize_cost('fc.*/W', tf.nn.l2_loss),
                               name='regularize_loss')
-        self.cost = tf.add_n([wd_cost, cost], name='total_cost')
-        summary.add_moving_summary(cost, wd_cost, self.cost, accuracy)
+        return tf.add_n([wd_cost, cost], name='total_cost')
 
-        summary.add_param_summary(('.*/W', ['histogram', 'rms']))
-
-    def _get_optimizer(self):
+    def optimizer(self):
         lr = tf.train.exponential_decay(
             learning_rate=1e-3,
             global_step=get_global_step_var(),

@@ -4,12 +4,15 @@
 
 
 import tensorflow as tf
+import numpy as np
+from collections import deque
 
+from ..tfutils.common import get_op_tensor_name
 from ..utils import logger
 from ..utils.naming import MOVING_SUMMARY_OPS_KEY
 from .base import Callback
 
-__all__ = ['MovingAverageSummary', 'MergeAllSummaries']
+__all__ = ['MovingAverageSummary', 'MergeAllSummaries', 'SimpleMovingAverage']
 
 
 class MovingAverageSummary(Callback):
@@ -17,7 +20,8 @@ class MovingAverageSummary(Callback):
     This callback is enabled by default.
     Maintain the moving average of summarized tensors in every step,
     by ops added to the collection.
-    Note that it only maintains the EMAs, the actual summary should be done in other callbacks.
+    Note that it only __maintains__ the moving averages in the graph,
+    the actual summary should be done in other callbacks.
     """
     def __init__(self, collection=MOVING_SUMMARY_OPS_KEY):
         """
@@ -31,7 +35,8 @@ class MovingAverageSummary(Callback):
 
     def _setup_graph(self):
         ops = tf.get_collection(self._collection)
-        logger.info("Maintain moving average summary of {} tensors.".format(len(ops)))
+        logger.info("Maintain moving average summary of {} tensors in collection {}.".format(
+            len(ops), self._collection))
 
         self.ema_op = tf.group(*ops, name='maintain_moving_average_summary')
         self._fetch = tf.train.SessionRunArgs(fetches=self.ema_op)
@@ -46,6 +51,8 @@ class MergeAllSummaries_RunAlone(Callback):
         self._key = key
 
     def _setup_graph(self):
+        size = len(tf.get_collection(self._key))
+        logger.info("Summarizing collection '{}' of size {}.".format(self._key, size))
         self.summary_op = tf.summary.merge_all(self._key)
 
     def _trigger_step(self):
@@ -65,6 +72,8 @@ class MergeAllSummaries_RunWithOp(Callback):
         self._key = key
 
     def _setup_graph(self):
+        size = len(tf.get_collection(self._key))
+        logger.info("Summarizing collection '{}' of size {}.".format(self._key, size))
         self.summary_op = tf.summary.merge_all(self._key)
         if self.summary_op is not None:
             self._fetches = tf.train.SessionRunArgs(self.summary_op)
@@ -115,3 +124,41 @@ def MergeAllSummaries(period=0, run_alone=False, key=tf.GraphKeys.SUMMARIES):
         return MergeAllSummaries_RunAlone(period, key)
     else:
         return MergeAllSummaries_RunWithOp(period, key)
+
+
+class SimpleMovingAverage(Callback):
+    """
+    Monitor Simple Moving Average (SMA), i.e. an average within a sliding window,
+    of some tensors.
+    """
+    def __init__(self, tensors, window_size):
+        """
+        Args:
+            tensors (str or [str]): names of tensors
+            window_size (int): size of the moving window
+        """
+
+        self._tensor_names = [get_op_tensor_name(x)[1] for x in tensors]
+        self._display_names = [get_op_tensor_name(x)[0] for x in tensors]
+        self._window = int(window_size)
+        self._queue = deque(maxlen=window_size)
+
+    def _setup_graph(self):
+        tensors = self.get_tensors_maybe_in_tower(self._tensor_names)
+        for t in tensors:
+            assert t.get_shape().ndims == 0, \
+                "SimpleMovingAverage only accepts scalar tensor! Got one with {}".format(t.get_shape())
+        self._fetch = tf.train.SessionRunArgs(fetches=tensors)
+
+    def _before_run(self, _):
+        return self._fetch
+
+    def _after_run(self, _, rv):
+        results = rv.results
+        self._queue.append(results)
+
+    def _trigger_step(self):
+        if self.global_step % self._window == 0:
+            averages = np.asarray(self._queue).mean(axis=0)
+            for name, avg in zip(self._display_names, averages):
+                self.trainer.monitors.put_scalar(name + '/SMA', avg)

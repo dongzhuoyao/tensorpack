@@ -49,6 +49,7 @@ class SimpleTrainer(SingleCostTrainer):
     Single-GPU single-cost single-tower trainer.
     """
     def _setup_graph(self, input, get_cost_fn, get_opt_fn):
+        logger.info("Building graph for a single training tower ...")
         with TowerContext('', is_training=True):
             grads = self._make_get_grad_fn(input, get_cost_fn, get_opt_fn)()
             opt = get_opt_fn()
@@ -139,15 +140,26 @@ class SyncMultiGPUTrainerReplicated(SingleCostTrainer):
     """
 
     @map_arg(gpus=_int_to_range)
-    def __init__(self, gpus, average=True, use_nccl=True):
+    def __init__(self, gpus, average=True, mode=None, use_nccl=None):
         """
         Args:
             gpus (int or [int]): list of GPU ids.
             average (bool): whether to average or sum gradients.
-            use_nccl (bool): use NCCL or TensorFlow copy to reduce.
+            mode (str or None): Gradient aggregation mode.
+                Supported values: ['nccl', 'hierarchical', 'cpu'].
+                Default to pick automatically by heuristics.
+                These modes may have slight (within 5%) differences in speed.
         """
         self.devices = gpus
-        self._builder = SyncMultiGPUReplicatedBuilder(gpus, average, use_nccl)
+
+        if use_nccl is not None:
+            mode = 'nccl' if use_nccl else None
+            logger.warn("use_nccl option was deprecated! Use the `mode` option instead!")
+        if mode is None:
+            mode = 'hierarchical' if len(gpus) >= 8 else 'nccl'
+        mode = mode.lower()
+
+        self._builder = SyncMultiGPUReplicatedBuilder(gpus, average, mode)
         super(SyncMultiGPUTrainerReplicated, self).__init__()
 
     def _setup_graph(self, input, get_cost_fn, get_opt_fn):
@@ -354,5 +366,5 @@ try:
 except ImportError:
     HorovodTrainer = create_dummy_class('HovorodTrainer', 'horovod')    # noqa
 except Exception:      # could be other than ImportError, e.g. NCCL not found
-    print("Horovod is installed but cannot be imported.")
+    print("Horovod is installed but cannot be imported. Check `python -c 'import horovod.tensorflow'`.")
     HorovodTrainer = create_dummy_class('HovorodTrainer', 'horovod')    # noqa
