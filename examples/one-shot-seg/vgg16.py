@@ -22,7 +22,7 @@ batch_size = 1
 LR = 1e-10
 CLASS_NUM = 2
 evaluate_every_n_epoch = 1
-support_image_size =(224,224)
+support_image_size =(224, 224)
 query_image_size = (500, 500)
 
 def get_data(name, batch=1):
@@ -152,7 +152,7 @@ def get_config():
 
     logger.info("Running on {} towers. Batch size per tower: {}".format(nr_tower, batch_size))
     dataset_train = get_data('fold0_train', batch_size)
-    dataset_val = get_data('fold0_1shot_test', batch_size)
+    #dataset_val = get_data('fold0_1shot_test', batch_size)
 
     callbacks = [
         ModelSaver(),
@@ -168,7 +168,7 @@ def get_config():
         model=Model(),
         data=input,
         callbacks=callbacks,
-        steps_per_epoch=  10 // total_batch,
+        steps_per_epoch=  10000 // total_batch,
         max_epoch=max_epoch,
     )
 

@@ -20,6 +20,7 @@ class LoaderOfPairs(object):
         profile_copy['first_label_params'].append(('original_first_label', 1.0, 0.0))
         profile_copy['deploy_mode'] = True
         dbi = ss_datalayer.DBInterface(profile)
+        self.data_size = len(dbi.db_items)
         self.PLP = ss_datalayer.PairLoaderProcess(None, None, dbi, profile_copy)
     def get_items(self):
         self.out = self.PLP.load_next_frame(try_mode=False)

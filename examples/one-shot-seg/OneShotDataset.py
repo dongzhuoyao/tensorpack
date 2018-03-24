@@ -20,17 +20,19 @@ class OneShotDataset(RNGDataFlow):
         self.name = name
         profile = getattr(settings, name)
         self.loader = LoaderOfPairs(profile)
+        self.data_size = self.loader.data_size
 
     def size(self):
-        return 1e10
+        return self.data_size
 
     @staticmethod
     def class_num():
         return 2
 
     def get_data(self): # only for one-shot learning
-        self.loader.get_items_no_return()
-        yield [self.loader.out['first_img'][0],self.loader.out['first_label'][0],self.loader.out['second_img'][0],self.loader.out['second_label'][0]]
+        for i in range(self.data_size):
+            self.loader.get_items_no_return()
+            yield [self.loader.out['first_img'][0],self.loader.out['first_label'][0],self.loader.out['second_img'][0],self.loader.out['second_label'][0]]
 
 
 
