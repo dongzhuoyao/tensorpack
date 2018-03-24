@@ -1,13 +1,19 @@
 import numpy as np
 import os.path as osp
 from util import Map
-from db_path import *
+
 
 
 # Classes in pascal dataset
 PASCAL_CATS = ['aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car' , 'cat', 'chair', 'cow',
                'diningtable', 'dog', 'horse', 'motorbike', 'person', 'potted plant', 'sheep', 'sofa',
                'train', 'tv/monitor']
+
+# Download Pascal VOC from http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar
+PASCAL_PATH= '/data1/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012'
+SBD_PATH = '/data1/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012'
+
+
 
 def get_cats(split, fold, num_folds=4):
     '''
@@ -85,8 +91,8 @@ fold0_train = Map(empty_profile,
     image_sets=['sbd_training', 'pascal_training'],
     #image_sets=['pascal_training'],
     pascal_cats = get_cats('train',0),
-    first_shape=[224,224],
-    second_shape=[500,500]) # original code is second_shape=None),TODO
+    first_shape=[321,321],
+    second_shape=[321,321]) # original code is second_shape=None),TODO
 
 # Setting for testing on **test images** in unseen image classes (in total 5 classes), 5-shot
 fold0_5shot_test = Map(empty_profile,
@@ -95,8 +101,8 @@ fold0_5shot_test = Map(empty_profile,
     read_mode='deterministic',
     image_sets=['pascal_test'],
     pascal_cats = get_cats('test',0),
-    first_shape=[224,224],
-    second_shape=[500,500],
+    first_shape=[321,321],
+    second_shape=[321,321],
     k_shot=5)
 
 ## Setting for testing on **test images** in unseen image classes (in total 5 classes), 1-shot

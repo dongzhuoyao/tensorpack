@@ -22,8 +22,8 @@ batch_size = 1
 LR = 1e-10
 CLASS_NUM = 2
 evaluate_every_n_epoch = 1
-support_image_size =(224, 224)
-query_image_size = (500, 500)
+support_image_size =(321, 321)
+query_image_size = (321, 321)
 
 def get_data(name, batch=1):
     isTrain = True if 'train' in name else False
