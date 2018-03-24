@@ -87,14 +87,14 @@ def network(img):
               .apply(convnormrelu, 'conv5_3', 512)())
 
     # TODO smoothen
-    logits = Conv2D("smooth", logits, CLASS_NUM, 3)
-    logits = tf.image.resize_bilinear(logits, img.shape[1:3])
+    #logits = Conv2D("smooth", logits, CLASS_NUM, 3)
+    #logits = tf.image.resize_bilinear(logits, img.shape[1:3])
     return logits
 
 class Model(ModelDesc):
     def inputs(self):
         return [tf.placeholder(tf.float32, [None, support_image_size[0], support_image_size[1], 3], 'first_image'),
-                tf.placeholder(tf.int32, [None, support_image_size[0], support_image_size[1]], 'first_label'),
+                tf.placeholder(tf.float32, [None, support_image_size[0], support_image_size[1]], 'first_label'),
                 tf.placeholder(tf.float32, [None, query_image_size[0], query_image_size[1], 3], 'second_image'),
                 tf.placeholder(tf.int32, [None, query_image_size[0], query_image_size[1]], 'second_label')
                 ]
@@ -103,27 +103,29 @@ class Model(ModelDesc):
 
     def build_graph(self, first_image, first_label, second_image, second_label):
         first_label = tf.expand_dims(first_label, 3, name='first_label_ee')
+        first_image_masked = first_image*first_label
         with argscope(Conv2D, kernel_size=3,
                       kernel_initializer=tf.variance_scaling_initializer(scale=2.)), \
              argscope([Conv2D, MaxPooling, BatchNorm], data_format="NHWC"):
                  with tf.variable_scope("support"):
-                     support_logits = network(first_image)
+                     support_logits = network(first_image_masked)
                  with tf.variable_scope("query"):
                      query_logits = network(second_image)
 
 
         costs = []
+        support_logits  = tf.reduce_mean(support_logits, [1, 2],keep_dims=True,name='gap')
+        support_logits = tf.image.resize_bilinear(support_logits, query_logits.shape[1:3])
 
-        prob = tf.nn.softmax(query_logits, name='prob')
+        logits = support_logits + query_logits
+        logits = Conv2D("smooth", logits, CLASS_NUM, 3)
 
-        support_cost = softmax_cross_entropy_with_ignore_label(support_logits, first_label, class_num=CLASS_NUM)
-        support_cost = tf.reduce_mean(support_cost, name='support_cross_entropy_loss')
+        prob = tf.nn.softmax(logits, name='prob')
 
-        query_cost = softmax_cross_entropy_with_ignore_label(query_logits, second_label, class_num=CLASS_NUM)
-        query_cost = tf.reduce_mean(query_cost, name='query_cross_entropy_loss')
+        cost = softmax_cross_entropy_with_ignore_label(logits, second_label, class_num=CLASS_NUM)
+        cost = tf.reduce_mean(cost, name='cross_entropy_loss')
+        costs.append(cost)
 
-        costs.append(support_cost)
-        costs.append(query_cost)
 
         if get_current_tower_context().is_training:
             wd_w = tf.train.exponential_decay(2e-4, get_global_step_var(),
@@ -159,7 +161,7 @@ def get_config():
         GPUUtilizationTracker(),
         EstimatedTimeLeft(),
         PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
-        ProgressBar(["support_cross_entropy_loss","query_cross_entropy_loss", "cost", "wd_cost"])  # uncomment it to debug for every step
+        ProgressBar(["cross_entropy_loss", "cost", "wd_cost"])  # uncomment it to debug for every step
     ]
 
     input = QueueInput(dataset_train)
