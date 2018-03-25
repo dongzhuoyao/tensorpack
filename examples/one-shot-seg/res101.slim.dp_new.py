@@ -6,7 +6,6 @@ import argparse
 import os,cv2
 import numpy as np
 
-import tensorflow as tf
 from tqdm import tqdm
 from tensorpack import *
 from tensorpack.tfutils import argscope, get_model_loader
@@ -15,20 +14,25 @@ from tensorpack.tfutils.summary import *
 from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.utils.stats import MIoUStatistics
 import OneShotDataset
+from deeplabv2_dilation6_new import deeplabv2
+import tensorflow as tf
+slim = tf.contrib.slim
+
 
 max_epoch = 6
 weight_decay = 5e-4
-batch_size = 1
-LR = 1e-3
+batch_size = 12
+LR = 1e-4
 CLASS_NUM = 2
 evaluate_every_n_epoch = 1
 support_image_size =(321, 321)
 query_image_size = (321, 321)
+n_times_per_image_in_a_epoch = 10000
 
-def get_data(name, batch=1):
+def get_data(name,batch_size=1):
     isTrain = True if 'train' in name else False
     dataset = OneShotDataset.OneShotDataset(name)
-    dataset = BatchData(dataset, 1)
+    dataset = BatchData(dataset, batch_size)
     return dataset
 
 
@@ -62,34 +66,6 @@ def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
     return loss
 
 
-def network(img):
-    logits = (LinearWrap(img)
-              .apply(convnormrelu, 'conv1_1', 64)
-              .apply(convnormrelu, 'conv1_2', 64)
-              .MaxPooling('pool1', 2)
-              # 112
-              .apply(convnormrelu, 'conv2_1', 128)
-              .apply(convnormrelu, 'conv2_2', 128)
-              .MaxPooling('pool2', 2)
-              # 56
-              .apply(convnormrelu, 'conv3_1', 256)
-              .apply(convnormrelu, 'conv3_2', 256)
-              .apply(convnormrelu, 'conv3_3', 256)
-              .MaxPooling('pool3', 2)
-              # 28
-              .apply(convnormrelu, 'conv4_1', 512)
-              .apply(convnormrelu, 'conv4_2', 512)
-              .apply(convnormrelu, 'conv4_3', 512)
-              .MaxPooling('pool4', 2)
-              # 14
-              .apply(convnormrelu, 'conv5_1', 512)
-              .apply(convnormrelu, 'conv5_2', 512)
-              .apply(convnormrelu, 'conv5_3', 512)())
-
-    # TODO smoothen
-    #logits = Conv2D("smooth", logits, CLASS_NUM, 3)
-    #logits = tf.image.resize_bilinear(logits, img.shape[1:3])
-    return logits
 
 class Model(ModelDesc):
     def inputs(self):
@@ -102,25 +78,25 @@ class Model(ModelDesc):
 
 
     def build_graph(self, second_image, second_label):
+        ctx = get_current_tower_context()
+        logger.info("current ctx.is_training: {}".format(ctx.is_training))
 
-        with argscope(Conv2D, kernel_size=3,
-                      kernel_initializer=tf.variance_scaling_initializer(scale=2.)), \
-             argscope([Conv2D, MaxPooling, BatchNorm], data_format="NHWC"):
-
-                 with tf.variable_scope("query"):
-                     query_logits = network(second_image)
-
+        #with tf.variable_scope("support"):
+        #    support_logits = deeplabv2(first_image_masked, CLASS_NUM, is_training=ctx.is_training)
+        with tf.variable_scope("query"):
+            query_logits = deeplabv2(second_image, CLASS_NUM, is_training=ctx.is_training)
 
         costs = []
         logits = query_logits
-        logits = Conv2D("smooth", logits, CLASS_NUM, 3)
+
+        logits = slim.conv2d(logits, CLASS_NUM, [3, 3], stride=1, rate=6,
+                          activation_fn=None, normalizer_fn=None)
+
         logits = tf.image.resize_bilinear(logits, second_image.shape[1:3],name="upsample")
 
         prob = tf.nn.softmax(logits, name='prob')
 
 
-
-        print("dongzhuoyao....")
 
         if get_current_tower_context().is_training:
             cost = softmax_cross_entropy_with_ignore_label(logits, second_label, class_num=CLASS_NUM)
@@ -158,7 +134,7 @@ def get_config():
         ModelSaver(),
         GPUUtilizationTracker(),
         EstimatedTimeLeft(),
-        #PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
+        PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
         ProgressBar(["cross_entropy_loss", "cost", "wd_cost"]) , # uncomment it to debug for every step
         #RunOp(lambda: tf.add_check_numerics_ops(), run_before=False, run_as_trigger=True, run_step=True)
 
@@ -170,7 +146,7 @@ def get_config():
         model=Model(),
         data=input,
         callbacks=callbacks,
-        steps_per_epoch=  1000 // total_batch,
+        steps_per_epoch=  n_times_per_image_in_a_epoch // total_batch,
         max_epoch=max_epoch,
     )
 
@@ -230,10 +206,10 @@ def view(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default='2',help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default='4',help='comma separated list of GPU(s) to use.')
     parser.add_argument('--data', help='ILSVRC dataset dir')
     parser.add_argument('--norm', choices=['none', 'bn'], default='none')
-    parser.add_argument('--load',default="vgg16.npz", help='load model')
+    parser.add_argument('--load',default="slim_resnet_v2_101.ckpt", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     args = parser.parse_args()
 

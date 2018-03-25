@@ -19,7 +19,7 @@ import OneShotDataset
 max_epoch = 6
 weight_decay = 5e-4
 batch_size = 1
-LR = 1e-3
+LR = 1e1
 CLASS_NUM = 2
 evaluate_every_n_epoch = 1
 support_image_size =(321, 321)
@@ -63,32 +63,8 @@ def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
 
 
 def network(img):
-    logits = (LinearWrap(img)
-              .apply(convnormrelu, 'conv1_1', 64)
-              .apply(convnormrelu, 'conv1_2', 64)
-              .MaxPooling('pool1', 2)
-              # 112
-              .apply(convnormrelu, 'conv2_1', 128)
-              .apply(convnormrelu, 'conv2_2', 128)
-              .MaxPooling('pool2', 2)
-              # 56
-              .apply(convnormrelu, 'conv3_1', 256)
-              .apply(convnormrelu, 'conv3_2', 256)
-              .apply(convnormrelu, 'conv3_3', 256)
-              .MaxPooling('pool3', 2)
-              # 28
-              .apply(convnormrelu, 'conv4_1', 512)
-              .apply(convnormrelu, 'conv4_2', 512)
-              .apply(convnormrelu, 'conv4_3', 512)
-              .MaxPooling('pool4', 2)
-              # 14
-              .apply(convnormrelu, 'conv5_1', 512)
-              .apply(convnormrelu, 'conv5_2', 512)
-              .apply(convnormrelu, 'conv5_3', 512)())
-
-    # TODO smoothen
-    #logits = Conv2D("smooth", logits, CLASS_NUM, 3)
-    #logits = tf.image.resize_bilinear(logits, img.shape[1:3])
+    from slim_vgg import vgg_16
+    logits = vgg_16(img)
     return logits
 
 class Model(ModelDesc):

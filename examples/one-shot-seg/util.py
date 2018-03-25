@@ -8,9 +8,8 @@ from skimage.morphology import disk
 from skimage.filters import rank
 import pickle
 import copy
-import PIL.Image as Image
 import time
-import md5
+import cv2
 
 debug_mode = False
 def cprint(string, style = None):
@@ -34,7 +33,7 @@ class bcolors:
 
 def read_img(img_path):
     cprint('Reading Image ' + img_path, bcolors.OKGREEN)
-    uint_image = np.array(Image.open(img_path))
+    uint_image = cv2.imread(img_path, cv2.IMREAD_COLOR) #RGB! not BGR
     if len(uint_image.shape) == 2:
         tmp_image = np.zeros(uint_image.shape + (3,), dtype=np.uint8)
         tmp_image[:,:,0] = tmp_image[:,:,1] = tmp_image[:,:,2] = uint_image
@@ -43,7 +42,7 @@ def read_img(img_path):
         
 def read_mask(mask_path):
     #read mask
-    m_uint = np.array(Image.open(mask_path))
+    m_uint = cv2.imread(mask_path,cv2.IMREAD_GRAYSCALE)
     fg = np.unique(m_uint)
     if not (len(m_uint.shape) == 2 and ((len(fg) == 2 and fg[0] == 0 and fg[1] == 255) or (len(fg) == 1 and (fg[0] == 0 or fg[0] == 255)))):
         print mask_path, fg, m_uint.shape
@@ -206,36 +205,6 @@ def load_netflow_db(annotations_file, split, shuffle = False):
 
     return dict(frame_indices=frame_indices, data_dir=data_dir, length=length)
 
-def read_netflow_instance(netflow_db, instance_id):
-    data_dir = netflow_db['data_dir']
-    instance_id = netflow_db['frame_indices'][instance_id]
-    instance_id = instance_id + 1
-    img1 = np.array(Image.open(osp.join(data_dir, '%05d_img1.ppm' % instance_id)).astype(np.float32)) / 255.0
-    img2 = np.array(Image.open(osp.join(data_dir, '%05d_img2.ppm' % instance_id)).astype(np.float32)) / 255.0
-    flow = read_flo_file( osp.join(data_dir, '%05d_flow.flo' % instance_id))
-    return img1, img2, flow
-
-
-#def compute_flow(T1, T2, object_size, img_size, flow = None):
-        #newx = np.arange(img_size[1])
-        #newy = np.arange(img_size[0])
-        #mesh_grid = np.stack(np.meshgrid(newx, newy), axis = 0)
-        #locs1 = np.array(mesh_grid, dtype='float')
-        #locs2 = np.array(locs1.copy(), dtype='float')
-        #if flow is not None:
-             #locs2 += flow.transpose((2,0,1))
-        #x,y = T1.transform_points(locs1[0].ravel(), locs1[1].ravel(), locs1[0].shape)
-        #locs1 = np.concatenate((x,y)).reshape((2,) + img_size)
-        #x,y = T2.transform_points(locs2[0].ravel(), locs2[1].ravel(), locs2[0].shape)
-        #locs2 = np.concatenate((x,y)).reshape((2,) + img_size)
-        #flow_trans = locs2 - locs1
-        
-        #final_flow = np.zeros((2,) + img_size)
-        #T1_cp = copy.deepcopy(T1)
-        #T1_cp.color_adjustment_param = None
-        #final_flow[0] = T1_cp.transform_img(flow_trans[0], object_size, flow_trans[0].shape, cval=0)
-        #final_flow[1] = T1_cp.transform_img(flow_trans[1], object_size, flow_trans[1].shape, cval=0)
-        #return final_flow.transpose((1,2,0))
 
 
 def compute_flow(T1, T2, object_size, img_size, flow = None):
@@ -471,7 +440,7 @@ class VideoPlayer:
                 self.mappings.append(mapping)
                 self.gt_mappings.append(gt_mapping)
     
-    def get_frame(self, frame_id, compute_iflow = False):
+    def get_frame(self, frame_id):
         if self.cache.has_key(frame_id):
             img, mask, obj_size = self.cache[frame_id]
             assert(np.all(img >= 0) and np.all(img <= 1.0))
@@ -494,22 +463,11 @@ class VideoPlayer:
                     mask[mask == -1] = 0
             self.cache[frame_id] = (img, mask, obj_size)
         output = dict(image=img, mask=mask)
-        
-        if compute_iflow:
-            try:
-                iflow = self.video_item.read_iflow(img_id, self.step, self.flo_method)
-            except Exception as e:
-                cprint('Failed to load \'' + self.flo_method + '\' iflow for video ' + self.name + '. Return zero iflow..', bcolors.FAIL)
-                iflow = np.zeros(img.shape[:2] + (2,))
-            if self.mappings is None:
-                output['iflow'] = iflow
-            else:
-                output['iflow'] = compute_flow(self.mappings[frame_id], self.gt_mappings[frame_id - 1], obj_size, img.shape[:2], flow = iflow)
+
         
         if output.has_key('mask') and output['mask'] is not None:
             assert output['mask'].shape[0] == output['image'].shape[0] and output['mask'].shape[1] == output['image'].shape[1]
-        if output.has_key('iflow'):
-            assert output['iflow'].shape[0] == output['image'].shape[0] and output['iflow'].shape[1] == output['image'].shape[1]
+
         return output
 
 class ImagePlayer:
@@ -647,7 +605,7 @@ class PASCAL:
         anns = []
         for item in names:
             mclass_path = osp.join(self.db_path, 'SegmentationClassAug', item + '.png')
-            mclass_uint = np.array(Image.open(mclass_path))
+            mclass_uint = cv2.imread(mclass_path,cv2.IMREAD_GRAYSCALE)
             class_ids = self.get_unique_ids(mclass_uint)
 
             if read_mode == PASCAL_READ_MODES.SEMANTIC:
@@ -796,7 +754,7 @@ class DBPascalItem(DBImageItem):
         else:
             self.ids_map = ids_map
     def read_mask(self, orig_mask=False):
-        mobj_uint = np.array(Image.open(self.mask_path))
+        mobj_uint =cv2.imread(self.mask_path,cv2.IMREAD_GRAYSCALE)
         
         if orig_mask:
             return mobj_uint.astype(np.float32)

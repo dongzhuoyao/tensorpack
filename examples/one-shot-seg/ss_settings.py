@@ -41,16 +41,6 @@ def get_cats(split, fold, num_folds=4):
 
 empty_profile = Map(
                 ###############################################
-                # For transforming video stream, not used
-                video_base_trans=None,
-                video_frame_trans=None, 
-                video_noise_trans =None,
-                ###############################################
-                # For transforming input images, not used
-                image_base_trans=None,
-                image_frame_trans=None,
-                image_noise_trans=None,
-                ###############################################
                 # Do not change this part
                 first_label_params=[('first_label', 1., 0.)],
                 second_label_params=[('second_label', 1., 0.)],
@@ -61,7 +51,6 @@ empty_profile = Map(
                 shape_divisible=1,
                 output_type=None,
                 read_mode=None, # Either "Shuffle" (for training) or "Deterministic" (for testing, random seed fixed)
-                bgr=True, # should be True, because the image is read by "Image.open" not by "cv2.imread"
                 scale_256=True,
                 mean = (104.0/255, 116.0/255, 122.0/255),
                 first_label_scale= 1,
@@ -77,7 +66,7 @@ empty_profile = Map(
                 coco_path = None,
                 pascal_path = PASCAL_PATH,
                 sbd_path = SBD_PATH,
-                worker_num = 1)
+                worker_num = 4)
 
 
 ########################### Settings for reproducing experiments ###########################

@@ -163,6 +163,7 @@ class SaverRestore(SessionInit):
         return var_dict
 
 
+
 class SaverRestoreRelaxed(SaverRestore):
     """ Same as :class:`SaverRestore`, but has more relaxed constraints.
 

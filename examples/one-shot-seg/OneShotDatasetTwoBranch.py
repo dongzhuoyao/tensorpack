@@ -11,10 +11,10 @@ from tensorpack.dataflow.base import RNGDataFlow
 
 from test import LoaderOfPairs
 
-__all__ = ['OneShotDataset']
+__all__ = ['OneShotDatasetTwoBranch']
 
 
-class OneShotDataset(RNGDataFlow):
+class OneShotDatasetTwoBranch(RNGDataFlow):
     def __init__(self,name):
         settings = __import__('ss_settings')
         self.name = name
@@ -32,9 +32,11 @@ class OneShotDataset(RNGDataFlow):
     def get_data(self): # only for one-shot learning
         for i in range(self.data_size):
             self.loader.get_items_no_return()
-                #yield [self.loader.out['first_img'][0],self.loader.out['first_label'][0],self.loader.out['second_img'][0],self.loader.out['second_label'][0]]
-            yield [self.loader.out['second_img'][0],
-                   self.loader.out['second_label'][0]]
+            first_image = self.loader.out['first_img'][0]
+            first_label = self.loader.out['first_label'][0]
+            first_image_masked = first_image*first_label[:,:,np.newaxis]
+            yield [first_image_masked, self.loader.out['second_img'][0],self.loader.out['second_label'][0]]
+
 
 
 if __name__ == '__main__':

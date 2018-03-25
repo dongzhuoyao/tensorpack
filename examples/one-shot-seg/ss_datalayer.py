@@ -127,8 +127,7 @@ class PairLoaderProcess(Process):
             self.shape_divisible = params['shape_divisible']
         else:
             self.shape_divisible = 1
-        
-        self.bgr = params['bgr']
+
         self.scale_256 = params['scale_256']
         self.first_label_mean = params['first_label_mean']
         self.first_label_scale = 1.0 if not params.has_key('first_label_scale') else params['first_label_scale']
@@ -137,9 +136,7 @@ class PairLoaderProcess(Process):
         self.second_label_params = params['second_label_params']
         self.deploy_mode = params['deploy_mode'] if params.has_key('deploy_mode') else False
         self.has_cont = params['has_cont'] if params.has_key('has_cont') else False
-        if self.bgr:
-            #Always store mean in RGB format
-            self.mean = self.mean[:,:, ::-1]
+
             
     def run(self):
         try:
@@ -177,7 +174,7 @@ class PairLoaderProcess(Process):
         if frame_dict['mask'] is None: 
             return None
         
-        image = frame_dict['image'] - self.mean
+        image = frame_dict['image'] - self.mean # BGR - BGR
         label = frame_dict['mask']
          
         if shape is None:
@@ -188,9 +185,6 @@ class PairLoaderProcess(Process):
         if tuple(shape) != image.shape[:-1]:
             image = resize(image, shape)
             label = resize(label, shape, order = 0, preserve_range=True)
-            
-        if self.bgr:
-            image = image[:,:, ::-1] #???
             
         if self.scale_256:
             image *= 255

@@ -19,7 +19,7 @@ import OneShotDataset
 max_epoch = 6
 weight_decay = 5e-4
 batch_size = 1
-LR = 1e-3
+LR = 1e-4
 CLASS_NUM = 2
 evaluate_every_n_epoch = 1
 support_image_size =(321, 321)
@@ -47,7 +47,7 @@ def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
     """
     with tf.name_scope('softmax_cross_entropy_with_ignore_label'):
         tf.assert_equal(logits.get_shape()[1:3], label.get_shape()[1:])  # shape assert
-
+        #TODO need assert here
         raw_prediction = tf.reshape(logits, [-1, class_num])
         label = tf.reshape(label,[-1,])
         #label_onehot = tf.one_hot(label, depth=class_num)
@@ -93,46 +93,49 @@ def network(img):
 
 class Model(ModelDesc):
     def inputs(self):
-        return [#tf.placeholder(tf.float32, [None, support_image_size[0], support_image_size[1], 3], 'first_image'),
-                #tf.placeholder(tf.float32, [None, support_image_size[0], support_image_size[1]], 'first_label'),
+        return [tf.placeholder(tf.float32, [None, support_image_size[0], support_image_size[1], 3], 'first_image'),
+                tf.placeholder(tf.float32, [None, support_image_size[0], support_image_size[1]], 'first_label'),
                 tf.placeholder(tf.float32, [None, query_image_size[0], query_image_size[1], 3], 'second_image'),
                 tf.placeholder(tf.int32, [None, query_image_size[0], query_image_size[1]], 'second_label')
                 ]
 
 
 
-    def build_graph(self, second_image, second_label):
-
+    def build_graph(self, first_image, first_label, second_image, second_label):
+        first_label = tf.expand_dims(first_label, 3, name='first_label_ee')
+        first_image_masked = first_image*first_label
         with argscope(Conv2D, kernel_size=3,
                       kernel_initializer=tf.variance_scaling_initializer(scale=2.)), \
              argscope([Conv2D, MaxPooling, BatchNorm], data_format="NHWC"):
-
+                 with tf.variable_scope("support"):
+                     support_logits = network(first_image_masked)
                  with tf.variable_scope("query"):
                      query_logits = network(second_image)
 
 
         costs = []
-        logits = query_logits
+        support_logits  = tf.reduce_mean(support_logits, [1, 2],keep_dims=True,name='gap')
+        support_logits = tf.image.resize_bilinear(support_logits, query_logits.shape[1:3])
+
+        logits = support_logits + query_logits
+        #logits = query_logits
         logits = Conv2D("smooth", logits, CLASS_NUM, 3)
-        logits = tf.image.resize_bilinear(logits, second_image.shape[1:3],name="upsample")
+        logits = tf.image.resize_bilinear(logits, second_image.shape[1:3])
 
         prob = tf.nn.softmax(logits, name='prob')
 
+        cost = softmax_cross_entropy_with_ignore_label(logits, second_label, class_num=CLASS_NUM)
+        cost = tf.reduce_mean(cost, name='cross_entropy_loss')
+        costs.append(cost)
 
-
-        print("dongzhuoyao....")
 
         if get_current_tower_context().is_training:
-            cost = softmax_cross_entropy_with_ignore_label(logits, second_label, class_num=CLASS_NUM)
-            cost = tf.reduce_mean(cost, name='cross_entropy_loss')
-            costs.append(cost)
-
             wd_w = tf.train.exponential_decay(2e-4, get_global_step_var(),
                                               80000, 0.7, True)
             wd_cost = tf.multiply(wd_w, regularize_cost('.*/W', tf.nn.l2_loss), name='wd_cost')
             costs.append(wd_cost)
 
-            #add_param_summary(('.*', ['histogram', 'rms']))
+            add_param_summary(('.*', ['histogram', 'rms']))
             total_cost = tf.add_n(costs, name='cost')
             return total_cost
 
@@ -151,6 +154,7 @@ def get_config():
     nr_tower = max(get_nr_gpu(), 1)
     total_batch = batch_size * nr_tower
 
+
     logger.info("Running on {} towers. Batch size per tower: {}".format(nr_tower, batch_size))
     dataset_train = get_data('fold0_train', batch_size)
 
@@ -158,10 +162,8 @@ def get_config():
         ModelSaver(),
         GPUUtilizationTracker(),
         EstimatedTimeLeft(),
-        #PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
-        ProgressBar(["cross_entropy_loss", "cost", "wd_cost"]) , # uncomment it to debug for every step
-        #RunOp(lambda: tf.add_check_numerics_ops(), run_before=False, run_as_trigger=True, run_step=True)
-
+        PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
+        ProgressBar(["cross_entropy_loss", "cost", "wd_cost"])  # uncomment it to debug for every step
     ]
 
     input = QueueInput(dataset_train)
@@ -170,7 +172,7 @@ def get_config():
         model=Model(),
         data=input,
         callbacks=callbacks,
-        steps_per_epoch=  1000 // total_batch,
+        steps_per_epoch=  10000 // total_batch,
         max_epoch=max_epoch,
     )
 
@@ -181,7 +183,7 @@ class CalculateMIoU(Callback):
 
     def _setup_graph(self):
         self.pred = self.trainer.get_predictor(
-            ['second_image'], ['prob'])
+            ['first_image','first_label','second_image'], ['prob'])
 
     def _before_train(self):
         pass
@@ -193,7 +195,7 @@ class CalculateMIoU(Callback):
 
         self.stat = MIoUStatistics(self.nb_class)
 
-        for second_image, second_label in tqdm(self.val_ds.get_data()):
+        for first_image, first_label,second_image, second_label in tqdm(self.val_ds.get_data()):
             #first_image = np.squeeze(first_image)
             #first_label = np.squeeze(first_label)
             second_image = np.squeeze(second_image)
@@ -202,7 +204,7 @@ class CalculateMIoU(Callback):
             def mypredictor(input_img):
                 # input image: 1*H*W*3
                 # output : H*W*C
-                output = self.pred(input_img)
+                output = self.pred(first_image,first_label,input_img)
                 return output[0][0]
             prediction = predict_scaler(second_image, mypredictor, scales=[0.5,0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=query_image_size,
                            is_densecrf=False)
@@ -221,8 +223,8 @@ def view(args):
         ##"""
         cv2.imshow("first_img",(inputs[0][0]+np.array([104, 116, 122], dtype='float32')).astype(np.uint8))
         cv2.imshow("first_label",inputs[1][0])
-        #cv2.imshow("second_img", (inputs[2][0]+np.array([104, 116, 122], dtype='float32')).astype(np.uint8))
-        #cv2.imshow("second_label", inputs[3][0])
+        cv2.imshow("second_img", (inputs[2][0]+np.array([104, 116, 122], dtype='float32')).astype(np.uint8))
+        cv2.imshow("second_label", inputs[3][0])
         cv2.waitKey(10000)
         ##"""
         print "ssss"
@@ -230,7 +232,7 @@ def view(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default='2',help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default='3',help='comma separated list of GPU(s) to use.')
     parser.add_argument('--data', help='ILSVRC dataset dir')
     parser.add_argument('--norm', choices=['none', 'bn'], default='none')
     parser.add_argument('--load',default="vgg16.npz", help='load model')
