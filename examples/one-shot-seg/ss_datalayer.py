@@ -15,10 +15,57 @@ class DBInterface():
     def __init__(self, params):
         self.params = params
         self.load_items()
-        
+        self.data_size = len(self.db_items)
         # initialize the random generator
         self.init_randget(params['read_mode'])
         self.cycle = 0
+
+    def load_items(self):
+        def _remove_small_objects(items):
+            filtered_item = []
+            for item in items:
+                mask = item.read_mask()
+                if util.change_coordinates(mask, 32.0, 0.0).sum() > 2:
+                    filtered_item.append(item)
+            return filtered_item
+
+        self.db_items = []
+        if self.params.has_key('image_sets'):
+            for image_set in self.params['image_sets']:
+                assert image_set.startswith('pascal') or image_set.startswith('sbd'), "only support pascal or sbd"
+                if image_set.startswith('pascal'):
+                    pascal_db = util.PASCAL(self.params['pascal_path'], image_set.replace("pascal_",""))  # train or test
+                elif image_set.startswith('sbd'):
+                    pascal_db = util.PASCAL(self.params['sbd_path'], image_set.replace("sbd_",""))  # train or test
+
+                # reads pair of images from one semantic class and and with binary labels
+                items = pascal_db.getItems(self.params['pascal_cats'], self.params['areaRng'],
+                                           read_mode=util.PASCAL_READ_MODES.SEMANTIC)
+                items = _remove_small_objects(items)
+                self.db_items.extend(items)
+
+            cprint('Total of ' + str(len(self.db_items)) + ' db items loaded!', bcolors.OKBLUE)
+
+            # inverse index
+
+            items = self.db_items
+
+            # In image_pair mode pair of images are sampled from the same semantic class
+            clusters = util.PASCAL.cluster_items(self.db_items)
+
+            # db_items will be a list of tuples (set,j) in which set is the set that img_item belongs to and j is the index of img_item in that set
+            self.db_items = []  # empty the list !!
+            for item in items:
+                set_id = item.obj_ids[0]
+                imgset = clusters[set_id]
+                assert (imgset.length > self.params[
+                    'k_shot']), 'class ' + imgset.name + ' has only ' + imgset.length + ' examples.'
+                in_set_index = imgset.image_items.index(item)
+                self.db_items.append((imgset, in_set_index)) #in_set_index is used for "second_image"
+            cprint('Total of ' + str(len(clusters)) + ' classes!', bcolors.OKBLUE)
+
+        self.orig_db_items = copy.copy(self.db_items)
+        self.seq_index = len(self.db_items)
         
     def init_randget(self, read_mode):
         self.rand_gen = random.Random()
@@ -46,61 +93,23 @@ class DBInterface():
             self.update_seq_index()
 
             imgset, second_index = self.db_items[self.seq_index] # query image index
-            player = util.VideoPlayer(imgset)
-            set_indices = range(second_index) + range(second_index+1, player.length) # exclude second_index
+            set_indices = range(second_index) + range(second_index+1, len(imgset.image_items)) # exclude second_index
             assert(len(set_indices) >= self.params['k_shot'])
             self.rand_gen.shuffle(set_indices)
             first_index = set_indices[:self.params['k_shot']] # support set image indexes(may be multi-shot~)
-            return player, first_index, second_index
+
+            metadata = {'name':imgset.name,
+                        'class_id':imgset.image_items[0].obj_ids[0]}
+
+            return [imgset.image_items[v].img_path for v in first_index],\
+                   [imgset.image_items[v].mask_path for v in first_index],\
+                   imgset.image_items[second_index].img_path,\
+                    imgset.image_items[second_index].mask_path, \
+                    metadata
 
 
-    
-    def load_items(self):
-        def _remove_small_objects(items):
-            filtered_item = []
-            for item in items:
-                mask = item.read_mask()
-                if util.change_coordinates(mask, 32.0, 0.0).sum() > 2:
-                    filtered_item.append(item)
-            return filtered_item
 
-        self.db_items = []
-        if self.params.has_key('image_sets'):
-            for image_set in self.params['image_sets']:
-                assert image_set.startswith('pascal') or image_set.startswith('sbd'),"only support pascal or sbd"
-                if image_set.startswith('pascal'):
-                    pascal_db = util.PASCAL(self.params['pascal_path'], image_set[7:])  # train or test
-                elif image_set.startswith('sbd'):
-                    pascal_db = util.PASCAL(self.params['sbd_path'], image_set[4:])   # train or test
 
-                #reads pair of images from one semantic class and and with binary labels
-
-                items = pascal_db.getItems(self.params['pascal_cats'], self.params['areaRng'], read_mode = util.PASCAL_READ_MODES.SEMANTIC)
-                items = _remove_small_objects(items)
-                self.db_items.extend(items)
-
-            cprint('Total of ' + str(len(self.db_items)) + ' db items loaded!', bcolors.OKBLUE)
-            
-            #inverse index
-
-            items = self.db_items
-
-            #In image_pair mode pair of images are sampled from the same semantic class
-            clusters = util.PASCAL.cluster_items(self.db_items)
-
-            #db_items will be a list of tuples (set,j) in which set is the set that img_item belongs to and j is the index of img_item in that set
-            self.db_items = [] # empty the list !!
-            for item in items:
-                set_id = item.obj_ids[0]
-                imgset = clusters[set_id]
-                assert(imgset.length > self.params['k_shot']), 'class ' + imgset.name + ' has only ' + imgset.length + ' examples.'
-                in_set_index = imgset.image_items.index(item)
-                self.db_items.append((imgset, in_set_index))
-            cprint('Total of ' + str(len(clusters)) + ' classes!', bcolors.OKBLUE)
-
-        
-        self.orig_db_items = copy.copy(self.db_items)
-        self.seq_index = len(self.db_items)
             
 
 class PairLoaderProcess():
@@ -114,9 +123,8 @@ class PairLoaderProcess():
             
 
     def load_next_frame(self):
-        player, first_index, second_index = self.db_interface.next_pair()
-        #item = self.read_imgs(player, first_index, second_index)
-        return first_index, second_index
+        return self.db_interface.next_pair()
+
 
 
 

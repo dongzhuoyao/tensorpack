@@ -6,7 +6,6 @@ import argparse
 import os,cv2
 import numpy as np
 
-import tensorflow as tf
 from tqdm import tqdm
 from tensorpack import *
 from tensorpack.tfutils import argscope, get_model_loader
@@ -14,8 +13,12 @@ from tensorpack.utils.segmentation.segmentation import predict_slider, visualize
 from tensorpack.tfutils.summary import *
 from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.utils.stats import MIoUStatistics
+from tensorpack.utils import logger
 import OneShotDatasetTwoBranch
-from deeplabv2_dilation6 import deeplabv2
+from deeplabv2_dilation6_new import deeplabv2
+import tensorflow as tf
+slim = tf.contrib.slim
+
 max_epoch = 6
 weight_decay = 5e-4
 batch_size = 12
@@ -27,9 +30,40 @@ query_image_size = (321, 321)
 
 def get_data(name,batch_size=1):
     isTrain = True if 'train' in name else False
-    dataset = OneShotDatasetTwoBranch.OneShotDatasetTwoBranch(name)
-    dataset = BatchData(dataset, batch_size)
-    return dataset
+    ds = OneShotDatasetTwoBranch.OneShotDatasetTwoBranch(name)
+
+    def data_prepare(ds):
+        first_image = cv2.imread(ds[0][0], cv2.IMREAD_COLOR)
+        first_label = cv2.imread(ds[1][0], cv2.IMREAD_GRAYSCALE)
+        second_image = cv2.imread(ds[2], cv2.IMREAD_COLOR)
+        second_label = cv2.imread(ds[3], cv2.IMREAD_GRAYSCALE)
+        metadata = ds[4]
+        class_id = metadata['class_id']
+        first_label = np.equal(first_label,class_id).astype(np.uint8)
+        second_label = np.equal(second_label,class_id).astype(np.uint8)
+
+
+        first_image = cv2.resize(first_image,support_image_size)
+        first_label = cv2.resize(first_label, support_image_size,interpolation=cv2.INTER_NEAREST)
+        second_image = cv2.resize(second_image, support_image_size)
+        second_label = cv2.resize(second_label, support_image_size,interpolation=cv2.INTER_NEAREST)
+
+        #np.array([104, 116, 122], dtype='float32')
+
+        first_image_masked = first_image*first_label[:,:,np.newaxis]
+
+        return first_image_masked,second_image,second_label
+
+
+    if isTrain:
+        ds = MultiThreadMapData(ds,nr_thread=16,map_func=data_prepare,buffer_size=200,strict=True)
+        #ds = FakeData([[input_shape[0], input_shape[1], 3], [output_shape[0], output_shape[1],nr_skeleton]], 5000, random=False, dtype='uint8')
+        ds = BatchData(ds, batch_size)
+        ds = PrefetchDataZMQ(ds, 1)
+    else:
+        ds = MapData(ds, data_prepare)
+    return ds
+
 
 
 def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
@@ -66,16 +100,16 @@ class Model(ModelDesc):
 
 
     def build_graph(self, first_image_masked, second_image, second_label):
+        first_image_masked = first_image_masked - tf.constant([104, 116, 122], dtype='float32')
+        second_image = second_image - tf.constant([104, 116, 122], dtype='float32')
+
         ctx = get_current_tower_context()
         logger.info("current ctx.is_training: {}".format(ctx.is_training))
 
-        with argscope(Conv2D, kernel_size=3,
-                      kernel_initializer=tf.variance_scaling_initializer(scale=2.)), \
-             argscope([Conv2D, MaxPooling, BatchNorm], data_format="NHWC"):
-                 with tf.variable_scope("support"):
-                     support_logits = deeplabv2(first_image_masked,CLASS_NUM,is_training=ctx.is_training)
-                 with tf.variable_scope("query"):
-                    query_logits = deeplabv2(second_image,CLASS_NUM,is_training=ctx.is_training)
+        with tf.variable_scope("support"):
+             support_logits = deeplabv2(first_image_masked,CLASS_NUM,is_training=ctx.is_training)
+        with tf.variable_scope("query"):
+            query_logits = deeplabv2(second_image,CLASS_NUM,is_training=ctx.is_training)
 
 
         costs = []
@@ -84,7 +118,8 @@ class Model(ModelDesc):
 
         logits = support_logits + query_logits
 
-        logits = Conv2D("smooth", logits, CLASS_NUM, 3)
+        logits = slim.conv2d(logits, CLASS_NUM, [3, 3], stride=1, rate=6,
+                             activation_fn=None, normalizer_fn=None)
         logits = tf.image.resize_bilinear(logits, second_image.shape[1:3],name="upsample")
 
         prob = tf.nn.softmax(logits, name='prob')
@@ -116,7 +151,8 @@ class Model(ModelDesc):
 
 
 def get_config():
-    logger.auto_set_dir()
+    global args
+    logger.auto_set_dir(name=args.test_data)
     nr_tower = max(get_nr_gpu(), 1)
     total_batch = batch_size * nr_tower
 
@@ -130,14 +166,11 @@ def get_config():
         PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
         ProgressBar(["cross_entropy_loss", "cost", "wd_cost"]) , # uncomment it to debug for every step
         #RunOp(lambda: tf.add_check_numerics_ops(), run_before=False, run_as_trigger=True, run_step=True)
-
     ]
 
-    input = QueueInput(dataset_train)
-    input = StagingInput(input, nr_stage=1)
     return TrainConfig(
         model=Model(),
-        data=input,
+        dataflow=dataset_train,
         callbacks=callbacks,
         steps_per_epoch=  10000 // total_batch,
         max_epoch=max_epoch,
@@ -186,9 +219,9 @@ def view(args):
     ds.reset_state()
     for inputs in ds.get_data():
         ##"""
-        cv2.imshow("first_img_masked",(inputs[0][0]+np.array([104, 116, 122], dtype='float32')).astype(np.uint8))
-        cv2.imshow("second_img", (inputs[1][0]+np.array([104, 116, 122], dtype='float32')).astype(np.uint8))
-        cv2.imshow("second_label", inputs[2][0])
+        cv2.imshow("first_img_masked",(inputs[0][0]).astype(np.uint8))
+        cv2.imshow("second_img", (inputs[1][0]).astype(np.uint8))
+        cv2.imshow("second_label", visualize_label(inputs[2][0]))
         cv2.waitKey(10000)
         ##"""
         print "ssss"
@@ -197,10 +230,11 @@ def view(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu', default='5',help='comma separated list of GPU(s) to use.')
-    parser.add_argument('--data', help='ILSVRC dataset dir')
-    parser.add_argument('--norm', choices=['none', 'bn'], default='none')
     parser.add_argument('--load',default="slim_resnet_v2_101.ckpt", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
+    parser.add_argument('--test_data', default="fold0_1shot_test", help='test data')
+    parser.add_argument('--train_data', default="fold0_train", help='train data')
+
     args = parser.parse_args()
 
     if args.gpu:

@@ -33,8 +33,8 @@ class OneShotDatasetTwoBranch(RNGDataFlow):
 
     def get_data(self): # only for one-shot learning
         for i in range(self.data_size):
-            first_index,second_index = self.PLP.load_next_frame() #like: [227],568
-            yield [first_index, second_index]
+            first_image_list,first_label_list,second_image, second_label, metadata = self.PLP.load_next_frame()
+            yield [first_image_list,first_label_list,second_image, second_label, metadata]
 
 
 
