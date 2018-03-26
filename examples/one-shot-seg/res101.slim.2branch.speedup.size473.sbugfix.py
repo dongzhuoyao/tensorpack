@@ -218,7 +218,7 @@ class CalculateMIoU(Callback):
             second_label = np.squeeze(second_label)
 
             k_shot = len(first_image_masks)
-            prediction_fused = np.zeros((support_image_size[0], support_image_size[1], CLASS_NUM), dtype=np.float32)
+            prediction_fused = np.zeros((second_image.shape[0], second_image.shape[1], CLASS_NUM), dtype=np.float32)
             for kk in range(k_shot):
                 def mypredictor(input_img):
                     # input image: 1*H*W*3
@@ -233,9 +233,13 @@ class CalculateMIoU(Callback):
             prediction_fused = np.argmax(prediction_fused, axis=2)
             self.stat.feed(prediction_fused, second_label)
 
+
+
         logger.info("mIoU: {}".format(self.stat.mIoU))
         logger.info("mean_accuracy: {}".format(self.stat.mean_accuracy))
         logger.info("accuracy: {}".format(self.stat.accuracy))
+        logger.info("mIoU beautify: {}".format(self.stat.mIoU_beautify))
+        logger.info("matrix beatify: {}".format(self.stat.confusion_matrix_beautify))
 
 def proceed_test(args, is_save = True):
     import cv2
