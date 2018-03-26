@@ -12,3 +12,4 @@ res101.slim.2branch.speedup:fold0_1shot_test|pascal0|49.9(backup), 51.4(backup2)
 res101.slim.2branch.speedup.tailcbr:fold0_1shot_test|pascal0|43.4
 res101.slim.2branch.speedup.taildilation_dl:fold0_1shot_test|pascal0|47.0
 res101.slim.2branch.speedup.tailcbr.lr1e-5:fold0_1shot_test|pascal0|43.4
+res101.slim.2branch.speedup.tailcbr.size473:fold0_1shot_test|pascal0|43.4
