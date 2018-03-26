@@ -308,19 +308,16 @@ if __name__ == '__main__':
 
     if args.view:
         view(args)
-
-
-    if args.test:
+    elif args.test:
         assert args.test_load is not None
         proceed_test(args)
+    else:
+        config = get_config()
+        if args.load:
+            from sess_utils import my_get_model_loader
+            config.session_init = my_get_model_loader(args.load)
 
 
-    config = get_config()
-    if args.load:
-        from sess_utils import my_get_model_loader
-        config.session_init = my_get_model_loader(args.load)
-
-
-    nr_tower = max(get_nr_gpu(), 1)
-    trainer = SyncMultiGPUTrainerReplicated(nr_tower)
-    launch_train_with_config(config, trainer)
+        nr_tower = max(get_nr_gpu(), 1)
+        trainer = SyncMultiGPUTrainerReplicated(nr_tower)
+        launch_train_with_config(config, trainer)
