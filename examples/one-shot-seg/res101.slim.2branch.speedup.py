@@ -251,7 +251,7 @@ def proceed_test(args, is_save = True):
 
     pred_config = PredictConfig(
         model=Model(),
-        session_init=my_get_model_loader(args.test_load),
+        session_init=get_model_loader(args.test_load),
         input_names=['first_image_masked','second_image'],
         output_names=['prob'])
     predictor = OfflinePredictor(pred_config)
