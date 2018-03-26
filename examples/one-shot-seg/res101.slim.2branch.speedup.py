@@ -33,26 +33,45 @@ def get_data(name,batch_size=1):
     ds = OneShotDatasetTwoBranch.OneShotDatasetTwoBranch(name)
 
     def data_prepare(ds):
-        first_image = cv2.imread(ds[0][0], cv2.IMREAD_COLOR)
-        first_label = cv2.imread(ds[1][0], cv2.IMREAD_GRAYSCALE)
-        second_image = cv2.imread(ds[2], cv2.IMREAD_COLOR)
-        second_label = cv2.imread(ds[3], cv2.IMREAD_GRAYSCALE)
-        metadata = ds[4]
-        class_id = metadata['class_id']
-        first_label = np.equal(first_label,class_id).astype(np.uint8)
-        second_label = np.equal(second_label,class_id).astype(np.uint8)
+        if isTrain:
+            first_image = cv2.imread(ds[0][0], cv2.IMREAD_COLOR)
+            first_label = cv2.imread(ds[1][0], cv2.IMREAD_GRAYSCALE)
+            second_image = cv2.imread(ds[2], cv2.IMREAD_COLOR)
+            second_label = cv2.imread(ds[3], cv2.IMREAD_GRAYSCALE)
+            metadata = ds[4]
+            class_id = metadata['class_id']
+            first_label = np.equal(first_label,class_id).astype(np.uint8)
+            second_label = np.equal(second_label,class_id).astype(np.uint8)
 
 
-        first_image = cv2.resize(first_image,support_image_size)
-        first_label = cv2.resize(first_label, support_image_size,interpolation=cv2.INTER_NEAREST)
-        second_image = cv2.resize(second_image, support_image_size)
-        second_label = cv2.resize(second_label, support_image_size,interpolation=cv2.INTER_NEAREST)
+            first_image = cv2.resize(first_image,support_image_size)
+            first_label = cv2.resize(first_label, support_image_size,interpolation=cv2.INTER_NEAREST)
+            second_image = cv2.resize(second_image, support_image_size)
+            second_label = cv2.resize(second_label, support_image_size,interpolation=cv2.INTER_NEAREST)
 
-        #np.array([104, 116, 122], dtype='float32')
+            first_image_masked = first_image*first_label[:,:,np.newaxis]
 
-        first_image_masked = first_image*first_label[:,:,np.newaxis]
+            return first_image_masked,second_image,second_label
+        else:
+            k_shots = len(ds[0])
+            metadata = ds[4]
+            class_id = metadata['class_id']
+            first_image_masks = []
+            for kk in range(k_shots):
+                first_image = cv2.imread(ds[0][kk], cv2.IMREAD_COLOR)
+                first_label = cv2.imread(ds[1][kk], cv2.IMREAD_GRAYSCALE)
+                first_label = np.equal(first_label, class_id).astype(np.uint8)
+                first_image = cv2.resize(first_image, support_image_size)
+                first_label = cv2.resize(first_label, support_image_size, interpolation=cv2.INTER_NEAREST)
+                first_image_masked = first_image * first_label[:, :, np.newaxis]
+                first_image_masks.append(first_image_masked)
 
-        return first_image_masked,second_image,second_label
+            second_image = cv2.imread(ds[2], cv2.IMREAD_COLOR)
+            second_label = cv2.imread(ds[3], cv2.IMREAD_GRAYSCALE)
+            second_label = np.equal(second_label, class_id).astype(np.uint8)
+            second_image = cv2.resize(second_image, support_image_size)
+            second_label = cv2.resize(second_label, support_image_size, interpolation=cv2.INTER_NEAREST)
+            return first_image_masks, second_image, second_label
 
 
     if isTrain:
@@ -157,7 +176,7 @@ def get_config():
     total_batch = batch_size * nr_tower
 
     logger.info("Running on {} towers. Batch size per tower: {}".format(nr_tower, batch_size))
-    dataset_train = get_data('fold0_train', batch_size)
+    dataset_train = get_data(args.train_data, batch_size)
 
     callbacks = [
         ModelSaver(),
@@ -172,7 +191,7 @@ def get_config():
         model=Model(),
         dataflow=dataset_train,
         callbacks=callbacks,
-        steps_per_epoch=  10000 // total_batch,
+        steps_per_epoch=  10000// total_batch,
         max_epoch=max_epoch,
     )
 
@@ -190,7 +209,7 @@ class CalculateMIoU(Callback):
 
     def _trigger(self):
         global args
-        self.val_ds = get_data('fold0_1shot_test')
+        self.val_ds = get_data(args.test_data)
         self.val_ds.reset_state()
 
         self.stat = MIoUStatistics(self.nb_class)
@@ -202,7 +221,7 @@ class CalculateMIoU(Callback):
             def mypredictor(input_img):
                 # input image: 1*H*W*3
                 # output : H*W*C
-                output = self.pred(first_image_masked,input_img)
+                output = self.pred(first_image_masked[np.newaxis,:,:,:],input_img)
                 return output[0][0]
             prediction = predict_scaler(second_image, mypredictor, scales=[0.5, 0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=query_image_size,
                            is_densecrf=False)
@@ -212,6 +231,51 @@ class CalculateMIoU(Callback):
         self.trainer.monitors.put_scalar("mIoU", self.stat.mIoU)
         self.trainer.monitors.put_scalar("mean_accuracy", self.stat.mean_accuracy)
         self.trainer.monitors.put_scalar("accuracy", self.stat.accuracy)
+
+def proceed_test(args, is_save = False):
+    import cv2
+    ds = get_data(args.test_data)
+
+
+    pred_config = PredictConfig(
+        model=Model(),
+        session_init=get_model_loader(args.test_load),
+        input_names=['first_image_masked','second_image'],
+        output_names=['prob'])
+    predictor = OfflinePredictor(pred_config)
+
+    i = 0
+    stat = MIoUStatistics(CLASS_NUM)
+    logger.info("start validation....")
+
+
+    for first_image_masks, second_image, second_label  in tqdm(ds.get_data()):
+        second_image = np.squeeze(second_image)
+        second_label = np.squeeze(second_label)
+
+        k_shot = len(first_image_masks)
+        prediction_fused = np.zeros((support_image_size[0],support_image_size[1],CLASS_NUM),dtype=np.float32)
+        for kk in range(k_shot):
+            def mypredictor(input_img):
+                # input image: 1*H*W*3
+                # output : H*W*C
+                output = predictor(first_image_masks[kk][np.newaxis, :, :, :], input_img)
+                return output[0][0]
+
+            prediction = predict_scaler(second_image, mypredictor, scales=[0.5,0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=support_image_size, is_densecrf = False)
+            prediction_fused += prediction
+
+        prediction_fused = np.argmax(prediction_fused, axis=2)
+        stat.feed(prediction_fused, second_label)
+
+        if is_save:
+            cv2.imwrite("result/{}.png".format(i), np.concatenate((image, visualize_label(prediction_fused), visualize_label(prediction)), axis=1))
+
+        i += 1
+
+    logger.info("mIoU: {}".format(stat.mIoU))
+    logger.info("mean_accuracy: {}".format(stat.mean_accuracy))
+    logger.info("accuracy: {}".format(stat.accuracy))
 
 
 def view(args):
@@ -234,6 +298,8 @@ if __name__ == '__main__':
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--test_data', default="fold0_1shot_test", help='test data')
     parser.add_argument('--train_data', default="fold0_train", help='train data')
+    parser.add_argument('--test', action='store_true', help='test data')
+    parser.add_argument('--test_load', help='load model')
 
     args = parser.parse_args()
 
@@ -242,6 +308,11 @@ if __name__ == '__main__':
 
     if args.view:
         view(args)
+
+
+    if args.test:
+        assert args.test_load is not None
+        proceed_test(args)
 
 
     config = get_config()
