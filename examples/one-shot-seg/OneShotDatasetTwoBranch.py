@@ -8,8 +8,7 @@ import cv2
 
 from tensorpack.utils import logger
 from tensorpack.dataflow.base import RNGDataFlow
-
-from test import LoaderOfPairs
+import ss_datalayer
 
 __all__ = ['OneShotDatasetTwoBranch']
 
@@ -19,8 +18,11 @@ class OneShotDatasetTwoBranch(RNGDataFlow):
         settings = __import__('ss_settings')
         self.name = name
         profile = getattr(settings, name)
-        self.loader = LoaderOfPairs(profile)
-        self.data_size = self.loader.data_size
+        profile_copy = profile.copy()
+        profile_copy['deploy_mode'] = True
+        dbi = ss_datalayer.DBInterface(profile)
+        self.data_size = len(dbi.db_items)
+        self.PLP = ss_datalayer.PairLoaderProcess(dbi, profile_copy)
 
     def size(self):
         return self.data_size
@@ -31,11 +33,8 @@ class OneShotDatasetTwoBranch(RNGDataFlow):
 
     def get_data(self): # only for one-shot learning
         for i in range(self.data_size):
-            self.loader.get_items_no_return()
-            first_image = self.loader.out['first_img'][0]
-            first_label = self.loader.out['first_label'][0]
-            first_image_masked = first_image*first_label[:,:,np.newaxis]
-            yield [first_image_masked, self.loader.out['second_img'][0],self.loader.out['second_label'][0]]
+            first_index,second_index = self.PLP.load_next_frame() #like: [227],568
+            yield [first_index, second_index]
 
 
 

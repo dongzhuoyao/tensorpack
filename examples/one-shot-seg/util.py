@@ -761,7 +761,7 @@ class DBPascalItem(DBImageItem):
         m = np.zeros(mobj_uint.shape, dtype=np.float32)
         for obj_id in self.obj_ids:
             m[mobj_uint == obj_id] = self.ids_map[obj_id]
-        #m[mobj_uint == 255] = 255
+
         return m
     def read_img(self):
         return read_img(self.img_path)

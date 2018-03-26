@@ -48,13 +48,10 @@ empty_profile = Map(
                 k_shot=1,
                 first_shape=None,
                 second_shape=None,
-                shape_divisible=1,
                 output_type=None,
                 read_mode=None, # Either "Shuffle" (for training) or "Deterministic" (for testing, random seed fixed)
                 scale_256=True,
                 mean = (104.0/255, 116.0/255, 122.0/255),
-                first_label_scale= 1,
-                first_label_mean = 0,
                 batch_size = 1,
                 video_sets=[],
                 image_sets=[],
@@ -75,7 +72,6 @@ empty_profile = Map(
 
 # Setting for training (on **training images**)
 fold0_train = Map(empty_profile,
-    output_type='image_pair',
     read_mode='shuffle',
     image_sets=['sbd_training', 'pascal_training'],
     #image_sets=['pascal_training'],
@@ -85,7 +81,6 @@ fold0_train = Map(empty_profile,
 
 # Setting for testing on **test images** in unseen image classes (in total 5 classes), 5-shot
 fold0_5shot_test = Map(empty_profile,
-    output_type='image_pair',
     db_cycle = 1000,
     read_mode='deterministic',
     image_sets=['pascal_test'],
