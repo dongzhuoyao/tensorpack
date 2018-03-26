@@ -21,12 +21,12 @@ slim = tf.contrib.slim
 
 max_epoch = 6
 weight_decay = 5e-4
-batch_size = 12
+batch_size = 8
 LR = 1e-4
 CLASS_NUM = 2
 evaluate_every_n_epoch = 1
-support_image_size =(321, 321)
-query_image_size = (321, 321)
+support_image_size =(473, 473)
+query_image_size = (473, 473)
 
 def get_data(name,batch_size=1):
     isTrain = True if 'train' in name else False
@@ -137,8 +137,7 @@ class Model(ModelDesc):
 
         logits = support_logits + query_logits
 
-        logits = slim.conv2d(logits, CLASS_NUM, [3, 3], stride=1, rate=6,
-                             activation_fn=None, normalizer_fn=None)
+        logits = slim.conv2d(logits, CLASS_NUM, [3, 3], stride=1, rate=6)
         logits = tf.image.resize_bilinear(logits, second_image.shape[1:3],name="upsample")
 
         prob = tf.nn.softmax(logits, name='prob')

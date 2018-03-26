@@ -15,7 +15,7 @@ from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.utils.stats import MIoUStatistics
 from tensorpack.utils import logger
 import OneShotDatasetTwoBranch
-from deeplabv2_dilation6_new import deeplabv2
+from deeplabv2_dilation6_tailDilation import deeplabv2
 import tensorflow as tf
 slim = tf.contrib.slim
 

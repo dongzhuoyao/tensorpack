@@ -137,8 +137,7 @@ class Model(ModelDesc):
 
         logits = support_logits + query_logits
 
-        logits = slim.conv2d(logits, CLASS_NUM, [3, 3], stride=1, rate=6,
-                             activation_fn=None, normalizer_fn=None)
+        logits = slim.conv2d(logits, CLASS_NUM, [3, 3], stride=1, rate=6)
         logits = tf.image.resize_bilinear(logits, second_image.shape[1:3],name="upsample")
 
         prob = tf.nn.softmax(logits, name='prob')
