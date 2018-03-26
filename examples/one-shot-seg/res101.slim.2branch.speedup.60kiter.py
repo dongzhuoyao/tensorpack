@@ -27,6 +27,7 @@ CLASS_NUM = 2
 evaluate_every_n_epoch = 1
 support_image_size =(321, 321)
 query_image_size = (321, 321)
+images_per_epoch = 10000*batch_size
 
 def get_data(name,batch_size=1):
     isTrain = True if 'train' in name else False
@@ -135,7 +136,7 @@ class Model(ModelDesc):
         support_logits = tf.reduce_mean(support_logits, [1, 2], keep_dims=True, name='gap')
         support_logits = tf.image.resize_bilinear(support_logits, query_logits.shape[1:3])
 
-        logits = support_logits + query_logits # 2048 channels
+        logits = support_logits + query_logits
 
         logits = slim.conv2d(logits, CLASS_NUM, [3, 3], stride=1, rate=6,
                              activation_fn=None, normalizer_fn=None)
@@ -191,7 +192,7 @@ def get_config():
         model=Model(),
         dataflow=dataset_train,
         callbacks=callbacks,
-        steps_per_epoch=  10000// total_batch,
+        steps_per_epoch=  images_per_epoch// total_batch,
         max_epoch=max_epoch,
     )
 
@@ -238,14 +239,9 @@ class CalculateMIoU(Callback):
         logger.info("mean_accuracy: {}".format(self.stat.mean_accuracy))
         logger.info("accuracy: {}".format(self.stat.accuracy))
 
-def proceed_test(args, is_save = True):
+def proceed_test(args, is_save = False):
     import cv2
     ds = get_data(args.test_data)
-
-
-    result_dir = "result"
-    from tensorpack.utils.fs import mkdir_p
-    mkdir_p(result_dir)
 
 
     pred_config = PredictConfig(
@@ -258,6 +254,8 @@ def proceed_test(args, is_save = True):
     i = 0
     stat = MIoUStatistics(CLASS_NUM)
     logger.info("start validation....")
+
+
     for first_image_masks, second_image, second_label  in tqdm(ds.get_data()):
         second_image = np.squeeze(second_image)
         second_label = np.squeeze(second_label)
@@ -278,17 +276,13 @@ def proceed_test(args, is_save = True):
         stat.feed(prediction_fused, second_label)
 
         if is_save:
-            cv2.imwrite("{}/{}.png".format(result_dir,i), np.concatenate((first_image_masks[0],second_image, visualize_label(second_label), visualize_label(prediction_fused)), axis=1))
+            cv2.imwrite("result/{}.png".format(i), np.concatenate((image, visualize_label(prediction_fused), visualize_label(prediction)), axis=1))
 
         i += 1
 
     logger.info("mIoU: {}".format(stat.mIoU))
     logger.info("mean_accuracy: {}".format(stat.mean_accuracy))
     logger.info("accuracy: {}".format(stat.accuracy))
-    logger.info("mIoU beautify: {}".format(stat.mIoU_beautify))
-    logger.info("matrix beatify: {}".format(stat.confusion_matrix_beautify))
-
-
 
 
 def view(args):
