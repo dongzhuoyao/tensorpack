@@ -222,7 +222,11 @@ def predict_slider(full_image, predictor, classes, tile_size, overlap = 1.0/3):
             full_probs[y1:y2, x1:x2] += prediction_no_padding  # accumulate the predictions also in the overlapping regions
 
     # average the predictions in the overlapping regions
-    full_probs /= count_predictions
+    try:
+        full_probs /= count_predictions
+    except:
+        from IPython import embed
+        embed()
     return full_probs
 
 def predict_scaler(full_image, predictor, scales, classes, tile_size, is_densecrf,overlap=1.0/3):

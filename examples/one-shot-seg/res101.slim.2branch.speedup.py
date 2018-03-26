@@ -18,6 +18,7 @@ import OneShotDatasetTwoBranch
 from deeplabv2_dilation6_new import deeplabv2
 import tensorflow as tf
 slim = tf.contrib.slim
+from sess_utils import my_get_model_loader
 
 max_epoch = 6
 weight_decay = 5e-4
@@ -69,8 +70,8 @@ def get_data(name,batch_size=1):
             second_image = cv2.imread(ds[2], cv2.IMREAD_COLOR)
             second_label = cv2.imread(ds[3], cv2.IMREAD_GRAYSCALE)
             second_label = np.equal(second_label, class_id).astype(np.uint8)
-            second_image = cv2.resize(second_image, support_image_size)
-            second_label = cv2.resize(second_label, support_image_size, interpolation=cv2.INTER_NEAREST)
+            #second_image = cv2.resize(second_image, support_image_size)
+            #second_label = cv2.resize(second_label, support_image_size, interpolation=cv2.INTER_NEAREST)
             return first_image_masks, second_image, second_label
 
 
@@ -243,14 +244,14 @@ def proceed_test(args, is_save = True):
     ds = get_data(args.test_data)
 
 
-    result_dir = "result"
+    result_dir = "result22"
     from tensorpack.utils.fs import mkdir_p
     mkdir_p(result_dir)
 
 
     pred_config = PredictConfig(
         model=Model(),
-        session_init=get_model_loader(args.test_load),
+        session_init=my_get_model_loader(args.test_load),
         input_names=['first_image_masked','second_image'],
         output_names=['prob'])
     predictor = OfflinePredictor(pred_config)
@@ -263,7 +264,7 @@ def proceed_test(args, is_save = True):
         second_label = np.squeeze(second_label)
 
         k_shot = len(first_image_masks)
-        prediction_fused = np.zeros((support_image_size[0],support_image_size[1],CLASS_NUM),dtype=np.float32)
+        prediction_fused = np.zeros((second_image.shape[0],second_image.shape[1],CLASS_NUM),dtype=np.float32)
         for kk in range(k_shot):
             def mypredictor(input_img):
                 # input image: 1*H*W*3
@@ -278,7 +279,7 @@ def proceed_test(args, is_save = True):
         stat.feed(prediction_fused, second_label)
 
         if is_save:
-            cv2.imwrite("{}/{}.png".format(result_dir,i), np.concatenate((first_image_masks[0],second_image, visualize_label(second_label), visualize_label(prediction_fused)), axis=1))
+            cv2.imwrite("{}/{}.png".format(result_dir,i), np.concatenate((cv2.resize(first_image_masks[0],(second_image.shape[1],second_image.shape[0])),second_image, visualize_label(second_label), visualize_label(prediction_fused)), axis=1))
 
         i += 1
 
@@ -327,7 +328,6 @@ if __name__ == '__main__':
     else:
         config = get_config()
         if args.load:
-            from sess_utils import my_get_model_loader
             config.session_init = my_get_model_loader(args.load)
 
 
