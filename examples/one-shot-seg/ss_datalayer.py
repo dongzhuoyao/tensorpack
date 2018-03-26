@@ -156,6 +156,7 @@ class PairLoaderProcess(Process):
         item = self.load_frame(*next_pair)
         # try to load the image more times in case it is None
         if item is None and not try_mode:
+            raise
             item = self.try_some_more(100)
         return item
 
@@ -230,7 +231,11 @@ class PairLoaderProcess(Process):
             frame2_dict = player.get_frame(second_index)
             image2, label2, shape = self.__prepross(frame2_dict, self.second_shape)
             item['second_img'] = [image2]
-        
+
+        item["first_label"] = []
+        for label1 in labels1:
+            item["first_label"].append(label1) # H,W
+        item["second_label"] = [label2] # H,W
         
         if self.deploy_mode:
             first_semantic_labels=[]
@@ -256,115 +261,8 @@ class PairLoaderProcess(Process):
                                    second_semantic_labels=second_semantic_labels)
             
             item['deploy_info'] =  deploy_info
-        
-        #create first_labels
-        for i in range(len(self.first_label_params)):
-            name, down_scale, offset = self.first_label_params[i]
-            item[name] = []
-            for label1 in labels1:
-                nlabel1 = util.change_coordinates(label1, down_scale, offset)
-                nlabel1 = (nlabel1 - self.first_label_mean) * self.first_label_scale
-                assert(self.__is_integer(nlabel1))
-                item[name].append(nlabel1) # H,W
 
-        if second_index is not None:
-            #create second_labels
-            for i in range(len(self.second_label_params)):
-                name, down_scale, offset = self.second_label_params[i]
-                nlabel2 = util.change_coordinates(label2, down_scale, offset)
-                assert(self.__is_integer(nlabel2))
-                item[name] = [nlabel2] # H,W
-        if self.has_cont:
-            item['cont'] = [0] + [1] * (len(first_index) - 1)
-            
+
         return item
             
-class SSDatalayer():
-    def __del__(self):
-        for process in self.processes:
-            process.terminate()
 
-    def setup(self, bottom, top):
-        params = eval(self.param_str)
-         
-        if params.has_key('profile'):
-            settings = __import__('ss_settings')
-            profile = getattr(settings, params['profile'])
-            profile.update(params)
-            params = profile
-        
-        self.all_top_names = ['first_img', 'second_img']
-
-        if params.has_key('top_names'):
-            self.top_names = copy.copy(params['top_names'])
-        else:
-            self.top_names = copy.copy(self.all_top_names)
-        
-        assert(set(self.top_names) <= set(self.all_top_names)), str(self.top_names) + ' is not subset of ' + str(self.all_top_names)
-        
-        if params.has_key('has_cont') and params['has_cont']:
-            self.top_names.append('cont')
-            
-        for i in range(len(params['first_label_params'])):
-            name, down_scale, offset = params['first_label_params'][i]
-            self.top_names.append(name)
-            
-        for i in range(len(params['second_label_params'])):
-            name, down_scale, offset = params['second_label_params'][i]
-            self.top_names.append(name)
-        
-        self.batch_size = params['batch_size']
-        
-        self.queue = Queue(self.batch_size * params['worker_num'])
-        self.db_interface = DBInterface(params)
-        self.processes = []
-        for i in range(params['worker_num']):
-            process = PairLoaderProcess('SSDatalayer Process', self.queue, self.db_interface, params)
-            process.daemon = True
-            process.start()
-            self.processes.append(process)
-    def __stack(self, obj_list):
-        isinstance(obj_list, list)
-        if isinstance(obj_list[0], np.ndarray):
-            #arrays = np.stack(obj_list, axis = 0)
-            arrays = np.concatenate(obj_list, axis = 0).reshape((len(obj_list),) + obj_list[0].shape)
-        else:
-            #It should be a list of numbers
-            assert(not hasattr(obj_list[0], '__len__'))
-            arrays = np.array(obj_list)
-        return arrays
-    def forward(self, bottom, top):
-        cprint('Queue size ' + str(self.queue.qsize()) + ', ' + 'Batch size ' + str(self.batch_size), bcolors.OKGREEN)
-        for itt in range(self.batch_size):
-            item = self.dequeue()
-            assert item is not None
-            for i in range(len(self.top_names)):
-                obj_list = item[self.top_names[i]]
-                #items are interleaved
-                inds = np.arange(len(obj_list)) * self.batch_size + itt
-                top[i].data[inds,...] = self.__stack(obj_list)
-        
-    def reshape(self, bottom, top):
-        self.init_queue()
-        for i in range(len(self.top_names)):
-            top_name = self.top_names[i]
-            arrays = self.cur_item[top_name]
-            if hasattr(arrays[0], '__len__'):
-                top[i].reshape(len(arrays) * self.batch_size, *arrays[0].shape)
-            else:
-                top[i].reshape(len(arrays) * self.batch_size)
-       
-    def backward(self, top, propagate_down, bottom):
-        pass
-    
-    ###### Queue operations
-    def init_queue(self):
-        if not hasattr(self, 'cur_item') or self.cur_item is None:
-            self.cur_item = self.queue.get()
-            
-    def dequeue(self):
-        self.init_queue()
-        item = self.cur_item
-        self.cur_item = None
-        self.init_queue()
-        return item    
