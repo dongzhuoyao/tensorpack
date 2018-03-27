@@ -7,6 +7,7 @@ new note: [NOTE2.md](NOTE2.md)
 
 more experimental results on RemoteSense Images can be seen in [aerial/README.md](aerial/README.md)
 
+one shot seg can be seen in [README.md](https://github.com/dongzhuoyao/tensorpack/blob/deeplab/examples/one-shot-seg/README.md)
 
 ### Result On Pasal VOC
 
