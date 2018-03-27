@@ -18,7 +18,6 @@ import OneShotDatasetTwoBranch
 from deeplabv2_dilation6_new import deeplabv2
 import tensorflow as tf
 slim = tf.contrib.slim
-from sess_utils import my_get_model_loader
 
 max_epoch = 6
 weight_decay = 5e-4
@@ -28,6 +27,7 @@ CLASS_NUM = 2
 evaluate_every_n_epoch = 1
 support_image_size =(321, 321)
 query_image_size = (321, 321)
+images_per_epoch = 40000
 
 def get_data(name,batch_size=1):
     isTrain = True if 'train' in name else False
@@ -136,7 +136,7 @@ class Model(ModelDesc):
         support_logits = tf.reduce_mean(support_logits, [1, 2], keep_dims=True, name='gap')
         support_logits = tf.image.resize_bilinear(support_logits, query_logits.shape[1:3])
 
-        logits = support_logits + query_logits # 2048 channels
+        logits = support_logits + query_logits
 
         logits = slim.conv2d(logits, CLASS_NUM, [3, 3], stride=1, rate=6,
                              activation_fn=None, normalizer_fn=None)
@@ -185,14 +185,14 @@ def get_config():
         EstimatedTimeLeft(),
         PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
         ProgressBar(["cross_entropy_loss", "cost", "wd_cost"]) , # uncomment it to debug for every step
-        RunOp(lambda: tf.group(get_global_step_var().assign(0)), run_before=True, run_as_trigger=False, run_step=False,verbose=True)
+        #RunOp(lambda: tf.add_check_numerics_ops(), run_before=False, run_as_trigger=True, run_step=True)
     ]
 
     return TrainConfig(
         model=Model(),
         dataflow=dataset_train,
         callbacks=callbacks,
-        steps_per_epoch=  100// total_batch,
+        steps_per_epoch=  images_per_epoch// total_batch,
         max_epoch=max_epoch,
     )
 
@@ -295,8 +295,6 @@ def proceed_test(args, is_save = True):
     logger.info("matrix beatify: {}".format(stat.confusion_matrix_beautify))
 
 
-
-
 def view(args):
     ds = RepeatedData(get_data('fold0_train'), -1)
     ds.reset_state()
@@ -333,9 +331,11 @@ if __name__ == '__main__':
     else:
         config = get_config()
         if args.load:
+            from sess_utils import my_get_model_loader
             config.session_init = my_get_model_loader(args.load)
 
 
         nr_tower = max(get_nr_gpu(), 1)
         trainer = SyncMultiGPUTrainerReplicated(nr_tower)
         launch_train_with_config(config, trainer)
+
