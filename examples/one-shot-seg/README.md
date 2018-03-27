@@ -30,6 +30,6 @@ res101.slim.2branch.speedup.60kiter.mcontext.lrschedule|pascal0|:question:
 * **important update:** 3.27, test data size changed to 1000 fixed
 
 
-Arch |fold0| fold1|fold2|fold3|Mean 
-|----|----|----|----|----|----|
-|res101.slim.2branch.speedup.240k.forbash|59.7|53.8|50.7|47.9|53.0|
+Arch |n-shot|fold0| fold1|fold2|fold3|Mean 
+|----|----|----|----|----|----|----|
+|res101.slim.2branch.speedup.240k.forbash(346)|1-shot|59.7|53.8|50.7|47.9|53.0|
