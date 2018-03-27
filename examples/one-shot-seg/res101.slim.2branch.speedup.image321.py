@@ -15,21 +15,19 @@ from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.utils.stats import MIoUStatistics
 from tensorpack.utils import logger
 import OneShotDatasetTwoBranch
-from deeplabv2_dilation6_new_mtscale import deeplabv2
+from deeplabv2_dilation6_new import deeplabv2
 import tensorflow as tf
 slim = tf.contrib.slim
+from sess_utils import my_get_model_loader
 
 max_epoch = 6
 weight_decay = 5e-4
-batch_size = 8
+batch_size = 12
 LR = 1e-4
-lr_schedule = [(4, 1e-5),]
 CLASS_NUM = 2
 evaluate_every_n_epoch = 1
-support_image_size =(473, 473)
-query_image_size = (473, 473)
-images_per_epoch = 40000
-fusion_width = 256
+support_image_size =(321, 321)
+query_image_size = (321, 321)
 
 def get_data(name,batch_size=1):
     isTrain = True if 'train' in name else False
@@ -87,6 +85,7 @@ def get_data(name,batch_size=1):
     return ds
 
 
+
 def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
     """
     This function accepts logits rather than predictions, and is more numerically stable than
@@ -128,37 +127,24 @@ class Model(ModelDesc):
         logger.info("current ctx.is_training: {}".format(ctx.is_training))
 
         with tf.variable_scope("support"):
-             support_context_list = deeplabv2(first_image_masked,CLASS_NUM,is_training=ctx.is_training)
+             support_logits = deeplabv2(first_image_masked,CLASS_NUM,is_training=ctx.is_training)
         with tf.variable_scope("query"):
-            query_context_list = deeplabv2(second_image,CLASS_NUM,is_training=ctx.is_training)
+            query_logits = deeplabv2(second_image,CLASS_NUM,is_training=ctx.is_training)
 
-        def smooth(inp, conv_width, name, stride=1,output_num=fusion_width):
-            with tf.variable_scope(name):
-                return slim.conv2d(inp, output_num, [conv_width, conv_width], stride=stride,
-                                        activation_fn=None, normalizer_fn=None)
-
-        fusion_branch = smooth(support_context_list[0],1,"context_support0")+ \
-                        smooth(query_context_list[0], 1, "context_query0")
-        fusion_branch = smooth(fusion_branch,1,"context_fusion0",stride=2)
-
-        fusion_branch = fusion_branch +\
-        smooth(support_context_list[1], 1, "context_support1") + \
-        smooth(query_context_list[1], 1, "context_query1")
-        fusion_branch = smooth(fusion_branch, 1, "context_fusion1", stride=1)
-
-        fusion_branch = fusion_branch + \
-                        smooth(support_context_list[2], 1, "context_support2") + \
-                        smooth(query_context_list[2], 1, "context_query2")
-        fusion_branch = smooth(fusion_branch, 1, "context_fusion2", stride=1)
-
-        fusion_branch = fusion_branch + \
-                        smooth(support_context_list[3], 1, "context_support3") + \
-                        smooth(query_context_list[3], 1, "context_query3")
-        fusion_branch = smooth(fusion_branch, 1, "context_fusion3", stride=1,output_num=CLASS_NUM)
 
         costs = []
-        logits = tf.image.resize_bilinear(fusion_branch, second_image.shape[1:3],name="upsample")
+        support_logits = tf.reduce_mean(support_logits, [1, 2], keep_dims=True, name='gap')
+        support_logits = tf.image.resize_bilinear(support_logits, query_logits.shape[1:3])
+
+        logits = support_logits + query_logits # 2048 channels
+
+        logits = slim.conv2d(logits, CLASS_NUM, [3, 3], stride=1, rate=6,
+                             activation_fn=None, normalizer_fn=None)
+        logits = tf.image.resize_bilinear(logits, second_image.shape[1:3],name="upsample")
+
         prob = tf.nn.softmax(logits, name='prob')
+
+
 
         if get_current_tower_context().is_training:
             cost = softmax_cross_entropy_with_ignore_label(logits, second_label, class_num=CLASS_NUM)
@@ -198,17 +184,15 @@ def get_config():
         GPUUtilizationTracker(),
         EstimatedTimeLeft(),
         PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
-        ScheduledHyperParamSetter('learning_rate', lr_schedule),
-        ProgressBar(["cross_entropy_loss", "cost", "wd_cost","learning_rate"]) , # uncomment it to debug for every step
-        RunOp(lambda: tf.group(get_global_step_var().assign(0)), run_before=True, run_as_trigger=False, run_step=False,
-              verbose=True)
+        ProgressBar(["cross_entropy_loss", "cost", "wd_cost"]) , # uncomment it to debug for every step
+        #RunOp(lambda: tf.add_check_numerics_ops(), run_before=False, run_as_trigger=True, run_step=True)
     ]
 
     return TrainConfig(
         model=Model(),
         dataflow=dataset_train,
         callbacks=callbacks,
-        steps_per_epoch=  images_per_epoch// total_batch,
+        steps_per_epoch=  10000// total_batch,
         max_epoch=max_epoch,
     )
 
@@ -258,6 +242,7 @@ class CalculateMIoU(Callback):
         logger.info("accuracy: {}".format(self.stat.accuracy))
         logger.info("mIoU beautify: {}".format(self.stat.mIoU_beautify))
         logger.info("matrix beatify: {}".format(self.stat.confusion_matrix_beautify))
+
 
 def proceed_test(args, is_save = True):
     import cv2
@@ -309,6 +294,9 @@ def proceed_test(args, is_save = True):
     logger.info("mIoU beautify: {}".format(stat.mIoU_beautify))
     logger.info("matrix beatify: {}".format(stat.confusion_matrix_beautify))
 
+
+
+
 def view(args):
     ds = RepeatedData(get_data('fold0_train'), -1)
     ds.reset_state()
@@ -345,7 +333,6 @@ if __name__ == '__main__':
     else:
         config = get_config()
         if args.load:
-            from sess_utils import my_get_model_loader
             config.session_init = my_get_model_loader(args.load)
 
 

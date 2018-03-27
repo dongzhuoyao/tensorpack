@@ -21,14 +21,14 @@ slim = tf.contrib.slim
 
 max_epoch = 6
 weight_decay = 5e-4
-batch_size = 8
+batch_size = 12
 LR = 1e-4
 lr_schedule = [(4, 1e-5),]
 CLASS_NUM = 2
 evaluate_every_n_epoch = 1
-support_image_size =(473, 473)
-query_image_size = (473, 473)
-images_per_epoch = 40000
+support_image_size =(321, 321)
+query_image_size = (321, 321)
+images_per_epoch = 10000*batch_size
 fusion_width = 256
 
 def get_data(name,batch_size=1):
@@ -199,7 +199,7 @@ def get_config():
         EstimatedTimeLeft(),
         PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
         ScheduledHyperParamSetter('learning_rate', lr_schedule),
-        ProgressBar(["cross_entropy_loss", "cost", "wd_cost","learning_rate"]) , # uncomment it to debug for every step
+        ProgressBar(["cross_entropy_loss", "cost", "wd_cost", "learning_rate"]),  # uncomment it to debug for every step
         RunOp(lambda: tf.group(get_global_step_var().assign(0)), run_before=True, run_as_trigger=False, run_step=False,
               verbose=True)
     ]

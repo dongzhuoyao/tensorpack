@@ -22,6 +22,8 @@ class OneShotDatasetTwoBranch(RNGDataFlow):
         profile_copy['deploy_mode'] = True
         dbi = ss_datalayer.DBInterface(profile)
         self.data_size = len(dbi.db_items)
+        if "test" in self.name:
+            self.data_size = 1000
         self.PLP = ss_datalayer.PairLoaderProcess(dbi, profile_copy)
 
     def size(self):
