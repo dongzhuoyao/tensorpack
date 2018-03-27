@@ -35,3 +35,4 @@ res101.slim.2branch.speedup.60kiter.mcontext.lrschedule|pascal0|:question:
 Arch |n-shot|fold0| fold1|fold2|fold3|Mean 
 |----|----|----|----|----|----|----|
 |res101.slim.2branch.speedup.240k.forbash(346)|1-shot|59.7|53.8|50.7|47.9|53.0|
+|res101.slim.2branch.speedup.240k.forbash(1000)|1-shot|59.0|53.7|50.4|47.9|53.0|
