@@ -23,6 +23,7 @@ res101.slim.2branch.speedup.mcontext.240k|pascal0|63.6
 res101.slim.2branch.speedup.mcontext.240k.image473.lrschedule|pascal0|:question:
 res101.slim.2branch.speedup.mcontext.240k.image473|pascal0|:question:
 res101.slim.2branch.speedup.60kiter|pascal0|:question:
+res101.slim.2branch.speedup.60kiter.mcontext.lrschedule|pascal0|:question:
 
 * experiments show that 1000 test and 300 test lead nearly no difference.
 * image size 473 showes 3% lower than image size 321
