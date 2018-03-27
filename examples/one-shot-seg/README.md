@@ -20,7 +20,8 @@ res101.slim.2branch.speedup.image473.lrschedule|pascal0|58.8,58(backup),58.4(bac
 res101.slim.2branch.speedup.size473.sbugfix|pascal0|44
 res101.slim.2branch.speedup.240k|pascal0|60
 res101.slim.2branch.speedup.mcontext.240k|pascal0|63.6
-res101.slim.2branch.speedup.mcontext.240k.image473.lrschedule|pascal0|:question:
+res101.slim.2branch.speedup.mcontext.240k.width128|pascal0|:question:
+res101.slim.2branch.speedup.mcontext.240k.image473.lrschedule|pascal0|59.3
 res101.slim.2branch.speedup.mcontext.240k.image473|pascal0|60
 res101.slim.2branch.speedup.60kiter|pascal0|61.5
 res101.slim.2branch.speedup.60kiter.mcontext.lrschedule|pascal0|:question:
