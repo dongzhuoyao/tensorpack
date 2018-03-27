@@ -14,6 +14,7 @@ Arch |Dataset| Result
 ~~res101.slim.2branch.speedup.tailcbr.size473:fold0_1shot_test|pascal0|43.4~~
 res101.slim.2branch.speedup|pascal0|49.9(backup), 51.4(backup2),47.5(backup3)
 res101.slim.2branch.speedup.size473(may be actually 321)|pascal0|56.7
+res101.slim.2branch.speedup.image321|pascal0|:question:
 res101.slim.2branch.speedup.image473|pascal0|58.4
 res101.slim.2branch.speedup.image473.lrschedule|pascal0|58.8
 res101.slim.2branch.speedup.size473.sbugfix|pascal0|44
