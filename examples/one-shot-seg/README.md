@@ -18,3 +18,5 @@ res101.slim.2branch.speedup.240k:fold0_1shot_test|pascal0|60
 res101.slim.2branch.speedup.image473:fold0_1shot_test|pascal0|58.4
 res101.slim.2branch.speedup.size473.sbugfix:fold0_1shot_test|pascal0|44
 res101.slim.2branch.speedup.mcontext.240k.image473|pascal0|:question:
+res101.slim.2branch.speedup.mcontext.240k.image473.lrschedule|pascal0|:question:
+res101.slim.2branch.speedup.240k.forbash|pascal0|:question:
