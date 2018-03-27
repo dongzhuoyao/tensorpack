@@ -24,3 +24,8 @@ res101.slim.2branch.speedup.mcontext.240k.image473|pascal0|:question:
 res101.slim.2branch.speedup.mcontext.240k.image473.lrschedule|pascal0|:question:
 res101.slim.2branch.speedup.240k.forbash|pascal0|:question:
 
+
+
+Arch |fold0| fold1|fold2|fold3|Mean 
+|----|----|----|----|----|----|
+|res101.slim.2branch.speedup.240k.forbash|59.7|53.8|50.7|47.9|53.0|
