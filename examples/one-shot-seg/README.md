@@ -26,6 +26,7 @@ res101.slim.2branch.speedup.240k.forbash|pascal0|:question:
 
 * experiments show that 1000 test and 300 test lead nearly no difference.
 * image size 473 showes 3% lower than image size 321
+* **important update:** 3.27, test data size changed to 1000 fixed
 
 
 Arch |fold0| fold1|fold2|fold3|Mean 
