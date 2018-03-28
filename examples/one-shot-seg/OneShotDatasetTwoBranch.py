@@ -41,4 +41,8 @@ class OneShotDatasetTwoBranch(RNGDataFlow):
 
 
 if __name__ == '__main__':
-    pass
+    ds = OneShotDatasetTwoBranch("fold0_5shot_test")
+
+    for idx,data in enumerate(ds.get_data()):
+        metadata = data[4]
+        print "{} {}   {}".format(idx, ','.join(metadata['image1_name']),metadata['image2_name'])

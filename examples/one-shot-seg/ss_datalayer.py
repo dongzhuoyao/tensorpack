@@ -1,6 +1,6 @@
 
 import numpy as np
-import random
+import random,os
 from multiprocessing import Process, Queue, Pool, Lock
 
 import sys
@@ -99,7 +99,10 @@ class DBInterface():
             first_index = set_indices[:self.params['k_shot']] # support set image indexes(may be multi-shot~)
 
             metadata = {'name':imgset.name,
-                        'class_id':imgset.image_items[0].obj_ids[0]}
+                        'class_id':imgset.image_items[0].obj_ids[0],
+                        'image1_name':[os.path.basename(imgset.image_items[ii].img_path) for ii in first_index],
+                        'image2_name': os.path.basename(imgset.image_items[second_index].img_path),
+                        }
 
             return [imgset.image_items[v].img_path for v in first_index],\
                    [imgset.image_items[v].mask_path for v in first_index],\
