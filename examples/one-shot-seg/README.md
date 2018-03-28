@@ -21,11 +21,12 @@ res101.slim.2branch.speedup.size473.sbugfix|pascal0|44
 res101.slim.2branch.speedup.240k|pascal0|60
 res101.slim.2branch.speedup.mcontext.240k(256)|pascal0|63.6
 res101.slim.2branch.speedup.mcontext.240k.width128|pascal0|:question:
-res101.slim.2branch.speedup.mcontext.240k.width384|pascal0|:question:
+res101.slim.2branch.speedup.mcontext.240k.width384|pascal0|62.0
+res101.slim.2branch.speedup.mcontext.240k.width512|pascal0|63.7
 res101.slim.2branch.speedup.mcontext.240k.image473.lrschedule|pascal0|59.3
 res101.slim.2branch.speedup.mcontext.240k.image473|pascal0|60
 res101.slim.2branch.speedup.60kiter|pascal0|61.5
-res101.slim.2branch.speedup.60kiter.mcontext.lrschedule|pascal0|:question:
+res101.slim.2branch.speedup.60kiter.mcontext.lrschedule|pascal0|61.8
 
 * experiments show that 1000 test and 300 test lead nearly no difference.
 * image size 473 showes 3% lower than image size 321
