@@ -23,13 +23,28 @@ max_epoch = 6
 weight_decay = 5e-4
 batch_size = 12
 LR = 1e-4
-lr_schedule = [(4, 1e-5),]
 CLASS_NUM = 2
 evaluate_every_n_epoch = 1
 support_image_size =(321, 321)
 query_image_size = (321, 321)
-images_per_epoch = 10000*batch_size
+images_per_epoch = 40000
 fusion_width = 256
+def my_squeeze_excitation_layer(input_x, out_dim, layer_name,ratio=4):
+  with tf.variable_scope(layer_name):
+    squeeze = tf.reduce_mean(input_x, [1, 2], name='gap', keep_dims=False)
+
+    with tf.variable_scope('fc1'):
+      excitation = tf.layers.dense(inputs=squeeze, use_bias=True, units=int(out_dim / ratio))
+
+    excitation = tf.nn.relu(excitation)
+
+    with tf.variable_scope('fc2'):
+      excitation = tf.layers.dense(inputs=excitation, use_bias=True, units=out_dim)
+    excitation = tf.nn.sigmoid(excitation)
+
+    excitation = tf.reshape(excitation, [-1, 1, 1, out_dim])
+    scale = input_x * excitation
+    return scale
 
 def get_data(name,batch_size=1):
     isTrain = True if 'train' in name else False
@@ -137,22 +152,22 @@ class Model(ModelDesc):
                 return slim.conv2d(inp, output_num, [conv_width, conv_width], stride=stride,
                                         activation_fn=None, normalizer_fn=None)
 
-        fusion_branch = smooth(support_context_list[0],1,"context_support0") + \
+        fusion_branch = my_squeeze_excitation_layer(smooth(support_context_list[0],1,"context_support0"),fusion_width,"support0_se")+ \
                         smooth(query_context_list[0], 1, "context_query0")
         fusion_branch = smooth(fusion_branch,1,"context_fusion0",stride=2)
 
-        fusion_branch = fusion_branch +\
-        smooth(support_context_list[1], 1, "context_support1") + \
+        fusion_branch = fusion_branch + \
+                        my_squeeze_excitation_layer(smooth(support_context_list[1], 1, "context_support1"),fusion_width,"support1_se") + \
         smooth(query_context_list[1], 1, "context_query1")
         fusion_branch = smooth(fusion_branch, 1, "context_fusion1", stride=1)
 
         fusion_branch = fusion_branch + \
-                        smooth(support_context_list[2], 1, "context_support2") + \
+                        my_squeeze_excitation_layer(smooth(support_context_list[2], 1, "context_support2"),fusion_width,"support2_se") + \
                         smooth(query_context_list[2], 1, "context_query2")
         fusion_branch = smooth(fusion_branch, 1, "context_fusion2", stride=1)
 
         fusion_branch = fusion_branch + \
-                        smooth(support_context_list[3], 1, "context_support3") + \
+                        my_squeeze_excitation_layer(smooth(support_context_list[3], 1, "context_support3"),fusion_width,"support3_se") + \
                         smooth(query_context_list[3], 1, "context_query3")
         fusion_branch = smooth(fusion_branch, 1, "context_fusion3", stride=1,output_num=CLASS_NUM)
 
@@ -198,10 +213,8 @@ def get_config():
         GPUUtilizationTracker(),
         EstimatedTimeLeft(),
         PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
-        ScheduledHyperParamSetter('learning_rate', lr_schedule),
-        ProgressBar(["cross_entropy_loss", "cost", "wd_cost", "learning_rate"]),  # uncomment it to debug for every step
-        RunOp(lambda: tf.group(get_global_step_var().assign(0)), run_before=True, run_as_trigger=False, run_step=False,
-              verbose=True)
+        ProgressBar(["cross_entropy_loss", "cost", "wd_cost"]) , # uncomment it to debug for every step
+        #RunOp(lambda: tf.add_check_numerics_ops(), run_before=False, run_as_trigger=True, run_step=True)
     ]
 
     return TrainConfig(

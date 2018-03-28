@@ -28,7 +28,7 @@ CLASS_NUM = 2
 evaluate_every_n_epoch = 1
 support_image_size =(321, 321)
 query_image_size = (321, 321)
-images_per_epoch = 10000*batch_size
+images_per_epoch = 40000
 fusion_width = 256
 
 def get_data(name,batch_size=1):
@@ -137,7 +137,7 @@ class Model(ModelDesc):
                 return slim.conv2d(inp, output_num, [conv_width, conv_width], stride=stride,
                                         activation_fn=None, normalizer_fn=None)
 
-        fusion_branch = smooth(support_context_list[0],1,"context_support0") + \
+        fusion_branch = smooth(support_context_list[0],1,"context_support0")+ \
                         smooth(query_context_list[0], 1, "context_query0")
         fusion_branch = smooth(fusion_branch,1,"context_fusion0",stride=2)
 
@@ -197,11 +197,10 @@ def get_config():
         ModelSaver(),
         GPUUtilizationTracker(),
         EstimatedTimeLeft(),
-        PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
         ScheduledHyperParamSetter('learning_rate', lr_schedule),
-        ProgressBar(["cross_entropy_loss", "cost", "wd_cost", "learning_rate"]),  # uncomment it to debug for every step
-        RunOp(lambda: tf.group(get_global_step_var().assign(0)), run_before=True, run_as_trigger=False, run_step=False,
-              verbose=True)
+        PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
+        ProgressBar(["cross_entropy_loss", "cost", "wd_cost"]) , # uncomment it to debug for every step
+        #RunOp(lambda: tf.add_check_numerics_ops(), run_before=False, run_as_trigger=True, run_step=True)
     ]
 
     return TrainConfig(
