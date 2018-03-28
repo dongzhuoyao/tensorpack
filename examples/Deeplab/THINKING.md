@@ -22,7 +22,7 @@ Recognition](https://arxiv.org/abs/1801.07455)
 *  [Scene Parsing with Global Context Embedding](https://github.com/hfslyc/GCPNet)
 * [ESPNet: Efficient Spatial Pyramid of Dilated
 Convolutions for Semantic Segmentation](https://github.com/sacmehta/ESPNet) to hourglass
-* Efficient Interactive Annotation of Segmentation Datasets with Polygon-RNN++ with one-shot
+* [Efficient Interactive Annotation of Segmentation Datasets with Polygon-RNN++](http://www.cs.toronto.edu/polyrnn/) with one-shot
 
 ## current focus
 * [Adversarial Learning for Semi-supervised Semantic Segmentation](https://github.com/hfslyc/AdvSemiSeg)
