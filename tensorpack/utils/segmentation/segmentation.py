@@ -86,7 +86,15 @@ def visualize_label(label, class_num=21, ignore_label = 255):
         label_colours = [(255, 255, 255),(0, 0, 0)]
 
     for i in range(0,class_num):
-        img_color[label == i] = label_colours[i]
+        if i == 0:
+            img_color[label == i] = label_colours[i]
+        else:
+            hsv = cv2.cvtColor(label_colours[i],cv2.COLOR_BGR2HSV)
+            hsv[1] = hsv[1] + 0.1
+            hsv[2] = hsv[2] - 0.1
+            bgr = cv2.cvtColor(hsv,cv2.COLOR_HSV2BGR)
+            img_color[label == i] = bgr
+            
 
     img_color[label==ignore_label] = ignore_color#highlight ignore label
 
