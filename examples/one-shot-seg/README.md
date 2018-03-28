@@ -30,8 +30,7 @@ res101.slim.2branch.speedup.mcontext.240k.width1024|pascal0|63.2
 res101.slim.2branch.speedup.mcontext.240k.image473.lrschedule|pascal0|59.3
 res101.slim.2branch.speedup.mcontext.240k.image473|pascal0|60
 res101.slim.2branch.speedup.mcontext3.240k|pascal0|61.2
-res101.slim.2branch.speedup.mcontext3.240k|pascal0|:question:
-res101.slim.2branch.speedup.mcontext23.240k|pascal0|:question:
+res101.slim.2branch.speedup.mcontext23.240k|pascal0|63.2
 res101.slim.2branch.speedup.mcontext123.240k|pascal0|:question:
 res101.slim.2branch.speedup.60kiter|pascal0|61.5
 res101.slim.2branch.speedup.60kiter.mcontext|pascal0|:question:
