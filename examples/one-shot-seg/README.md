@@ -21,7 +21,7 @@ res101.slim.2branch.speedup.size473.sbugfix|pascal0|44
 res101.slim.2branch.speedup.240k|pascal0|60
 res101.slim.2branch.speedup.mcontext.240k(256)|pascal0|63.6
 res101.slim.2branch.speedup.mcontext.240k.support_se|pascal0|:question:
-res101.slim.2branch.speedup.mcontext.240k.width64|pascal0|:question:
+res101.slim.2branch.speedup.mcontext.240k.width64|pascal0|63.4
 res101.slim.2branch.speedup.mcontext.240k.width128|pascal0|63.3
 res101.slim.2branch.speedup.mcontext.240k.width384|pascal0|62.0
 res101.slim.2branch.speedup.mcontext.240k.width512|pascal0|63.7
