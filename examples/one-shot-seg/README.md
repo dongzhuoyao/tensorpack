@@ -14,18 +14,19 @@ Arch |Dataset| Result
 ~~res101.slim.2branch.speedup.tailcbr.size473:fold0_1shot_test|pascal0|43.4~~
 res101.slim.2branch.speedup|pascal0|49.9(backup), 51.4(backup2),47.5(backup3)
 res101.slim.2branch.speedup.size473(may be actually 321)|pascal0|56.7
-res101.slim.2branch.speedup.image321|pascal0|:question:
+res101.slim.2branch.speedup.image321|pascal0|54.7
 res101.slim.2branch.speedup.image473|pascal0|58.4
 res101.slim.2branch.speedup.image473.lrschedule|pascal0|58.8,58(backup),58.4(backup2)
 res101.slim.2branch.speedup.size473.sbugfix|pascal0|44
 res101.slim.2branch.speedup.240k|pascal0|60
 res101.slim.2branch.speedup.mcontext.240k(256)|pascal0|63.6
 res101.slim.2branch.speedup.mcontext.240k.width128|pascal0|:question:
-res101.slim.2branch.speedup.mcontext.240k.width384|pascal0|:question:
+res101.slim.2branch.speedup.mcontext.240k.width384|pascal0|62.0
+res101.slim.2branch.speedup.mcontext.240k.width512|pascal0|63.7
 res101.slim.2branch.speedup.mcontext.240k.image473.lrschedule|pascal0|59.3
 res101.slim.2branch.speedup.mcontext.240k.image473|pascal0|60
 res101.slim.2branch.speedup.60kiter|pascal0|61.5
-res101.slim.2branch.speedup.60kiter.mcontext.lrschedule|pascal0|:question:
+res101.slim.2branch.speedup.60kiter.mcontext.lrschedule|pascal0|61.8
 
 * experiments show that 1000 test and 300 test lead nearly no difference.
 * image size 473 showes 3% lower than image size 321
@@ -35,3 +36,6 @@ res101.slim.2branch.speedup.60kiter.mcontext.lrschedule|pascal0|:question:
 Arch |n-shot|fold0| fold1|fold2|fold3|Mean 
 |----|----|----|----|----|----|----|
 |res101.slim.2branch.speedup.240k.forbash(346)|1-shot|59.7|53.8|50.7|47.9|53.0|
+|res101.slim.2branch.speedup.240k.forbash(1000)|1-shot|59.0|53.7|50.4|47.9|53.0|
+|res101.slim.2branch.speedup.240k.forbash(1000)|5-shot(prob mix)|58.8|53.4|50.5|48|52.6|
+|res101.slim.2branch.speedup.240k.forbash(1000)|5-shot(or)|60.8|56.0|51.3|51.1|54.8|
