@@ -83,18 +83,14 @@ def visualize_label(label, class_num=21, ignore_label = 255):
     h, w = label.shape
     img_color = np.zeros((h, w, 3)).astype('uint8')
     if class_num == 2:#if two class, using white-black colormap to enlarge contrast
-        label_colours = [(255, 255, 255),(0, 0, 0)]
+        my_label_colours = [(255, 255, 255),(0, 0, 0)]
+    else:
+        my_label_colours = label_colours
 
     for i in range(0,class_num):
-        if i == 0:
-            img_color[label == i] = label_colours[i]
-        else:
-            hsv = cv2.cvtColor(label_colours[i],cv2.COLOR_BGR2HSV)
-            hsv[1] = hsv[1] + 0.1
-            hsv[2] = hsv[2] - 0.1
-            bgr = cv2.cvtColor(hsv,cv2.COLOR_HSV2BGR)
-            img_color[label == i] = bgr
-            
+            img_color[label == i] = my_label_colours[i]
+
+
 
     img_color[label==ignore_label] = ignore_color#highlight ignore label
 

@@ -310,10 +310,12 @@ def proceed_test_dir(args):
 
     for i in tqdm(range(len(ll))):
         filename = ll[i]
+        if "001987" not in filename:
+            continue
         image = cv2.imread(os.path.join(args.test_dir_path,filename))
-        prediction = predict_scaler(image, mypredictor, scales=[0.5,0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = False)
-        prediction = np.argmax(prediction, axis=2)
-        cv2.imwrite(os.path.join(final_dir,"{}".format(filename)), prediction)
+        prediction = predict_scaler(image, mypredictor, scales=[0.5, 0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = False)
+        prediction = np.argmax(prediction, axis=2).astype(np.uint8)# must convert to uint8
+        cv2.imwrite(os.path.join(final_dir,"{}".format(filename.replace("jpg","png"))), prediction) # jpg will appear some fault
         cv2.imwrite(os.path.join(visual_dir, "{}".format(filename)), np.concatenate((image, visualize_label(prediction)), axis=1))
 
 
