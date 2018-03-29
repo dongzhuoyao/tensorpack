@@ -68,6 +68,36 @@ empty_profile = Map(
 
 ########################### Settings for reproducing experiments ###########################
 
+
+foldall_train = Map(empty_profile,
+    read_mode='shuffle',
+    image_sets=['sbd_training', 'pascal_training'],
+    #image_sets=['pascal_training'],
+    pascal_cats = PASCAL_CATS,
+    first_shape=[321,321],
+    second_shape=[321,321]) # original code is second_shape=None),TODO
+
+foldall_1shot_test = Map(empty_profile,
+    db_cycle = 1000,
+    read_mode='deterministic',
+    image_sets=['pascal_test'],
+    #image_sets=['pascal_training'],
+    pascal_cats = PASCAL_CATS,
+    first_shape=[321,321],
+    second_shape=[321,321],
+     k_shot=1 ) # original code is second_shape=None),TODO
+
+foldall_5shot_test = Map(empty_profile,
+    db_cycle = 1000,
+    read_mode='deterministic',
+    image_sets=['pascal_test'],
+    #image_sets=['pascal_training'],
+    pascal_cats = PASCAL_CATS,
+    first_shape=[321,321],
+    second_shape=[321,321],
+     k_shot=5 ) # original code is second_shape=None),TODO
+
+
 #### fold 0 ####
 
 # Setting for training (on **training images**)
