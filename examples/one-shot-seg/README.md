@@ -20,7 +20,7 @@ res101.slim.2branch.speedup.image473.lrschedule|pascal0|58.8,58(backup),58.4(bac
 res101.slim.2branch.speedup.size473.sbugfix|pascal0|44
 res101.slim.2branch.speedup.240k|pascal0|60
 res101.slim.2branch.speedup.mcontext.240k(256)|pascal0|63.6
-res101.slim.2branch.speedup.mcontext.240k.lrschedule|pascal0|:question:
+res101.slim.2branch.speedup.mcontext.240k.lrschedule|pascal0|60.2
 res101.slim.2branch.speedup.mcontext.240k.support_se|pascal0|63.5
 res101.slim.2branch.speedup.mcontext.240k.width64|pascal0|63.4
 res101.slim.2branch.speedup.mcontext.240k.width128|pascal0|63.3
@@ -29,8 +29,11 @@ res101.slim.2branch.speedup.mcontext.240k.width512|pascal0|63.7
 res101.slim.2branch.speedup.mcontext.240k.width1024|pascal0|63.2
 res101.slim.2branch.speedup.mcontext.240k.image473.lrschedule|pascal0|59.3
 res101.slim.2branch.speedup.mcontext.240k.image473|pascal0|60
+res101.slim.2branch.speedup.mcontext3.240k|pascal0|61.2
+res101.slim.2branch.speedup.mcontext23.240k|pascal0|63.2
+res101.slim.2branch.speedup.mcontext123.240k|pascal0|61.4
 res101.slim.2branch.speedup.60kiter|pascal0|61.5
-res101.slim.2branch.speedup.60kiter.mcontext|pascal0|:question:
+res101.slim.2branch.speedup.60kiter.mcontext|pascal0|63.4
 res101.slim.2branch.speedup.60kiter.mcontext.lrschedule|pascal0|61.8
 
 
@@ -45,3 +48,7 @@ Arch |n-shot|fold0| fold1|fold2|fold3|Mean
 |res101.slim.2branch.speedup.240k.forbash(1000)|1-shot|59.0|53.7|50.4|47.9|53.0|
 |res101.slim.2branch.speedup.240k.forbash(1000)|5-shot(prob mix)|58.8|53.4|50.5|48|52.6|
 |res101.slim.2branch.speedup.240k.forbash(1000)|5-shot(or)|60.8|56.0|51.3|51.1|54.8|
+|res101.slim.2branch.speedup.mcontext.240k|1-shot|62.4|55.7|51.8|51.1|55.3|
+|res101.slim.2branch.speedup.mcontext.240k.support_se|1-shot|63.3|54.3|51.2|51.5|55.0
+|res101.slim.2branch.speedup.mcontext.240k.width512|1-shot|63.4|55.4|52.2|52|55.75
+
