@@ -272,7 +272,7 @@ class CalculateMIoU(Callback):
         logger.info("mIoU beautify: {}".format(self.stat.mIoU_beautify))
         logger.info("matrix beatify: {}".format(self.stat.confusion_matrix_beautify))
 
-def proceed_test(args, is_save = True):
+def proceed_test(args, is_save = False):
     import cv2
     ds = get_data(args.test_data)
 
