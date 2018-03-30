@@ -22,6 +22,7 @@ res101.slim.2branch.speedup.240k|pascal0|60
 res101.slim.2branch.speedup.mcontext.240k(256)|pascal0|63.6
 res101.slim.2branch.speedup.mcontext.240k.lrschedule|pascal0|60.2
 res101.slim.2branch.speedup.mcontext.240k.support_se|pascal0|63.5
+res101.slim.2branch.speedup.mcontext.240k.all_se|pascal0|63.7
 res101.slim.2branch.speedup.mcontext.240k.width64|pascal0|63.4
 res101.slim.2branch.speedup.mcontext.240k.width128|pascal0|63.3
 res101.slim.2branch.speedup.mcontext.240k.width384|pascal0|62.0
@@ -52,8 +53,12 @@ Arch |n-shot|fold0| fold1|fold2|fold3|Mean
 |res101.slim.2branch.speedup.mcontext.240k|5-shot|?|?|?|?|?|
 |res101.slim.2branch.speedup.mcontext.240k.support_se|1-shot|63.3|54.3|51.2|51.5|55.0
 |res101.slim.2branch.speedup.mcontext.240k.support_se|5-shot|?|55.6|?|53.6|?
+|res101.slim.2branch.speedup.mcontext.240k.all_se|1-shot|63.7|53.8|50.6|?|stopped, no use
 |res101.slim.2branch.speedup.mcontext.240k.width512|1-shot|63.4|55.4|52.2|52|55.75
-|res101.slim.2branch.speedup.mcontext.240k.width512|5-shot|?
+|res101.slim.2branch.speedup.mcontext.240k.width512|5-shot|64.1|56.8|52.6|52.0|56.38|
+|res101.slim.2branch.speedup.mcontext.240k.all_ran|1-shot|
+|res101.slim.2branch.speedup.mcontext.240k.support_ran|1-shot|
+
 
 
 oracle all class:  
