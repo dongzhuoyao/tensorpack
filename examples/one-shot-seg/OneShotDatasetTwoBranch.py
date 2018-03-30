@@ -10,16 +10,19 @@ from tensorpack.utils import logger
 from tensorpack.dataflow.base import RNGDataFlow
 import ss_datalayer
 
+
 __all__ = ['OneShotDatasetTwoBranch']
 
 
 class OneShotDatasetTwoBranch(RNGDataFlow):
-    def __init__(self,name):
+    def __init__(self,name, image_size=(321,321)):
         settings = __import__('ss_settings')
         self.name = name
         profile = getattr(settings, name)
         profile_copy = profile.copy()
         profile_copy['deploy_mode'] = True
+        profile_copy['first_shape'] = image_size
+        profile_copy['second_shape'] = image_size
         dbi = ss_datalayer.DBInterface(profile)
         self.data_size = len(dbi.db_items)
         if "test" in self.name:

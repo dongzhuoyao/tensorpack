@@ -15,23 +15,41 @@ from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.utils.stats import MIoUStatistics
 from tensorpack.utils import logger
 import OneShotDatasetTwoBranch
-from deeplabv2_dilation6_new import deeplabv2
+from deeplabv2_dilation6_new_mtscale import deeplabv2
 import tensorflow as tf
+image_size = (320, 320)
 slim = tf.contrib.slim
-from sess_utils import my_get_model_loader
 from RAN import AttentionModule
 max_epoch = 6
 weight_decay = 5e-4
-batch_size = 8
+batch_size = 12
 LR = 1e-4
 CLASS_NUM = 2
 evaluate_every_n_epoch = 1
-support_image_size =(473, 473)
-query_image_size = (473, 473)
+support_image_size =image_size
+query_image_size = image_size
+images_per_epoch = 40000
+fusion_width = 256
+def my_squeeze_excitation_layer(input_x, out_dim, layer_name,ratio=4):
+  with tf.variable_scope(layer_name):
+    squeeze = tf.reduce_mean(input_x, [1, 2], name='gap', keep_dims=False)
+
+    with tf.variable_scope('fc1'):
+      excitation = tf.layers.dense(inputs=squeeze, use_bias=True, units=int(out_dim / ratio))
+
+    excitation = tf.nn.relu(excitation)
+
+    with tf.variable_scope('fc2'):
+      excitation = tf.layers.dense(inputs=excitation, use_bias=True, units=out_dim)
+    excitation = tf.nn.sigmoid(excitation)
+
+    excitation = tf.reshape(excitation, [-1, 1, 1, out_dim])
+    scale = input_x * excitation
+    return scale
 
 def get_data(name,batch_size=1):
     isTrain = True if 'train' in name else False
-    ds = OneShotDatasetTwoBranch.OneShotDatasetTwoBranch(name)
+    ds = OneShotDatasetTwoBranch.OneShotDatasetTwoBranch(name,())
 
     def data_prepare(ds):
         if isTrain:
@@ -85,7 +103,6 @@ def get_data(name,batch_size=1):
     return ds
 
 
-
 def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
     """
     This function accepts logits rather than predictions, and is more numerically stable than
@@ -127,24 +144,37 @@ class Model(ModelDesc):
         logger.info("current ctx.is_training: {}".format(ctx.is_training))
 
         with tf.variable_scope("support"):
-             support_logits = deeplabv2(first_image_masked,CLASS_NUM,is_training=ctx.is_training)
+             support_context_list = deeplabv2(first_image_masked,CLASS_NUM,is_training=ctx.is_training)
         with tf.variable_scope("query"):
-            query_logits = deeplabv2(second_image,CLASS_NUM,is_training=ctx.is_training)
+            query_context_list = deeplabv2(second_image,CLASS_NUM,is_training=ctx.is_training)
 
+        def smooth(inp, conv_width, name, stride=1,output_num=fusion_width):
+            with tf.variable_scope(name):
+                return slim.conv2d(inp, output_num, [conv_width, conv_width], stride=stride,
+                                        activation_fn=None, normalizer_fn=None)
+
+        fusion_branch = AttentionModule(smooth(support_context_list[0],1,"context_support0"),fusion_width,"support0_ran")+ \
+                        AttentionModule(smooth(query_context_list[0], 1, "context_query0"),fusion_width,"query0_ran")
+        fusion_branch = smooth(fusion_branch,1,"context_fusion0",stride=2)
+
+        fusion_branch = fusion_branch + \
+                        AttentionModule(smooth(support_context_list[1], 1, "context_support1"),fusion_width,"support1_ran") + \
+                        AttentionModule(smooth(query_context_list[1], 1, "context_query1"),fusion_width,"query1_ran")
+        fusion_branch = smooth(fusion_branch, 1, "context_fusion1", stride=1)
+
+        fusion_branch = fusion_branch + \
+                        AttentionModule(smooth(support_context_list[2], 1, "context_support2"),fusion_width,"support2_ran") + \
+                        AttentionModule(smooth(query_context_list[2], 1, "context_query2"),fusion_width,"query2_ran")
+        fusion_branch = smooth(fusion_branch, 1, "context_fusion2", stride=1)
+
+        fusion_branch = fusion_branch + \
+                        AttentionModule(smooth(support_context_list[3], 1, "context_support3"),fusion_width,"support3_ran") + \
+                        AttentionModule(smooth(query_context_list[3], 1, "context_query3"),fusion_width,"query3_ran")
+        fusion_branch = smooth(fusion_branch, 1, "context_fusion3", stride=1,output_num=CLASS_NUM)
 
         costs = []
-        support_logits = tf.reduce_mean(support_logits, [1, 2], keep_dims=True, name='gap')
-        support_logits = tf.image.resize_bilinear(support_logits, query_logits.shape[1:3])
-
-        logits = support_logits + query_logits # 2048 channels
-
-        logits = slim.conv2d(logits, CLASS_NUM, [3, 3], stride=1, rate=6,
-                             activation_fn=None, normalizer_fn=None)
-        logits = tf.image.resize_bilinear(logits, second_image.shape[1:3],name="upsample")
-
+        logits = tf.image.resize_bilinear(fusion_branch, second_image.shape[1:3],name="upsample")
         prob = tf.nn.softmax(logits, name='prob')
-
-
 
         if get_current_tower_context().is_training:
             cost = softmax_cross_entropy_with_ignore_label(logits, second_label, class_num=CLASS_NUM)
@@ -192,7 +222,7 @@ def get_config():
         model=Model(),
         dataflow=dataset_train,
         callbacks=callbacks,
-        steps_per_epoch=  10000// total_batch,
+        steps_per_epoch=  images_per_epoch// total_batch,
         max_epoch=max_epoch,
     )
 
@@ -243,7 +273,6 @@ class CalculateMIoU(Callback):
         logger.info("mIoU beautify: {}".format(self.stat.mIoU_beautify))
         logger.info("matrix beatify: {}".format(self.stat.confusion_matrix_beautify))
 
-
 def proceed_test(args, is_save = True):
     import cv2
     ds = get_data(args.test_data)
@@ -269,7 +298,7 @@ def proceed_test(args, is_save = True):
         second_label = np.squeeze(second_label)
 
         k_shot = len(first_image_masks)
-        prediction_fused = np.zeros((second_image.shape[0],second_image.shape[1],CLASS_NUM),dtype=np.float32)
+        prediction_fused = np.zeros((second_image.shape[0],second_image.shape[1]),dtype=np.uint8)
         for kk in range(k_shot):
             def mypredictor(input_img):
                 # input image: 1*H*W*3
@@ -278,9 +307,10 @@ def proceed_test(args, is_save = True):
                 return output[0][0]
 
             prediction = predict_scaler(second_image, mypredictor, scales=[0.5,0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=support_image_size, is_densecrf = False)
-            prediction_fused += prediction
+            prediction = np.argmax(prediction, axis=2)
+            prediction_fused = np.logical_or(prediction, prediction_fused)
 
-        prediction_fused = np.argmax(prediction_fused, axis=2)
+
         stat.feed(prediction_fused, second_label)
 
         if is_save:
@@ -293,9 +323,6 @@ def proceed_test(args, is_save = True):
     logger.info("accuracy: {}".format(stat.accuracy))
     logger.info("mIoU beautify: {}".format(stat.mIoU_beautify))
     logger.info("matrix beatify: {}".format(stat.confusion_matrix_beautify))
-
-
-
 
 def view(args):
     ds = RepeatedData(get_data('fold0_train'), -1)
@@ -312,7 +339,7 @@ def view(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default='5',help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default='1',help='comma separated list of GPU(s) to use.')
     parser.add_argument('--load',default="slim_resnet_v2_101.ckpt", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--test_data', default="fold0_1shot_test", help='test data')
@@ -333,6 +360,7 @@ if __name__ == '__main__':
     else:
         config = get_config()
         if args.load:
+            from sess_utils import my_get_model_loader
             config.session_init = my_get_model_loader(args.load)
 
 

@@ -281,7 +281,7 @@ def proceed_test(args, is_save = True):
         second_label = np.squeeze(second_label)
 
         k_shot = len(first_image_masks)
-        prediction_fused = np.zeros((second_image.shape[0],second_image.shape[1],CLASS_NUM),dtype=np.float32)
+        prediction_fused = np.zeros((second_image.shape[0],second_image.shape[1]),dtype=np.uint8)
         for kk in range(k_shot):
             def mypredictor(input_img):
                 # input image: 1*H*W*3
@@ -290,9 +290,10 @@ def proceed_test(args, is_save = True):
                 return output[0][0]
 
             prediction = predict_scaler(second_image, mypredictor, scales=[0.5,0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=support_image_size, is_densecrf = False)
-            prediction_fused += prediction
+            prediction = np.argmax(prediction, axis=2)
+            prediction_fused = np.logical_or(prediction, prediction_fused)
 
-        prediction_fused = np.argmax(prediction_fused, axis=2)
+
         stat.feed(prediction_fused, second_label)
 
         if is_save:
