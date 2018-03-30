@@ -53,7 +53,7 @@ Arch |n-shot|fold0| fold1|fold2|fold3|Mean
 |res101.slim.2branch.speedup.mcontext.240k|5-shot :question:|?|?|?|?|?|
 |res101.slim.2branch.speedup.mcontext.240k.support_se|1-shot|63.3|54.3|51.2|51.5|55.0
 |res101.slim.2branch.speedup.mcontext.240k.support_se|5-shot|64.4|55.6|:question:|53.6|?
-|res101.slim.2branch.speedup.mcontext.240k.all_se|1-shot|63.7|53.8|50.6|?|stopped, no use
+|res101.slim.2branch.speedup.mcontext.240k.all_se|1-shot :question:|63.7|53.8|50.6|?|stopped, no use
 |res101.slim.2branch.speedup.mcontext.240k.width512|1-shot|63.4|55.4|52.2|52|55.75
 |res101.slim.2branch.speedup.mcontext.240k.width512|5-shot|64.1|56.8|52.6|52.0|56.38|
 |res101.slim.2branch.speedup.mcontext.240k.all_ran :question:|1-shot|
