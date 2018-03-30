@@ -290,7 +290,7 @@ def proceed_test_dir(args):
     predictor = OfflinePredictor(pred_config)
 
     from tensorpack.utils.fs import mkdir_p
-    result_dir = "test-from-dir2"
+    result_dir = "test-from-dir3"
     visual_dir = os.path.join(result_dir,"visualization")
     final_dir = os.path.join(result_dir,"final")
     import shutil
@@ -310,8 +310,6 @@ def proceed_test_dir(args):
 
     for i in tqdm(range(len(ll))):
         filename = ll[i]
-        if "001987" not in filename:
-            continue
         image = cv2.imread(os.path.join(args.test_dir_path,filename))
         prediction = predict_scaler(image, mypredictor, scales=[0.5, 0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = False)
         prediction = np.argmax(prediction, axis=2).astype(np.uint8)# must convert to uint8
