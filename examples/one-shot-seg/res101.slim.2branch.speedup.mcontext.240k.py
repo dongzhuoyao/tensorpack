@@ -305,9 +305,9 @@ def proceed_test(args, is_save = True):
             for iii in range(len(first_images)):
                 new_img = cv2.resize(first_images[iii], (second_image.shape[1], second_image.shape[0]))
                 new_label = cv2.resize(first_labels[iii], (second_image.shape[1], second_image.shape[0]))
-                huge.append(visualize_binary_mask(new_img,new_label,color=(192, 128, 0),class_num=2))
-            huge.extend([second_image, visualize_binary_mask(second_image, second_label,color= (64, 0, 128), class_num=2),
-                         visualize_binary_mask(second_image, prediction_fused, color= (64, 0, 128), class_num=2)])
+                huge.append(visualize_binary_mask(new_img,new_label,color=(0, 0, 255),class_num=2))
+            huge.extend([second_image, visualize_binary_mask(second_image, second_label,color= (255, 0, 0), class_num=2),
+                         visualize_binary_mask(second_image, prediction_fused, color= (255, 0, 0), class_num=2)])
             huge = np.concatenate(huge, axis=1)
             cv2.imwrite("{}/{}.png".format(result_dir,i), huge)
 
