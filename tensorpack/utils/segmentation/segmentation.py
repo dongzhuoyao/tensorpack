@@ -27,6 +27,8 @@ label_colours = [(0,0,0)
 ignore_color = (255,255,255)
 fuzzy_color = (64,0,128)
 
+label2_colours = [(192,128,0),(64,0,128)]
+
 
 def update_confusion_matrix(pred, label, conf_m, nb_classes, ignore = 255):
 
@@ -76,6 +78,31 @@ def pad_edge(img, target_size):
     cols_missing = max(target_size[1] - img.shape[1], 0)
     padded_img = np.pad(img, ((0, rows_missing), (0, cols_missing), (0, 0)), 'constant')
     return padded_img, [0,target_size[0]-rows_missing,0,target_size[1] - cols_missing]
+
+
+def apply_mask(image, mask, color, alpha=0.5):
+    """Apply the given mask to the image.
+    """
+    for c in range(3):
+        image[:, :, c] = np.where(mask == 1,
+                                  image[:, :, c] *
+                                  (1 - alpha) + alpha * color[c] * 255,
+                                  image[:, :, c])
+    return image
+
+
+#https://github.com/matterport/Mask_RCNN/blob/master/visualize.py
+def visualize_binary_mask(image, label,color, class_num, alpha=0.5):
+    """Color classes a good distance away from each other."""
+
+    image = np.copy(image)
+    for ii in range(1,class_num):# background no mask
+        for c in range(3):
+            image[:, :, c] = np.where(label == ii,
+                                      image[:, :, c] *
+                                      (1 - alpha) + alpha * color[c],
+                                      image[:, :, c])
+    return image
 
 
 def visualize_label(label, class_num=21, ignore_label = 255):

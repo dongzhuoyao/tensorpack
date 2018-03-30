@@ -9,7 +9,7 @@ import numpy as np
 from tqdm import tqdm
 from tensorpack import *
 from tensorpack.tfutils import argscope, get_model_loader
-from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler
+from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler, visualize_binary_mask
 from tensorpack.tfutils.summary import *
 from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.utils.stats import MIoUStatistics
@@ -59,10 +59,14 @@ def get_data(name,batch_size=1):
             metadata = ds[4]
             class_id = metadata['class_id']
             first_image_masks = []
+            first_images = []
+            first_labels = []
             for kk in range(k_shots):
                 first_image = cv2.imread(ds[0][kk], cv2.IMREAD_COLOR)
                 first_label = cv2.imread(ds[1][kk], cv2.IMREAD_GRAYSCALE)
                 first_label = np.equal(first_label, class_id).astype(np.uint8)
+                first_images.append(first_image)
+                first_labels.append(first_label)
                 first_image = cv2.resize(first_image, support_image_size)
                 first_label = cv2.resize(first_label, support_image_size, interpolation=cv2.INTER_NEAREST)
                 first_image_masked = first_image * first_label[:, :, np.newaxis]
@@ -73,7 +77,7 @@ def get_data(name,batch_size=1):
             second_label = np.equal(second_label, class_id).astype(np.uint8)
             #second_image = cv2.resize(second_image, support_image_size)
             #second_label = cv2.resize(second_label, support_image_size, interpolation=cv2.INTER_NEAREST)
-            return first_image_masks, second_image, second_label
+            return first_image_masks, second_image, second_label, first_images, first_labels
 
 
     if isTrain:
@@ -261,7 +265,7 @@ def proceed_test(args, is_save = True):
     ds = get_data(args.test_data)
 
 
-    result_dir = "result22"
+    result_dir = "paper_visualization"
     from tensorpack.utils.fs import mkdir_p
     mkdir_p(result_dir)
 
@@ -276,7 +280,7 @@ def proceed_test(args, is_save = True):
     i = 0
     stat = MIoUStatistics(CLASS_NUM)
     logger.info("start validation....")
-    for first_image_masks, second_image, second_label  in tqdm(ds.get_data()):
+    for first_image_masks, second_image, second_label,first_images,first_labels  in tqdm(ds.get_data()):
         second_image = np.squeeze(second_image)
         second_label = np.squeeze(second_label)
 
@@ -297,7 +301,15 @@ def proceed_test(args, is_save = True):
         stat.feed(prediction_fused, second_label)
 
         if is_save:
-            cv2.imwrite("{}/{}.png".format(result_dir,i), np.concatenate((cv2.resize(first_image_masks[0],(second_image.shape[1],second_image.shape[0])),second_image, visualize_label(second_label), visualize_label(prediction_fused)), axis=1))
+            huge = []
+            for iii in range(len(first_images)):
+                new_img = cv2.resize(first_images[iii], (second_image.shape[1], second_image.shape[0]))
+                new_label = cv2.resize(first_labels[iii], (second_image.shape[1], second_image.shape[0]))
+                huge.append(visualize_binary_mask(new_img,new_label,color=(192, 128, 0),class_num=2))
+            huge.extend([second_image, visualize_binary_mask(second_image, second_label,color= (64, 0, 128), class_num=2),
+                         visualize_binary_mask(second_image, prediction_fused, color= (64, 0, 128), class_num=2)])
+            huge = np.concatenate(huge, axis=1)
+            cv2.imwrite("{}/{}.png".format(result_dir,i), huge)
 
         i += 1
 
