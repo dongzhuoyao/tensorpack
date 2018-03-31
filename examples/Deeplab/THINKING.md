@@ -23,6 +23,7 @@ Recognition](https://arxiv.org/abs/1801.07455)
 * [ESPNet: Efficient Spatial Pyramid of Dilated
 Convolutions for Semantic Segmentation](https://github.com/sacmehta/ESPNet) to hourglass
 * [Efficient Interactive Annotation of Segmentation Datasets with Polygon-RNN++](http://www.cs.toronto.edu/polyrnn/) with one-shot
+* Learning Pixel-level Semantic Affinity with Image-level Supervision for Weakly Supervised Semantic Segmentation
 
 ## current focus
 * [Adversarial Learning for Semi-supervised Semantic Segmentation](https://github.com/hfslyc/AdvSemiSeg)
