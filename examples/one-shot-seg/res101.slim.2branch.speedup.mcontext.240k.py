@@ -265,7 +265,7 @@ def proceed_test(args, is_save = True):
     ds = get_data(args.test_data)
 
 
-    result_dir = "paper_visualization_5shot"
+    result_dir = "fold3_1shot_weak"
     from tensorpack.utils.fs import mkdir_p
     mkdir_p(result_dir)
 
@@ -319,6 +319,75 @@ def proceed_test(args, is_save = True):
     logger.info("mIoU beautify: {}".format(stat.mIoU_beautify))
     logger.info("matrix beatify: {}".format(stat.confusion_matrix_beautify))
 
+
+
+def proceed_compare(args, is_save = True):
+    import cv2
+    ds_1shot = get_data("fold0_1shot_test")
+    ds_5shot = get_data("fold0_5shot_test")
+
+
+    result_dir = "paper_visualization_compare"
+    from tensorpack.utils.fs import mkdir_p
+    mkdir_p(result_dir)
+
+
+    pred_config = PredictConfig(
+        model=Model(),
+        session_init=get_model_loader(args.test_load),
+        input_names=['first_image_masked','second_image'],
+        output_names=['prob'])
+    predictor = OfflinePredictor(pred_config)
+
+    i = 0
+    stat = MIoUStatistics(CLASS_NUM)
+    logger.info("start validation....")
+    for data_1shot,data_5shot  in tqdm(zip(ds_1shot.get_data(),ds_5shot.get_data())):
+        predict_list = []
+        huge = []
+        current_img = data_1shot[1]
+        for tmp in [data_1shot,data_5shot]:
+                first_image_masks, second_image, second_label, first_images, first_labels = tmp[0],tmp[1],tmp[2],tmp[3],tmp[4]
+                second_image = np.squeeze(second_image)
+                second_label = np.squeeze(second_label)
+
+                k_shot = len(first_image_masks)
+                prediction_fused = np.zeros((second_image.shape[0],second_image.shape[1]),dtype=np.uint8)
+                for kk in range(k_shot):
+                    def mypredictor(input_img):
+                        # input image: 1*H*W*3
+                        # output : H*W*C
+                        output = predictor(first_image_masks[kk][np.newaxis, :, :, :], input_img)
+                        return output[0][0]
+
+                    prediction = predict_scaler(second_image, mypredictor, scales=[0.5,0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=support_image_size, is_densecrf = False)
+                    prediction = np.argmax(prediction, axis=2)
+                    prediction_fused = np.logical_or(prediction, prediction_fused)
+
+                predict_list.append(prediction_fused)
+
+        current_img = visualize_binary_mask(current_img, predict_list[0], color=(127, 255, 0), class_num=2)
+        current_img = visualize_binary_mask(current_img, predict_list[1], color=(255, 64, 64), class_num=2)
+
+        if is_save:
+            for iii in range(len(first_images)):
+                new_img = cv2.resize(first_images[iii], (second_image.shape[1], second_image.shape[0]))
+                new_label = cv2.resize(first_labels[iii], (second_image.shape[1], second_image.shape[0]))
+                huge.append(visualize_binary_mask(new_img,new_label,color=(0, 0, 255),class_num=2))
+            huge.extend([second_image,current_img, visualize_binary_mask(second_image, second_label,color= (255, 0, 0), class_num=2),
+                         visualize_binary_mask(second_image, prediction_fused, color= (255, 0, 0), class_num=2)])
+            huge = np.concatenate(huge, axis=1)
+            cv2.imwrite("{}/{}.png".format(result_dir,i), huge)
+
+        i += 1
+
+    logger.info("mIoU: {}".format(stat.mIoU))
+    logger.info("mean_accuracy: {}".format(stat.mean_accuracy))
+    logger.info("accuracy: {}".format(stat.accuracy))
+    logger.info("mIoU beautify: {}".format(stat.mIoU_beautify))
+    logger.info("matrix beatify: {}".format(stat.confusion_matrix_beautify))
+
+
 def view(args):
     ds = RepeatedData(get_data('fold0_train'), -1)
     ds.reset_state()
@@ -337,9 +406,10 @@ if __name__ == '__main__':
     parser.add_argument('--gpu', default='5',help='comma separated list of GPU(s) to use.')
     parser.add_argument('--load',default="slim_resnet_v2_101.ckpt", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
-    parser.add_argument('--test_data', default="fold0_1shot_test", help='test data')
-    parser.add_argument('--train_data', default="fold0_train", help='train data')
+    parser.add_argument('--test_data', default="fold3_1shot_test", help='test data')
+    parser.add_argument('--train_data', default="fold1_train", help='train data')
     parser.add_argument('--test', action='store_true', help='test data')
+    parser.add_argument('--test_compare', action='store_true', help='test data')
     parser.add_argument('--test_load', help='load model')
 
     args = parser.parse_args()
@@ -352,6 +422,8 @@ if __name__ == '__main__':
     elif args.test:
         assert args.test_load is not None
         proceed_test(args)
+    elif args.test_compare:
+        proceed_compare(args)
     else:
         config = get_config()
         if args.load:

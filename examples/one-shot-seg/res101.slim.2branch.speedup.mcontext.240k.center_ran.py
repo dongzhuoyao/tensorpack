@@ -155,23 +155,31 @@ class Model(ModelDesc):
 
         fusion_branch = smooth(support_context_list[0],1,"context_support0")+ \
                         smooth(query_context_list[0], 1, "context_query0")
+
+        fusion_branch = AttentionModule(fusion_branch, fusion_width, "center0_ran")
+
         fusion_branch = smooth(fusion_branch,1,"context_fusion0",stride=2)
 
-        fusion_branch = AttentionModule(fusion_branch,fusion_width,"center0_ran")
 
         fusion_branch = fusion_branch + \
                         smooth(support_context_list[1], 1, "context_support1") + \
                         smooth(query_context_list[1], 1, "context_query1")
-        fusion_branch = smooth(fusion_branch, 1, "context_fusion1", stride=1)
 
         fusion_branch = AttentionModule(fusion_branch, fusion_width, "center1_ran")
+
+        fusion_branch = smooth(fusion_branch, 1, "context_fusion1", stride=1)
+
+
 
         fusion_branch = fusion_branch + \
                         smooth(support_context_list[2], 1, "context_support2") + \
                         smooth(query_context_list[2], 1, "context_query2")
-        fusion_branch = smooth(fusion_branch, 1, "context_fusion2", stride=1)
 
         fusion_branch = AttentionModule(fusion_branch, fusion_width, "center2_ran")
+
+        fusion_branch = smooth(fusion_branch, 1, "context_fusion2", stride=1)
+
+
 
         fusion_branch = fusion_branch + \
                         smooth(support_context_list[3], 1, "context_support3") + \

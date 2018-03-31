@@ -9,7 +9,7 @@ import numpy as np
 from tqdm import tqdm
 from tensorpack import *
 from tensorpack.tfutils import argscope, get_model_loader
-from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler
+from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler, visualize_binary_mask
 from tensorpack.tfutils.summary import *
 from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.utils.stats import MIoUStatistics
@@ -19,7 +19,7 @@ from deeplabv2_dilation6_new_mtscale import deeplabv2
 import tensorflow as tf
 slim = tf.contrib.slim
 
-max_epoch = 6
+max_epoch = 60
 weight_decay = 5e-4
 batch_size = 12
 LR = 1e-4
@@ -27,12 +27,12 @@ CLASS_NUM = 2
 evaluate_every_n_epoch = 1
 support_image_size =(321, 321)
 query_image_size = (321, 321)
-images_per_epoch = 40000
-fusion_width = 512
+images_per_epoch = 4000
+fusion_width = 256
 
 def get_data(name,batch_size=1):
     isTrain = True if 'train' in name else False
-    ds = OneShotDatasetTwoBranch.OneShotDatasetTwoBranch(name)
+    ds = OneShotDatasetTwoBranch.OneShotDatasetTwoBranch(name,())
 
     def data_prepare(ds):
         if isTrain:
@@ -84,34 +84,6 @@ def get_data(name,batch_size=1):
     else:
         ds = MapData(ds, data_prepare)
     return ds
-
-
-def get_test_data(name,batch_size=1):
-    ds = OneShotDatasetTwoBranch.OneShotDatasetTwoBranch(name)
-    def data_prepare(ds):
-            k_shots = len(ds[0])
-            metadata = ds[4]
-            class_id = metadata['class_id']
-            first_image_masks = []
-            for kk in range(k_shots):
-                first_image = cv2.imread(ds[0][kk], cv2.IMREAD_COLOR)
-                first_label = cv2.imread(ds[1][kk], cv2.IMREAD_GRAYSCALE)
-                first_label = np.equal(first_label, class_id).astype(np.uint8)
-                first_image = cv2.resize(first_image, support_image_size)
-                first_label = cv2.resize(first_label, support_image_size, interpolation=cv2.INTER_NEAREST)
-                first_image_masked = first_image * first_label[:, :, np.newaxis]
-                first_image_masks.append(first_image_masked)
-
-            second_image = cv2.imread(ds[2], cv2.IMREAD_COLOR)
-            second_label = cv2.imread(ds[3], cv2.IMREAD_GRAYSCALE)
-            second_label = np.equal(second_label, class_id).astype(np.uint8)
-            #second_image = cv2.resize(second_image, support_image_size)
-            #second_label = cv2.resize(second_label, support_image_size, interpolation=cv2.INTER_NEAREST)
-            return first_image_masks, second_image, second_label
-
-    ds = MapData(ds, data_prepare)
-    return ds
-
 
 
 def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
@@ -225,8 +197,9 @@ def get_config():
         GPUUtilizationTracker(),
         EstimatedTimeLeft(),
         PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
-        ProgressBar(["cross_entropy_loss", "cost", "wd_cost"]) , # uncomment it to debug for every step
-        #RunOp(lambda: tf.add_check_numerics_ops(), run_before=False, run_as_trigger=True, run_step=True)
+        ProgressBar(["cross_entropy_loss", "cost", "wd_cost","learning_rate"]) , # uncomment it to debug for every step
+        RunOp(lambda: tf.group(get_global_step_var().assign(0)), run_before=True, run_as_trigger=False, run_step=False,
+              verbose=True)
     ]
 
     return TrainConfig(
@@ -284,12 +257,12 @@ class CalculateMIoU(Callback):
         logger.info("mIoU beautify: {}".format(self.stat.mIoU_beautify))
         logger.info("matrix beatify: {}".format(self.stat.confusion_matrix_beautify))
 
-def proceed_test(args, is_save = False):
+def proceed_test(args, is_save = True):
     import cv2
-    ds = get_test_data(args.test_data)
+    ds = get_data(args.test_data)
 
 
-    result_dir = "result22"
+    result_dir = "fold3_1shot_weak"
     from tensorpack.utils.fs import mkdir_p
     mkdir_p(result_dir)
 
@@ -304,12 +277,12 @@ def proceed_test(args, is_save = False):
     i = 0
     stat = MIoUStatistics(CLASS_NUM)
     logger.info("start validation....")
-    for first_image_masks, second_image, second_label  in tqdm(ds.get_data()):
+    for first_image_masks, second_image, second_label,first_images,first_labels  in tqdm(ds.get_data()):
         second_image = np.squeeze(second_image)
         second_label = np.squeeze(second_label)
 
         k_shot = len(first_image_masks)
-        prediction_fused = np.zeros((second_image.shape[0],second_image.shape[1],CLASS_NUM),dtype=np.float32)
+        prediction_fused = np.zeros((second_image.shape[0],second_image.shape[1]),dtype=np.uint8)
         for kk in range(k_shot):
             def mypredictor(input_img):
                 # input image: 1*H*W*3
@@ -318,13 +291,22 @@ def proceed_test(args, is_save = False):
                 return output[0][0]
 
             prediction = predict_scaler(second_image, mypredictor, scales=[0.5,0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=support_image_size, is_densecrf = False)
-            prediction_fused += prediction
+            prediction = np.argmax(prediction, axis=2)
+            prediction_fused = np.logical_or(prediction, prediction_fused)
 
-        prediction_fused = np.argmax(prediction_fused, axis=2)
+
         stat.feed(prediction_fused, second_label)
 
         if is_save:
-            cv2.imwrite("{}/{}.png".format(result_dir,i), np.concatenate((cv2.resize(first_image_masks[0],(second_image.shape[1],second_image.shape[0])),second_image, visualize_label(second_label), visualize_label(prediction_fused)), axis=1))
+            huge = []
+            for iii in range(len(first_images)):
+                new_img = cv2.resize(first_images[iii], (second_image.shape[1], second_image.shape[0]))
+                new_label = cv2.resize(first_labels[iii], (second_image.shape[1], second_image.shape[0]))
+                huge.append(visualize_binary_mask(new_img,new_label,color=(0, 0, 255),class_num=2))
+            huge.extend([second_image, visualize_binary_mask(second_image, second_label,color= (255, 0, 0), class_num=2),
+                         visualize_binary_mask(second_image, prediction_fused, color= (255, 0, 0), class_num=2)])
+            huge = np.concatenate(huge, axis=1)
+            cv2.imwrite("{}/{}.png".format(result_dir,i), huge)
 
         i += 1
 
@@ -333,6 +315,75 @@ def proceed_test(args, is_save = False):
     logger.info("accuracy: {}".format(stat.accuracy))
     logger.info("mIoU beautify: {}".format(stat.mIoU_beautify))
     logger.info("matrix beatify: {}".format(stat.confusion_matrix_beautify))
+
+
+
+def proceed_compare(args, is_save = True):
+    import cv2
+    ds_1shot = get_data("fold0_1shot_test")
+    ds_5shot = get_data("fold0_5shot_test")
+
+
+    result_dir = "paper_visualization_compare"
+    from tensorpack.utils.fs import mkdir_p
+    mkdir_p(result_dir)
+
+
+    pred_config = PredictConfig(
+        model=Model(),
+        session_init=get_model_loader(args.test_load),
+        input_names=['first_image_masked','second_image'],
+        output_names=['prob'])
+    predictor = OfflinePredictor(pred_config)
+
+    i = 0
+    stat = MIoUStatistics(CLASS_NUM)
+    logger.info("start validation....")
+    for data_1shot,data_5shot  in tqdm(zip(ds_1shot.get_data(),ds_5shot.get_data())):
+        predict_list = []
+        huge = []
+        current_img = data_1shot[1]
+        for tmp in [data_1shot,data_5shot]:
+                first_image_masks, second_image, second_label, first_images, first_labels = tmp[0],tmp[1],tmp[2],tmp[3],tmp[4]
+                second_image = np.squeeze(second_image)
+                second_label = np.squeeze(second_label)
+
+                k_shot = len(first_image_masks)
+                prediction_fused = np.zeros((second_image.shape[0],second_image.shape[1]),dtype=np.uint8)
+                for kk in range(k_shot):
+                    def mypredictor(input_img):
+                        # input image: 1*H*W*3
+                        # output : H*W*C
+                        output = predictor(first_image_masks[kk][np.newaxis, :, :, :], input_img)
+                        return output[0][0]
+
+                    prediction = predict_scaler(second_image, mypredictor, scales=[0.5,0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=support_image_size, is_densecrf = False)
+                    prediction = np.argmax(prediction, axis=2)
+                    prediction_fused = np.logical_or(prediction, prediction_fused)
+
+                predict_list.append(prediction_fused)
+
+        current_img = visualize_binary_mask(current_img, predict_list[0], color=(127, 255, 0), class_num=2)
+        current_img = visualize_binary_mask(current_img, predict_list[1], color=(255, 64, 64), class_num=2)
+
+        if is_save:
+            for iii in range(len(first_images)):
+                new_img = cv2.resize(first_images[iii], (second_image.shape[1], second_image.shape[0]))
+                new_label = cv2.resize(first_labels[iii], (second_image.shape[1], second_image.shape[0]))
+                huge.append(visualize_binary_mask(new_img,new_label,color=(0, 0, 255),class_num=2))
+            huge.extend([second_image,current_img, visualize_binary_mask(second_image, second_label,color= (255, 0, 0), class_num=2),
+                         visualize_binary_mask(second_image, prediction_fused, color= (255, 0, 0), class_num=2)])
+            huge = np.concatenate(huge, axis=1)
+            cv2.imwrite("{}/{}.png".format(result_dir,i), huge)
+
+        i += 1
+
+    logger.info("mIoU: {}".format(stat.mIoU))
+    logger.info("mean_accuracy: {}".format(stat.mean_accuracy))
+    logger.info("accuracy: {}".format(stat.accuracy))
+    logger.info("mIoU beautify: {}".format(stat.mIoU_beautify))
+    logger.info("matrix beatify: {}".format(stat.confusion_matrix_beautify))
+
 
 def view(args):
     ds = RepeatedData(get_data('fold0_train'), -1)
@@ -352,10 +403,11 @@ if __name__ == '__main__':
     parser.add_argument('--gpu', default='5',help='comma separated list of GPU(s) to use.')
     parser.add_argument('--load',default="slim_resnet_v2_101.ckpt", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
-    parser.add_argument('--test_data', default="foldall_train", help='test data')
-    parser.add_argument('--train_data', default="foldall_train", help='train data')
+    parser.add_argument('--test_data', default="fold0_1shot_test", help='test data')
+    parser.add_argument('--train_data', default="fold0_train", help='train data')
     parser.add_argument('--test', action='store_true', help='test data')
-    parser.add_argument('--test_load', default="train_log/res101.slim.2branch.speedup.mcontext.240k.width512.oracle:foldall_1shot_test/model-5575962", help='load model')
+    parser.add_argument('--test_compare', action='store_true', help='test data')
+    parser.add_argument('--test_load', help='load model')
 
     args = parser.parse_args()
 
@@ -367,6 +419,8 @@ if __name__ == '__main__':
     elif args.test:
         assert args.test_load is not None
         proceed_test(args)
+    elif args.test_compare:
+        proceed_compare(args)
     else:
         config = get_config()
         if args.load:
