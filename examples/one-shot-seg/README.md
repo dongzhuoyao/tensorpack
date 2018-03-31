@@ -63,4 +63,5 @@ Arch |n-shot|fold0| fold1|fold2|fold3|Mean
 
 oracle all class:  
 res101.slim.2branch.speedup.mcontext.240k.width512.oracle:foldall_1shot_test, 67.0
+res101.slim.2branch.speedup.mcontext.240k.width512.oracle:foldall_train, 72.5
 
