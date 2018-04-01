@@ -60,7 +60,7 @@ Arch |n-shot|fold0| fold1|fold2|fold3|Mean
 |res101.slim.2branch.speedup.mcontext.240k.width512|5-shot|64.1|56.8|52.6|52.0|56.38|
 |res101.slim.2branch.speedup.mcontext.240k.all_ran|1-shot|63.6|56.4|52.6|50.8|55.85|
 |res101.slim.2branch.speedup.mcontext.240k.support_ran :question:|1-shot|63.3|56.8|52.5|50.1|55.6|
-|res101.slim.2branch.speedup.mcontext.240k.center_ran :question:|1-shot||
+|res101.slim.2branch.speedup.mcontext.240k.center_ran :question:|1-shot|65.8|58.0||||
 
 
 oracle all class:  
