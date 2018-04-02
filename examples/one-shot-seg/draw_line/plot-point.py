@@ -336,8 +336,8 @@ def get_data(ppp, filter):
         if line.find(filter) != -1:
             print line
             lines.append(line)
-        if len(lines) > 40:
-            break
+        #if len(lines) > 40:
+        #    break
     np_x = np.zeros((len(lines)))
     np_y = np.zeros((len(lines)))
     for idx, line in enumerate(lines):
