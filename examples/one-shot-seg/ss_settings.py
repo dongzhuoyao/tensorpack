@@ -109,6 +109,8 @@ fold0_train = Map(empty_profile,
     first_shape=image_size,
     second_shape=image_size) # original code is second_shape=None),TODO
 
+fold0_5shot_train = Map(fold0_train,k_shot=5)
+
 # Setting for testing on **test images** in unseen image classes (in total 5 classes), 5-shot
 fold0_5shot_test = Map(empty_profile,
     db_cycle = 1000,
