@@ -30,30 +30,12 @@ support_image_size =image_size
 query_image_size = image_size
 images_per_epoch = 40000
 fusion_width = 256
+lstm_mid_channel = 256
 
 batch_size = 5
 k_shot = 5
 
-mid_channel = 256
-from ConvLSTMCell import ConvLSTMCell
-
-
-def convlstm(x,output_channels=CLASS_NUM):
-    tf.assert_equal(len(x.get_shape()), 4)
-    convlstm_layer = tf.contrib.rnn.ConvLSTMCell(
-        conv_ndims=2,
-        input_shape=[20,20,mid_channel],#x.get_shape()[1:], #[28, 28, channel], TODO
-        output_channels= output_channels,
-        kernel_shape=[3, 3],
-        use_bias=True,
-        skip_connection=False,
-        forget_bias=1.0,
-        initializers=None,
-        name="conv_lstm_cell")
-
-    initial_state = convlstm_layer.zero_state(batch_size, dtype=tf.float32)
-    outputs, _ = tf.nn.dynamic_rnn(convlstm_layer, x, initial_state=initial_state, time_major=False, dtype="float32")
-    return outputs
+from cell import ConvLSTMCell_carlthome
 
 
 
@@ -170,12 +152,10 @@ class Model(ModelDesc):
 
         ctx = get_current_tower_context()
         logger.info("current ctx.is_training: {}".format(ctx.is_training))
-        fusion_unwrap_list = []
-        cell = ConvLSTMCell(CLASS_NUM)
-        if ctx.is_training:
-            state = cell.zero_state(batch_size, 20, 20)
-        else:
-            state = cell.zero_state(1, 20, 20)
+
+
+        cell = ConvLSTMCell_carlthome([20, 20], filters=lstm_mid_channel, kernel = [3, 3],reuse=tf.AUTO_REUSE)
+
 
 
         first_image_masked = tf.reshape(first_image_masked,(-1,image_size[0],image_size[1],3))
@@ -195,7 +175,8 @@ class Model(ModelDesc):
             shape_list = support_context_list[iii].get_shape().as_list()
             support_context_list[iii] = tf.reshape(support_context_list[iii],(-1,k_shot,shape_list[1],shape_list[2],shape_list[3]))
 
-        fusion_branch_list_for_lstm = []
+        fusion_list = []
+        final_list = []
         with tf.variable_scope('') as scope:
             for kth_shot in range(k_shot):
                 if kth_shot > 0:
@@ -231,14 +212,25 @@ class Model(ModelDesc):
                 fusion_branch = fusion_branch + \
                                 smooth(support_context_list[3][:,kth_shot,:,:,:], 1, "context_support3") + \
                                 smooth(query_context_list[3], 1, "context_query3")
-                fusion_branch = smooth(fusion_branch, 1, "context_fusion3", stride=1,output_num=mid_channel)
+                fusion_branch = smooth(fusion_branch, 1, "context_fusion3", stride=1, output_num=lstm_mid_channel) # [batch_size,w,h,c]
+                fusion_list.append(fusion_branch)
 
+            fusion_branch = tf.stack(fusion_list)
+            fusion_branch = tf.transpose(fusion_branch,(1, 0, 2, 3, 4))# batch_size, time_step, w, h, c
 
-                fusion_branch, state = cell(fusion_branch, state)
-                fusion_unwrap_list.append(fusion_branch)
+            fusion_branch, state = tf.nn.dynamic_rnn(cell, fusion_branch, dtype=fusion_branch.dtype)
+
+            fusion_branch = tf.split(fusion_branch,axis=1,num_or_size_splits=k_shot)
+
+        with tf.variable_scope('') as scope:
+            for iii in range(k_shot):
+                    if iii > 0:
+                        scope.reuse_variables()
+                    final_list.append(smooth(tf.squeeze(fusion_branch[iii],axis=1), 1, "context_after_lstm", stride=1, output_num=CLASS_NUM))
+
 
         costs = []
-        logits = tf.image.resize_bilinear(fusion_unwrap_list[-1], second_image.shape[1:3],name="upsample")
+        logits = tf.image.resize_bilinear(final_list[-1], second_image.shape[1:3],name="upsample")
         prob = tf.nn.softmax(logits, name='prob')
 
         if get_current_tower_context().is_training:
@@ -246,12 +238,7 @@ class Model(ModelDesc):
             cost = tf.reduce_mean(cost, name='cross_entropy_loss')
             costs.append(cost)
 
-            wd_w = tf.train.exponential_decay(2e-4, get_global_step_var(),
-                                              80000, 0.7, True)
-            wd_cost = tf.multiply(wd_w, regularize_cost('.*/W', tf.nn.l2_loss), name='wd_cost')
-            costs.append(wd_cost)
 
-            #add_param_summary(('.*', ['histogram', 'rms']))
             total_cost = tf.add_n(costs, name='cost')
             return total_cost
 
@@ -279,7 +266,7 @@ def get_config():
         GPUUtilizationTracker(),
         EstimatedTimeLeft(),
         PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
-        ProgressBar(["cross_entropy_loss", "cost", "wd_cost", "learning_rate"]),  # uncomment it to debug for every step
+        ProgressBar(["cross_entropy_loss", "cost", "learning_rate"]),  # uncomment it to debug for every step
         RunOp(lambda: tf.group(get_global_step_var().assign(0)), run_before=True, run_as_trigger=False, run_step=False,
               verbose=True)
     ]
