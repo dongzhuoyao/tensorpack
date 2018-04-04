@@ -104,7 +104,7 @@ def get_data(name,batch_size=1):
 
 
     if isTrain:
-        ds = MultiThreadMapData(ds,nr_thread=16,map_func=data_prepare,buffer_size=200,strict=True)
+        ds = MultiThreadMapData(ds,nr_thread=6,map_func=data_prepare,buffer_size=200,strict=True)
         #ds = FakeData([[input_shape[0], input_shape[1], 3], [output_shape[0], output_shape[1],nr_skeleton]], 5000, random=False, dtype='uint8')
         ds = BatchData(ds, batch_size)
         ds = PrefetchDataZMQ(ds, 1)

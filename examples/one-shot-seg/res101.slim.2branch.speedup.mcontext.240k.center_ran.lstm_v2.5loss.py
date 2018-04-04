@@ -104,7 +104,7 @@ def get_data(name,batch_size=1):
 
 
     if isTrain:
-        ds = MultiThreadMapData(ds,nr_thread=16,map_func=data_prepare,buffer_size=200,strict=True)
+        ds = MultiThreadMapData(ds,nr_thread=6,map_func=data_prepare,buffer_size=200,strict=True)
         #ds = FakeData([[input_shape[0], input_shape[1], 3], [output_shape[0], output_shape[1],nr_skeleton]], 5000, random=False, dtype='uint8')
         ds = BatchData(ds, batch_size)
         ds = PrefetchDataZMQ(ds, 1)
@@ -237,10 +237,11 @@ class Model(ModelDesc):
             for jjj in range(k_shot):
                 logits = tf.image.resize_bilinear(final_list[jjj], second_image.shape[1:3])
                 cost = softmax_cross_entropy_with_ignore_label(logits, second_label, class_num=CLASS_NUM)
-                cost = tf.reduce_mean(cost, name='cross_entropy_loss')
+                cost = tf.reduce_mean(cost, name='cross_entropy_loss')/k_shot
                 costs.append(cost)
 
             total_cost = tf.add_n(costs, name='cost')
+
             return total_cost
     def optimizer(self):
         lr = tf.get_variable('learning_rate', initializer=LR, trainable=False)
