@@ -123,7 +123,7 @@ fold0_5shot_test = Map(empty_profile,
 
 ## Setting for testing on **test images** in unseen image classes (in total 5 classes), 1-shot
 fold0_1shot_test = Map(fold0_5shot_test, k_shot=1)
-
+fold0_10shot_test = Map(fold0_5shot_test, k_shot=10)
 
 
 #### fold 1 ####
