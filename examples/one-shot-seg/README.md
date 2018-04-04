@@ -75,4 +75,4 @@ res101.slim.2branch.speedup.mcontext.240k.width512.oracle:foldall_train, 72.5
 |----|----|----|----|
 res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss,epoch1|63|62.7|62.9
 res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss,epoch3|66.8|67.6|:question:
-res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2,epoch3|:question:|67.1|:question:
+res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2,epoch3|66.3|67.1|:question:
