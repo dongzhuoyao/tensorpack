@@ -350,6 +350,7 @@ def get_data(ppp, filter):
 if __name__ == '__main__':
     #main()
 
+    np_x_, np_y_ = get_data("0log.log", "@res101.slim.2branch.speedup.240k.forfigure.py:240][0m mIoU:")
     np_x, np_y = get_data("baseline.log", "@res101.slim.2branch.speedup.mcontext.240k.forfigure.py:254][0m mIoU:")
     np_xx, np_yy = get_data("log.log","@res101.slim.2branch.speedup.mcontext.240k.center_ran.forfigure.py:284][0m mIoU:")
 
@@ -357,8 +358,8 @@ if __name__ == '__main__':
     args.title = "Val mIoU Trend"
     args.ylabel = "Val mIoU"
     args.xlabel = "Epoch"
-    args.legend = "MCG,MCG+Attention"
-    args.y_column = "y,y"
+    args.legend = "Baseline,MCG,MCG+Attention"
+    args.y_column = "y,y,y"
     args.x_column = "x"
 
-    do_plot(data_xs = [np_x],data_ys = [np_y,np_yy])
+    do_plot(data_xs = [np_x],data_ys = [np_y_,np_y,np_yy])

@@ -37,6 +37,9 @@ k_shot = 5
 
 from cell import ConvLSTMCell_carlthome
 
+#python res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.py --test_load train_log/res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2:fold0_5shot_test/model-24000 --k_shot 1 --test --test_data fold0_1shot_test --gpu 1
+#python res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.py --test_load train_log/res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2:fold0_5shot_test/model-24000 --k_shot 10 --test --test_data fold0_10shot_test --gpu 1
+
 
 
 def my_squeeze_excitation_layer(input_x, out_dim, layer_name,ratio=4):
@@ -138,7 +141,8 @@ def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
 
 class Model(ModelDesc):
     def inputs(self):
-        return [tf.placeholder(tf.float32, [None, k_shot, support_image_size[0], support_image_size[1], 3], 'first_image_masked'),
+        global args
+        return [tf.placeholder(tf.float32, [None, args.k_shot, support_image_size[0], support_image_size[1], 3], 'first_image_masked'),
                 #tf.placeholder(tf.float32, [None, support_image_size[0], support_image_size[1]], 'first_label'),
                 tf.placeholder(tf.float32, [None, query_image_size[0], query_image_size[1], 3], 'second_image'),
                 tf.placeholder(tf.int32, [None, query_image_size[0], query_image_size[1]], 'second_label')
@@ -173,12 +177,12 @@ class Model(ModelDesc):
 
         for iii in range(len(support_context_list)):
             shape_list = support_context_list[iii].get_shape().as_list()
-            support_context_list[iii] = tf.reshape(support_context_list[iii],(-1,k_shot,shape_list[1],shape_list[2],shape_list[3]))
+            support_context_list[iii] = tf.reshape(support_context_list[iii],(-1,args.k_shot,shape_list[1],shape_list[2],shape_list[3]))
 
         fusion_list = []
         final_list = []
         with tf.variable_scope('') as scope:
-            for kth_shot in range(k_shot):
+            for kth_shot in range(args.k_shot):
                 if kth_shot > 0:
                     scope.reuse_variables()
                 fusion_branch = smooth(support_context_list[0][:,kth_shot,:,:,:],1,"context_support0")+ \
@@ -220,10 +224,10 @@ class Model(ModelDesc):
 
             fusion_branch, state = tf.nn.dynamic_rnn(cell, fusion_branch, dtype=fusion_branch.dtype)
 
-            fusion_branch = tf.split(fusion_branch,axis=1,num_or_size_splits=k_shot)
+            fusion_branch = tf.split(fusion_branch,axis=1,num_or_size_splits=args.k_shot)
 
         with tf.variable_scope('') as scope:
-            for iii in range(k_shot):
+            for iii in range(args.k_shot):
                     if iii > 0:
                         scope.reuse_variables()
                     final_list.append(smooth(tf.squeeze(fusion_branch[iii],axis=1), 1, "context_after_lstm", stride=1, output_num=CLASS_NUM))
@@ -351,21 +355,24 @@ def proceed_test(args, is_save = False):
     for first_image_masks, second_image, second_label  in tqdm(ds.get_data()):
         second_image = np.squeeze(second_image)
         second_label = np.squeeze(second_label)
+        first_image_masks = np.squeeze(first_image_masks)
 
-        k_shot = len(first_image_masks)
-        prediction_fused = np.zeros((second_image.shape[0],second_image.shape[1]),dtype=np.uint8)
-        for kk in range(k_shot):
-            def mypredictor(input_img):
-                # input image: 1*H*W*3
-                # output : H*W*C
-                output = predictor(first_image_masks[kk][np.newaxis, :, :, :], input_img)
-                return output[0][0]
+        if len(first_image_masks.shape) == 3:  # make 1-shot runnable
+            first_image_masks = first_image_masks[np.newaxis, :, :, :]
 
-            prediction = predict_scaler(second_image, mypredictor, scales=[0.5,0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=support_image_size, is_densecrf = False)
-            prediction = np.argmax(prediction, axis=2)
-            prediction_fused = np.logical_or(prediction, prediction_fused)
+        prediction_fused = np.zeros((second_image.shape[0], second_image.shape[1], CLASS_NUM), dtype=np.float32)
 
+        def mypredictor(input_img):
+            # input image: 1*H*W*3
+            # output : H*W*C
+            output = predictor(first_image_masks[np.newaxis, :, :, :, :], input_img)
+            return output[0][0]
 
+        prediction = predict_scaler(second_image, mypredictor, scales=[0.5, 0.75, 1, 1.25, 1.5],
+                                    classes=CLASS_NUM, tile_size=support_image_size, is_densecrf=False)
+        prediction_fused += prediction
+
+        prediction_fused = np.argmax(prediction_fused, axis=2)
         stat.feed(prediction_fused, second_label)
 
         if is_save:
@@ -404,6 +411,7 @@ if __name__ == '__main__':
     parser.add_argument('--test_data', default="fold0_5shot_test", help='test data')
     parser.add_argument('--train_data', default="fold0_5shot_train", help='train data')
     parser.add_argument('--test', action='store_true', help='test data')
+    parser.add_argument('--k_shot', default=1, type=int, help='k_shot')
     parser.add_argument('--test_load', help='load model')
 
     args = parser.parse_args()
