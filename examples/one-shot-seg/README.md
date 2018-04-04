@@ -70,3 +70,5 @@ oracle all class:
 res101.slim.2branch.speedup.mcontext.240k.width512.oracle:foldall_1shot_test, 67.0
 res101.slim.2branch.speedup.mcontext.240k.width512.oracle:foldall_train, 72.5
 
+res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss,63;1-shot:62.7;10-shot:62.9
+
