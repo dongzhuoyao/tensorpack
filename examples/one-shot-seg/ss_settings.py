@@ -128,16 +128,19 @@ fold0_10shot_test = Map(fold0_5shot_test, k_shot=10)
 
 #### fold 1 ####
 fold1_train = Map(fold0_train, pascal_cats=get_cats('train', 1))
+fold1_5shot_train = Map(fold1_train,k_shot=5)
 fold1_5shot_test = Map(fold0_5shot_test, pascal_cats=get_cats('test', 1))
 fold1_1shot_test = Map(fold1_5shot_test, k_shot=1)
 
 #### fold 2 ####
 fold2_train = Map(fold0_train, pascal_cats=get_cats('train', 2))
+fold2_5shot_train = Map(fold2_train,k_shot=5)
 fold2_5shot_test = Map(fold0_5shot_test, pascal_cats=get_cats('test', 2))
 fold2_1shot_test = Map(fold2_5shot_test, k_shot=1)
 
 #### fold 3 ####
 fold3_train = Map(fold0_train, pascal_cats=get_cats('train', 3))
+fold3_5shot_train = Map(fold3_train,k_shot=5)
 fold3_5shot_test = Map(fold0_5shot_test, pascal_cats=get_cats('test', 3))
 fold3_1shot_test = Map(fold3_5shot_test, k_shot=1)
 
