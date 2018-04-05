@@ -41,6 +41,7 @@ res101.slim.2branch.speedup.60kiter.mcontext.lrschedule|pascal0|61.8
 res101.slim.2branch.speedup.mcontext.240k.center_se:fold3_1shot_test|53.2|
 
 
+
 * experiments show that 1000 test and 300 test lead nearly no difference.
 * image size 473 showes 3% lower than image size 321
 * **important update:** 3.27, test data size changed to 1000 fixed
@@ -76,3 +77,4 @@ res101.slim.2branch.speedup.mcontext.240k.width512.oracle:foldall_train, 72.5
 res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss,epoch1|63|62.7|62.9
 res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss,epoch3|66.8|67.6|67.6
 res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2,epoch3|66.3|67.1|67.0
+res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width64:fold0_5shot_test||67.4||
