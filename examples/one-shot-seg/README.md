@@ -39,7 +39,8 @@ res101.slim.2branch.speedup.60kiter|pascal0|61.5
 res101.slim.2branch.speedup.60kiter.mcontext|pascal0|63.4
 res101.slim.2branch.speedup.60kiter.mcontext.lrschedule|pascal0|61.8
 res101.slim.2branch.speedup.mcontext.240k.center_se:fold3_1shot_test|53.2|
-
+res101.slim.2branch.speedup.mcontext.240k.center_se.forcompare:fold0_1shot_test|61.7|
+res101.slim.2branch.speedup.mcontext.240k.all_se.forcompare:fold0_1shot_test|63.5|
 
 
 * experiments show that 1000 test and 300 test lead nearly no difference.
