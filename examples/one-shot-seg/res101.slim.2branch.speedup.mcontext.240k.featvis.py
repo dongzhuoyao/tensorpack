@@ -9,7 +9,7 @@ import numpy as np
 from tqdm import tqdm
 from tensorpack import *
 from tensorpack.tfutils import argscope, get_model_loader
-from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, visualize_feat,predict_scaler,visualize_binary_mask
+from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler, visualize_binary_mask
 from tensorpack.tfutils.summary import *
 from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.utils.stats import MIoUStatistics
@@ -17,9 +17,10 @@ from tensorpack.utils import logger
 import OneShotDatasetTwoBranch
 from deeplabv2_dilation6_new_mtscale import deeplabv2
 import tensorflow as tf
-image_size = (320, 320)
 slim = tf.contrib.slim
-from RAN import AttentionModule
+
+image_size = (320,320)
+
 max_epoch = 6
 weight_decay = 5e-4
 batch_size = 12
@@ -30,26 +31,10 @@ support_image_size =image_size
 query_image_size = image_size
 images_per_epoch = 40000
 fusion_width = 256
-def my_squeeze_excitation_layer(input_x, out_dim, layer_name,ratio=4):
-  with tf.variable_scope(layer_name):
-    squeeze = tf.reduce_mean(input_x, [1, 2], name='gap', keep_dims=False)
-
-    with tf.variable_scope('fc1'):
-      excitation = tf.layers.dense(inputs=squeeze, use_bias=True, units=int(out_dim / ratio))
-
-    excitation = tf.nn.relu(excitation)
-
-    with tf.variable_scope('fc2'):
-      excitation = tf.layers.dense(inputs=excitation, use_bias=True, units=out_dim)
-    excitation = tf.nn.sigmoid(excitation)
-
-    excitation = tf.reshape(excitation, [-1, 1, 1, out_dim])
-    scale = input_x * excitation
-    return scale
 
 def get_data(name,batch_size=1):
     isTrain = True if 'train' in name else False
-    ds = OneShotDatasetTwoBranch.OneShotDatasetTwoBranch(name,())
+    ds = OneShotDatasetTwoBranch.OneShotDatasetTwoBranch(name)
 
     def data_prepare(ds):
         if isTrain:
@@ -76,10 +61,14 @@ def get_data(name,batch_size=1):
             metadata = ds[4]
             class_id = metadata['class_id']
             first_image_masks = []
+            first_images = []
+            first_labels = []
             for kk in range(k_shots):
                 first_image = cv2.imread(ds[0][kk], cv2.IMREAD_COLOR)
                 first_label = cv2.imread(ds[1][kk], cv2.IMREAD_GRAYSCALE)
                 first_label = np.equal(first_label, class_id).astype(np.uint8)
+                first_images.append(first_image)
+                first_labels.append(first_label)
                 first_image = cv2.resize(first_image, support_image_size)
                 first_label = cv2.resize(first_label, support_image_size, interpolation=cv2.INTER_NEAREST)
                 first_image_masked = first_image * first_label[:, :, np.newaxis]
@@ -155,36 +144,17 @@ class Model(ModelDesc):
 
         fusion_branch = smooth(support_context_list[0],1,"context_support0")+ \
                         smooth(query_context_list[0], 1, "context_query0")
-
-        fusion_branch = AttentionModule(fusion_branch, fusion_width, "center0_ran")
-
-        fusion_branch = tf.identity(fusion_branch,name="fusion_feat0")
-
         fusion_branch = smooth(fusion_branch,1,"context_fusion0",stride=2)
 
-
-        fusion_branch = fusion_branch + \
-                        smooth(support_context_list[1], 1, "context_support1") + \
-                        smooth(query_context_list[1], 1, "context_query1")
-
-        fusion_branch = AttentionModule(fusion_branch, fusion_width, "center1_ran")
-        fusion_branch = tf.identity(fusion_branch, name="fusion_feat1")
-
+        fusion_branch = fusion_branch +\
+        smooth(support_context_list[1], 1, "context_support1") + \
+        smooth(query_context_list[1], 1, "context_query1")
         fusion_branch = smooth(fusion_branch, 1, "context_fusion1", stride=1)
-
-
 
         fusion_branch = fusion_branch + \
                         smooth(support_context_list[2], 1, "context_support2") + \
                         smooth(query_context_list[2], 1, "context_query2")
-
-        fusion_branch = AttentionModule(fusion_branch, fusion_width, "center2_ran")
-
-        fusion_branch = tf.identity(fusion_branch, name="fusion_feat2")
-
         fusion_branch = smooth(fusion_branch, 1, "context_fusion2", stride=1)
-
-
 
         fusion_branch = fusion_branch + \
                         smooth(support_context_list[3], 1, "context_support3") + \
@@ -299,7 +269,7 @@ def proceed_test(args, is_save = True):
     ds = get_data(args.test_data)
 
 
-    result_dir = "result_featvis"
+    result_dir = "result_mcontext_featvis"
     from tensorpack.utils.fs import mkdir_p
     mkdir_p(result_dir)
 
@@ -311,7 +281,7 @@ def proceed_test(args, is_save = True):
         output_names=['fusion_feat3','prob'])
     predictor = OfflinePredictor(pred_config)
 
-    from tensorpack.utils.segmentation.segmentation import visualize_feat_relative
+    from tensorpack.utils.segmentation.segmentation import visualize_feat
 
     i = 0
     stat = MIoUStatistics(CLASS_NUM)
@@ -355,6 +325,75 @@ def proceed_test(args, is_save = True):
 
         i += 1
 
+
+
+def proceed_compare(args, is_save = True):
+    import cv2
+    ds_1shot = get_data("fold0_1shot_test")
+    ds_5shot = get_data("fold0_5shot_test")
+
+
+    result_dir = "paper_visualization_compare"
+    from tensorpack.utils.fs import mkdir_p
+    mkdir_p(result_dir)
+
+
+    pred_config = PredictConfig(
+        model=Model(),
+        session_init=get_model_loader(args.test_load),
+        input_names=['first_image_masked','second_image'],
+        output_names=['prob'])
+    predictor = OfflinePredictor(pred_config)
+
+    i = 0
+    stat = MIoUStatistics(CLASS_NUM)
+    logger.info("start validation....")
+    for data_1shot,data_5shot  in tqdm(zip(ds_1shot.get_data(),ds_5shot.get_data())):
+        predict_list = []
+        huge = []
+        current_img = data_1shot[1]
+        for tmp in [data_1shot,data_5shot]:
+                first_image_masks, second_image, second_label, first_images, first_labels = tmp[0],tmp[1],tmp[2],tmp[3],tmp[4]
+                second_image = np.squeeze(second_image)
+                second_label = np.squeeze(second_label)
+
+                k_shot = len(first_image_masks)
+                prediction_fused = np.zeros((second_image.shape[0],second_image.shape[1]),dtype=np.uint8)
+                for kk in range(k_shot):
+                    def mypredictor(input_img):
+                        # input image: 1*H*W*3
+                        # output : H*W*C
+                        output = predictor(first_image_masks[kk][np.newaxis, :, :, :], input_img)
+                        return output[0][0]
+
+                    prediction = predict_scaler(second_image, mypredictor, scales=[0.5,0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=support_image_size, is_densecrf = False)
+                    prediction = np.argmax(prediction, axis=2)
+                    prediction_fused = np.logical_or(prediction, prediction_fused)
+
+                predict_list.append(prediction_fused)
+
+        current_img = visualize_binary_mask(current_img, predict_list[0], color=(127, 255, 0), class_num=2)
+        current_img = visualize_binary_mask(current_img, predict_list[1], color=(255, 64, 64), class_num=2)
+
+        if is_save:
+            for iii in range(len(first_images)):
+                new_img = cv2.resize(first_images[iii], (second_image.shape[1], second_image.shape[0]))
+                new_label = cv2.resize(first_labels[iii], (second_image.shape[1], second_image.shape[0]))
+                huge.append(visualize_binary_mask(new_img,new_label,color=(0, 0, 255),class_num=2))
+            huge.extend([second_image,current_img, visualize_binary_mask(second_image, second_label,color= (255, 0, 0), class_num=2),
+                         visualize_binary_mask(second_image, prediction_fused, color= (255, 0, 0), class_num=2)])
+            huge = np.concatenate(huge, axis=1)
+            cv2.imwrite("{}/{}.png".format(result_dir,i), huge)
+
+        i += 1
+
+    logger.info("mIoU: {}".format(stat.mIoU))
+    logger.info("mean_accuracy: {}".format(stat.mean_accuracy))
+    logger.info("accuracy: {}".format(stat.accuracy))
+    logger.info("mIoU beautify: {}".format(stat.mIoU_beautify))
+    logger.info("matrix beatify: {}".format(stat.confusion_matrix_beautify))
+
+
 def view(args):
     ds = RepeatedData(get_data('fold0_train'), -1)
     ds.reset_state()
@@ -370,12 +409,13 @@ def view(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default='1',help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default='5',help='comma separated list of GPU(s) to use.')
     parser.add_argument('--load',default="slim_resnet_v2_101.ckpt", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--test_data', default="fold0_1shot_test", help='test data')
     parser.add_argument('--train_data', default="fold0_train", help='train data')
     parser.add_argument('--test', action='store_true', help='test data')
+    parser.add_argument('--test_compare', action='store_true', help='test data')
     parser.add_argument('--test_load', help='load model')
 
     args = parser.parse_args()
@@ -388,6 +428,8 @@ if __name__ == '__main__':
     elif args.test:
         assert args.test_load is not None
         proceed_test(args)
+    elif args.test_compare:
+        proceed_compare(args)
     else:
         config = get_config()
         if args.load:

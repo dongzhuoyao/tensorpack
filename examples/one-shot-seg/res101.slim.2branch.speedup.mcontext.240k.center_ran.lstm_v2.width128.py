@@ -9,7 +9,7 @@ import numpy as np
 from tqdm import tqdm
 from tensorpack import *
 from tensorpack.tfutils import argscope, get_model_loader
-from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, visualize_feat,predict_scaler,visualize_binary_mask
+from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler
 from tensorpack.tfutils.summary import *
 from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.utils.stats import MIoUStatistics
@@ -22,7 +22,7 @@ slim = tf.contrib.slim
 from RAN import AttentionModule
 max_epoch = 6
 weight_decay = 5e-4
-batch_size = 12
+
 LR = 1e-4
 CLASS_NUM = 2
 evaluate_every_n_epoch = 1
@@ -30,6 +30,18 @@ support_image_size =image_size
 query_image_size = image_size
 images_per_epoch = 40000
 fusion_width = 256
+lstm_mid_channel = 128
+
+batch_size = 5
+k_shot = 5
+
+from cell import ConvLSTMCell_carlthome
+
+#python res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.py --test_load train_log/res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss:fold0_5shot_test/model-24000 --k_shot 1 --test --test_data fold0_1shot_test --gpu 1
+#python res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.py --test_load train_log/res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss:fold0_5shot_test/model-24000 --k_shot 10 --test --test_data fold0_10shot_test --gpu 1
+
+
+
 def my_squeeze_excitation_layer(input_x, out_dim, layer_name,ratio=4):
   with tf.variable_scope(layer_name):
     squeeze = tf.reduce_mean(input_x, [1, 2], name='gap', keep_dims=False)
@@ -53,24 +65,25 @@ def get_data(name,batch_size=1):
 
     def data_prepare(ds):
         if isTrain:
-            first_image = cv2.imread(ds[0][0], cv2.IMREAD_COLOR)
-            first_label = cv2.imread(ds[1][0], cv2.IMREAD_GRAYSCALE)
-            second_image = cv2.imread(ds[2], cv2.IMREAD_COLOR)
-            second_label = cv2.imread(ds[3], cv2.IMREAD_GRAYSCALE)
+            k_shots = len(ds[0])
             metadata = ds[4]
             class_id = metadata['class_id']
-            first_label = np.equal(first_label,class_id).astype(np.uint8)
-            second_label = np.equal(second_label,class_id).astype(np.uint8)
+            first_image_masks = []
+            for kk in range(k_shots):
+                first_image = cv2.imread(ds[0][kk], cv2.IMREAD_COLOR)
+                first_label = cv2.imread(ds[1][kk], cv2.IMREAD_GRAYSCALE)
+                first_label = np.equal(first_label, class_id).astype(np.uint8)
+                first_image = cv2.resize(first_image, support_image_size)
+                first_label = cv2.resize(first_label, support_image_size, interpolation=cv2.INTER_NEAREST)
+                first_image_masked = first_image * first_label[:, :, np.newaxis]
+                first_image_masks.append(first_image_masked)
 
-
-            first_image = cv2.resize(first_image,support_image_size)
-            first_label = cv2.resize(first_label, support_image_size,interpolation=cv2.INTER_NEAREST)
+            second_image = cv2.imread(ds[2], cv2.IMREAD_COLOR)
+            second_label = cv2.imread(ds[3], cv2.IMREAD_GRAYSCALE)
+            second_label = np.equal(second_label, class_id).astype(np.uint8)
             second_image = cv2.resize(second_image, support_image_size)
-            second_label = cv2.resize(second_label, support_image_size,interpolation=cv2.INTER_NEAREST)
-
-            first_image_masked = first_image*first_label[:,:,np.newaxis]
-
-            return first_image_masked,second_image,second_label
+            second_label = cv2.resize(second_label, support_image_size, interpolation=cv2.INTER_NEAREST)
+            return np.stack(first_image_masks), second_image, second_label
         else:
             k_shots = len(ds[0])
             metadata = ds[4]
@@ -90,11 +103,11 @@ def get_data(name,batch_size=1):
             second_label = np.equal(second_label, class_id).astype(np.uint8)
             #second_image = cv2.resize(second_image, support_image_size)
             #second_label = cv2.resize(second_label, support_image_size, interpolation=cv2.INTER_NEAREST)
-            return first_image_masks, second_image, second_label
+            return np.stack(first_image_masks), second_image, second_label
 
 
     if isTrain:
-        ds = MultiThreadMapData(ds,nr_thread=16,map_func=data_prepare,buffer_size=200,strict=True)
+        ds = MultiThreadMapData(ds,nr_thread=6,map_func=data_prepare,buffer_size=200,strict=True)
         #ds = FakeData([[input_shape[0], input_shape[1], 3], [output_shape[0], output_shape[1],nr_skeleton]], 5000, random=False, dtype='uint8')
         ds = BatchData(ds, batch_size)
         ds = PrefetchDataZMQ(ds, 1)
@@ -128,7 +141,8 @@ def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
 
 class Model(ModelDesc):
     def inputs(self):
-        return [tf.placeholder(tf.float32, [None, support_image_size[0], support_image_size[1], 3], 'first_image_masked'),
+        global args
+        return [tf.placeholder(tf.float32, [None,args.k_shot, support_image_size[0], support_image_size[1], 3], 'first_image_masked'),
                 #tf.placeholder(tf.float32, [None, support_image_size[0], support_image_size[1]], 'first_label'),
                 tf.placeholder(tf.float32, [None, query_image_size[0], query_image_size[1], 3], 'second_image'),
                 tf.placeholder(tf.int32, [None, query_image_size[0], query_image_size[1]], 'second_label')
@@ -137,12 +151,20 @@ class Model(ModelDesc):
 
 
     def build_graph(self, first_image_masked, second_image, second_label):
-        first_image_masked = first_image_masked - tf.constant([104, 116, 122], dtype='float32')
+        #first_image_masked = first_image_masked - tf.constant([104, 116, 122], dtype='float32')
         second_image = second_image - tf.constant([104, 116, 122], dtype='float32')
 
         ctx = get_current_tower_context()
         logger.info("current ctx.is_training: {}".format(ctx.is_training))
 
+
+        cell = ConvLSTMCell_carlthome([20, 20], filters=lstm_mid_channel, kernel = [3, 3],reuse=tf.AUTO_REUSE)
+
+
+
+        first_image_masked = tf.reshape(first_image_masked,(-1,image_size[0],image_size[1],3))
+
+        first_image_masked = first_image_masked - tf.constant([104, 116, 122], dtype='float32')
         with tf.variable_scope("support"):
              support_context_list = deeplabv2(first_image_masked,CLASS_NUM,is_training=ctx.is_training)
         with tf.variable_scope("query"):
@@ -153,48 +175,66 @@ class Model(ModelDesc):
                 return slim.conv2d(inp, output_num, [conv_width, conv_width], stride=stride,
                                         activation_fn=None, normalizer_fn=None)
 
-        fusion_branch = smooth(support_context_list[0],1,"context_support0")+ \
-                        smooth(query_context_list[0], 1, "context_query0")
+        for iii in range(len(support_context_list)):
+            shape_list = support_context_list[iii].get_shape().as_list()
+            support_context_list[iii] = tf.reshape(support_context_list[iii],(-1,args.k_shot,shape_list[1],shape_list[2],shape_list[3]))
 
-        fusion_branch = AttentionModule(fusion_branch, fusion_width, "center0_ran")
+        fusion_list = []
+        final_list = []
+        with tf.variable_scope('') as scope:
+            for kth_shot in range(args.k_shot):
+                if kth_shot > 0:
+                    scope.reuse_variables()
+                fusion_branch = smooth(support_context_list[0][:,kth_shot,:,:,:],1,"context_support0")+ \
+                                smooth(query_context_list[0], 1, "context_query0")
 
-        fusion_branch = tf.identity(fusion_branch,name="fusion_feat0")
+                fusion_branch = AttentionModule(fusion_branch, fusion_width, "center0_ran")
 
-        fusion_branch = smooth(fusion_branch,1,"context_fusion0",stride=2)
-
-
-        fusion_branch = fusion_branch + \
-                        smooth(support_context_list[1], 1, "context_support1") + \
-                        smooth(query_context_list[1], 1, "context_query1")
-
-        fusion_branch = AttentionModule(fusion_branch, fusion_width, "center1_ran")
-        fusion_branch = tf.identity(fusion_branch, name="fusion_feat1")
-
-        fusion_branch = smooth(fusion_branch, 1, "context_fusion1", stride=1)
+                fusion_branch = smooth(fusion_branch,1,"context_fusion0",stride=2)
 
 
+                fusion_branch = fusion_branch + \
+                                smooth(support_context_list[1][:,kth_shot,:,:,:], 1, "context_support1") + \
+                                smooth(query_context_list[1], 1, "context_query1")
 
-        fusion_branch = fusion_branch + \
-                        smooth(support_context_list[2], 1, "context_support2") + \
-                        smooth(query_context_list[2], 1, "context_query2")
+                fusion_branch = AttentionModule(fusion_branch, fusion_width, "center1_ran")
 
-        fusion_branch = AttentionModule(fusion_branch, fusion_width, "center2_ran")
-
-        fusion_branch = tf.identity(fusion_branch, name="fusion_feat2")
-
-        fusion_branch = smooth(fusion_branch, 1, "context_fusion2", stride=1)
+                fusion_branch = smooth(fusion_branch, 1, "context_fusion1", stride=1)
 
 
 
-        fusion_branch = fusion_branch + \
-                        smooth(support_context_list[3], 1, "context_support3") + \
-                        smooth(query_context_list[3], 1, "context_query3")
-        fusion_branch = smooth(fusion_branch, 1, "context_fusion3", stride=1,output_num=CLASS_NUM)
+                fusion_branch = fusion_branch + \
+                                smooth(support_context_list[2][:,kth_shot,:,:,:], 1, "context_support2") + \
+                                smooth(query_context_list[2], 1, "context_query2")
 
-        fusion_branch = tf.identity(fusion_branch, name="fusion_feat3")
+                fusion_branch = AttentionModule(fusion_branch, fusion_width, "center2_ran")
+
+                fusion_branch = smooth(fusion_branch, 1, "context_fusion2", stride=1)
+
+
+
+                fusion_branch = fusion_branch + \
+                                smooth(support_context_list[3][:,kth_shot,:,:,:], 1, "context_support3") + \
+                                smooth(query_context_list[3], 1, "context_query3")
+                fusion_branch = smooth(fusion_branch, 1, "context_fusion3", stride=1, output_num=lstm_mid_channel) # [batch_size,w,h,c]
+                fusion_list.append(fusion_branch)
+
+            fusion_branch = tf.stack(fusion_list)
+            fusion_branch = tf.transpose(fusion_branch,(1, 0, 2, 3, 4))# batch_size, time_step, w, h, c
+
+            fusion_branch, state = tf.nn.dynamic_rnn(cell, fusion_branch, dtype=fusion_branch.dtype)
+
+            fusion_branch = tf.split(fusion_branch,axis=1,num_or_size_splits=args.k_shot)
+
+        with tf.variable_scope('') as scope:
+            for iii in range(args.k_shot):
+                    if iii > 0:
+                        scope.reuse_variables()
+                    final_list.append(smooth(tf.squeeze(fusion_branch[iii],axis=1), 1, "context_after_lstm", stride=1, output_num=CLASS_NUM))
+
 
         costs = []
-        logits = tf.image.resize_bilinear(fusion_branch, second_image.shape[1:3],name="upsample")
+        logits = tf.image.resize_bilinear(final_list[-1], second_image.shape[1:3],name="upsample")
         prob = tf.nn.softmax(logits, name='prob')
 
         if get_current_tower_context().is_training:
@@ -202,14 +242,10 @@ class Model(ModelDesc):
             cost = tf.reduce_mean(cost, name='cross_entropy_loss')
             costs.append(cost)
 
-            wd_w = tf.train.exponential_decay(2e-4, get_global_step_var(),
-                                              80000, 0.7, True)
-            wd_cost = tf.multiply(wd_w, regularize_cost('.*/W', tf.nn.l2_loss), name='wd_cost')
-            costs.append(wd_cost)
 
-            #add_param_summary(('.*', ['histogram', 'rms']))
             total_cost = tf.add_n(costs, name='cost')
             return total_cost
+
 
     def optimizer(self):
         lr = tf.get_variable('learning_rate', initializer=LR, trainable=False)
@@ -235,8 +271,9 @@ def get_config():
         GPUUtilizationTracker(),
         EstimatedTimeLeft(),
         PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
-        ProgressBar(["cross_entropy_loss", "cost", "wd_cost"]) , # uncomment it to debug for every step
-        #RunOp(lambda: tf.add_check_numerics_ops(), run_before=False, run_as_trigger=True, run_step=True)
+        ProgressBar(["cross_entropy_loss", "cost", "learning_rate"]),  # uncomment it to debug for every step
+        RunOp(lambda: tf.group(get_global_step_var().assign(0)), run_before=True, run_as_trigger=False, run_step=False,
+              verbose=True)
     ]
 
     return TrainConfig(
@@ -269,19 +306,21 @@ class CalculateMIoU(Callback):
         for first_image_masks, second_image, second_label in tqdm(self.val_ds.get_data()):
             second_image = np.squeeze(second_image)
             second_label = np.squeeze(second_label)
+            first_image_masks = np.squeeze(first_image_masks)
 
-            k_shot = len(first_image_masks)
+            if len(first_image_masks.shape) == 3:# make 1-shot runnable
+                first_image_masks = first_image_masks[np.newaxis,:, :, :]
+
             prediction_fused = np.zeros((second_image.shape[0], second_image.shape[1], CLASS_NUM), dtype=np.float32)
-            for kk in range(k_shot):
-                def mypredictor(input_img):
-                    # input image: 1*H*W*3
-                    # output : H*W*C
-                    output = self.pred(first_image_masks[kk][np.newaxis, :, :, :], input_img)
-                    return output[0][0]
+            def mypredictor(input_img):
+                # input image: 1*H*W*3
+                # output : H*W*C
+                output = self.pred(first_image_masks[np.newaxis,:, :, :, :], input_img)
+                return output[0][0]
 
-                prediction = predict_scaler(second_image, mypredictor, scales=[0.5, 0.75, 1, 1.25, 1.5],
-                                            classes=CLASS_NUM, tile_size=support_image_size, is_densecrf=False)
-                prediction_fused += prediction
+            prediction = predict_scaler(second_image, mypredictor, scales=[0.5, 0.75, 1, 1.25, 1.5],
+                                        classes=CLASS_NUM, tile_size=support_image_size, is_densecrf=False)
+            prediction_fused += prediction
 
             prediction_fused = np.argmax(prediction_fused, axis=2)
             self.stat.feed(prediction_fused, second_label)
@@ -294,12 +333,12 @@ class CalculateMIoU(Callback):
         logger.info("mIoU beautify: {}".format(self.stat.mIoU_beautify))
         logger.info("matrix beatify: {}".format(self.stat.confusion_matrix_beautify))
 
-def proceed_test(args, is_save = True):
+def proceed_test(args, is_save = False):
     import cv2
     ds = get_data(args.test_data)
 
 
-    result_dir = "result_featvis"
+    result_dir = "result22"
     from tensorpack.utils.fs import mkdir_p
     mkdir_p(result_dir)
 
@@ -308,10 +347,8 @@ def proceed_test(args, is_save = True):
         model=Model(),
         session_init=get_model_loader(args.test_load),
         input_names=['first_image_masked','second_image'],
-        output_names=['fusion_feat3','prob'])
+        output_names=['prob'])
     predictor = OfflinePredictor(pred_config)
-
-    from tensorpack.utils.segmentation.segmentation import visualize_feat_relative
 
     i = 0
     stat = MIoUStatistics(CLASS_NUM)
@@ -319,48 +356,47 @@ def proceed_test(args, is_save = True):
     for first_image_masks, second_image, second_label  in tqdm(ds.get_data()):
         second_image = np.squeeze(second_image)
         second_label = np.squeeze(second_label)
+        first_image_masks = np.squeeze(first_image_masks)
 
-        second_image = cv2.resize(second_image, image_size)#special case for feature visualization
-        second_label = cv2.resize(second_label, image_size)#special case for feature visualization
+        if len(first_image_masks.shape) == 3:  # make 1-shot runnable
+            first_image_masks = first_image_masks[np.newaxis, :, :, :]
 
-        k_shot = len(first_image_masks)
-        concated = []
-        for kk in range(k_shot):
-            for iii in range(1):
-                def mypredictor(input_img):
-                    # input image: 1*H*W*3
-                    # output : H*W*C
-                    input_img = cv2.resize(input_img,image_size)
-                    output = predictor(first_image_masks[kk][np.newaxis, :, :, :], input_img[np.newaxis, :, :, :])
-                    return output[iii][0] # W,H,C
+        prediction_fused = np.zeros((second_image.shape[0], second_image.shape[1], CLASS_NUM), dtype=np.float32)
 
-                prediction = visualize_feat(second_image, mypredictor)
-                concated.extend([cv2.resize(tmp,image_size) for tmp in prediction]) #upsample feature to image size
+        def mypredictor(input_img):
+            # input image: 1*H*W*3
+            # output : H*W*C
+            output = predictor(first_image_masks[np.newaxis, :, :, :, :], input_img)
+            return output[0][0]
 
-            #one-shot
-            def mypredictor(input_img):
-                # input image: 1*H*W*3
-                # output : H*W*C
-                output = predictor(first_image_masks[kk][np.newaxis, :, :, :], input_img)
-                return output[1][0]
+        prediction = predict_scaler(second_image, mypredictor, scales=[0.5, 0.75, 1, 1.25, 1.5],
+                                    classes=CLASS_NUM, tile_size=support_image_size, is_densecrf=False)
+        prediction_fused += prediction
 
-            prediction = predict_scaler(second_image, mypredictor, scales=[0.5, 0.75, 1, 1.25, 1.5],
-                                        classes=CLASS_NUM, tile_size=support_image_size, is_densecrf=False)
-            prediction = np.argmax(prediction, axis=2)
-            fff = visualize_binary_mask(second_image, second_label, color=(0, 0, 255), class_num=2)
-            concated.append(visualize_binary_mask(fff, prediction, color=(0, 255, 0), class_num=2))
+        prediction_fused = np.argmax(prediction_fused, axis=2)
+        stat.feed(prediction_fused, second_label)
 
         if is_save:
-            cv2.imwrite("{}/{}.png".format(result_dir,i), np.concatenate(tuple(concated), axis=1))
+            cv2.imwrite("{}/{}.png".format(result_dir,i), np.concatenate((cv2.resize(first_image_masks[0],(second_image.shape[1],second_image.shape[0])),second_image, visualize_label(second_label), visualize_label(prediction_fused)), axis=1))
 
         i += 1
 
+    logger.info("mIoU: {}".format(stat.mIoU))
+    logger.info("mean_accuracy: {}".format(stat.mean_accuracy))
+    logger.info("accuracy: {}".format(stat.accuracy))
+    logger.info("mIoU beautify: {}".format(stat.mIoU_beautify))
+    logger.info("matrix beatify: {}".format(stat.confusion_matrix_beautify))
+
 def view(args):
-    ds = RepeatedData(get_data('fold0_train'), -1)
+    ds = RepeatedData(get_data('fold0_5shot_train'), -1)
     ds.reset_state()
     for inputs in ds.get_data():
         ##"""
-        cv2.imshow("first_img_masked",(inputs[0][0]).astype(np.uint8))
+        cv2.imshow("first_img_masked0",(inputs[0][0,0]).astype(np.uint8))
+        cv2.imshow("first_img_masked1", (inputs[0][0,1]).astype(np.uint8))
+        cv2.imshow("first_img_masked2", (inputs[0][0,2]).astype(np.uint8))
+        cv2.imshow("first_img_masked3", (inputs[0][0,3]).astype(np.uint8))
+        cv2.imshow("first_img_masked4", (inputs[0][0,4]).astype(np.uint8))
         cv2.imshow("second_img", (inputs[1][0]).astype(np.uint8))
         cv2.imshow("second_label", visualize_label(inputs[2][0]))
         cv2.waitKey(10000)
@@ -373,8 +409,9 @@ if __name__ == '__main__':
     parser.add_argument('--gpu', default='1',help='comma separated list of GPU(s) to use.')
     parser.add_argument('--load',default="slim_resnet_v2_101.ckpt", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
-    parser.add_argument('--test_data', default="fold0_1shot_test", help='test data')
-    parser.add_argument('--train_data', default="fold0_train", help='train data')
+    parser.add_argument('--test_data', default="fold0_5shot_test", help='test data')
+    parser.add_argument('--train_data', default="fold0_5shot_train", help='train data')
+    parser.add_argument('--k_shot', default=5, type=int, help='k_shot')
     parser.add_argument('--test', action='store_true', help='test data')
     parser.add_argument('--test_load', help='load model')
 

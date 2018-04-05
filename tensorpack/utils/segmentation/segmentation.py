@@ -291,17 +291,49 @@ def predict_scaler(full_image, predictor, scales, classes, tile_size, is_densecr
         full_probs = dense_crf(full_probs, sxy_bilateral=(67, 67), srgb_bilateral=(10,10,10), n_iters=10)
     return full_probs
 
-
-def visualize_feat(img,predictor,top_k=3):
+def visualize_feat_sigmoid(img,predictor,top_k=3):
     output = predictor(img)
     img_list = [output[:,:,i] for i in range(output.shape[-1])]
     img_list = sorted(img_list, key=lambda x: np.linalg.norm(x,1), reverse=True) # sort inplace, time costing
     result = []
+
+    def sigmoid(x, derivative=False):
+        return x * (1 - x) if derivative else 1 / (1 + np.exp(-x))
+
     for i in range(top_k):
         current = img_list[i]
-        #current = (current - np.min(current))*255/(np.max(current)-np.min(current))
-        current = np.abs(current)
-        current = current*255/np.max(current)
+        current = sigmoid(current)*255
+        current = current.astype(np.uint8)
+        current = cv2.applyColorMap(current, cv2.COLORMAP_JET)#https://blog.csdn.net/loveliuzz/article/details/73648505
+        result.append(current)
+
+    return result
+
+def visualize_feat(img,predictor):
+    output = predictor(img)
+    img_list = [output[:,:,i] for i in range(output.shape[-1])]
+    result = []
+    for i in range(len(img_list)):
+        current = img_list[i]
+        current = (current - np.min(current))*255/(np.max(current)-np.min(current))
+        mask = current
+        mask = mask[:,:,np.newaxis]* np.ones((1,1,3))
+        current = current.astype(np.uint8)
+        current = cv2.applyColorMap(current, cv2.COLORMAP_JET)#https://blog.csdn.net/loveliuzz/article/details/73648505
+        result.append(current)
+        result.append(mask)
+
+    return result
+
+def visualize_feat_relative(img,predictor,top_k=5):
+    output = predictor(img)
+    img_list = [output[:,:,i] for i in range(output.shape[-1])]
+    img_list = sorted(img_list, key=lambda x: np.sum(x), reverse=True) # sort inplace, time costing
+
+    result = []
+    for i in range(top_k):
+        current = img_list[i]
+        current = (current - np.min(current))*255/(np.max(current)-np.min(current))
         current = current.astype(np.uint8)
         current = cv2.applyColorMap(current, cv2.COLORMAP_JET)#https://blog.csdn.net/loveliuzz/article/details/73648505
         result.append(current)

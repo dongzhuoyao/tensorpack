@@ -9,7 +9,7 @@ import numpy as np
 from tqdm import tqdm
 from tensorpack import *
 from tensorpack.tfutils import argscope, get_model_loader
-from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, visualize_feat,predict_scaler,visualize_binary_mask
+from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler
 from tensorpack.tfutils.summary import *
 from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.utils.stats import MIoUStatistics
@@ -17,19 +17,18 @@ from tensorpack.utils import logger
 import OneShotDatasetTwoBranch
 from deeplabv2_dilation6_new_mtscale import deeplabv2
 import tensorflow as tf
-image_size = (320, 320)
 slim = tf.contrib.slim
-from RAN import AttentionModule
+
 max_epoch = 6
 weight_decay = 5e-4
 batch_size = 12
 LR = 1e-4
 CLASS_NUM = 2
 evaluate_every_n_epoch = 1
-support_image_size =image_size
-query_image_size = image_size
+support_image_size =(321, 321)
+query_image_size = (321, 321)
 images_per_epoch = 40000
-fusion_width = 256
+fusion_width = 428 #384,89;
 def my_squeeze_excitation_layer(input_x, out_dim, layer_name,ratio=4):
   with tf.variable_scope(layer_name):
     squeeze = tf.reduce_mean(input_x, [1, 2], name='gap', keep_dims=False)
@@ -49,7 +48,7 @@ def my_squeeze_excitation_layer(input_x, out_dim, layer_name,ratio=4):
 
 def get_data(name,batch_size=1):
     isTrain = True if 'train' in name else False
-    ds = OneShotDatasetTwoBranch.OneShotDatasetTwoBranch(name,())
+    ds = OneShotDatasetTwoBranch.OneShotDatasetTwoBranch(name)
 
     def data_prepare(ds):
         if isTrain:
@@ -153,45 +152,24 @@ class Model(ModelDesc):
                 return slim.conv2d(inp, output_num, [conv_width, conv_width], stride=stride,
                                         activation_fn=None, normalizer_fn=None)
 
-        fusion_branch = smooth(support_context_list[0],1,"context_support0")+ \
-                        smooth(query_context_list[0], 1, "context_query0")
-
-        fusion_branch = AttentionModule(fusion_branch, fusion_width, "center0_ran")
-
-        fusion_branch = tf.identity(fusion_branch,name="fusion_feat0")
-
+        fusion_branch = my_squeeze_excitation_layer(smooth(support_context_list[0],1,"context_support0"),fusion_width,"support0_se")+ \
+                        my_squeeze_excitation_layer(smooth(query_context_list[0], 1, "context_query0"),fusion_width,"query0_se")
         fusion_branch = smooth(fusion_branch,1,"context_fusion0",stride=2)
 
-
         fusion_branch = fusion_branch + \
-                        smooth(support_context_list[1], 1, "context_support1") + \
-                        smooth(query_context_list[1], 1, "context_query1")
-
-        fusion_branch = AttentionModule(fusion_branch, fusion_width, "center1_ran")
-        fusion_branch = tf.identity(fusion_branch, name="fusion_feat1")
-
+                        my_squeeze_excitation_layer(smooth(support_context_list[1], 1, "context_support1"),fusion_width,"support1_se") + \
+                        my_squeeze_excitation_layer(smooth(query_context_list[1], 1, "context_query1"),fusion_width,"query1_se")
         fusion_branch = smooth(fusion_branch, 1, "context_fusion1", stride=1)
 
-
-
         fusion_branch = fusion_branch + \
-                        smooth(support_context_list[2], 1, "context_support2") + \
-                        smooth(query_context_list[2], 1, "context_query2")
-
-        fusion_branch = AttentionModule(fusion_branch, fusion_width, "center2_ran")
-
-        fusion_branch = tf.identity(fusion_branch, name="fusion_feat2")
-
+                        my_squeeze_excitation_layer(smooth(support_context_list[2], 1, "context_support2"),fusion_width,"support2_se") + \
+                        my_squeeze_excitation_layer(smooth(query_context_list[2], 1, "context_query2"),fusion_width,"query2_se")
         fusion_branch = smooth(fusion_branch, 1, "context_fusion2", stride=1)
 
-
-
         fusion_branch = fusion_branch + \
-                        smooth(support_context_list[3], 1, "context_support3") + \
-                        smooth(query_context_list[3], 1, "context_query3")
+                        my_squeeze_excitation_layer(smooth(support_context_list[3], 1, "context_support3"),fusion_width,"support3_se") + \
+                        my_squeeze_excitation_layer(smooth(query_context_list[3], 1, "context_query3"),fusion_width,"query3_se")
         fusion_branch = smooth(fusion_branch, 1, "context_fusion3", stride=1,output_num=CLASS_NUM)
-
-        fusion_branch = tf.identity(fusion_branch, name="fusion_feat3")
 
         costs = []
         logits = tf.image.resize_bilinear(fusion_branch, second_image.shape[1:3],name="upsample")
@@ -299,7 +277,7 @@ def proceed_test(args, is_save = True):
     ds = get_data(args.test_data)
 
 
-    result_dir = "result_featvis"
+    result_dir = "result22"
     from tensorpack.utils.fs import mkdir_p
     mkdir_p(result_dir)
 
@@ -308,10 +286,8 @@ def proceed_test(args, is_save = True):
         model=Model(),
         session_init=get_model_loader(args.test_load),
         input_names=['first_image_masked','second_image'],
-        output_names=['fusion_feat3','prob'])
+        output_names=['prob'])
     predictor = OfflinePredictor(pred_config)
-
-    from tensorpack.utils.segmentation.segmentation import visualize_feat_relative
 
     i = 0
     stat = MIoUStatistics(CLASS_NUM)
@@ -320,40 +296,32 @@ def proceed_test(args, is_save = True):
         second_image = np.squeeze(second_image)
         second_label = np.squeeze(second_label)
 
-        second_image = cv2.resize(second_image, image_size)#special case for feature visualization
-        second_label = cv2.resize(second_label, image_size)#special case for feature visualization
-
         k_shot = len(first_image_masks)
-        concated = []
+        prediction_fused = np.zeros((second_image.shape[0],second_image.shape[1]),dtype=np.uint8)
         for kk in range(k_shot):
-            for iii in range(1):
-                def mypredictor(input_img):
-                    # input image: 1*H*W*3
-                    # output : H*W*C
-                    input_img = cv2.resize(input_img,image_size)
-                    output = predictor(first_image_masks[kk][np.newaxis, :, :, :], input_img[np.newaxis, :, :, :])
-                    return output[iii][0] # W,H,C
-
-                prediction = visualize_feat(second_image, mypredictor)
-                concated.extend([cv2.resize(tmp,image_size) for tmp in prediction]) #upsample feature to image size
-
-            #one-shot
             def mypredictor(input_img):
                 # input image: 1*H*W*3
                 # output : H*W*C
                 output = predictor(first_image_masks[kk][np.newaxis, :, :, :], input_img)
-                return output[1][0]
+                return output[0][0]
 
-            prediction = predict_scaler(second_image, mypredictor, scales=[0.5, 0.75, 1, 1.25, 1.5],
-                                        classes=CLASS_NUM, tile_size=support_image_size, is_densecrf=False)
+            prediction = predict_scaler(second_image, mypredictor, scales=[0.5,0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=support_image_size, is_densecrf = False)
             prediction = np.argmax(prediction, axis=2)
-            fff = visualize_binary_mask(second_image, second_label, color=(0, 0, 255), class_num=2)
-            concated.append(visualize_binary_mask(fff, prediction, color=(0, 255, 0), class_num=2))
+            prediction_fused = np.logical_or(prediction, prediction_fused)
+
+
+        stat.feed(prediction_fused, second_label)
 
         if is_save:
-            cv2.imwrite("{}/{}.png".format(result_dir,i), np.concatenate(tuple(concated), axis=1))
+            cv2.imwrite("{}/{}.png".format(result_dir,i), np.concatenate((cv2.resize(first_image_masks[0],(second_image.shape[1],second_image.shape[0])),second_image, visualize_label(second_label), visualize_label(prediction_fused)), axis=1))
 
         i += 1
+
+    logger.info("mIoU: {}".format(stat.mIoU))
+    logger.info("mean_accuracy: {}".format(stat.mean_accuracy))
+    logger.info("accuracy: {}".format(stat.accuracy))
+    logger.info("mIoU beautify: {}".format(stat.mIoU_beautify))
+    logger.info("matrix beatify: {}".format(stat.confusion_matrix_beautify))
 
 def view(args):
     ds = RepeatedData(get_data('fold0_train'), -1)
@@ -370,7 +338,7 @@ def view(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default='1',help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default='5',help='comma separated list of GPU(s) to use.')
     parser.add_argument('--load',default="slim_resnet_v2_101.ckpt", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--test_data', default="fold0_1shot_test", help='test data')
