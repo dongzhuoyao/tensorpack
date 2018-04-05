@@ -79,3 +79,4 @@ res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss,epoch3|66.8|6
 res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2,epoch3|66.3|67.1|67.0
 res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width64:fold0_5shot_test||67.4||
 res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold0_5shot_test||67.9||
+res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.width128:fold0_5shot_test||:question:||
