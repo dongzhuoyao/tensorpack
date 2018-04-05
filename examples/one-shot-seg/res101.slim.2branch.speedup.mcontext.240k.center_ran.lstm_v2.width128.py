@@ -41,6 +41,7 @@ from cell import ConvLSTMCell_carlthome
 #python res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.py --test_load train_log/res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss:fold0_5shot_test/model-24000 --k_shot 10 --test --test_data fold0_10shot_test --gpu 1
 
 
+#python res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.py --train_data fold1_5shot_train --test_data fold1_5shot_test --k_shot 5 --gpu 5
 
 def my_squeeze_excitation_layer(input_x, out_dim, layer_name,ratio=4):
   with tf.variable_scope(layer_name):
