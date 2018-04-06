@@ -24,6 +24,7 @@ Recognition](https://arxiv.org/abs/1801.07455)
 Convolutions for Semantic Segmentation](https://github.com/sacmehta/ESPNet) to hourglass
 * [Efficient Interactive Annotation of Segmentation Datasets with Polygon-RNN++](http://www.cs.toronto.edu/polyrnn/) with one-shot
 * Learning Pixel-level Semantic Affinity with Image-level Supervision for Weakly Supervised Semantic Segmentation
+*  Image Generation from Scene Graphs
 
 ## current focus
 * [Adversarial Learning for Semi-supervised Semantic Segmentation](https://github.com/hfslyc/AdvSemiSeg)
