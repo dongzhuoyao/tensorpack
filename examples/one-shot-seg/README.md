@@ -85,3 +85,9 @@ res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width64:fold0
 res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold0_5shot_test|66.1|67.9|68.2|
 res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.width128:fold0_5shot_test|64.5|67.5|68.0|
 res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.width64:fold0_5shot_test|65.16|68.1|68.1|
+
+|arch|1shot|2shot|3shot|4shot|5shot|6shot|7shot|8shot|9shot|10shot|
+|operator or(enter_ran)|65.8||||66.2||||||
+|operator or(enter_ran.lstm.5loss)|66.1||||67.9||||||
+
+
