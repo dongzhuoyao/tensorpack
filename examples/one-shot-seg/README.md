@@ -90,5 +90,6 @@ res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.width64:fold0_5shot
 |----|----|----|----|----|----|----|----|----|----|----|
 |operator or(enter_ran)|65.8||||66.2||||||
 |operator or(enter_ran.lstm.5loss)|66.1||||67.9||||||
+|operator or(enter_ran.lstm)|66.1||||67.9||||||
 
 
