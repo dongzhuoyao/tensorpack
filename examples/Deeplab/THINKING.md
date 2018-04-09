@@ -31,3 +31,7 @@ Convolutions for Semantic Segmentation](https://github.com/sacmehta/ESPNet) to h
 * [Seed, Expand and Constrain: Three Principles for Weakly-Supervised Image Segmentation](https://github.com/ascust/SEC-MXNet)
 * [Prototypical Networks for Few-shot Learning]()
 * Hourglass
+
+## similar
+
+neural style transfer, pose estimation,   
