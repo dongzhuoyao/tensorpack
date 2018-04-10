@@ -32,6 +32,13 @@ Convolutions for Semantic Segmentation](https://github.com/sacmehta/ESPNet) to h
 * [Prototypical Networks for Few-shot Learning]()
 * Hourglass
 
+## maybe
+
+* referring segmentation
+* pararaph supervised segmentation
+* class-label supervised seg, end-to-end with spn, resnet101
+
+
 ## similar
 
 neural style transfer, pose estimation,   
