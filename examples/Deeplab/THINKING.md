@@ -37,6 +37,7 @@ Convolutions for Semantic Segmentation](https://github.com/sacmehta/ESPNet) to h
 * referring segmentation
 * pararaph supervised segmentation
 * class-label supervised seg, end-to-end with spn, resnet101
+* [co-seg in video](https://github.com/GYZHikari/Semantic-Cosegmentation)
 
 
 ## similar
