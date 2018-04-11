@@ -38,6 +38,9 @@ Convolutions for Semantic Segmentation](https://github.com/sacmehta/ESPNet) to h
 * pararaph supervised segmentation
 * class-label supervised seg, end-to-end with spn, resnet101
 * [co-seg in video](https://github.com/GYZHikari/Semantic-Cosegmentation)
+* [Learning from Synthetic Data: Addressing Domain Shift for Semantic Segmentation](https://github.com/swamiviv/LSD-seg)
+* [ReferringRelationships](https://github.com/StanfordVL/ReferringRelationships)
+* Image to Image Translation for Domain Adaptation
 
 
 ## similar
