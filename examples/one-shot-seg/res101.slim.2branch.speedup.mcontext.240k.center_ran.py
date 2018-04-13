@@ -30,6 +30,16 @@ support_image_size =image_size
 query_image_size = image_size
 images_per_epoch = 40000
 fusion_width = 256
+
+#python res101.slim.2branch.speedup.mcontext.240k.center_ran.py --test --test_load train_log/res101.slim.2branch.speedup.mcontext.240k.center_ran:fold0_1shot_test/model-5575962  --test_data fold0_2shot_test --gpu 1
+#python res101.slim.2branch.speedup.mcontext.240k.center_ran.py --test --test_load train_log/res101.slim.2branch.speedup.mcontext.240k.center_ran:fold0_1shot_test/model-5575962  --test_data fold0_3shot_test --gpu 1
+#python res101.slim.2branch.speedup.mcontext.240k.center_ran.py --test --test_load train_log/res101.slim.2branch.speedup.mcontext.240k.center_ran:fold0_1shot_test/model-5575962  --test_data fold0_4shot_test --gpu 1
+
+#python res101.slim.2branch.speedup.mcontext.240k.center_ran.py --test --test_load train_log/res101.slim.2branch.speedup.mcontext.240k.center_ran:fold0_1shot_test/model-5575962  --test_data fold0_6shot_test --gpu 1
+#python res101.slim.2branch.speedup.mcontext.240k.center_ran.py --test --test_load train_log/res101.slim.2branch.speedup.mcontext.240k.center_ran:fold0_1shot_test/model-5575962  --test_data fold0_7shot_test --gpu 1
+#python res101.slim.2branch.speedup.mcontext.240k.center_ran.py --test --test_load train_log/res101.slim.2branch.speedup.mcontext.240k.center_ran:fold0_1shot_test/model-5575962  --test_data fold0_8shot_test --gpu 1
+#python res101.slim.2branch.speedup.mcontext.240k.center_ran.py --test --test_load train_log/res101.slim.2branch.speedup.mcontext.240k.center_ran:fold0_1shot_test/model-5575962  --test_data fold0_9shot_test --gpu 1
+#python res101.slim.2branch.speedup.mcontext.240k.center_ran.py --test --test_load train_log/res101.slim.2branch.speedup.mcontext.240k.center_ran:fold0_1shot_test/model-5575962  --test_data fold0_10shot_test --gpu 1
 def my_squeeze_excitation_layer(input_x, out_dim, layer_name,ratio=4):
   with tf.variable_scope(layer_name):
     squeeze = tf.reduce_mean(input_x, [1, 2], name='gap', keep_dims=False)

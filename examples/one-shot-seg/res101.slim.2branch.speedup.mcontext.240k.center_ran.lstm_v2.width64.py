@@ -38,6 +38,7 @@ k_shot = 5
 from cell import ConvLSTMCell_carlthome
 
 #python res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.width64.py --test --test_load train_log/res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.width64:fold0_5shot_test/model-32000 --test_data fold0_1shot_test --k_shot 1
+#python res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.width64.py --test --test_load train_log/res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.width64:fold0_5shot_test/model-32000 --test_data fold0_10shot_test --k_shot 10
 
 def my_squeeze_excitation_layer(input_x, out_dim, layer_name,ratio=4):
   with tf.variable_scope(layer_name):

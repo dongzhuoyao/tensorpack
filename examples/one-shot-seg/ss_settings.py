@@ -123,6 +123,14 @@ fold0_5shot_test = Map(empty_profile,
 
 ## Setting for testing on **test images** in unseen image classes (in total 5 classes), 1-shot
 fold0_1shot_test = Map(fold0_5shot_test, k_shot=1)
+fold0_2shot_test = Map(fold0_5shot_test, k_shot=2)
+fold0_3shot_test = Map(fold0_5shot_test, k_shot=3)
+fold0_4shot_test = Map(fold0_5shot_test, k_shot=4)
+fold0_5shot_test = Map(fold0_5shot_test, k_shot=5)
+fold0_6shot_test = Map(fold0_5shot_test, k_shot=6)
+fold0_7shot_test = Map(fold0_5shot_test, k_shot=7)
+fold0_8shot_test = Map(fold0_5shot_test, k_shot=8)
+fold0_9shot_test = Map(fold0_5shot_test, k_shot=9)
 fold0_10shot_test = Map(fold0_5shot_test, k_shot=10)
 
 
