@@ -42,7 +42,7 @@ Convolutions for Semantic Segmentation](https://github.com/sacmehta/ESPNet) to h
 * [ReferringRelationships](https://github.com/StanfordVL/ReferringRelationships)
 * Image to Image Translation for Domain Adaptation
 * scene graph generation:  https://github.com/yikang-li/MSDN
-
+* Semi-supervised FusedGAN for Conditional Image Generation, second paper
 
 ## similar
 
