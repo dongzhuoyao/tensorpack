@@ -1,4 +1,4 @@
-## Thinking
+## XXXX
 
 *  Semi Supervised Semantic Segmentation Using Generative Adversarial Network
 *  Embedding human skeleton to furthur optimize human segmentation
