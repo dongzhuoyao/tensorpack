@@ -1,4 +1,4 @@
-## Thinking
+## XXXX
 
 *  Semi Supervised Semantic Segmentation Using Generative Adversarial Network
 *  Embedding human skeleton to furthur optimize human segmentation
@@ -41,7 +41,8 @@ Convolutions for Semantic Segmentation](https://github.com/sacmehta/ESPNet) to h
 * [Learning from Synthetic Data: Addressing Domain Shift for Semantic Segmentation](https://github.com/swamiviv/LSD-seg)
 * [ReferringRelationships](https://github.com/StanfordVL/ReferringRelationships)
 * Image to Image Translation for Domain Adaptation
-
+* scene graph generation:  https://github.com/yikang-li/MSDN
+* Semi-supervised FusedGAN for Conditional Image Generation, second paper
 
 ## similar
 
