@@ -9,14 +9,13 @@ import skimage.io
 
 from util import im_processing, text_processing
 from util.io import load_referit_gt_mask as load_gt_mask
-from refer import REFER
 from pycocotools import mask as cocomask
 
 
 def build_referit_batches(setname, T, input_H, input_W):
     # data directory
-    im_dir = '/data/ryli/text_objseg/exp-referit/referit-dataset/images/'
-    mask_dir = '/data/ryli/text_objseg/exp-referit/referit-dataset/mask/'
+    im_dir = '/data4/hutao/dataset/referit/images/'
+    mask_dir = '/data4/hutao/dataset/referit/mask/'
     query_file = './data/referit/referit_query_' + setname + '.json'
     vocab_file = './data/vocabulary_referit.txt'
 
@@ -66,7 +65,8 @@ def build_referit_batches(setname, T, input_H, input_W):
 
 
 def build_coco_batches(dataset, setname, T, input_H, input_W):
-    im_dir = '/data/ryli/datasets/coco/images'
+    from refer import REFER
+    im_dir = '/data1/dataset/coco'
     im_type = 'train2014'
     vocab_file = './data/vocabulary_Gref.txt'
 

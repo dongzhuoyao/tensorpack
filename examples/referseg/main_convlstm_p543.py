@@ -7,7 +7,7 @@ import pdb
 import numpy as np
 import tensorflow as tf
 import skimage
-# import matplotlib.pyplot as plt
+
 
 from LSTM_model_convlstm_p543 import LSTM_model
 # from RMI_model import RMI_model
@@ -44,7 +44,7 @@ def train(modelname, max_iter, snapshot, dataset, weights, setname, mu, lr, bs, 
         pretrained_model = './external/TF-resnet/model/ResNet101_init.tfmodel'
         load_var = {var.op.name: var for var in tf.global_variables() if var.op.name.startswith('ResNet')}
     elif weights == 'deeplab':
-        pretrained_model = '/data/ryli/text_objseg/tensorflow-deeplab-resnet/models/deeplab_resnet_init.ckpt'
+        pretrained_model = 'deeplab_resnet_init.ckpt' # https://github.com/DrSleep/tensorflow-deeplab-resnet
         load_var = {var.op.name: var for var in tf.global_variables()
                         if var.name.startswith('res') or var.name.startswith('bn') or var.name.startswith('conv1')}
 
@@ -71,7 +71,16 @@ def train(modelname, max_iter, snapshot, dataset, weights, setname, mu, lr, bs, 
             im = batch['im_batch'].astype(np.float32)
             mask = np.expand_dims(batch['mask_batch'].astype(np.float32), axis=2)
 
-            im = im[:,:,::-1]
+            if False:
+                print(batch['sent_batch'][0])
+                import matplotlib.pyplot as plt
+                plt.imshow(im,cmap='Greys')
+                plt.axis('off')
+                plt.show()
+
+
+
+            im = im[:,:,::-1] # ???
             im -= mu
 
             text_batch[n_batch, ...] = text
@@ -251,8 +260,8 @@ def visualize_seg(im, predicts, sent):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-g', type = str, default = '0')
-    parser.add_argument('-m', type = str) # 'train' 'test'
+    parser.add_argument('-g', type = str, default = '5')
+    parser.add_argument('-m', type = str, default = 'train') # 'train' 'test'
     parser.add_argument('-n', type = str, default = 'LSTM') # 'LSTM' 'RMI'
     parser.add_argument('-i', type = int, default = 800000)
     parser.add_argument('-s', type = int, default = 100000)
@@ -260,10 +269,10 @@ if __name__ == "__main__":
     parser.add_argument('-v', default = False, action = 'store_true')
     parser.add_argument('-c', default = False, action = 'store_true') # whether or not apply DenseCRF
     parser.add_argument('-w', type = str, default = 'deeplab') # 'resnet' 'deeplab'
-    parser.add_argument('-t', type = str) # 'train' 'trainval' 'val' 'test' 'testA' 'testB'
+    parser.add_argument('-t', type = str, default = 'trainval') # 'train' 'trainval' 'val' 'test' 'testA' 'testB'
     parser.add_argument('-lr', type = float, default = 0.00025) # start learning rate
     parser.add_argument('-bs', type = int, default = 1) # batch size
-    parser.add_argument('-sfolder', type = str)
+    parser.add_argument('-sfolder', type = str,default="dongzhuoyao")
     parser.add_argument('-conv5', default = False, action = 'store_true')
 
     args = parser.parse_args()
