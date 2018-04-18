@@ -9,6 +9,7 @@ import cv2,colorsys
 import pydensecrf.densecrf as dcrf
 import os, sys
 from tensorpack.utils import logger
+from tensorpack.utils.palette import PALETTE_RGB
 
 __all__ = ['update_confusion_matrix', 'predict_slider']
 
@@ -118,12 +119,17 @@ def crop_saliency(img, label):
 
 def visualize_label(label, class_num=21, ignore_label = 255):
     """Color classes a good distance away from each other."""
+    if len(label.shape) == 3:
+        label = np.squeeze(label)
     h, w = label.shape
     img_color = np.zeros((h, w, 3)).astype('uint8')
     if class_num == 2:#if two class, using white-black colormap to enlarge contrast
         my_label_colours = [(255, 255, 255),(0, 0, 0)]
     else:
-        my_label_colours = label_colours
+        if class_num > 21:
+            my_label_colours = [PALETTE_RGB[i][::-1] for i in range(class_num)]
+        else:
+            my_label_colours = label_colours
 
     for i in range(0,class_num):
             img_color[label == i] = my_label_colours[i]
