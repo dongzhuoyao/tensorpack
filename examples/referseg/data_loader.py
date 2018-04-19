@@ -10,14 +10,24 @@ from tqdm import tqdm
 from tensorpack.utils import logger
 from tensorpack.dataflow.base import RNGDataFlow
 from tensorpack.utils.segmentation.segmentation import visualize_label
+
+
 __all__ = ['DataLoader']
 
+caption_train_json = '/data2/dataset/annotations/captions_train2014.json'
+instance_train_json = "/data2/dataset/annotations/instances_train2014.json"
+caption_val_json = '/data2/dataset/annotations/captions_val2014.json'
+instance_val_json = "/data2/dataset/annotations/instances_val2014.json"
+
+coco_train_dir = "/data2/dataset/coco/train2014"
+coco_val_dir = "/data2/dataset/coco/val2014"
+
+
 # maximum length of caption(number of word). if caption is longer than max_length, deleted.
-max_length = 49
+MAX_LENGTH = 49
 # if word occurs less than word_count_threshold in training dataset, the word index is special unknown token.
 word_count_threshold = 1
-
-
+IMG_SIZE = 320
 
 from collections import Counter
 import numpy as np
@@ -26,6 +36,46 @@ import os
 import json
 from pycocotools.coco import COCO
 from pycocotools import mask
+
+def resize_and_pad(im, input_h, input_w, interp):
+    # Resize and pad im to input_h x input_w size
+    im_h, im_w = im.shape[:2]
+    scale = min(input_h*1.0 / im_h, input_w*1.0 / im_w)
+    resized_h = int(np.round(im_h * scale))
+    resized_w = int(np.round(im_w * scale))
+    pad_h = int(np.floor(input_h - resized_h) / 2)
+    pad_w = int(np.floor(input_w - resized_w) / 2)
+
+    resized_im = cv2.resize(im, (resized_h, resized_w), interpolation=interp)
+    if resized_im.ndim == 2:
+        resized_im = resized_im[:,:,np.newaxis]# avoid swallow last dimension in grey image by cv2.resize
+    if im.ndim > 2:
+        new_im = np.zeros((input_h, input_w, im.shape[2]), dtype=resized_im.dtype)
+        new_im[pad_w:pad_w + resized_w, pad_h:pad_h + resized_h, ...] = resized_im  # reverse order
+    else:
+        new_im = np.zeros((input_h, input_w), dtype=resized_im.dtype)
+        new_im[pad_w:pad_w + resized_w, pad_h:pad_h + resized_h] = resized_im  # reverse order
+
+
+    return new_im
+
+def resize_and_tmp(im, input_h, input_w, interp):
+    # Resize and crop im to input_h x input_w size
+    im_h, im_w = im.shape[:2]
+    scale = min(input_h*1.0/im_h, input_w*1.0 / im_w)
+    resized_h = int(np.round(im_h * scale))
+    resized_w = int(np.round(im_w * scale))
+    crop_h = int(np.floor(resized_h - input_h) / 2)
+    crop_w = int(np.floor(resized_w - input_w) / 2)
+
+    resized_im = cv2.resize(im, (resized_h, resized_w),interpolation=interp)
+    if im.ndim > 2:
+        new_im = np.zeros((input_h, input_w, im.shape[2]), dtype=resized_im.dtype)
+    else:
+        new_im = np.zeros((input_h, input_w), dtype=resized_im.dtype)
+    new_im[...] = resized_im[crop_h:crop_h+input_h, crop_w:crop_w+input_w, ...]
+
+    return new_im
 
 def _process_caption_data(caption_file, image_dir, max_length):
     coco = COCO(caption_file)
@@ -95,26 +145,23 @@ def _build_vocab(annotations, threshold=1):
     return word_to_idx
 
 
-def _build_caption_vector(annotations, word_to_idx, max_length=15):
-    n_examples = len(annotations)
-    captions = np.ndarray((n_examples, max_length + 2)).astype(np.int32)
+def _build_caption_vector(caption, word_to_idx, max_length=15):
+    captions = np.ndarray(max_length + 2).astype(np.int32)
+    words = caption.split(" ")  # caption contrains only lower-case words
+    cap_vec = []
+    cap_vec.append(word_to_idx['<START>'])
+    for word in words:
+        if word in word_to_idx:
+            cap_vec.append(word_to_idx[word])
+    cap_vec.append(word_to_idx['<END>'])
 
-    for i, caption in enumerate(annotations['caption']):
-        words = caption.split(" ")  # caption contrains only lower-case words
-        cap_vec = []
-        cap_vec.append(word_to_idx['<START>'])
-        for word in words:
-            if word in word_to_idx:
-                cap_vec.append(word_to_idx[word])
-        cap_vec.append(word_to_idx['<END>'])
+    # pad short caption with the special null token '<NULL>' to make it fixed-size vector
+    if len(cap_vec) < (max_length + 2):
+        for j in range(max_length + 2 - len(cap_vec)):
+            cap_vec.append(word_to_idx['<NULL>'])
 
-        # pad short caption with the special null token '<NULL>' to make it fixed-size vector
-        if len(cap_vec) < (max_length + 2):
-            for j in range(max_length + 2 - len(cap_vec)):
-                cap_vec.append(word_to_idx['<NULL>'])
-
-        captions[i, :] = np.asarray(cap_vec)
-    print "Finished building caption vectors"
+    captions[:] = np.asarray(cap_vec)
+    #print "Finished building caption vectors"
     return captions
 
 
@@ -167,13 +214,13 @@ def _build_image_idxs(annotations, id_to_idx):
     return image_idxs
 
 class DataLoader(RNGDataFlow):
-    def __init__(self,name, img_dir, train_img_num = 4000, caption_num_per_image = 1):
+    def __init__(self,name, train_img_num = 4000, caption_num_per_image = 1):
         if "train" in name:
-            self.image_dir = img_dir
+            self.image_dir = coco_train_dir
             # about 80000 images and 400000 captions for train dataset
-            panda_caption, img_dict, coco_caption = _process_caption_data(caption_file='/data2/dataset/annotations/captions_train2014.json',
-                                                  image_dir=img_dir,
-                                                  max_length=max_length)
+            panda_caption, img_dict, coco_caption = _process_caption_data(caption_file=caption_train_json,
+                                                                          image_dir=self.image_dir,
+                                                                          max_length=MAX_LENGTH)
 
             word_to_idx = _build_vocab(annotations=panda_caption, threshold=word_count_threshold)
             print("build vocab done...")
@@ -184,21 +231,21 @@ class DataLoader(RNGDataFlow):
             self.img_ids = img_dict.keys()
             self.img_dict = img_dict
             self.coco_caption = coco_caption
-            self.coco_instance = COCO("/data2/dataset/annotations/instances_train2014.json")
+            self.coco_instance = COCO(instance_train_json)
 
 
         elif "test" in name:
-            panda_caption, img_dict, coco_caption = _process_caption_data(caption_file='/data2/dataset/annotations/captions_val2014.json',
-                                                image_dir=img_dir,
-                                                max_length=max_length)
+            self.image_dir = coco_val_dir
+            panda_caption, img_dict, coco_caption = _process_caption_data(caption_file=caption_val_json,
+                                                                          image_dir=self.image_dir,
+                                                                          max_length=MAX_LENGTH)
             word_to_idx = _build_vocab(annotations=panda_caption, threshold=word_count_threshold)
             print("build vocab done...")
             self.word_to_idx = word_to_idx
             self.img_dict = img_dict
             self.img_ids = img_dict.keys()
             self.coco_caption = coco_caption
-            self.coco_instance = COCO("/data2/dataset/annotations/instances_val2014.json")
-            self.image_dir = img_dir
+            self.coco_instance = COCO(instance_val_json)
 
         else:
             raise
@@ -217,15 +264,21 @@ class DataLoader(RNGDataFlow):
             caption = self.img_dict[img_id]# only consider one caption
             img_file_name, gt = generate_mask(self.coco_instance,img_id)
             img = cv2.imread(os.path.join(self.image_dir,img_file_name))
-            yield [img, gt, caption]
+            caption_ids = _build_caption_vector(caption, self.word_to_idx,max_length=MAX_LENGTH)
+
+            img = resize_and_pad(img, IMG_SIZE, IMG_SIZE,interp=cv2.INTER_LINEAR)
+            gt = resize_and_pad(gt, IMG_SIZE, IMG_SIZE, interp=cv2.INTER_NEAREST)
+
+            yield [img, gt, caption, caption_ids]
 
 
 
 if __name__ == '__main__':
-    ds = DataLoader("test","/data2/dataset/coco/val2014")
+    ds = DataLoader("test")
     for idx, data in enumerate(ds.get_data()):
         img, gt, caption = data[0],data[1],data[2]
-        print("{}".format(caption))
+        print("caption str: {}".format(caption))
+        print("caption id: {}".format(data[3]))
         cv2.imshow("img", img)
         cv2.imshow("label", visualize_label(gt,class_num=80))
         cv2.waitKey(50000)
