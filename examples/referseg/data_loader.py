@@ -1,5 +1,5 @@
 # Author: Tao Hu <taohu620@gmail.com>
-
+# the main code is borrowed from https://github.com/yunjey/show-attend-and-tell/blob/master/prepro.py
 
 import os
 import gzip

@@ -16,7 +16,7 @@ from util import loss
 
 class LSTM_model(object):
 
-    def __init__(self,  batch_size = 1, 
+    def __init__(self,  im, words, batch_size = 1,
                         num_steps = 20,
                         vf_h = 40,
                         vf_w = 40,
@@ -27,16 +27,11 @@ class LSTM_model(object):
                         w_emb_dim = 1000,
                         v_emb_dim = 1000,
                         mlp_dim = 500,
-                        start_lr = 0.00025,
-                        lr_decay_step = 800000,
-                        lr_decay_rate = 1.0,
                         rnn_size = 1000,
                         keep_prob_rnn = 1.0,
                         keep_prob_emb = 1.0,
                         keep_prob_mlp = 1.0,
                         num_rnn_layers = 1,
-                        optimizer = 'adam',
-                        weight_decay = 0.0005,
                         mode = 'eval',
                         weights = 'resnet',
                         conv5 = False):
@@ -47,9 +42,6 @@ class LSTM_model(object):
         self.H = H
         self.W = W
         self.vf_dim = vf_dim
-        self.start_lr = start_lr
-        self.lr_decay_step = lr_decay_step
-        self.lr_decay_rate = lr_decay_rate
         self.vocab_size = vocab_size
         self.w_emb_dim = w_emb_dim
         self.v_emb_dim = v_emb_dim
@@ -59,15 +51,13 @@ class LSTM_model(object):
         self.keep_prob_emb = keep_prob_emb
         self.keep_prob_mlp = keep_prob_mlp
         self.num_rnn_layers = num_rnn_layers
-        self.optimizer = optimizer
-        self.weight_decay = weight_decay
         self.mode = mode
         self.weights = weights
         self.conv5 = conv5
 
-        self.words = tf.placeholder(tf.int32, [self.batch_size, self.num_steps])
-        self.im = tf.placeholder(tf.float32, [self.batch_size, self.H, self.W, 3])
-        self.target_fine = tf.placeholder(tf.float32, [self.batch_size, self.H, self.W, 1])
+        self.words = words#tf.placeholder(tf.int32, [self.batch_size, self.num_steps])
+        self.im = im #tf.placeholder(tf.float32, [self.batch_size, self.H, self.W, 3])
+
 
         if self.weights == 'resnet':
             resmodel = resnet_model.ResNet(batch_size=self.batch_size, 
@@ -168,8 +158,8 @@ class LSTM_model(object):
         score = self._conv("score", convlstm_outputs[:, -1], 3, self.mlp_dim, 1, [1, 1, 1, 1])
 
         self.pred = score
-        self.up = tf.image.resize_bilinear(self.pred, [self.H, self.W])
-        self.sigm = tf.sigmoid(self.up)
+        self.up = tf.image.resize_bilinear(self.pred, [self.H, self.W]) # final feature map
+        self.sigm = tf.sigmoid(self.up) # apply sigmoid?
 
     def _conv(self, name, x, filter_size, in_filters, out_filters, strides):
         with tf.variable_scope(name):
@@ -184,6 +174,7 @@ class LSTM_model(object):
                 initializer=tf.random_normal_initializer(stddev=0.01))
             b = tf.get_variable('biases', out_filters, initializer=tf.constant_initializer(0.))
             return tf.nn.atrous_conv2d(x, w, rate=rate, padding='SAME') + b
+
 
     def train_op(self):
         if self.conv5:
@@ -233,3 +224,4 @@ class LSTM_model(object):
 
         # training step
         self.train_step = optimizer.apply_gradients(grads_and_vars, global_step=lr)
+
