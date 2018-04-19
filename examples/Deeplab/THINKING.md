@@ -43,6 +43,7 @@ Convolutions for Semantic Segmentation](https://github.com/sacmehta/ESPNet) to h
 * Image to Image Translation for Domain Adaptation
 * scene graph generation:  https://github.com/yikang-li/MSDN
 * Semi-supervised FusedGAN for Conditional Image Generation, second paper
+* [Deep Object Co-Segmentation](https://arxiv.org/pdf/1804.06423.pdf)
 
 ## similar
 
