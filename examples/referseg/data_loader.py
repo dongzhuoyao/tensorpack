@@ -233,6 +233,8 @@ class DataLoader(RNGDataFlow):
             self.coco_caption = coco_caption
             self.coco_instance = COCO(instance_train_json)
 
+            self.shuffle = True
+
 
         elif "test" in name:
             self.image_dir = coco_val_dir
@@ -259,7 +261,10 @@ class DataLoader(RNGDataFlow):
         return 80 #Coco
 
     def get_data(self): # only for one-shot learning
-        for i in range(self.size()):
+        if self.shuffle:
+            self.rng.shuffle(self.img_ids)
+
+        for i in range(len(self.img_ids)):
             img_id = self.img_ids[i]
             caption = self.img_dict[img_id]# only consider one caption
             img_file_name, gt = generate_mask(self.coco_instance,img_id)
@@ -269,7 +274,8 @@ class DataLoader(RNGDataFlow):
             img = resize_and_pad(img, IMG_SIZE, IMG_SIZE,interp=cv2.INTER_LINEAR)
             gt = resize_and_pad(gt, IMG_SIZE, IMG_SIZE, interp=cv2.INTER_NEAREST)
 
-            yield [img, gt, caption, caption_ids]
+            #yield [img, gt, caption, caption_ids]
+            yield [img, gt, caption_ids]
 
 
 

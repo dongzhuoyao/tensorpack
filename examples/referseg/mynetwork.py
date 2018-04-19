@@ -22,7 +22,7 @@ from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 import tensorpack.tfutils.symbolic_functions as symbf
 from tqdm import tqdm
 from LSTM_model_convlstm_p543 import LSTM_model
-
+from data_loader import DataLoader
 
 CLASS_NUM = 21
 IMG_SIZE = 320
@@ -74,7 +74,7 @@ class Model(ModelDesc):
         prob = tf.identity(predict, name='prob')
         label4d = tf.expand_dims(label, 3, name='label4d')
 
-        cost = symbf.softmax_cross_entropy_with_ignore_label(logits=prob, label=label4d,
+        cost = softmax_cross_entropy_with_ignore_label(logits=prob, label=label4d,
                                                              class_num=CLASS_NUM)
         prediction = tf.argmax(prob, axis=-1,name="prediction")
         cost = tf.reduce_mean(cost, name='cross_entropy_loss')  # the average cross-entropy loss
@@ -97,47 +97,13 @@ class Model(ModelDesc):
                 [('aspp.*_conv.*/W', 10),('aspp.*_conv.*/b', 20), ('conv.*/b', 2)])]) #TODO
 
 
-def get_data(name, data_dir, meta_dir, batch_size):
-    isTrain = name == 'train'
-    ds = dataset.PascalVOC12(data_dir, meta_dir, name, shuffle=True)
 
-    class RandomCropWithPadding(imgaug.ImageAugmentor):
-        def _get_augment_params(self, img):
-            self.h0 = img.shape[0]
-            self.w0 = img.shape[1]
-
-            if IMG_SIZE > self.h0:
-                top = (IMG_SIZE - self.h0) / 2
-                bottom = (IMG_SIZE - self.h0) - top
-            else:
-                top = 0
-                bottom = 0
-
-            if IMG_SIZE > self.w0:
-                left = (IMG_SIZE - self.w0) / 2
-                right = (IMG_SIZE - self.w0) - left
-            else:
-                left = 0
-                right = 0
-            new_shape = (top + bottom + self.h0, left + right + self.w0)
-            diffh = new_shape[0] - IMG_SIZE
-            assert diffh >= 0
-            crop_start_h = 0 if diffh == 0 else self.rng.randint(diffh)
-            diffw = new_shape[1] - IMG_SIZE
-            assert diffw >= 0
-            crop_start_w = 0 if diffw == 0 else self.rng.randint(diffw)
-            return (top, bottom, left, right, crop_start_h, crop_start_w)
-
-        def _augment(self, img, param):
-            top, bottom, left, right, crop_start_h, crop_start_w = param
-            img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=IGNORE_LABEL)
-            assert crop_start_h + IMG_SIZE <= img.shape[0], crop_start_w + IMG_SIZE <= img.shape[1]
-            return img[crop_start_h:crop_start_h + IMG_SIZE, crop_start_w:crop_start_w + IMG_SIZE]
-
+def get_data(name, batch_size):
+    isTrain = True if 'train' in name else False
+    ds = DataLoader(name)
 
     if isTrain:
         shape_aug = [
-            RandomCropWithPadding(),
             imgaug.Flip(horiz=True),
         ]
     else:
@@ -154,17 +120,15 @@ def get_data(name, data_dir, meta_dir, batch_size):
     return ds
 
 
-def view_data(data_dir, meta_dir, batch_size):
-    ds = RepeatedData(get_data('train',data_dir, meta_dir, batch_size), -1)
+def view_data():
+    ds = RepeatedData(get_data('train',10), -1)
     ds.reset_state()
-    for ims, labels in ds.get_data():
-        for im, label in zip(ims, labels):
-            #aa = visualize_label(label)
-            #pass
-            cv2.imshow("im", im / 255.0)
-            cv2.imshow("raw-label", label)
-            cv2.imshow("color-label", visualize_label(label))
-            cv2.waitKey(0)
+    for ims, labels,captions in ds.get_data():
+        for im, label,caption in zip(ims, labels,captions):
+            cv2.imshow("im", im)
+            cv2.imshow("color-label", visualize_label(label,class_num=80))
+            print(caption)
+            cv2.waitKey(10000)
 
 
 def get_config(data_dir, meta_dir, batch_size):
@@ -239,7 +203,7 @@ if __name__ == '__main__':
 
 
     if args.view:
-        view_data(args.data_dir,args.meta_dir,args.batch_size)
+        view_data()
     elif args.run:
         run(args.load, args.run, args.output)
     else:
