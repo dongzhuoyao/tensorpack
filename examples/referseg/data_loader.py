@@ -223,7 +223,7 @@ class DataLoader(RNGDataFlow):
                                                                           max_length=MAX_LENGTH)
 
             word_to_idx = _build_vocab(annotations=panda_caption, threshold=word_count_threshold)
-            print("build vocab done...")
+            print("build vocab done, vocab length={}...".format(len(word_to_idx.keys())))
             self.word_to_idx = word_to_idx
             #with open("tmp.json","w") as f:
             #    json.dump(self.img_dict,f)

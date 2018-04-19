@@ -24,11 +24,13 @@ from tqdm import tqdm
 from LSTM_model_convlstm_p543 import LSTM_model
 from data_loader import DataLoader
 
-CLASS_NUM = 21
+CLASS_NUM = 80
 IMG_SIZE = 320
 IGNORE_LABEL = 255
-VOCAB_SIZE = 999
-STEP_NUM = 49 # equal Max Length
+VOCAB_SIZE = 24022  # careful about the VOCAB SIZE
+STEP_NUM = 49+2 # equal Max Length
+evaluate_every_n_epoch = 1
+max_epoch = 10
 
 def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
     """
@@ -36,7 +38,7 @@ def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
     :func:`class_balanced_cross_entropy`.
     """
     with tf.name_scope('softmax_cross_entropy_with_ignore_label'):
-        tf.assert_equal(logits.get_shape()[1:3], label.get_shape()[1:])  # shape assert
+        tf.assert_equal(logits.get_shape()[1:3], label.get_shape()[1:3])  # shape assert
 
         raw_prediction = tf.reshape(logits, [-1, class_num])
         label = tf.reshape(label,[-1,])
@@ -56,15 +58,15 @@ class Model(ModelDesc):
     def _get_inputs(self):
         ## Set static shape so that tensorflow knows shape at compile time.
         return [InputDesc(tf.float32, [None, IMG_SIZE, IMG_SIZE, 3], 'image'),
-                InputDesc(tf.int32, [None, IMG_SIZE, IMG_SIZE], 'gt'),
+                InputDesc(tf.int32, [None, IMG_SIZE, IMG_SIZE, 1], 'gt'),
                 InputDesc(tf.int32, [None, STEP_NUM], 'caption'),]
 
     def _build_graph(self, inputs):
         image, label, caption = inputs
         image = image - tf.constant([104, 116, 122], dtype='float32')
         mode = "train" if get_current_tower_context().is_training else "val"
-
-        model = LSTM_model(image, caption, mode=mode, vocab_size=VOCAB_SIZE, weights="deeplab")
+        current_batch_size = args.batch_size if get_current_tower_context().is_training else 1
+        model = LSTM_model(image, caption, batch_size=current_batch_size, num_steps= STEP_NUM, mode=mode, vocab_size=VOCAB_SIZE, weights="deeplab")
         predict = model.up
 
         label = tf.identity(label, name="label")
@@ -72,9 +74,8 @@ class Model(ModelDesc):
 
         costs = []
         prob = tf.identity(predict, name='prob')
-        label4d = tf.expand_dims(label, 3, name='label4d')
 
-        cost = softmax_cross_entropy_with_ignore_label(logits=prob, label=label4d,
+        cost = softmax_cross_entropy_with_ignore_label(logits=prob, label=label,
                                                              class_num=CLASS_NUM)
         prediction = tf.argmax(prob, axis=-1,name="prediction")
         cost = tf.reduce_mean(cost, name='cross_entropy_loss')  # the average cross-entropy loss
@@ -85,9 +86,8 @@ class Model(ModelDesc):
                                               80000, 0.7, True)
             wd_cost = tf.multiply(wd_w, regularize_cost('.*/W', tf.nn.l2_loss), name='wd_cost') #TODO
             costs.append(wd_cost)
-
             self.cost = tf.add_n(costs, name='cost')
-            add_moving_summary(costs + [self.cost])
+
 
     def _get_optimizer(self):
         lr = tf.get_variable('learning_rate', initializer=2.5e-4, trainable=False)
@@ -126,29 +126,31 @@ def view_data():
     for ims, labels,captions in ds.get_data():
         for im, label,caption in zip(ims, labels,captions):
             cv2.imshow("im", im)
-            cv2.imshow("color-label", visualize_label(label,class_num=80))
+            cv2.imshow("color-label", visualize_label(label,class_num=CLASS_NUM))
             print(caption)
             cv2.waitKey(10000)
 
 
-def get_config(data_dir, meta_dir, batch_size):
+def get_config(batch_size):
     logger.auto_set_dir()
-    dataset_train = get_data('train', data_dir, meta_dir, batch_size)
+    dataset_train = get_data('train', batch_size)
     steps_per_epoch = dataset_train.size() * 9
-    dataset_val = get_data('val', data_dir, meta_dir, batch_size)
+
+    callbacks = [
+        ModelSaver(),
+        GPUUtilizationTracker(),
+        EstimatedTimeLeft(),
+        PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
+        ProgressBar(["cross_entropy_loss", "cost", "wd_cost"]),  # uncomment it to debug for every step
+        # RunOp(lambda: tf.add_check_numerics_ops(), run_before=False, run_as_trigger=True, run_step=True)
+    ]
 
     return TrainConfig(
-        dataflow=dataset_train,
-        callbacks=[
-            ModelSaver(),
-            ScheduledHyperParamSetter('learning_rate', [(2, 1.25e-4), (4, 5e-5), (6, 2.5e-5)]),
-            HumanHyperParamSetter('learning_rate'),
-            PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=1),
-            ProgressBar(["cross_entropy_loss","cost","wd_cost"])#uncomment it to debug for every step
-        ],
         model=Model(),
+        dataflow=dataset_train,
+        callbacks=callbacks,
         steps_per_epoch=steps_per_epoch,
-        max_epoch=10,
+        max_epoch=max_epoch,
     )
 
 
@@ -188,14 +190,11 @@ class CalculateMIoU(Callback):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', help='comma separated list of GPU(s) to use.')
-    parser.add_argument('--data_dir', default="/data1/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012",
-                        help='dataset dir')
-    parser.add_argument('--meta_dir', default="pascalvoc12", help='meta dir')
-    parser.add_argument('--load', help='load model')
+    parser.add_argument('--gpu', default='5', help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--load', default="deeplab_resnet_init.ckpt" ,help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
-    parser.add_argument('--batch_size', type=int, default = 16, help='batch_size')
+    parser.add_argument('--batch_size', type=int, default = 1, help='batch_size')
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     args = parser.parse_args()
     if args.gpu:
@@ -207,7 +206,7 @@ if __name__ == '__main__':
     elif args.run:
         run(args.load, args.run, args.output)
     else:
-        config = get_config(args.data_dir,args.meta_dir,args.batch_size)
+        config = get_config(args.batch_size)
         if args.load:
             config.session_init = get_model_loader(args.load)
         launch_train_with_config(

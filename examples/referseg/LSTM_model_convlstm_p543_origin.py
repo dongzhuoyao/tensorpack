@@ -16,20 +16,27 @@ from util import loss
 
 class LSTM_model(object):
 
-    def __init__(self,  im, words, vocab_size, num_steps, batch_size,
+    def __init__(self,  batch_size = 1, 
+                        num_steps = 20,
                         vf_h = 40,
                         vf_w = 40,
                         H = 320,
                         W = 320,
                         vf_dim = 2048,
+                        vocab_size = 12112,
                         w_emb_dim = 1000,
                         v_emb_dim = 1000,
                         mlp_dim = 500,
+                        start_lr = 0.00025,
+                        lr_decay_step = 800000,
+                        lr_decay_rate = 1.0,
                         rnn_size = 1000,
                         keep_prob_rnn = 1.0,
                         keep_prob_emb = 1.0,
                         keep_prob_mlp = 1.0,
                         num_rnn_layers = 1,
+                        optimizer = 'adam',
+                        weight_decay = 0.0005,
                         mode = 'eval',
                         weights = 'resnet',
                         conv5 = False):
@@ -40,6 +47,9 @@ class LSTM_model(object):
         self.H = H
         self.W = W
         self.vf_dim = vf_dim
+        self.start_lr = start_lr
+        self.lr_decay_step = lr_decay_step
+        self.lr_decay_rate = lr_decay_rate
         self.vocab_size = vocab_size
         self.w_emb_dim = w_emb_dim
         self.v_emb_dim = v_emb_dim
@@ -49,13 +59,15 @@ class LSTM_model(object):
         self.keep_prob_emb = keep_prob_emb
         self.keep_prob_mlp = keep_prob_mlp
         self.num_rnn_layers = num_rnn_layers
+        self.optimizer = optimizer
+        self.weight_decay = weight_decay
         self.mode = mode
         self.weights = weights
         self.conv5 = conv5
 
-        self.words = words#tf.placeholder(tf.int32, [self.batch_size, self.num_steps])
-        self.im = im #tf.placeholder(tf.float32, [self.batch_size, self.H, self.W, 3])
-
+        self.words = tf.placeholder(tf.int32, [self.batch_size, self.num_steps])
+        self.im = tf.placeholder(tf.float32, [self.batch_size, self.H, self.W, 3])
+        self.target_fine = tf.placeholder(tf.float32, [self.batch_size, self.H, self.W, 1])
 
         if self.weights == 'resnet':
             resmodel = resnet_model.ResNet(batch_size=self.batch_size, 
@@ -78,7 +90,7 @@ class LSTM_model(object):
             self.build_graph()
             if self.mode == 'eval':
                 return
-            #self.train_op()
+            self.train_op()
 
     def build_graph(self):
 
@@ -96,7 +108,7 @@ class LSTM_model(object):
             
         embedding_mat = tf.get_variable("embedding", [self.vocab_size, self.w_emb_dim], 
                                         initializer=tf.random_uniform_initializer(minval=-0.08, maxval=0.08))
-        embedded_seq = tf.nn.embedding_lookup(embedding_mat, tf.transpose(self.words)) #[step, batch_size, emb_dim]
+        embedded_seq = tf.nn.embedding_lookup(embedding_mat, tf.transpose(self.words))
 
         rnn_cell_basic = tf.nn.rnn_cell.BasicLSTMCell(self.rnn_size, state_is_tuple=False)
         if self.mode == 'train' and self.keep_prob_rnn < 1:
@@ -106,7 +118,7 @@ class LSTM_model(object):
         state = cell.zero_state(self.batch_size, tf.float32)
         state_shape = state.get_shape().as_list()
         state_shape[0] = self.batch_size
-        state.set_shape(state_shape) # [batch_size, emb_dim]
+        state.set_shape(state_shape)
 
         def f1():
             return tf.constant(0.), state
@@ -118,22 +130,13 @@ class LSTM_model(object):
                 w_emb = tf.nn.dropout(w_emb, self.keep_prob_emb)
             return cell(w_emb, state)
 
-        """
         with tf.variable_scope("RNN"):
             for n in range(self.num_steps):
                 if n > 0:
                     tf.get_variable_scope().reuse_variables()
-                #rnn_output, state = cell(w_emb, state)
-                rnn_output, state = tf.cond(tf.equal(self.words[0, n], tf.constant(0)), f1, f2) # ??? 0-th batch?
-        """
 
-        with tf.variable_scope("RNN"):
-            for n in range(self.num_steps):
-                if n > 0:
-                    tf.get_variable_scope().reuse_variables()
-                w_emb = embedded_seq[n, :, :]
-                rnn_output, state = cell(w_emb, state)
-
+                # rnn_output, state = cell(w_emb, state)
+                rnn_output, state = tf.cond(tf.equal(self.words[0, n], tf.constant(0)), f1, f2)
 
         lang_feat = tf.reshape(rnn_output, [self.batch_size, 1, 1, self.rnn_size])
         lang_feat = tf.nn.l2_normalize(lang_feat, 3)
@@ -165,8 +168,8 @@ class LSTM_model(object):
         score = self._conv("score", convlstm_outputs[:, -1], 3, self.mlp_dim, 1, [1, 1, 1, 1])
 
         self.pred = score
-        self.up = tf.image.resize_bilinear(self.pred, [self.H, self.W]) # final feature map
-        self.sigm = tf.sigmoid(self.up) # apply sigmoid?
+        self.up = tf.image.resize_bilinear(self.pred, [self.H, self.W])
+        self.sigm = tf.sigmoid(self.up)
 
     def _conv(self, name, x, filter_size, in_filters, out_filters, strides):
         with tf.variable_scope(name):
@@ -182,8 +185,6 @@ class LSTM_model(object):
             b = tf.get_variable('biases', out_filters, initializer=tf.constant_initializer(0.))
             return tf.nn.atrous_conv2d(x, w, rate=rate, padding='SAME') + b
 
-
-    """
     def train_op(self):
         if self.conv5:
             tvars = [var for var in tf.trainable_variables() if var.op.name.startswith('text_objseg') 
@@ -232,5 +233,3 @@ class LSTM_model(object):
 
         # training step
         self.train_step = optimizer.apply_gradients(grads_and_vars, global_step=lr)
-
-    """
