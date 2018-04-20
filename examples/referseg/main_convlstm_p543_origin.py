@@ -10,7 +10,7 @@ import skimage
 
 
 from LSTM_model_convlstm_p543_origin import LSTM_model
-# from RMI_model import RMI_model
+from RMI_model import RMI_model
 from pydensecrf import densecrf
 
 from util import data_reader

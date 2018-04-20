@@ -14,23 +14,26 @@ os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
 from tensorpack import *
 from tensorpack.dataflow import dataset
 from tensorpack.utils.gpu import get_nr_gpu
-from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label
+from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler
 from tensorpack.utils.stats import MIoUStatistics
 from tensorpack.utils import logger
 from tensorpack.tfutils import optimizer
 from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
-import tensorpack.tfutils.symbolic_functions as symbf
 from tqdm import tqdm
 from LSTM_model_convlstm_p543 import LSTM_model
 from data_loader import DataLoader
 
-CLASS_NUM = 80
+CLASS_NUM = DataLoader.class_num()
 IMG_SIZE = 320
 IGNORE_LABEL = 255
-VOCAB_SIZE = 24022  # careful about the VOCAB SIZE
-STEP_NUM = 49+2 # equal Max Length
+MAX_LENGTH = 49
+VOCAB_SIZE = len(DataLoader(name = "train", max_length=MAX_LENGTH, img_size=IMG_SIZE).word_to_idx.keys())#3224#28645#24022  # careful about the VOCAB SIZE
+# maximum length of caption(number of word). if caption is longer than max_length, deleted.
+STEP_NUM = MAX_LENGTH+2 # equal Max Length
 evaluate_every_n_epoch = 1
 max_epoch = 10
+init_lr = 2.5e-4
+lr_schedule = [(3, 1e-4), (7, 1e-5)]
 
 def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
     """
@@ -56,7 +59,6 @@ def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
 class Model(ModelDesc):
 
     def _get_inputs(self):
-        ## Set static shape so that tensorflow knows shape at compile time.
         return [InputDesc(tf.float32, [None, IMG_SIZE, IMG_SIZE, 3], 'image'),
                 InputDesc(tf.int32, [None, IMG_SIZE, IMG_SIZE, 1], 'gt'),
                 InputDesc(tf.int32, [None, STEP_NUM], 'caption'),]
@@ -66,7 +68,7 @@ class Model(ModelDesc):
         image = image - tf.constant([104, 116, 122], dtype='float32')
         mode = "train" if get_current_tower_context().is_training else "val"
         current_batch_size = args.batch_size if get_current_tower_context().is_training else 1
-        model = LSTM_model(image, caption, batch_size=current_batch_size, num_steps= STEP_NUM, mode=mode, vocab_size=VOCAB_SIZE, weights="deeplab")
+        model = LSTM_model(image, caption, class_num=CLASS_NUM, batch_size=current_batch_size, num_steps= STEP_NUM, mode=mode, vocab_size=VOCAB_SIZE, weights="deeplab")
         predict = model.up
 
         label = tf.identity(label, name="label")
@@ -74,43 +76,35 @@ class Model(ModelDesc):
 
         costs = []
         prob = tf.identity(predict, name='prob')
+        prediction = tf.argmax(prob, axis=-1, name="prediction")
 
         cost = softmax_cross_entropy_with_ignore_label(logits=prob, label=label,
                                                              class_num=CLASS_NUM)
-        prediction = tf.argmax(prob, axis=-1,name="prediction")
+
         cost = tf.reduce_mean(cost, name='cross_entropy_loss')  # the average cross-entropy loss
         costs.append(cost)
 
         if get_current_tower_context().is_training:
             wd_w = tf.train.exponential_decay(2e-4, get_global_step_var(),
                                               80000, 0.7, True)
-            wd_cost = tf.multiply(wd_w, regularize_cost('.*/W', tf.nn.l2_loss), name='wd_cost') #TODO
+            wd_cost = tf.multiply(wd_w, regularize_cost('.*/Waaaaaa', tf.nn.l2_loss), name='wd_cost') #TODO
+            #wd_cost = 0.0
             costs.append(wd_cost)
             self.cost = tf.add_n(costs, name='cost')
 
 
     def _get_optimizer(self):
-        lr = tf.get_variable('learning_rate', initializer=2.5e-4, trainable=False)
+        lr = tf.get_variable('learning_rate', initializer=init_lr, trainable=False)
         opt = tf.train.AdamOptimizer(lr, epsilon=1e-3)
         return optimizer.apply_grad_processors(
             opt, [gradproc.ScaleGradient(
-                [('aspp.*_conv.*/W', 10),('aspp.*_conv.*/b', 20), ('conv.*/b', 2)])]) #TODO
+                [('aspp.*_conv.*/Wnnnnnn', 10),('aspp.*_conv.*/bnnnnn', 20), ('conv.*/bnnnnn', 2)])]) #TODO
 
 
 
 def get_data(name, batch_size):
     isTrain = True if 'train' in name else False
-    ds = DataLoader(name)
-
-    if isTrain:
-        shape_aug = [
-            imgaug.Flip(horiz=True),
-        ]
-    else:
-        shape_aug = []
-        pass
-    ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False)
-
+    ds = DataLoader(name = name, max_length=MAX_LENGTH, img_size=IMG_SIZE)
 
     if isTrain:
         ds = BatchData(ds, batch_size)
@@ -134,12 +128,13 @@ def view_data():
 def get_config(batch_size):
     logger.auto_set_dir()
     dataset_train = get_data('train', batch_size)
-    steps_per_epoch = dataset_train.size() * 9
+    steps_per_epoch = dataset_train.size()*10
 
     callbacks = [
         ModelSaver(),
         GPUUtilizationTracker(),
         EstimatedTimeLeft(),
+        ScheduledHyperParamSetter('learning_rate', lr_schedule),
         PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
         ProgressBar(["cross_entropy_loss", "cost", "wd_cost"]),  # uncomment it to debug for every step
         # RunOp(lambda: tf.add_check_numerics_ops(), run_before=False, run_as_trigger=True, run_step=True)
@@ -154,8 +149,6 @@ def get_config(batch_size):
     )
 
 
-def run(model_path, image_path, output):
-    return #TODO
 
 class CalculateMIoU(Callback):
     def __init__(self, nb_class):
@@ -163,22 +156,28 @@ class CalculateMIoU(Callback):
 
     def _setup_graph(self):
         self.pred = self.trainer.get_predictor(
-            ['image'], ['prob'])
+            ['image','caption'], ['prob'])
 
     def _before_train(self):
         pass
 
     def _trigger(self):
         global args
-        self.val_ds = get_data('val', args.data_dir, args.meta_dir, args.batch_size)
+        self.val_ds = get_data('test',batch_size=args.batch_size)
         self.val_ds.reset_state()
 
         self.stat = MIoUStatistics(self.nb_class)
 
-        for image, label in tqdm(self.val_ds.get_data()):
+        for image, label, caption  in tqdm(self.val_ds.get_data()):
             label = np.squeeze(label)
             image = np.squeeze(image)
-            prediction = predict_slider(image, self.pred, self.nb_class, tile_size=IMG_SIZE)
+
+            def mypredictor(input_img):
+                # input image: 1*H*W*3
+                # output : H*W*C
+                output = self.pred(input_img[np.newaxis, :, :, :], caption)
+                return output[0][0]
+            prediction = predict_scaler(image, mypredictor, scales=[1], classes=CLASS_NUM, tile_size=IMG_SIZE, is_densecrf = False)
             prediction = np.argmax(prediction, axis=2)
             self.stat.feed(prediction, label)
 
@@ -194,7 +193,7 @@ if __name__ == '__main__':
     parser.add_argument('--load', default="deeplab_resnet_init.ckpt" ,help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
-    parser.add_argument('--batch_size', type=int, default = 1, help='batch_size')
+    parser.add_argument('--batch_size', type=int, default = 10, help='batch_size')
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     args = parser.parse_args()
     if args.gpu:
@@ -203,8 +202,6 @@ if __name__ == '__main__':
 
     if args.view:
         view_data()
-    elif args.run:
-        run(args.load, args.run, args.output)
     else:
         config = get_config(args.batch_size)
         if args.load:

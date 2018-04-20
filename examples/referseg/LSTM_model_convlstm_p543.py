@@ -16,7 +16,7 @@ from util import loss
 
 class LSTM_model(object):
 
-    def __init__(self,  im, words, vocab_size, num_steps, batch_size,
+    def __init__(self,  im, words, vocab_size, num_steps, batch_size, class_num,
                         vf_h = 40,
                         vf_w = 40,
                         H = 320,
@@ -35,6 +35,7 @@ class LSTM_model(object):
                         conv5 = False):
         self.batch_size = batch_size
         self.num_steps = num_steps
+        self.class_num = class_num
         self.vf_h = vf_h
         self.vf_w = vf_w
         self.H = H
@@ -162,7 +163,7 @@ class LSTM_model(object):
         convlstm_cell = ConvLSTMCell([self.vf_h, self.vf_w], self.mlp_dim, [1 ,1])
         convlstm_outputs, states = tf.nn.dynamic_rnn(convlstm_cell, tf.convert_to_tensor([[fusion[0], c5_lateral[0], c4_lateral[0], c3_lateral[0]]]), dtype=tf.float32)
 
-        score = self._conv("score", convlstm_outputs[:, -1], 3, self.mlp_dim, 1, [1, 1, 1, 1])
+        score = self._conv("score", convlstm_outputs[:, -1], 3, self.mlp_dim, self.class_num, [1, 1, 1, 1])
 
         self.pred = score
         self.up = tf.image.resize_bilinear(self.pred, [self.H, self.W]) # final feature map
