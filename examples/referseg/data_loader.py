@@ -203,12 +203,6 @@ class DataLoader(RNGDataFlow):
             self.img_dict = img_dict_train
             self.coco_caption = coco_caption
             self.coco_instance = COCO(instance_train_json)
-            self.catId_to_ascendorder = {}
-            for idx, data in enumerate(self.coco_instance.cats.items()):# notice here the catid is not continuous: 1,2,3,4,5,6,7,8,9,10,11,13....
-                key, value = data
-                self.catId_to_ascendorder[key] = idx
-            logger.info("catId_to_ascendorder length: {}".format(len(self.catId_to_ascendorder)))
-            print self.catId_to_ascendorder
 
 
 
@@ -228,6 +222,14 @@ class DataLoader(RNGDataFlow):
 
         else:
             raise
+
+        self.catId_to_ascendorder = {}
+        for idx, data in enumerate(
+                self.coco_instance.cats.items()):  # notice here the catid is not continuous: 1,2,3,4,5,6,7,8,9,10,11,13....
+            key, value = data
+            self.catId_to_ascendorder[key] = idx
+        logger.info("catId_to_ascendorder length: {}".format(len(self.catId_to_ascendorder)))
+        print self.catId_to_ascendorder
 
         logger.info("dataset size: {}".format(len(self.img_ids)))
 

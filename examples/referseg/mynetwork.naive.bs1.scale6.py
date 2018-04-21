@@ -26,7 +26,7 @@ from data_loader import DataLoader
 CLASS_NUM = DataLoader.class_num()
 IMG_SIZE = 320
 IGNORE_LABEL = 255
-MAX_LENGTH = 49
+MAX_LENGTH = 15
 VOCAB_SIZE = len(DataLoader(name = "train", max_length=MAX_LENGTH, img_size=IMG_SIZE).word_to_idx.keys())#3224#28645#24022  # careful about the VOCAB SIZE
 # maximum length of caption(number of word). if caption is longer than max_length, deleted.
 STEP_NUM = MAX_LENGTH+2 # equal Max Length
