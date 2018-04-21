@@ -34,7 +34,7 @@ evaluate_every_n_epoch = 1
 max_epoch = 10
 init_lr = 2.5e-4
 lr_schedule = [(3, 1e-4), (7, 1e-5)]
-step_scale = 6
+step_scale = 4
 
 def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
     """
@@ -178,7 +178,8 @@ class CalculateMIoU(Callback):
                 # output : H*W*C
                 output = self.pred(input_img[np.newaxis, :, :, :], caption)
                 return output[0][0]
-            prediction = predict_scaler(image, mypredictor, scales=[1], classes=CLASS_NUM, tile_size=IMG_SIZE, is_densecrf = False)
+
+            prediction = mypredictor(image)
             prediction = np.argmax(prediction, axis=2)
             self.stat.feed(prediction, label)
 
@@ -194,7 +195,7 @@ if __name__ == '__main__':
     parser.add_argument('--load', default="deeplab_resnet_init.ckpt" ,help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
-    parser.add_argument('--batch_size', type=int, default = 3, help='batch_size')
+    parser.add_argument('--batch_size', type=int, default = 1, help='batch_size')
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     args = parser.parse_args()
     if args.gpu:

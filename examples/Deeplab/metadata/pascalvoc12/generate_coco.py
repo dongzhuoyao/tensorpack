@@ -75,13 +75,13 @@ def proceed(detection_json):
             cv2.imshow("color-label", visualize_label(img_mask[:,:,0]))
             cv2.waitKey(0)
 
-
+print("proceed val")
+proceed(detection_json_val)
 
 print("proceed train")
 proceed(detection_json_train)
 
-print("proceed val")
-proceed(detection_json_val)
+
 
 f.close()
 

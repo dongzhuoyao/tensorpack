@@ -156,7 +156,7 @@ class CalculateMIoU(Callback):
 
     def _setup_graph(self):
         self.pred = self.trainer.get_predictor(
-            ['image','caption'], ['prob'])
+            ['image'], ['prob'])
 
     def _before_train(self):
         pass
@@ -177,7 +177,9 @@ class CalculateMIoU(Callback):
                 # output : H*W*C
                 output = self.pred(input_img[np.newaxis, :, :, :])
                 return output[0][0]
-            prediction = predict_scaler(image, mypredictor, scales=[1], classes=CLASS_NUM, tile_size=IMG_SIZE, is_densecrf = False)
+
+            prediction = mypredictor(image)
+            #prediction = predict_scaler(image, mypredictor, scales=[1], classes=CLASS_NUM, tile_size=IMG_SIZE, is_densecrf = False)
             prediction = np.argmax(prediction, axis=2)
             self.stat.feed(prediction, label)
 
@@ -193,7 +195,7 @@ if __name__ == '__main__':
     parser.add_argument('--load', default="deeplab_resnet_init.ckpt" ,help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
-    parser.add_argument('--batch_size', type=int, default = 3, help='batch_size')
+    parser.add_argument('--batch_size', type=int, default = 1, help='batch_size')
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     args = parser.parse_args()
     if args.gpu:

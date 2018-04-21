@@ -62,26 +62,36 @@ def _process_caption_data(caption_file, max_length, max_image_num = -1):
     caption_data = coco.dataset
     img_to_caption = {}
     img_ids = [tmp['id'] for tmp in caption_data['images']]
-    for img_id in img_ids[:max_image_num]:
+    for img_id in img_ids:
         annIds = coco.getAnnIds(imgIds=img_id)
         # only consider one caption
         img_to_caption[img_id] = coco.loadAnns(annIds[0])[0]['caption']
 
-
+    delete_keys = []
     for img_id, caption in tqdm(img_to_caption.items()):
         caption = caption.replace('.', '').replace(',', '').replace("'", "").replace('"', '')
         caption = caption.replace('&', 'and').replace('(', '').replace(")", "").replace('-', ' ')
         caption = " ".join(caption.split())  # replace multiple spaces
         caption = caption.lower()
         if len(caption.split(" ")) > max_length:
-            pass
+            delete_keys.append(img_id)
         img_to_caption[img_id] = caption
 
     # delete captions if size is larger than max_length
     logger.info("The number of captions before deletion: %d" % len(img_to_caption.keys()))
-    #logger.info("The number of captions after deletion: %d" % len(caption_data))
+    for dk in delete_keys:
+        del img_to_caption[dk]
+    logger.info("The number of captions after deletion: %d" % len(img_to_caption.keys()))
 
-    return img_to_caption, coco
+    final_img_to_caption = {}
+    for id,data in tqdm(enumerate(img_to_caption.items())):
+        img_id, caption = data
+        final_img_to_caption[img_id] = caption
+        if id >= max_image_num - 1:
+            break
+
+    logger.info("final : {}".format( len(final_img_to_caption.keys())))
+    return final_img_to_caption, coco
 
 
 def _build_vocab(caption_list, threshold=1):
@@ -127,7 +137,7 @@ def _build_caption_vector(caption, word_to_idx, max_length=15):
     return captions
 
 
-def generate_mask(_coco, img_id):
+def generate_mask(_coco,catId_to_ascendorder, img_id):
     img = _coco.loadImgs(img_id)[0]
     img_file_name = img['file_name']
     annIds = _coco.getAnnIds(imgIds=img_id)
@@ -147,7 +157,7 @@ def generate_mask(_coco, img_id):
             else:
                 rle = [ann['segmentation']]
         m = mask.decode(rle)
-        img_mask[np.where(m == 1)] = ann['category_id']
+        img_mask[np.where(m == 1)] = catId_to_ascendorder[ann['category_id']]
 
     return img_file_name, img_mask
 
@@ -188,11 +198,18 @@ class DataLoader(RNGDataFlow):
                     logger.info("save the vocab..")
                     json.dump(self.word_to_idx,f)
 
+            self.shuffle = True
             self.img_ids = img_dict_train.keys()
             self.img_dict = img_dict_train
             self.coco_caption = coco_caption
             self.coco_instance = COCO(instance_train_json)
-            self.shuffle = True
+            self.catId_to_ascendorder = {}
+            for idx, data in enumerate(self.coco_instance.cats.items()):# notice here the catid is not continuous: 1,2,3,4,5,6,7,8,9,10,11,13....
+                key, value = data
+                self.catId_to_ascendorder[key] = idx
+            logger.info("catId_to_ascendorder length: {}".format(len(self.catId_to_ascendorder)))
+            print self.catId_to_ascendorder
+
 
 
         elif "test" in self.name:
@@ -216,7 +233,7 @@ class DataLoader(RNGDataFlow):
 
 
     def size(self):
-        return 20#len(self.img_dict.keys())
+        return len(self.img_dict.keys())
 
 
     @staticmethod
@@ -231,7 +248,7 @@ class DataLoader(RNGDataFlow):
             if "train" in self.name:
                 img_id = self.img_ids[i]
                 caption = self.img_dict[img_id]# only consider one caption
-                img_file_name, gt = generate_mask(self.coco_instance,img_id)
+                img_file_name, gt = generate_mask(self.coco_instance,self.catId_to_ascendorder,img_id)
                 img = cv2.imread(os.path.join(self.image_dir,img_file_name))
                 caption_ids = _build_caption_vector(caption, self.word_to_idx,max_length=self.max_length)
 
@@ -245,7 +262,7 @@ class DataLoader(RNGDataFlow):
             else:
                 img_id = self.img_ids[i]
                 caption = self.img_dict[img_id]  # only consider one caption
-                img_file_name, gt = generate_mask(self.coco_instance, img_id)
+                img_file_name, gt = generate_mask(self.coco_instance, self.catId_to_ascendorder, img_id)
                 img = cv2.imread(os.path.join(self.image_dir, img_file_name))
 
                 caption_ids = _build_caption_vector(caption, self.word_to_idx, max_length=self.max_length)
@@ -263,13 +280,15 @@ class DataLoader(RNGDataFlow):
 
 
 if __name__ == '__main__':
-    ds = DataLoader("test")
+    ds = DataLoader("train", max_length=15, img_size=320)
     for idx, data in enumerate(ds.get_data()):
         img, gt, caption = data[0],data[1],data[2]
         print("caption str: {}".format(caption))
         print("caption id: {}".format(data[3]))
         cv2.imshow("img", img)
         cv2.imshow("label", visualize_label(gt,class_num=80))
+        print(np.max(gt))
+        print(np.unique(gt))
         cv2.waitKey(50000)
 
 

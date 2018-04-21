@@ -26,7 +26,7 @@ from data_loader import DataLoader
 CLASS_NUM = DataLoader.class_num()
 IMG_SIZE = 320
 IGNORE_LABEL = 255
-MAX_LENGTH = 49
+MAX_LENGTH = 15
 VOCAB_SIZE = len(DataLoader(name = "train", max_length=MAX_LENGTH, img_size=IMG_SIZE).word_to_idx.keys())#3224#28645#24022  # careful about the VOCAB SIZE
 # maximum length of caption(number of word). if caption is longer than max_length, deleted.
 STEP_NUM = MAX_LENGTH+2 # equal Max Length
@@ -177,7 +177,8 @@ class CalculateMIoU(Callback):
                 # output : H*W*C
                 output = self.pred(input_img[np.newaxis, :, :, :], caption)
                 return output[0][0]
-            prediction = predict_scaler(image, mypredictor, scales=[1], classes=CLASS_NUM, tile_size=IMG_SIZE, is_densecrf = False)
+            prediction = mypredictor(image)
+            #prediction = predict_scaler(image, mypredictor, scales=[1], classes=CLASS_NUM, tile_size=IMG_SIZE, is_densecrf = False)
             prediction = np.argmax(prediction, axis=2)
             self.stat.feed(prediction, label)
 
@@ -193,7 +194,7 @@ if __name__ == '__main__':
     parser.add_argument('--load', default="deeplab_resnet_init.ckpt" ,help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
-    parser.add_argument('--batch_size', type=int, default = 3, help='batch_size')
+    parser.add_argument('--batch_size', type=int, default = 1, help='batch_size')
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     args = parser.parse_args()
     if args.gpu:
