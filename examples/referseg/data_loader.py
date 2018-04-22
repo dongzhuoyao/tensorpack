@@ -164,7 +164,7 @@ def generate_mask(_coco,catId_to_ascendorder, img_id):
 
 
 class DataLoader(RNGDataFlow):
-    def __init__(self, name, max_length, img_size, train_img_num = 4000, test_img_num = 1000, use_caption = True):
+    def __init__(self, name, max_length, img_size, train_img_num = 4000, test_img_num = 1000, use_caption = True, quick_eval = True):
 
         self.max_length = max_length
         self.img_size = img_size
@@ -172,6 +172,7 @@ class DataLoader(RNGDataFlow):
         self.shuffle = False
         self.use_caption = use_caption
         self.vocab_name = "word_to_idx_train{}_test{}.json".format(train_img_num,test_img_num)
+        self.quick_eval = quick_eval
 
         if "train" in self.name:
             self.image_dir = coco_train_dir
@@ -235,7 +236,15 @@ class DataLoader(RNGDataFlow):
 
 
     def size(self):
-        return len(self.img_dict.keys())
+        if "train" in self.name:
+            return len(self.img_dict.keys())
+        elif "test" in self.name:
+            if self.quick_eval:
+                return 1000
+            else:
+                return len(self.img_dict.keys())
+        else:
+            raise
 
 
     @staticmethod
