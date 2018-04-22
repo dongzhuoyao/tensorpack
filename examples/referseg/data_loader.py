@@ -87,8 +87,9 @@ def _process_caption_data(caption_file, max_length, max_image_num = -1):
     for id,data in tqdm(enumerate(img_to_caption.items())):
         img_id, caption = data
         final_img_to_caption[img_id] = caption
-        if id >= max_image_num - 1:
-            break
+        if max_image_num > -1:# if =-1, just use all data!
+            if id >= max_image_num - 1:
+                break
 
     logger.info("final : {}".format( len(final_img_to_caption.keys())))
     return final_img_to_caption, coco
@@ -164,7 +165,9 @@ def generate_mask(_coco,catId_to_ascendorder, img_id):
 
 
 class DataLoader(RNGDataFlow):
-    def __init__(self, name, max_length, img_size, train_img_num = 4000, test_img_num = 1000, use_caption = True, quick_eval = True):
+    def __init__(self, name, max_length, img_size,
+                 train_img_num = 4000, test_img_num = 1000, use_caption = True, quick_eval = True,
+                 regenerate_json = True):
 
         self.max_length = max_length
         self.img_size = img_size
@@ -173,13 +176,14 @@ class DataLoader(RNGDataFlow):
         self.use_caption = use_caption
         self.vocab_name = "word_to_idx_train{}_test{}.json".format(train_img_num,test_img_num)
         self.quick_eval = quick_eval
+        self.regenerate_json = regenerate_json
 
         if "train" in self.name:
             self.image_dir = coco_train_dir
             img_dict_train, coco_caption = _process_caption_data(caption_file=caption_train_json,
                                                                           max_length=self.max_length, max_image_num = train_img_num)
 
-            if True:
+            if not regenerate_json:
                 logger.info("load vocab from {}".format(self.vocab_name))
                 with open(self.vocab_name, 'r') as load_f:
                     self.word_to_idx = json.load(load_f)

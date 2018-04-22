@@ -27,13 +27,14 @@ CLASS_NUM = DataLoader.class_num()
 IMG_SIZE = 320
 IGNORE_LABEL = 255
 MAX_LENGTH = 15
-VOCAB_SIZE = len(DataLoader(name = "train", max_length=MAX_LENGTH, img_size=IMG_SIZE).word_to_idx.keys())#3224#28645#24022  # careful about the VOCAB SIZE
+VOCAB_SIZE = len(DataLoader(name = "train", max_length=MAX_LENGTH, img_size=IMG_SIZE, train_img_num=-1,test_img_num=-1, quick_eval=True).word_to_idx.keys())#3224#28645#24022  # careful about the VOCAB SIZE
 # maximum length of caption(number of word). if caption is longer than max_length, deleted.
 STEP_NUM = MAX_LENGTH+2 # equal Max Length
 evaluate_every_n_epoch = 1
 max_epoch = 10
 init_lr = 2.5e-4
 lr_schedule = [(3, 1e-4), (7, 1e-5)]
+epoch_scale = 1
 
 def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
     """
@@ -104,7 +105,7 @@ class Model(ModelDesc):
 
 def get_data(name, batch_size):
     isTrain = True if 'train' in name else False
-    ds = DataLoader(name = name, max_length=MAX_LENGTH, img_size=IMG_SIZE,use_caption=False)
+    ds = DataLoader(name = name, max_length=MAX_LENGTH, img_size=IMG_SIZE,use_caption=False,train_img_num=-1,test_img_num=-1, quick_eval=True)
 
     if isTrain:
         ds = BatchData(ds, batch_size)
@@ -128,7 +129,7 @@ def view_data():
 def get_config(batch_size):
     logger.auto_set_dir()
     dataset_train = get_data('train', batch_size)
-    steps_per_epoch = dataset_train.size()*2
+    steps_per_epoch = dataset_train.size()*epoch_scale
 
     callbacks = [
         ModelSaver(),
