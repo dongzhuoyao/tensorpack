@@ -13,9 +13,10 @@ mynetwork.naive|bs=1,train_imgs=4k,val_imgs=1k|22.3|
 
 ## story
 
-#### add more sentence to an image? see effect
 #### change image proportion(4k,10k,nocap-80k)
+#### add more sentence to an image? see effect
 #### attention mechanism
+#### multi-scale guiding
 
 #### feature map visualization
 
