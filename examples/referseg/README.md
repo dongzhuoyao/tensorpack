@@ -1,4 +1,15 @@
-# referseg_rrn
+## referseg_rrn
 
-#  https://github.com/lichengunc/refer
-#  https://github.com/chenxi116/TF-phrasecut-public
+##  https://github.com/lichengunc/refer
+##  https://github.com/chenxi116/TF-phrasecut-public
+
+## Result
+
+Arch|metadata|result|
+|---|----|----|
+Arch|metadata|result|
+mynetwork.naive.nocap|bs=1,train_imgs=4k,val_imgs=1k|14.5|
+mynetwork.naive|bs=1,train_imgs=4k,val_imgs=1k|22.3|
+
+
+
