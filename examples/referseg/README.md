@@ -5,7 +5,11 @@
 
 ## Result
 
-Arch|result
-|---|----|
-Arch|result
+Arch|metadata|result|
+|---|----|----|
+Arch|metadata|result|
+mynetwork.naive.nocap|bs=1,imgs=4k|14.5|
+mynetwork.naive|bs=1,imgs=4k|22.3|
+
+
 
