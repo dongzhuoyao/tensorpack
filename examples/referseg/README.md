@@ -24,8 +24,13 @@ mynetwork.naive.nocap.alldataset.bs5.scale1||38.7
 #### add more sentence to an image? see effect
 #### attention mechanism
 #### multi-scale guiding
-
 #### feature map visualization
+
+## contribution
+
+#### our paper first employ the caption information into the segmentation of the image for better segmentation by exploring the relationship of objects.
+
+#### attentation and multi-scale
 
 
 
