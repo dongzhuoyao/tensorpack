@@ -13,6 +13,8 @@ mynetwork.naive|bs=1,train_imgs=4k,val_imgs=1k|22.3|
 mynetwork.naive.bs4||25.6|
 mynetwork.naive.bs4.train6k||28.97|
 mynetwork.naive.bs4.train10k||33.27
+mynetwork.naive.bs4.train20k||:question:
+mynetwork.naive.bs4.train40k||:question:
 mynetwork.naive.nocap.alldataset.bs5.scale1||38.7
 
 
