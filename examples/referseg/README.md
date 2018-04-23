@@ -16,6 +16,9 @@ mynetwork.naive.bs4.train10k||33.27
 mynetwork.naive.bs4.train20k||:question:
 mynetwork.naive.bs4.train40k||:question:
 mynetwork.naive.nocap.alldataset.bs5.scale1||38.7
+mynetwork.naive.nocap.alldataset.bs5.scale2||:question:|
+mynetwork.naive.nocap.train6k.bs4.scale2||:question:|
+mynetwork.naive.nocap.train10k.bs4.scale2||:question:|
 
 
 ## story
