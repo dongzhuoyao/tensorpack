@@ -10,6 +10,28 @@ Arch|metadata|result|
 Arch|metadata|result|
 mynetwork.naive.nocap|bs=1,train_imgs=4k,val_imgs=1k|14.5|
 mynetwork.naive|bs=1,train_imgs=4k,val_imgs=1k|22.3|
+mynetwork.naive.bs4||25.6|
+mynetwork.naive.bs4.train6k||28.97|
+mynetwork.naive.bs4.train10k||33.27
+mynetwork.naive.bs4.train20k||:question:
+mynetwork.naive.bs4.train40k||:question:
+mynetwork.naive.nocap.alldataset.bs5.scale1||38.7
+
+
+## story
+
+#### change image proportion(4k,10k,nocap-80k)
+#### add more sentence to an image? see effect
+#### attention mechanism
+#### multi-scale guiding
+#### feature map visualization
+
+## contribution
+
+#### our paper first employ the caption information into the segmentation of the image for better segmentation by exploring the relationship of objects.
+
+#### attentation and multi-scale
+
 
 
 
