@@ -10,8 +10,8 @@ from util.processing_tools import *
 
 class RMI_model(object):
 
-    def __init__(self, img, class_num ,batch_size,
-                        num_steps,mode,vocab_size,
+    def __init__(self, img, class_num, batch_size,
+                        num_steps, mode, vocab_size,
                         vf_h = 40,
                         vf_w = 40,
                         H = 320,
