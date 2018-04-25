@@ -10,7 +10,7 @@ from tqdm import tqdm
 from tensorpack.utils import logger
 from tensorpack.dataflow.base import RNGDataFlow
 from tensorpack.utils.segmentation.segmentation import visualize_label
-
+from tensorpack.utils.segmentation.coco_util import generate_id2trainid, generate_image_mask
 
 __all__ = ['DataLoader']
 
@@ -21,7 +21,7 @@ instance_val_json = "/data2/dataset/annotations/instances_val2014.json"
 
 coco_train_dir = "/data2/dataset/coco/train2014"
 coco_val_dir = "/data2/dataset/coco/val2014"
-
+class_num = 81
 
 
 # if word occurs less than word_count_threshold in training dataset, the word index is special unknown token.
@@ -146,19 +146,7 @@ def generate_mask(_coco,catId_to_ascendorder, img_id):
 
     for annId in annIds:
         ann = _coco.loadAnns(annId)[0]
-
-        # polygon
-        if type(ann['segmentation']) == list:
-            for _instance in ann['segmentation']:
-                rle = mask.frPyObjects([_instance], img['height'], img['width'])
-        # mask
-        else:  # mostly is aeroplane
-            if type(ann['segmentation']['counts']) == list:
-                rle = mask.frPyObjects([ann['segmentation']], img['height'], img['width'])
-            else:
-                rle = [ann['segmentation']]
-        m = mask.decode(rle)
-        img_mask[np.where(m == 1)] = catId_to_ascendorder[ann['category_id']]
+        img_mask, ann = generate_image_mask(_coco, img_mask, annId, catId_to_ascendorder)
 
     return img_file_name, img_mask
 
@@ -174,7 +162,7 @@ class DataLoader(RNGDataFlow):
         self.name = name
         self.shuffle = False
         self.use_caption = use_caption
-        self.vocab_name = "word_to_idx_train{}_test{}.json".format(train_img_num,test_img_num)
+        self.vocab_name = "word_to_idx_max{}_train{}_test{}.json".format(max_length, train_img_num,test_img_num)
         self.quick_eval = quick_eval
         self.regenerate_json = regenerate_json
 
@@ -228,12 +216,9 @@ class DataLoader(RNGDataFlow):
         else:
             raise
 
-        self.catId_to_ascendorder = {}
-        for idx, data in enumerate(
-                self.coco_instance.cats.items()):  # notice here the catid is not continuous: 1,2,3,4,5,6,7,8,9,10,11,13....
-            key, value = data
-            self.catId_to_ascendorder[key] = idx
+        self.catId_to_ascendorder = generate_id2trainid(self.coco_instance)
         logger.info("catId_to_ascendorder length: {}".format(len(self.catId_to_ascendorder)))
+
         print self.catId_to_ascendorder
 
         logger.info("dataset size: {}".format(len(self.img_ids)))
@@ -253,7 +238,7 @@ class DataLoader(RNGDataFlow):
 
     @staticmethod
     def class_num():
-        return 80 #Coco
+        return class_num #Coco
 
     def get_data(self): # only for one-shot learning
         if self.shuffle:
@@ -263,7 +248,7 @@ class DataLoader(RNGDataFlow):
             if "train" in self.name:
                 img_id = self.img_ids[i]
                 caption = self.img_dict[img_id]# only consider one caption
-                img_file_name, gt = generate_mask(self.coco_instance,self.catId_to_ascendorder,img_id)
+                img_file_name, gt = generate_mask(self.coco_instance,self.catId_to_ascendorder, img_id)
                 img = cv2.imread(os.path.join(self.image_dir,img_file_name))
                 caption_ids = _build_caption_vector(caption, self.word_to_idx,max_length=self.max_length)
 
@@ -276,6 +261,8 @@ class DataLoader(RNGDataFlow):
                     yield [img, gt]
             else:
                 img_id = self.img_ids[i]
+                #if str(img_id) != "546229":
+                #    continue
                 caption = self.img_dict[img_id]  # only consider one caption
                 img_file_name, gt = generate_mask(self.coco_instance, self.catId_to_ascendorder, img_id)
                 img = cv2.imread(os.path.join(self.image_dir, img_file_name))
@@ -295,13 +282,14 @@ class DataLoader(RNGDataFlow):
 
 
 if __name__ == '__main__':
-    ds = DataLoader("train", max_length=15, img_size=320)
+    ds = DataLoader("test", max_length=15, img_size=320,train_img_num=-1,test_img_num=-1,regenerate_json=True)
+    ds.reset_state()
     for idx, data in enumerate(ds.get_data()):
         img, gt, caption = data[0],data[1],data[2]
         print("caption str: {}".format(caption))
-        print("caption id: {}".format(data[3]))
+        #print("caption id: {}".format(data[3]))
         cv2.imshow("img", img)
-        cv2.imshow("label", visualize_label(gt,class_num=80))
+        cv2.imshow("label", visualize_label(gt,class_num=class_num))
         print(np.max(gt))
         print(np.unique(gt))
         cv2.waitKey(50000)
