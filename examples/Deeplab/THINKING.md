@@ -52,3 +52,5 @@ Convolutions for Semantic Segmentation](https://github.com/sacmehta/ESPNet) to h
 ## similar
 
 neural style transfer, pose estimation,   
+
+## after 518, do a new topic, no image segmentation any more, better video
