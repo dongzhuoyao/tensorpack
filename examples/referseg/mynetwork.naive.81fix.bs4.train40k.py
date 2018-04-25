@@ -20,26 +20,26 @@ from tensorpack.utils import logger
 from tensorpack.tfutils import optimizer
 from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 from tqdm import tqdm
-from RMI_model_nocap import RMI_model
+from RMI_model import RMI_model
 from data_loader import DataLoader
 
 CLASS_NUM = DataLoader.class_num()
 IMG_SIZE = 320
 IGNORE_LABEL = 255
 MAX_LENGTH = 15
-train_img_num=20000
+train_img_num=40000
 test_img_num=1000
 quick_eval=True
 regenerate_json = True
 
-VOCAB_SIZE = len(DataLoader(name = "train", max_length=MAX_LENGTH, img_size=IMG_SIZE, train_img_num=train_img_num,test_img_num=test_img_num,quick_eval=quick_eval, regenerate_json=regenerate_json).word_to_idx.keys())#3224#28645#24022  # careful about the VOCAB SIZE
 # maximum length of caption(number of word). if caption is longer than max_length, deleted.
 STEP_NUM = MAX_LENGTH+2 # equal Max Length
 evaluate_every_n_epoch = 1
 max_epoch = 10
 init_lr = 2.5e-4
 lr_schedule = [(3, 1e-4), (7, 1e-5)]
-epoch_scale = 2
+VOCAB_SIZE = len(DataLoader(name = "train", max_length=MAX_LENGTH, img_size=IMG_SIZE, train_img_num=train_img_num,test_img_num=test_img_num,quick_eval=quick_eval, regenerate_json=regenerate_json).word_to_idx.keys())#3224#28645#24022  # careful about the VOCAB SIZE
+
 
 def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
     """
@@ -67,14 +67,14 @@ class Model(ModelDesc):
     def _get_inputs(self):
         return [InputDesc(tf.float32, [None, IMG_SIZE, IMG_SIZE, 3], 'image'),
                 InputDesc(tf.int32, [None, IMG_SIZE, IMG_SIZE, 1], 'gt'),
-                ]
+                InputDesc(tf.int32, [None, STEP_NUM], 'caption'),]
 
     def _build_graph(self, inputs):
-        image, label = inputs
+        image, label, caption = inputs
         image = image - tf.constant([104, 116, 122], dtype='float32')
         mode = "train" if get_current_tower_context().is_training else "val"
         current_batch_size = args.batch_size if get_current_tower_context().is_training else 1
-        model = RMI_model(image, class_num=CLASS_NUM, batch_size=current_batch_size, num_steps= STEP_NUM, mode=mode, vocab_size=VOCAB_SIZE, weights="deeplab")
+        model = RMI_model(image, caption, class_num=CLASS_NUM, batch_size=current_batch_size, num_steps= STEP_NUM, mode=mode, vocab_size=VOCAB_SIZE, weights="deeplab")
         predict = model.up
 
         label = tf.identity(label, name="label")
@@ -110,7 +110,7 @@ class Model(ModelDesc):
 
 def get_data(name, batch_size):
     isTrain = True if 'train' in name else False
-    ds = DataLoader(name = name, max_length=MAX_LENGTH, img_size=IMG_SIZE,use_caption=False,train_img_num=train_img_num,test_img_num=test_img_num,quick_eval=quick_eval, regenerate_json=regenerate_json)
+    ds = DataLoader(name = name, max_length=MAX_LENGTH, img_size=IMG_SIZE,train_img_num=train_img_num,test_img_num=test_img_num,quick_eval=quick_eval, regenerate_json=regenerate_json)
 
     if isTrain:
         ds = BatchData(ds, batch_size)
@@ -134,7 +134,7 @@ def view_data():
 def get_config(batch_size):
     logger.auto_set_dir()
     dataset_train = get_data('train', batch_size)
-    steps_per_epoch = dataset_train.size()*epoch_scale
+    steps_per_epoch = dataset_train.size()*2
 
     callbacks = [
         ModelSaver(),
@@ -162,7 +162,7 @@ class CalculateMIoU(Callback):
 
     def _setup_graph(self):
         self.pred = self.trainer.get_predictor(
-            ['image'], ['prob'])
+            ['image','caption'], ['prob'])
 
     def _before_train(self):
         pass
@@ -174,16 +174,15 @@ class CalculateMIoU(Callback):
 
         self.stat = MIoUStatistics(self.nb_class)
 
-        for image, label  in tqdm(self.val_ds.get_data()):
+        for image, label, caption  in tqdm(self.val_ds.get_data()):
             label = np.squeeze(label)
             image = np.squeeze(image)
 
             def mypredictor(input_img):
                 # input image: 1*H*W*3
                 # output : H*W*C
-                output = self.pred(input_img[np.newaxis, :, :, :])
+                output = self.pred(input_img[np.newaxis, :, :, :], caption)
                 return output[0][0]
-
             prediction = mypredictor(image)
             #prediction = predict_scaler(image, mypredictor, scales=[1], classes=CLASS_NUM, tile_size=IMG_SIZE, is_densecrf = False)
             prediction = np.argmax(prediction, axis=2)
