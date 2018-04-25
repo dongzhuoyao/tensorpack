@@ -10,14 +10,14 @@ from matplotlib.patches import Polygon
 from tensorpack.utils.segmentation.segmentation import id_to_name,visualize_label
 from tensorpack.utils.segmentation.coco_util import generate_id2trainid, generate_image_mask
 
-coco_train = "/data2/dataset/coco/train2014"
-coco_val = "/data2/dataset/coco/val2014"
+coco_val = "/data2/dataset/coco/train2014"
+#coco_val = "/data2/dataset/coco/val2014"
 
-target_coco_val = "/data2/dataset/coco/new_val2014"
-target_coco_train = "/data2/dataset/coco/new_train2014"
+#target_coco_val = "/data2/dataset/coco/new_val2014"
+target_coco_val = "/data2/dataset/coco/new_train2014"
 
-detection_json_train = "/data2/dataset/annotations/instances_train2014.json"
-detection_json_val = "/data2/dataset/annotations/instances_val2014.json"
+detection_json_val = "/data2/dataset/annotations/instances_train2014.json"
+#detection_json_val = "/data2/dataset/annotations/instances_val2014.json"
 
 
 
@@ -46,7 +46,7 @@ for check_img_id in tqdm(list(instance_set)):
     class_names = set()
     for annId in annIds:
         img_mask, ann = generate_image_mask(coco_instance,img_mask,annId, cat_dict)
-        class_names.add(cat_dict[ann['category_id']]['name'])
+        class_names.add(coco_instance.cats[ann['category_id']]['name'])
 
     class_names = list(class_names)
     target_path = os.path.join(target_coco_val,coco_instance.imgs[check_img_id]['file_name'])\
