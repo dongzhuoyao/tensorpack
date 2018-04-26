@@ -10,7 +10,10 @@ try:
   # TF 1.7+
   from tensorflow.python.ops.rnn_cell_impl import LayerRNNCell
 except ImportError:
-  from tensorflow.python.ops.rnn_cell_impl import _LayerRNNCell as LayerRNNCell
+  try:
+    from tensorflow.python.ops.rnn_cell_impl import _LayerRNNCell as LayerRNNCell
+  except ImportError:
+      from tensorflow.python.ops.rnn_cell_impl import RNNCell as LayerRNNCell#https://github.com/batzner/indrnn/issues/14
 
 
 class IndRNNCell(LayerRNNCell):
