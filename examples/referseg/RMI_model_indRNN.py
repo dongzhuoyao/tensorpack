@@ -19,12 +19,12 @@ class RMI_model(object):
                         vf_dim = 2048,
                         w_emb_dim = 1000,
                         v_emb_dim = 1000,
-                      mlp_dim = 500,
+                        mlp_dim = 500,
                         rnn_size = 1000,
                         keep_prob_rnn = 1.0,
                         keep_prob_emb = 1.0,
                         keep_prob_mlp = 1.0,
-                        num_rnn_layers = 1,
+                        num_rnn_layers = 2,#Notice here!
                         weights = 'resnet'):
         self.batch_size = batch_size
         self.num_steps = num_steps
@@ -89,6 +89,7 @@ class RMI_model(object):
         rnn_cell_a = tf.nn.rnn_cell.BasicLSTMCell(self.mlp_dim, state_is_tuple=False)
         cell_a = tf.nn.rnn_cell.MultiRNNCell([rnn_cell_a] * self.num_rnn_layers, state_is_tuple=False)
 
+        """
         # Word LSTM
         state_w = cell_w.zero_state(self.batch_size, tf.float32)
         state_w_shape = state_w.get_shape().as_list()
@@ -100,10 +101,11 @@ class RMI_model(object):
         state_a_shape = state_a.get_shape().as_list()
         state_a_shape[0] = self.batch_size*self.vf_h*self.vf_w
         state_a.set_shape(state_a_shape)
+        """
 
         visual_feat = tf.nn.l2_normalize(visual_feat, 3)
         spatial = tf.convert_to_tensor(generate_spatial_batch(self.batch_size, self.vf_h, self.vf_w))
-        h_a = tf.zeros([self.batch_size*self.vf_h*self.vf_w, self.mlp_dim])
+        #h_a = tf.zeros([self.batch_size*self.vf_h*self.vf_w, self.mlp_dim])
 
         def f1():
             return state_w, state_a, h_a
@@ -135,6 +137,15 @@ class RMI_model(object):
 
                 state_w, state_a, h_a = tf.cond(tf.equal(self.words[0, n], tf.constant(0)), f1, f2)
 
+        from tensorpack.gist.ind_rnn_cell import IndRNNCell
+        from tensorflow.nn.rnn_cell import MultiRNNCell
+
+        # Regulate each neuron's recurrent weight as recommended in the paper
+        recurrent_max = pow(2, 1 / self.num_steps)
+
+        cell = MultiRNNCell([IndRNNCell(self.rnn_size, recurrent_max_abs=recurrent_max)]*self.num_rnn_layers)
+        output, state = tf.nn.dynamic_rnn(cell, input_data, dtype=tf.float32)
+
         lstm_output = tf.reshape(h_a, [self.batch_size, self.vf_h, self.vf_w, -1])
         lstm_output = tf.multiply(tf.subtract(tf.log(tf.add(1.0 + 1e-3, lstm_output)),
             tf.log(tf.subtract(1.0 + 1e-3, lstm_output))), 0.5)
@@ -162,31 +173,3 @@ class RMI_model(object):
             b = tf.get_variable('biases', out_filters, initializer=tf.constant_initializer(0.))
             return tf.nn.atrous_conv2d(x, w, rate=rate, padding='SAME') + b
 
-    """
-    def train_op(self):
-        # define loss
-        self.target = tf.image.resize_bilinear(self.target_fine, [self.vf_h, self.vf_w])
-        tvars = [var for var in tf.trainable_variables() if var.op.name.startswith('text_objseg') or var.op.name.startswith('ResNet/fc1000')]
-        reg_var_list = [var for var in tvars if var.op.name.find(r'DW') > 0]
-        self.cls_loss = loss.weighed_logistic_loss(self.pred, self.target)
-        self.reg_loss = loss.l2_regularization_loss(reg_var_list, self.weight_decay)
-        self.cost = self.cls_loss + self.reg_loss
-
-        # learning rate
-        lr = tf.Variable(0.0, trainable=False)
-        self.learning_rate = tf.train.polynomial_decay(self.start_lr, lr, self.lr_decay_step, end_learning_rate=0.00001, power=0.9)
-
-        # optimizer
-        if self.optimizer == 'adam':
-            optimizer = tf.train.AdamOptimizer(self.learning_rate)
-        else:
-            raise ValueError("Unknown optimizer type %s!" % self.optimizer)
-
-        # learning rate multiplier
-        grads_and_vars = optimizer.compute_gradients(self.cost, var_list=tvars)
-        var_lr_mult = {var: (2.0 if var.op.name.find(r'biases') > 0 else 1.0) for var in tvars}
-        grads_and_vars = [((g if var_lr_mult[v] == 1 else tf.multiply(var_lr_mult[v], g)), v) for g, v in grads_and_vars]
-
-        # training step
-        self.train_step = optimizer.apply_gradients(grads_and_vars, global_step=lr)
-    """

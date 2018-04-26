@@ -24,7 +24,6 @@ class LSTM_model(object):
                         vf_dim = 2048,
                         w_emb_dim = 1000,
                         v_emb_dim = 1000,
-                        mlp_dim = 500,
                         rnn_size = 1000,
                         keep_prob_rnn = 1.0,
                         keep_prob_emb = 1.0,
@@ -44,7 +43,6 @@ class LSTM_model(object):
         self.vocab_size = vocab_size
         self.w_emb_dim = w_emb_dim
         self.v_emb_dim = v_emb_dim
-        self.mlp_dim = mlp_dim
         self.rnn_size = rnn_size
         self.keep_prob_rnn = keep_prob_rnn
         self.keep_prob_emb = keep_prob_emb
@@ -146,28 +144,10 @@ class LSTM_model(object):
 
         feat_all = tf.concat([visual_feat, lang_feat, spatial], 3)
 
-        # RNN output to visual weights
-        fusion = self._conv("fusion", feat_all, 1, self.v_emb_dim + self.rnn_size + 8, self.mlp_dim, [1, 1, 1, 1])
-        fusion = tf.nn.relu(fusion)
+        self.pred = self._conv("score", feat_all, 1, feat_all.get_shape().as_list()[-1], self.class_num, [1, 1, 1, 1])
 
-        c5_lateral = self._conv("c5_lateral", self.visual_feat, 1, self.vf_dim, self.mlp_dim, [1, 1, 1, 1])
-        c5_lateral = tf.nn.relu(c5_lateral)
-
-        c4_lateral = self._conv("c4_lateral", self.visual_feat_c4, 1, 1024, self.mlp_dim, [1, 1, 1, 1])
-        c4_lateral = tf.nn.relu(c4_lateral)
-
-        c3_lateral = self._conv("c3_lateral", self.visual_feat_c3, 1, 512, self.mlp_dim, [1, 1, 1, 1])
-        c3_lateral = tf.nn.relu(c3_lateral)
-
-        # Convolutional LSTM
-        convlstm_cell = ConvLSTMCell([self.vf_h, self.vf_w], self.mlp_dim, [1 ,1])
-        convlstm_outputs, states = tf.nn.dynamic_rnn(convlstm_cell, tf.convert_to_tensor([[fusion[0], c5_lateral[0], c4_lateral[0], c3_lateral[0]]]), dtype=tf.float32)
-
-        score = self._conv("score", convlstm_outputs[:, -1], 3, self.mlp_dim, self.class_num, [1, 1, 1, 1])
-
-        self.pred = score
         self.up = tf.image.resize_bilinear(self.pred, [self.H, self.W]) # final feature map
-        self.sigm = tf.sigmoid(self.up) # apply sigmoid?
+        self.sigm = tf.sigmoid(self.up)
 
     def _conv(self, name, x, filter_size, in_filters, out_filters, strides):
         with tf.variable_scope(name):
@@ -182,56 +162,3 @@ class LSTM_model(object):
                 initializer=tf.random_normal_initializer(stddev=0.01))
             b = tf.get_variable('biases', out_filters, initializer=tf.constant_initializer(0.))
             return tf.nn.atrous_conv2d(x, w, rate=rate, padding='SAME') + b
-
-
-    """
-    def train_op(self):
-        if self.conv5:
-            tvars = [var for var in tf.trainable_variables() if var.op.name.startswith('text_objseg') 
-                        or var.name.startswith('res5') or var.name.startswith('res4')
-                        or var.name.startswith('res3')]
-        else:
-            tvars = [var for var in tf.trainable_variables() if var.op.name.startswith('text_objseg')]
-        reg_var_list = [var for var in tvars if var.op.name.find(r'DW') > 0 or var.name[-9:-2] == 'weights']
-        print('Collecting variables for regularization:')
-        for var in reg_var_list: print('\t%s' % var.name)
-        print('Done.')
-
-        # define loss
-        self.target = tf.image.resize_bilinear(self.target_fine, [self.vf_h, self.vf_w])
-        self.cls_loss = loss.weighed_logistic_loss(self.up, self.target_fine, 1, 1)
-        self.reg_loss = loss.l2_regularization_loss(reg_var_list, self.weight_decay)
-        self.cost = self.cls_loss + self.reg_loss
-
-        # learning rate
-        lr = tf.Variable(0.0, trainable=False)
-        self.learning_rate = tf.train.polynomial_decay(self.start_lr, lr, self.lr_decay_step, end_learning_rate=0.00001, power=0.9)
-
-        # optimizer
-        if self.optimizer == 'adam':
-            optimizer = tf.train.AdamOptimizer(self.learning_rate)
-        else:
-            raise ValueError("Unknown optimizer type %s!" % self.optimizer)
-
-        # learning rate multiplier
-        grads_and_vars = optimizer.compute_gradients(self.cost, var_list=tvars)
-        # var_lr_mult = {var: (2.0 if var.op.name.find(r'biases') > 0 else 1.0) for var in tvars}
-        var_lr_mult = {}
-        for var in tvars:
-            if var.op.name.find(r'biases') > 0:
-                var_lr_mult[var] = 2.0
-            elif var.name.startswith('res5') or var.name.startswith('res4') or var.name.startswith('res3'):
-                var_lr_mult[var] = 1.0
-            else:
-                var_lr_mult[var] = 1.0
-        print('Variable learning rate multiplication:')
-        for var in tvars:
-            print('\t%s: %f' % (var.name, var_lr_mult[var]))
-        print('Done.')
-        grads_and_vars = [((g if var_lr_mult[v] == 1 else tf.multiply(var_lr_mult[v], g)), v) for g, v in grads_and_vars]
-        # grads_and_vars = [((g if not v.name.startswith('res5') else tf.clip_by_norm(g, 0.1)), v) for g, v in grads_and_vars]
-
-        # training step
-        self.train_step = optimizer.apply_gradients(grads_and_vars, global_step=lr)
-
-    """
