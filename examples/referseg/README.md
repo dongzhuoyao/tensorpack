@@ -28,10 +28,10 @@ Arch|metadata|result|
 Arch|metadata|result|
 mynetwork.naive.nocap.81fix.train6k.bs4.scale2||29.8|
 mynetwork.naive.nocap.81fix.train10k.bs4.scale2||31.8|
-mynetwork.naive.nocap.81fix.train20k.bs4.scale2||37.4|
+mynetwork.naive.nocap.81fix.train20k.bs4.scale2||34.56|
 mynetwork.naive.nocap.81fix.train40k.bs4.scale2||:question:|
 mynetwork.naive.81fix.bs4.train6k||33.64|
-mynetwork.naive.81fix.bs4.train10k||:question:|
+mynetwork.naive.81fix.bs4.train10k||37.29|
 mynetwork.naive.81fix.bs4.train20k||:question:|
 mynetwork.naive.81fix.bs4.train40k||:question:|
 
