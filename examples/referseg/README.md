@@ -35,8 +35,7 @@ mynetwork.naive.81fix.bs4.train6k||33.64|
 mynetwork.naive.81fix.bs4.train10k||37.29|
 mynetwork.naive.81fix.bs4.train20k||41.8|
 mynetwork.naive.81fix.bs4.train40k||:question:|
-
-
+mynetwork.naive666.81fix.bs10.train6k||13.29|
 
 
 
