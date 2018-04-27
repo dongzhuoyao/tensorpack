@@ -36,7 +36,8 @@ file_name#annotations
 
 比如:
 
+COCO_train2014_000000581738_car_person_bus.jpg#Several buses are in the middle of the image, there are some people in these buses. In the right of the image is some cars.
+COCO_train2014_000000581739_vase.jpg#Three vases are in the middle of the image.
 COCO_train2014_000000581906_chair_suitcase.jpg#A suitcase is in the center of the picture, and in the right top of the image is a chair.
-
 
 
