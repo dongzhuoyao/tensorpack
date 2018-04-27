@@ -19,7 +19,7 @@ class RMI_model(object):
                         vf_dim = 2048,
                         w_emb_dim = 1000,
                         v_emb_dim = 1000,
-                      mlp_dim = 500,
+                        mlp_dim = 500,
                         rnn_size = 1000,
                         keep_prob_rnn = 1.0,
                         keep_prob_emb = 1.0,
@@ -78,7 +78,7 @@ class RMI_model(object):
             # visual_feat = tf.add(visual_feat, atrous3)
             visual_feat = self._conv("conv0", self.visual_feat, 1, self.vf_dim, self.v_emb_dim, [1, 1, 1, 1])
         elif self.weights == 'resnet':
-            visual_feat = self.visual_feat
+            visual_feat = origin_visual_feat = self.visual_feat
 
         embedding_mat = tf.get_variable("embedding", [self.vocab_size, self.w_emb_dim],
                                         initializer=tf.random_uniform_initializer(minval=-0.08, maxval=0.08))
@@ -166,6 +166,8 @@ class RMI_model(object):
         self.pred = conv2
         self.up = tf.image.resize_bilinear(self.pred, [self.H, self.W])
         self.sigm = tf.sigmoid(self.up)
+
+        self.direct_predict = self._conv("conv_direct_predict", origin_visual_feat, 1, origin_visual_feat.get_shape().as_list()[-1], self.class_num, [1, 1, 1, 1])
 
     def _conv(self, name, x, filter_size, in_filters, out_filters, strides):
         with tf.variable_scope(name):

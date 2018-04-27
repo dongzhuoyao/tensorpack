@@ -74,8 +74,9 @@ class Model(ModelDesc):
         image = image - tf.constant([104, 116, 122], dtype='float32')
         mode = "train" if get_current_tower_context().is_training else "val"
         current_batch_size = args.batch_size if get_current_tower_context().is_training else 1
-        model = RMI_model(image, caption, rnn_size=512, class_num=CLASS_NUM, batch_size=current_batch_size, num_steps= STEP_NUM, mode=mode, vocab_size=VOCAB_SIZE, weights="deeplab")
+        model = RMI_model(image, caption, class_num=CLASS_NUM, batch_size=current_batch_size, num_steps= STEP_NUM, mode=mode, vocab_size=VOCAB_SIZE, weights="deeplab")
         predict = model.up
+        direct_predict = model.direct_predict
 
         label = tf.identity(label, name="label")
 
@@ -87,8 +88,15 @@ class Model(ModelDesc):
         cost = softmax_cross_entropy_with_ignore_label(logits=prob, label=label,
                                                              class_num=CLASS_NUM)
 
+        direct_predict_cost = softmax_cross_entropy_with_ignore_label(logits=direct_predict, label=label,
+                                                             class_num=CLASS_NUM)
+
+        direct_predict_cost = tf.reduce_mean(direct_predict_cost)
+
         cost = tf.reduce_mean(cost, name='cross_entropy_loss')  # the average cross-entropy loss
         costs.append(cost)
+        costs.append(direct_predict_cost)
+
 
         if get_current_tower_context().is_training:
             wd_w = tf.train.exponential_decay(2e-4, get_global_step_var(),
@@ -200,7 +208,7 @@ if __name__ == '__main__':
     parser.add_argument('--load', default="deeplab_resnet_init.ckpt" ,help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
-    parser.add_argument('--batch_size', type=int, default = 6, help='batch_size')
+    parser.add_argument('--batch_size', type=int, default = 4, help='batch_size')
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     args = parser.parse_args()
     if args.gpu:
