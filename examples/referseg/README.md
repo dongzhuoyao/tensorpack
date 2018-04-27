@@ -39,6 +39,8 @@ mynetwork.naive666.81fix.bs10.train6k||13.29|
 mynetwork.naive666.81fix.bs4.train6k||21.2|
 mynetwork.naive666.indrnn.81fix.bs4.train6k||16.0|
 mynetwork.naive666.indrnn.81fix.bs4.train10k||21.9|
+mynetwork.naive666.indrnn.81fix.bs4.train20k||28.46|
+mynetwork.naive666.81fix.bs4.train6k.rnnlayer2||:question:|
 
 
 
