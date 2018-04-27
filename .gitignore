@@ -8,7 +8,7 @@ tensorpack/user_ops/obj
 *.meta
 *.log*
 *.bin
-*.jpg
+#*.jpg
 checkpoint
 *.json
 *.prototxt

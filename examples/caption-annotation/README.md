@@ -50,3 +50,7 @@ COCO_train2014_000000581738_car_person_bus.jpg#Several buses are in the middle o
 <br>COCO_train2014_000000581906_chair_suitcase.jpg#A suitcase is in the center of the picture, and in the right top of the image is a chair.
 
 
+## 总原则
+
+* 该实验主要用于探索文本描述信息和图像语义分割之间的内在关联
+*  尽量保证表述的差异化，如in the middle of/in the center of, sitting on/
