@@ -76,9 +76,11 @@ class RMI_model(object):
             # visual_feat = tf.add(atrous0, atrous1)
             # visual_feat = tf.add(visual_feat, atrous2)
             # visual_feat = tf.add(visual_feat, atrous3)
-            visual_feat = self._conv("conv0", self.visual_feat, 1, self.vf_dim, self.v_emb_dim, [1, 1, 1, 1])
+            visual_feat = origin_visual_feat= self._conv("conv0", self.visual_feat, 1, self.vf_dim, self.v_emb_dim, [1, 1, 1, 1])
         elif self.weights == 'resnet':
-            visual_feat = origin_visual_feat = self.visual_feat
+            raise
+            visual_feat  = self.visual_feat
+
 
         embedding_mat = tf.get_variable("embedding", [self.vocab_size, self.w_emb_dim],
                                         initializer=tf.random_uniform_initializer(minval=-0.08, maxval=0.08))
