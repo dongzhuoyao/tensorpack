@@ -52,5 +52,7 @@ COCO_train2014_000000581738_car_person_bus.jpg#Several buses are in the middle o
 
 ## 总原则
 
-* 该实验主要用于探索文本描述信息和图像语义分割之间的内在关联
-*  尽量保证表述的差异化，如in the middle of/in the center of, sitting on/
+*  该实验主要用于探索文本描述信息和图像语义分割之间的内在关联
+*  尽量保证表述的差异化，如in the middle of/in the center of, 主动，被动语态随机切换
+*  描述尽量刻画物体之间的位置关联，有多少个object(如果object太多就用some,several)？在图片大概哪个区域？
+*  
