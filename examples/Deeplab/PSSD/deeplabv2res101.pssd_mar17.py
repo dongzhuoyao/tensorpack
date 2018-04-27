@@ -305,7 +305,7 @@ def proceed_test_dir(args):
     def mypredictor(input_img):
         # input image: 1*H*W*3
         # output : H*W*C
-        output = predictor(input_img)
+        output = predictor(input_img[np.newaxis, :, :, :])
         return output[0][0]
 
     for i in tqdm(range(len(ll))):
@@ -341,7 +341,13 @@ class CalculateMIoU(Callback):
         for image, label in tqdm(self.val_ds.get_data()):
             label = np.squeeze(label)
             image = np.squeeze(image)
-            prediction = predict_scaler(image, self.pred, scales=[0.5,0.75,1,1.25,1.5], classes=CLASS_NUM, tile_size=CROP_SIZE,
+            def mypredictor(input_img):
+                # input image: 1*H*W*3
+                # output : H*W*C
+                output = self.pred(input_img[np.newaxis, :, :, :])
+                return output[0][0]
+
+            prediction = predict_scaler(image, mypredictor, scales=[0.5,0.75,1,1.25,1.5], classes=CLASS_NUM, tile_size=CROP_SIZE,
                            is_densecrf=False)
             prediction = np.argmax(prediction, axis=2)
             self.stat.feed(prediction, label)
