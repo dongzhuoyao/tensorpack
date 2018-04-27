@@ -28,7 +28,7 @@ annotations: A suitcase is in the center of the picture, and in the right top of
 
 ### COCO_train2014_000000581657_person_cell phone_chair_laptop.jpg
 
-![imagesss](images/COCO_train2014_000000581657_person_cell phone_chair_laptop.jpg)
+![imagesss](images/COCO_train2014_000000581657_person_cellphone_chair_laptop.jpg)
 
 file name: COCO_train2014_000000581657_person_cell phone_chair_laptop.jpg
 
