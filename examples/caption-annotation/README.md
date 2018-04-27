@@ -26,6 +26,15 @@ file name: COCO_train2014_000000581906_chair_suitcase.jpg
 
 annotations: A suitcase is in the center of the picture, and in the right top of the image is a chair.
 
+### COCO_train2014_000000581657_person_cell phone_chair_laptop.jpg
+
+![imagesss](images/COCO_train2014_000000581657_person_cell phone_chair_laptop.jpg)
+
+file name: COCO_train2014_000000581657_person_cell phone_chair_laptop.jpg
+
+annotations: Many people are sitting on chairs in the image. The person close to the sceen is using laptop. One person close to the screen is playing with his cellphone.
+
+
 
 
 ## 保存格式
