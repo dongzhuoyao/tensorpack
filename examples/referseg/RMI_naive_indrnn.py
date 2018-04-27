@@ -106,7 +106,7 @@ class RMI_naive_indrnn(object):
         recurrent_max = pow(2, 1 / self.num_steps)
 
         cell = MultiRNNCell([IndRNNCell(self.rnn_size, recurrent_max_abs=recurrent_max)]*self.num_rnn_layers)
-        rnn_output, state = tf.nn.dynamic_rnn(cell, embedded_seq, dtype=tf.float32,time_major=True)
+        rnn_output, state = tf.nn.dynamic_rnn(cell, embedded_seq, dtype=tf.float32,time_major=True) # key current function
         #rnn_output shape: [?, 17, 1000]
         #state shape [?,1000]
 

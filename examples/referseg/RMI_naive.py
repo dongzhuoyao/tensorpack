@@ -98,6 +98,7 @@ class LSTM_model(object):
         embedded_seq = tf.nn.embedding_lookup(embedding_mat, tf.transpose(self.words)) #[step, batch_size, emb_dim]
 
         rnn_cell_basic = tf.nn.rnn_cell.BasicLSTMCell(self.rnn_size, state_is_tuple=False)
+
         if self.mode == 'train' and self.keep_prob_rnn < 1:
             rnn_cell_basic = tf.nn.rnn_cell.DropoutWrapper(rnn_cell_basic, output_keep_prob=self.keep_prob_rnn)
         cell = tf.nn.rnn_cell.MultiRNNCell([rnn_cell_basic] * self.num_rnn_layers, state_is_tuple=False)

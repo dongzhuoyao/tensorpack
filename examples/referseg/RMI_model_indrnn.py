@@ -84,26 +84,12 @@ class RMI_model(object):
                                         initializer=tf.random_uniform_initializer(minval=-0.08, maxval=0.08))
         embedded_seq = tf.nn.embedding_lookup(embedding_mat, tf.transpose(self.words))
 
-        def get_w_cell():
-            lstm = tf.nn.rnn_cell.BasicLSTMCell(self.rnn_size, state_is_tuple=False)
-            return lstm
-
-        def get_a_cell():
-            lstm = tf.nn.rnn_cell.BasicLSTMCell(self.mlp_dim, state_is_tuple=False)
-            return lstm
-
-        cell_w = tf.nn.rnn_cell.MultiRNNCell(
-            [get_w_cell() for _ in range(self.num_rnn_layers)]
-        )
-        cell_a = tf.nn.rnn_cell.MultiRNNCell(
-            [get_a_cell() for _ in range(self.num_rnn_layers)]
-        )
-        """#https://github.com/tensorflow/tensorflow/issues/14897
-        rnn_cell_w = tf.nn.rnn_cell.BasicLSTMCell(self.rnn_size, state_is_tuple=False)
+        from tensorpack.gist.ind_rnn_cell import IndRNNCell
+        recurrent_max = pow(2, 1 / self.num_steps)
+        rnn_cell_w = IndRNNCell(self.rnn_size, recurrent_max_abs=recurrent_max)
         cell_w = tf.nn.rnn_cell.MultiRNNCell([rnn_cell_w] * self.num_rnn_layers, state_is_tuple=False)
-        rnn_cell_a = tf.nn.rnn_cell.BasicLSTMCell(self.mlp_dim, state_is_tuple=False)
+        rnn_cell_a = IndRNNCell(self.mlp_dim, recurrent_max_abs=recurrent_max)
         cell_a = tf.nn.rnn_cell.MultiRNNCell([rnn_cell_a] * self.num_rnn_layers, state_is_tuple=False)
-
 
         # Word LSTM
         state_w = cell_w.zero_state(self.batch_size, tf.float32)
@@ -116,9 +102,6 @@ class RMI_model(object):
         state_a_shape = state_a.get_shape().as_list()
         state_a_shape[0] = self.batch_size*self.vf_h*self.vf_w
         state_a.set_shape(state_a_shape)
-        """
-        state_w = cell_w.zero_state(self.batch_size, tf.float32)
-        state_a = cell_a.zero_state(self.batch_size * self.vf_h * self.vf_w, tf.float32)
 
         visual_feat = tf.nn.l2_normalize(visual_feat, 3)
         spatial = tf.convert_to_tensor(generate_spatial_batch(self.batch_size, self.vf_h, self.vf_w))
