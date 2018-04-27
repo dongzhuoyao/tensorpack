@@ -28,7 +28,15 @@ annotations: A suitcase is in the center of the picture, and in the right top of
 
 
 
+## 保存格式
 
+file_name#annotations
+
+以#符号隔开，每行一个记录
+
+比如:
+
+COCO_train2014_000000581906_chair_suitcase.jpg#A suitcase is in the center of the picture, and in the right top of the image is a chair.
 
 
 
