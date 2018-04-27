@@ -134,7 +134,7 @@ def view_data():
 def get_config(batch_size):
     logger.auto_set_dir()
     dataset_train = get_data('train', batch_size)
-    steps_per_epoch = dataset_train.size()*10
+    steps_per_epoch = dataset_train.size()*6
 
     callbacks = [
         ModelSaver(),
