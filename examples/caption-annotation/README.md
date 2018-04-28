@@ -10,6 +10,8 @@
 
 ## 标注样例
 
+注意文件名，文本描述主要基于文件名中的类别，比如COCO_train2014_000000581738_car_person_bus.jpg就是要针对图片中的car,person,bus做相应的描述。
+
 
 ### COCO_train2014_000000581738_car_person_bus.jpg
 
