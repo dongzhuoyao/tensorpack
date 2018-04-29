@@ -33,6 +33,7 @@ mynetwork.naive.nocap.81fix.train20k.bs4.scale2||34.56|
 mynetwork.naive.nocap.81fix.train40k.bs4.scale2||38.1|
 mynetwork.naive.81fix.bs4.train6k.deepSupervise||30.4|
 mynetwork.naive.81fix.bs5.train6k.rnn512||33.0|
+mynetwork.naive.81fix.bs4.train6k.scale6|32.3|
 mynetwork.naive.81fix.bs4.train6k||33.64|
 mynetwork.naive.81fix.bs4.train10k||37.29|
 mynetwork.naive.81fix.bs4.train20k||41.8|
