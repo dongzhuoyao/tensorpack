@@ -12,7 +12,7 @@ import numpy as np
 
 os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
 from tensorpack import *
-from tensorpack.dataflow.dataset import Camvid
+from tensorpack.dataflow.dataset.cityscapes import Cityscapes
 from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler
 from tensorpack.utils.stats import MIoUStatistics
@@ -27,23 +27,23 @@ from seg_utils import RandomCropWithPadding, softmax_cross_entropy_with_ignore_l
 
 
 
-CLASS_NUM = Camvid.class_num()
-CROP_SIZE = 321
-batch_size = 20
+CLASS_NUM = Cityscapes.class_num()
+CROP_SIZE = 1024
+batch_size = 2
 
 IGNORE_LABEL = 255
 
 GROWTH_RATE = 48
 first_batch_lr = 1e-3
 lr_schedule = [(4, 1e-4), (8, 1e-5)]
-epoch_scale = 1000 #640
+epoch_scale = 1 #640
 max_epoch = 10
 lr_multi_schedule = [('nothing', 5),('nothing',10)]
 evaluate_every_n_epoch = 1
 
-def get_data(name, data_dir, meta_dir, batch_size):
+def get_data(name, data_dir, meta_dir, batch_size,partial_data=-1):
     isTrain = True if 'train' in name else False
-    ds = Camvid(data_dir, meta_dir, name, shuffle=True)
+    ds = Cityscapes(data_dir, meta_dir, name, partial_data, shuffle=True)
 
     if isTrain:#special augmentation
         shape_aug = [imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
@@ -170,7 +170,7 @@ def view_data(data_dir, meta_dir, batch_size):
 def get_config(data_dir, meta_dir, batch_size):
     logger.auto_set_dir()
     nr_tower = max(get_nr_gpu(), 1)
-    dataset_train = get_data('train_val', data_dir, meta_dir, batch_size)
+    dataset_train = get_data('train', data_dir, meta_dir, batch_size)
     steps_per_epoch = dataset_train.size() * epoch_scale
 
     return TrainConfig(
@@ -213,7 +213,7 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = False, is_densecrf = False):
     import cv2
-    ds = Camvid(args.data_dir, args.meta_dir, "test")
+    ds = Cityscapes(args.data_dir, args.meta_dir, "val")
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
@@ -266,7 +266,7 @@ class CalculateMIoU(Callback):
 
     def _trigger(self):
         global args
-        self.val_ds = get_data('test', args.data_dir, args.meta_dir, args.batch_size)
+        self.val_ds = get_data('val', args.data_dir, args.meta_dir, args.batch_size, partial_data = 30)
         self.val_ds.reset_state()
 
         self.stat = MIoUStatistics(self.nb_class)
@@ -294,9 +294,9 @@ class CalculateMIoU(Callback):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu', default="0", help='comma separated list of GPU(s) to use.')
-    parser.add_argument('--data_dir', default="/data1/dataset/SegNet-Tutorial",
+    parser.add_argument('--data_dir', default="/data2/dataset/cityscapes",
                         help='dataset dir')
-    parser.add_argument('--meta_dir', default="metadata/camvid", help='meta dir')
+    parser.add_argument('--meta_dir', default="metadata/cityscapes", help='meta dir')
     #parser.add_argument('--load', default="../resnet101.npz", help='load model')
     parser.add_argument('--growth_rate', default= GROWTH_RATE, help='growth_rate')
     parser.add_argument('--num_layers', default=121, help='num_layers')

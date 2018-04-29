@@ -57,13 +57,17 @@ class CityscapesFiles(RNGDataFlow):
             yield [fname, flabel]
 
 class Cityscapes(RNGDataFlow):
-    def __init__(self, meta_dir, name,
-                 shuffle=None, dir_structure=None):
+    def __init__(self, root_dir, meta_dir, name,
+                 partial_data = -1, shuffle=None, dir_structure=None):
 
         assert name in ['train', 'val','test'], name
         assert os.path.isdir(meta_dir), meta_dir
+        assert os.path.isdir(root_dir), root_dir
+
         self.reset_state()
         self.name = name
+        self.root_dir = root_dir
+        self.partial_data = partial_data
 
         if shuffle is None:
             shuffle = name == 'train'
@@ -80,10 +84,14 @@ class Cityscapes(RNGDataFlow):
             raise
 
         for line in f.readlines():
-            self.imglist.append(line.strip("\n").split(" "))
+            tmp_list = line.strip("\n").split(" ")
+            tmp_list = [os.path.join(self.root_dir,tmp) for tmp in tmp_list]
+            self.imglist.append(tmp_list)
         f.close()
 
-        #self.imglist = self.imglist[:100]
+        self.imglist = self.imglist[:self.partial_data]
+
+        self.imglist = self.imglist[:100]
 
     def size(self):
         return len(self.imglist)
