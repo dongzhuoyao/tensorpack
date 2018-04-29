@@ -170,7 +170,7 @@ class RMI_model(object):
         self.sigm = tf.sigmoid(self.up)
 
         self.direct_predict = self._conv("conv_direct_predict", origin_visual_feat, 1, origin_visual_feat.get_shape().as_list()[-1], self.class_num, [1, 1, 1, 1])
-
+        self.direct_predict = tf.image.resize_bilinear(self.direct_predict, [self.H, self.W])
     def _conv(self, name, x, filter_size, in_filters, out_filters, strides):
         with tf.variable_scope(name):
             w = tf.get_variable('DW', [filter_size, filter_size, in_filters, out_filters], 
