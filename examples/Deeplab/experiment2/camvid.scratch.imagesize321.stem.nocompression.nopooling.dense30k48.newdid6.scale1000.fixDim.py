@@ -274,7 +274,7 @@ class CalculateMIoU(Callback):
         def mypredictor(input_img):
             # input image: 1*H*W*3
             # output : H*W*C
-            output = self.pred(input_img)
+            output = self.pred(input_img[np.newaxis, :, :, :])
             return output[0][0]
 
         for image, label in tqdm(self.val_ds.get_data()):
