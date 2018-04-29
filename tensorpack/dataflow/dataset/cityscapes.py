@@ -76,6 +76,7 @@ class Cityscapes(RNGDataFlow):
 
         if name == 'train':
             f = open(os.path.join(meta_dir,"train.txt"),"r")
+            assert self.partial_data == -1
         elif name=="val":
             f = open(os.path.join(meta_dir, "val.txt"), "r")
         elif name=="test":
@@ -91,7 +92,7 @@ class Cityscapes(RNGDataFlow):
 
         self.imglist = self.imglist[:self.partial_data]
 
-        self.imglist = self.imglist[:100]
+        #self.imglist = self.imglist[:100]
 
     def size(self):
         return len(self.imglist)
