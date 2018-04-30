@@ -108,7 +108,7 @@ deeplabv2.camvid.imagesize321.res100.scratch.on_trainval.scale160||58.6|
 
 ### Aerial 
 
-Arch |#Params| Val mIoU(target: 88.67)
+Arch |#Params| Val mIoU(target: )
 ------------ | -------------| -------------
 deeplabv2.aerial.imagesize473.scratch||86.72
 deeplabv2.aerial.imagesize473.res50.scratch||86.9
@@ -120,7 +120,10 @@ camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.newdid6.4gpu_
 
 
 
-
+### Cityscapes
+Arch |#Params| Val mIoU(target: 69.45, 71.8)
+------------ | -------------| -------------
+cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim||65.5
 
 
 
