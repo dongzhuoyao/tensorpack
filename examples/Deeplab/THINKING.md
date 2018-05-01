@@ -33,6 +33,7 @@ Convolutions for Semantic Segmentation](https://github.com/sacmehta/ESPNet) to h
 * Hourglass
 * RGB-D seg
 
+
 ## maybe
 
 * referring segmentation
@@ -47,7 +48,7 @@ Convolutions for Semantic Segmentation](https://github.com/sacmehta/ESPNet) to h
 * [Deep Object Co-Segmentation](https://arxiv.org/pdf/1804.06423.pdf)
 * clipnet to seg,det
 * clipnet drawback? tensor decompose?
-
+* progressive DUC
 
 ## similar
 
