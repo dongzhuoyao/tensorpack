@@ -34,6 +34,7 @@ Convolutions for Semantic Segmentation](https://github.com/sacmehta/ESPNet) to h
 * RGB-D seg
 
 
+
 ## maybe
 
 * referring segmentation
@@ -49,6 +50,7 @@ Convolutions for Semantic Segmentation](https://github.com/sacmehta/ESPNet) to h
 * clipnet to seg,det
 * clipnet drawback? tensor decompose?
 * progressive DUC
+* gcn+pose estimation
 
 ## similar
 
