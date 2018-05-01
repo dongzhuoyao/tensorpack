@@ -3,7 +3,6 @@
 # File: deeplabv2.py
 # Author: Tao Hu <taohu620@gmail.com>
 
-
 import cv2
 import tensorflow as tf
 import argparse
@@ -23,16 +22,6 @@ from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 from densenet_v1_deepsupervision import densenet
 slim = tf.contrib.slim
 
-from tensorpack.gist import memory_saving_gradients
-from tensorflow.python.ops import gradients
-#https://github.com/openai/gradient-checkpointing/issues/4
-# monkey patch tf.gradients to point to our custom version, with automatic checkpoint selection
-def gradients_memory(ys, xs, grad_ys=None, **kwargs):
-    logger.warn("you are using sub-linear gradient~~~")
-    #https://github.com/openai/gradient-checkpointing/issues/5
-    return memory_saving_gradients.gradients(ys, xs, grad_ys, checkpoints='speed', **kwargs)
-gradients.__dict__["gradients"] = gradients_memory
-
 from tqdm import tqdm
 from seg_utils import RandomCropWithPadding, softmax_cross_entropy_with_ignore_label
 
@@ -40,15 +29,14 @@ from seg_utils import RandomCropWithPadding, softmax_cross_entropy_with_ignore_l
 
 CLASS_NUM = Cityscapes.class_num()
 CROP_SIZE = 1024
-batch_size = 4
-
+batch_size = 2
 
 IGNORE_LABEL = 255
 
 GROWTH_RATE = 48
 first_batch_lr = 1e-3
 lr_schedule = [(4, 1e-4), (8, 1e-5)]
-epoch_scale = 8 #640
+epoch_scale = 12 #640
 max_epoch = 10
 lr_multi_schedule = [('nothing', 5),('nothing',10)]
 evaluate_every_n_epoch = 1
