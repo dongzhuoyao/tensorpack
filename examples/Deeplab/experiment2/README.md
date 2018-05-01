@@ -124,7 +124,8 @@ camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.newdid6.4gpu_
 Arch |#Params| Val mIoU(target: 69.45, 71.8)
 ------------ | -------------| -------------
 cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim||65.5
-
+------------ | -------------| -------------
+camvid.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.scale1000.fixDim||66.1|
 
 
 
@@ -153,6 +154,8 @@ slim.deeplabv2.dilation6.voc.imagesize473|**70.6**
 Arch | Val mIoU
 ------------ | -------------
 deeplabv2.cs.imagesize672.scale18|**74.21** ([test:72.67](https://www.cityscapes-dataset.com/evaluation-results/?submissionID=984))
+
+
 
 
 **notice:** The validation mIOU for this repo is  all achieved  with multi-scale and left-right flippling.
