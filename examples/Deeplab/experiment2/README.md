@@ -123,9 +123,9 @@ camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.newdid6.4gpu_
 ### Cityscapes(5.2)
 Arch |#Params| Val mIoU(target: 69.45, 71.8)
 ------------ | -------------| -------------
-cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim(8)||65.5
+cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim(8)||65.5,(val500:67.93)
 cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.sublinear||64.15
-cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale12||70.7
+cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale12||70.7,(val500:70.57)
 cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale16||:question:
 cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale20||:question:
 ------------ | -------------| -------------
