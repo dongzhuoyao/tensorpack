@@ -35,6 +35,7 @@ import json
 from pycocotools.coco import COCO
 from pycocotools import mask
 
+
 def resize_and_pad(im, input_h, input_w, interp):
     # Resize and pad im to input_h x input_w size
     im_h, im_w = im.shape[:2]
@@ -94,28 +95,6 @@ def _process_caption_data(caption_file, max_length, max_image_num = -1):
     logger.info("final : {}".format( len(final_img_to_caption.keys())))
     return final_img_to_caption, coco
 
-
-def _build_vocab(caption_list, threshold=1):
-    counter = Counter()
-    max_len = 0
-    for i, caption in enumerate(caption_list):
-        words = caption.split(' ')  # caption contrains only lower-case words
-        for w in words:
-            counter[w] += 1
-
-        if len(caption.split(" ")) > max_len:
-            max_len = len(caption.split(" "))
-
-    vocab = [word for word in counter if counter[word] >= threshold]
-    print ('Filtered %d words to %d words with word count threshold %d.' % (len(counter), len(vocab), threshold))
-
-    word_to_idx = {u'<NULL>': 0, u'<START>': 1, u'<END>': 2}
-    idx = 3
-    for word in vocab:
-        word_to_idx[word] = idx
-        idx += 1
-    print "Max length of caption: ", max_len
-    return word_to_idx
 
 
 def _build_caption_vector(caption, word_to_idx, max_length=15):

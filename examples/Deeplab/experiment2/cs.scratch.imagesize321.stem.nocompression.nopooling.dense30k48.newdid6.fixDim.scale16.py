@@ -36,7 +36,7 @@ IGNORE_LABEL = 255
 GROWTH_RATE = 48
 first_batch_lr = 1e-3
 lr_schedule = [(4, 1e-4), (8, 1e-5)]
-epoch_scale = 8 #640
+epoch_scale = 16 #640
 max_epoch = 10
 lr_multi_schedule = [('nothing', 5),('nothing',10)]
 evaluate_every_n_epoch = 1
@@ -230,7 +230,7 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
     def mypredictor(input_img):
         # input image: 1*H*W*3
         # output : H*W*C
-        output = predictor(input_img[np.newaxis, :, :, :])
+        output = predictor(input_img)
         return output[0][0]
 
     for image, label in tqdm(ds.get_data()):
@@ -250,55 +250,6 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
     logger.info("accuracy: {}".format(stat.accuracy))
 
 
-def proceed_test(args, is_save=True, is_densecrf=False):
-    import cv2
-    ds = Cityscapes(args.data_dir, args.meta_dir, "test")
-    imglist = ds.imglist
-    ds = BatchData(ds, 1)
-
-    names = [os.path.basename(tmp[0]).split(".")[0] for tmp in imglist]
-
-    pred_config = PredictConfig(
-        model=Model(),
-        session_init=get_model_loader(args.load),
-        input_names=['image'],
-        output_names=['prob'])
-    predictor = OfflinePredictor(pred_config)
-
-    from tensorpack.utils.fs import mkdir_p
-    import shutil
-    result_dir = "test-{}".format(os.path.basename(__file__).rstrip(".py"))
-    standard_dir = os.path.join(result_dir, "upload")
-    vis_dir = os.path.join(result_dir, "vis")
-    # shutil.rmtree(result_dir)
-    mkdir_p(result_dir)
-    mkdir_p(standard_dir)
-    mkdir_p(vis_dir)
-
-    i = 0
-    logger.info("start test....")
-    from tensorpack.utils.segmentation.cs_helper import trainId2label
-    getlabel = lambda trainid: trainId2label[trainid].id
-    vgetlabel = np.vectorize(getlabel)
-
-    def mypredictor(input_img):
-        # input image: 1*H*W*3
-        # output : H*W*C
-        output = predictor(input_img[np.newaxis, :, :, :])
-        return output[0][0]
-
-    for image, label in tqdm(ds.get_data()):
-        label = np.squeeze(label)
-        image = np.squeeze(image)
-        prediction = predict_scaler(image, mypredictor, scales=[0.5, 0.75, 1, 1.25, 1.5], classes=CLASS_NUM,
-                                    tile_size=CROP_SIZE, is_densecrf=is_densecrf)
-        prediction = np.argmax(prediction, axis=2)
-
-        if is_save:
-            cv2.imwrite(os.path.join(standard_dir, "{}.png".format(names[i])), vgetlabel(prediction))
-            cv2.imwrite(os.path.join(vis_dir, "{}.png".format(names[i])),
-                        np.concatenate((image, visualize_label(label), visualize_label(prediction)), axis=1))
-        i += 1
 
 
 
@@ -355,7 +306,6 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, default = batch_size, help='batch_size')
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     parser.add_argument('--validation', action='store_true', help='validate model on validation images')
-    parser.add_argument('--test', action='store_true', help='test model on test images')
     args = parser.parse_args()
     if args.gpu:
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
@@ -367,8 +317,6 @@ if __name__ == '__main__':
         run(args.load, args.run, args.output)
     elif args.validation:
         proceed_validation(args)
-    elif args.test:
-        proceed_test(args)
     else:
         config = get_config(args.data_dir,args.meta_dir,args.batch_size)
         if args.load:

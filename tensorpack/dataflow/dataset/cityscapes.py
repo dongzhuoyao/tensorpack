@@ -78,8 +78,10 @@ class Cityscapes(RNGDataFlow):
             f = open(os.path.join(meta_dir,"train.txt"),"r")
             assert self.partial_data == -1
         elif name=="val":
+            assert self.shuffle==False
             f = open(os.path.join(meta_dir, "val.txt"), "r")
         elif name=="test":
+            assert self.shuffle == False
             f = open(os.path.join(meta_dir, "test.txt"), "r")
         else:
             raise

@@ -2,6 +2,29 @@
 import numpy as np
 from pycocotools.coco import COCO
 from pycocotools import mask
+from collections import Counter
+
+def _build_vocab(caption_list, threshold=1):
+    counter = Counter()
+    max_len = 0
+    for i, caption in enumerate(caption_list):
+        words = caption.split(' ')  # caption contrains only lower-case words
+        for w in words:
+            counter[w] += 1
+
+        if len(caption.split(" ")) > max_len:
+            max_len = len(caption.split(" "))
+
+    vocab = [word for word in counter if counter[word] >= threshold]
+    print ('Filtered %d words to %d words with word count threshold %d.' % (len(counter), len(vocab), threshold))
+
+    word_to_idx = {u'<NULL>': 0, u'<START>': 1, u'<END>': 2}
+    idx = 3
+    for word in vocab:
+        word_to_idx[word] = idx
+        idx += 1
+    print "Max length of caption: ", max_len
+    return word_to_idx
 
 def generate_id2trainid(_coco):
     new_dict = {}
