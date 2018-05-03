@@ -38,6 +38,20 @@ def clean_sentence(caption):
 def clean_dir(train_path):
     with open(train_path,"r") as f:
         lines = f.readlines()
+
+    id2desc = {}
+    lines.sort()
+    for line in lines:
+        try:
+            line = line.strip("\n")
+            line_list = line.split("#")
+            file_name = line_list[0]
+            id = int(file_name.split("_")[2])
+            desc = line_list[1]
+            id2desc[id] = desc
+        except Exception as e:
+            pass
+
     caption_list = []
     for line in lines:
         try:
@@ -55,5 +69,5 @@ def clean_dir(train_path):
     pass
 
 
-clean_dir(val_path)
+clean_dir(train_path)
 

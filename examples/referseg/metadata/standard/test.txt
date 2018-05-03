@@ -1,0 +1,367 @@
+COCO_val2014_000000000042_dog.jpg#Many  shoes are on the cabinet which occupies the whole picture, and a dog is in the heaps of shoes.
+COCO_val2014_000000000073_motorcycle.jpg#There are two motorcycle in the picture.
+COCO_val2014_000000000074_person_bicycle_dog.jpg#A bicycle and a dog are on the right side of the picture and several people are in the top.
+COCO_val2014_000000000133_teddy bear_bed.jpg#A teddy bear lay on the right top corner of the bed which occupies the top 3/4 part of the picture  .
+COCO_val2014_000000000136_person_giraffe.jpg#Two persons in the left of picture are watching two giraffes in the right.
+COCO_val2014_000000000139_clock_tv_dining table_microwave_vase_person_book_potted plant_chair_refrigerator.jpg#There are a clock, tv,dining table, microwave, vase, books, potted plant, chair,refrigerator in the room, and two persons are chatting through the window.
+COCO_val2014_000000000143_bird.jpg#Eight birds park on the branches of a tree which scatter across the whole picture.
+COCO_val2014_000000000164_oven_cup_dining table_bowl_microwave_bottle_wine glass_chair_refrigerator.jpg#There are oven, cups, dining table, microwave, bottle, wine glass, chair, refrigerator in the chicken which is mainly in the upper half of the picture.
+COCO_val2014_000000000192_person_baseball bat.jpg#Four persons are playing baseball.Three persons in middle of the picture are chatting and one person in the left takes a bat.
+COCO_val2014_000000000196_fork_dining table_bowl_spoon_carrot_broccoli.jpg#There are many bowls of varieties of food, such as carrot and broccoli, on the dining table which domains most of the picture.Some spoons and forks are plugged in food.
+COCO_val2014_000000000208_toothbrush_sink.jpg#A sink occupied the whole picture and a toothbrush is at the center of the picture.
+COCO_val2014_000000000241_remote_cup_couch_person_bottle_potted plant_handbag.jpg#There are five persons in the picture. The person in the middle takes a remote. The other four persons sit on the couch in the lower part of the picture.There also are two cups and a bottle in the left bottom, a potted plant in the upper part, a handbag in the right.
+COCO_val2014_000000000257_handbag_person_traffic light_truck_backpack.jpg#There are many persons and five trucks in the bottom of the picture. A person in the left load a backpack and some persons take handbags.Some traffic lights are in the right.
+COCO_val2014_000000000283_wine glass_chair_bottle_dining table.jpg#There are a dining table in left bottom of the picture and two chairs in the right top, a bottle and wine glass in the center.
+COCO_val2014_000000000285_bear.jpg#A bear occupy four-fifth of the picture.
+COCO_val2014_000000000294_fork_clock_microwave_person_spoon_knife.jpg#There are some forks, spoons, knives and a microwave in the right half of the picture, a fat person in the left and a clock in left top.
+COCO_val2014_000000000328_car_backpack_bench_person_book_tie_cell phone.jpg#There persons sit on a bench in the middle of the picture. The right two persons wear ties and the center person looks a book. Two backpack load on the left of the bench and a car parks behind it.
+COCO_val2014_000000000338_handbag_person_oven_refrigerator_clock.jpg#A old woman with a handbag and a old man are in the right of the picture. A clock hangs over the woman. An oven is on the left and a refrigerator is in the center.
+COCO_val2014_000000000357_baseball bat_person_baseball glove.jpg#Five baseball players are on the left top of the picture and three players on the right bottom.All the players wear baseball gloves and one of them hands a baseball bat. Many persons gather on the right top.
+COCO_val2014_000000000359_car_traffic light.jpg#Two cars are on the bottom of the picture and two traffic lights on the sides.
+COCO_val2014_000000000360_person_snowboard.jpg#there a skier on a snowboard is in the center of the picture and another skier in the left.
+COCO_val2014_000000000387_laptop_cell phone.jpg#Three overlapped laptops nearly domain the picture and  a cell phone is on the upper laptop.
+COCO_val2014_000000000395_person_cell phone.jpg#There are many persons in the bottom half of the picture. The nearest man hold a cellphone.
+COCO_val2014_000000000397_fork_cup_dining table_person_chair_pizza.jpg#A big pizza occupies the most center  place of the picture.A chair is on the right top, a dining table on the left bottom, a person on the left top, a cup on the left bottom and another cup and a fork on the right bottom.
+COCO_val2014_000000000400_dog_boat.jpg#A boat occupy main part of the picture and a dog is on the right of the boat.
+COCO_val2014_000000001000_handbag_person_backpack_tennis racket.jpg#several persons are in the middle of the picture,the first person from the left have a handbag and the tennis racket in his hand, the fourth person from the left have a backpack with him
+COCO_val2014_000000001029_airplane.jpg#one airplane are in the middle of the picture
+COCO_val2014_000000001063_giraffe.jpg#one giraffe are in the middle of the picture, with its long neck head to us
+COCO_val2014_000000001064_broccoli.jpg#two bcoccolis are in the middle of the picture
+COCO_val2014_000000001083_cow.jpg#three cow are in the middle of the picture
+COCO_val2014_000000001089_tie_cup_person.jpg#there are a person wear a tie behind the cup, the tie are in the middle of this person
+COCO_val2014_000000001103_bird.jpg#there are several birds in the middle of the picture, with three of them have inverted image below them
+COCO_val2014_000000001138_chair_couch_clock_potted plant.jpg#there are three chairs,one couch and three poted plants, one clock in the middle of the picture, the biggest potted plant are beside the long couch, the chairs are in the left of the couch, and the two small potted plant are in the  upperleft of the chair, the clock are in the middle of two potted plants
+COCO_val2014_000000001146_tie_person.jpg#there a person wear a tie in the middle of the picture, the tie are in the middle of this person
+COCO_val2014_000000001149_tie_cell phone_person.jpg#several person are in the picture, tie and one phone are in the middle of the third left most person, another phones are in the middle of the fourth right most person 
+COCO_val2014_000000001153_spoon_bowl_banana_bottle.jpg#there are several banana in the bowl in the middle of the picture, then the spoon are in the upperleft of the banana, the bottle is between the bowl and spoon.
+COCO_val2014_000000001164_person_elephant.jpg#two persons and a elephant are in the middle of picture, two persons are in the right of the elephant, one person is the upperright of another.
+COCO_val2014_000000001171_car_train_truck.jpg#a train is in the picture, the car is in the left side of train, and truck is in the right side
+COCO_val2014_000000001176_person_skateboard_bench.jpg#several persons are in the picture, the person in the middle of the picture are above a skateboard, the bench is below the skateboard
+COCO_val2014_000000001180_fork_dining table_bowl_person_cake_chair_knife.jpg#several persons are in the picture, one person in the middle of the picture. The knife is in the lowleft of the person, bowl are in the left of the person, the chair are in the right of the person. Big dining table are below the person while cake are in the middle of the dining table.
+COCO_val2014_000000001205_bed.jpg#a bed are in the left of the picture
+COCO_val2014_000000001228_zebra.jpg#four zebras are in the picture, them are side by side
+COCO_val2014_000000001244_person_chair_umbrella_boat_suitcase.jpg#there are person, chair,two boats, umbrella, suitcase in the picture,person is in the middle of the picture, umbrella is above the person, one boat is in the upperleft, another boat is in the upperright of the picture, the chair is below the person,  a suitcase is in the right of the person.
+COCO_val2014_000000001268_backpack_person_handbag_cell phone_bird_boat.jpg#there are backpack,three persons,one handbag, cell phone,bird and three boats in the picture, one person is in the right of the picture, the handbag is in the left of this person, the bird is in the middle of the picture, a cell phone is in the upperleft of the person. three boats are in the upperright of the person.
+COCO_val2014_000000001270_person_bench_baseball glove_bottle_baseball bat.jpg#there are several persons in the picture,bench is in the left middle of the picture,baseball glove is in the right of the second left most person, baseball glove is also in the right of the second right most person, the bottle is in the upper left of the picture, the baseball bat is in the left of this picture.
+COCO_val2014_000000001290_cake_person_chair_cup_dining table.jpg#there are cakes and two person, one cup, chair and dining table in picture. Cake are in the middle of the picture, chair are in the left side of the picture, a person is in the upperleft of the cake and above the chair, dinner table are in the bottom of the picture, another person are in the lowwerright of the picture.
+COCO_val2014_000000001292_person_chair_tennis racket_cup.jpg#there are person, chair,cup, tennis racket in the picture, person are in the middle of the picture, the tennis racket is in the middle of the person, the cup is in the left of the picture, the chair is in the lowwerright of the person.
+COCO_val2014_000000001296_person_cell phone_clock.jpg#there are person, clock, cell phone. The person is in the middle of the picture, the cell phone is inside the person and in the upperright of the person, the clock are also inside the person.
+COCO_val2014_000000001340_vase.jpg#there is vase in the middle of the picture, the vase is in the middle of the picture.
+COCO_val2014_000000001342_train_airplane_book_person.jpg#there are train,airplane,book,person. Book is in the middle of the picture, train is inside and the upperleft of the book, airplane is in the lowwerleft of the book, the person is in the lowwerright of the picture.
+COCO_val2014_000000001347_tv_laptop_keyboard_mouse_cup.jpg#there are TV, laptop, keyboard, mouse, cup. TV is in the right of the picture, the keyboard is  in the right of the TV, mouse is in between the TV and keyboard, the mouse is in the right of the keyboard, between the keyboard and the laptop. The laptop is in the right of the picture. Cup is between the laptop and keyboard.
+COCO_val2014_000000001353_person_train.jpg#there are several persons and a train. The persons are above the train.
+COCO_val2014_000000001369_person_surfboard.jpg#There are one person with surfboard in the middle of the picture.
+COCO_val2014_000000001374_car_train.jpg#There are a car and a train. The car is in the right of the picture, the train is in the left of the picture.
+COCO_val2014_000000001393_vase_potted plant.jpg#There are a vase, a potted plant. The potted plant is in left of the picture, the vase is in the middle of the picture.
+COCO_val2014_000000001398_person_cat.jpg#There are a person and a cat. The cat is beside the person,the cat is in the left of the person, the person is in the middle of the picture.
+COCO_val2014_000000001404_person_teddy bear_couch.jpg#There are a person, a teddy bear, couch. The person is in the left part of the picture, the teddy bear is in the right of the person, person an teddy is inside the couch. The couch is in the middle of the picture.
+COCO_val2014_000000001425_sandwich_bowl.jpg#There are sandwich and bowl in the picture. Sandwich is in the right of the bowl.The bowl is in the right of the picture.
+COCO_val2014_000000001436_person_laptop_couch.jpg#There are three laptops and person,couch in the picture. Three laptop is in the right of the couch.The couch is in the right of the picture.The person is in the middle of the picture, between the laptops and the couch.
+COCO_val2014_000000001442_bear.jpg#There is bear in the middle of the picture.
+COCO_val2014_000000001448_giraffe.jpg#There is giraffe in the middle of the picture.
+COCO_val2014_000000001464_person.jpg#There is one person in the middle of the picture.
+COCO_val2014_000000001490_person_surfboard.jpg#There is one person above the surfboard in the middle of the picture.
+COCO_val2014_000000001503_tv_laptop_mouse_keyboard.jpg#There are TV, laptop, keyboard, mouse. TV is in the right of the picture, the keyboard is  in the lowerright of the TV, mouse is in between the TV and laptop, the mouse is in the right of the keyboard.
+COCO_val2014_000000001525_airplane.jpg#There is airplane in the middle of the picture.
+COCO_val2014_000000001532_car_truck.jpg#There are cars and trucks. Truck are in the bottom and middle of the picture, the car is in the left of trunks. There is also a truck between the car and truck.
+COCO_val2014_000000001554_sheep_person_handbag_umbrella_truck.jpg#There are sheep, person, handbag, umbrella,truck. Sheeps in the middle of the picture, persons are in the upperright of the sheeps, truck is in the right of persons and abover the sheeps.Handbag and umbrella is in the middle of the persons.
+COCO_val2014_000000001561_skateboard_bird_couch.jpg#There are skateboard and bird in a couch. The bird is above the skateboard, the skateboard is in the middle of the couch, the couch is full of the picture.
+COCO_val2014_000000001563_person_skis.jpg#There are a person with skis inside her. Skis are in the right of the person. The person is in the middle of the picture.
+COCO_val2014_000000001573_teddy bear_cup_spoon_oven_chair_knife.jpg#There are teddy bear,cup spoon, two ovens,chair,knife. Oven is in the left of the picture, the teddy is above the oven. Another oven is in the right of the first oven. Cup is above the second oven. The spoon and knife is above the oven.spoon is between two knives, the chair is in the right of the picture.
+COCO_val2014_000000001577_chair_vase.jpg#There are vase and chair, Vase is in the middle of the picture, the chair is in the right of the vase.
+COCO_val2014_000000001584_bus_person.jpg#There  are buses and person. One big bus in the middle of the picture. Several persons are in the right of the bus. Other two small bus is in the right of the big bus.
+COCO_val2014_000000001590_truck_cow.jpg#There is truck and cow. The truck is in the upperleft of the picture and the cow is inside the truck.
+COCO_val2014_000000001591_remote_dining table_tv_person_chair_refrigerator.jpg#There are remote, dining table, TV,person, chair and refrigerator. The TV is in the middle and right of the picture, the two persons is inside the TV, the chair is below one person, another  chair is between the two person, the refrigerator is between the two persons. The remote is in the left of the TV.
+COCO_val2014_000000001592_person_chair_umbrella.jpg#There are umbrella,chair and person. The person is in the middle of the picture. The chair is below the person and the umbrella is above the person.
+COCO_val2014_000000001599_person_chair_sports ball_tennis racket_bench.jpg#There are several persons, chairs, sports ball, tennis racket and bench.Severals persons are in the upperleft of the picture, there is one person in the middle of the picture, the tennis racket is in the upperright of the middle person. Two chairs are in the left side of the picture and bench near the chair.
+COCO_val2014_000000001626_person_chair_couch_remote_potted plant.jpg#There are two persons, chair,couch,remote,and potted plant. Chairs are in the left of the picture,two persons are in the right of the chairs, remote is inside the right person.Another chair is in the right of the right person. Potted plant is in the right of the chair and also in the right part of the picture.
+COCO_val2014_000000001647_scissors.jpg#There is a scissors in the middle of the picture.
+COCO_val2014_000000001655_person_cell phone.jpg#There are person, cell phone. Person is in the bottom and middle of the picture. Cell phone is in the upper right of the person.
+COCO_val2014_000000001667_fork_dining table_vase_person_spoon_cake_bench.jpg#There are fork,dining table,vase,two persons,spoon,cake and bench. One person is in the middle of the picture, the spoon and fork are in the middle of the person. One bench is below the person. Two persons is in the right of the middle person. A vase is below the two persons. Dining tables is below the two persons. The cake and vase is below the two persons.
+COCO_val2014_000000001668_person_baseball glove_baseball bat.jpg#There are two persons, baseball glove and baseball bat. The two persons are separately in the right and the middle of the picture. Baseball bat and baseball glove is between the left person and right person. The baseball glove is in the right of the left person.
+COCO_val2014_000000001675_keyboard_cat.jpg#There are cat and keyboard in the picture. Cat is above the keyboard, the keyboard is in the bottom of the picture.
+COCO_val2014_000000001682_sports ball_boat.jpg#There are sports ball and boat. Sports ball is in the upper and middle of the picture. The boat is above the sports ball.
+COCO_val2014_000000001700_person_snowboard.jpg#There are a person over snowboard in the middle of the picture. 
+COCO_val2014_000000001722_umbrella_person_truck_motorcycle_handbag_bicycle.jpg#There are umbrella,chair,truck,motorcycle,handbag,bicycle and person. The person is in the upper of the bicycle, the umbrella is above the bicycle. The bicycle is in the left part of the picture. The motorcycle is in the right part of the picture. The truck is in the right part of the picture. 
+COCO_val2014_000000001739_truck.jpg#The truck is in the middle of the picture.
+COCO_val2014_000000001757_person_bottle_wine glass.jpg#There are person, bottle and wine glasses. One wine glass is in the right part and another wine glass is in the left of the first wine glasses. The bottle is in the middle of the picture. Wine glasses are in the left part of the picture.
+COCO_val2014_000000001761_person_airplane.jpg#There are two airplane and several persons in the pictures. The two airplanes is in the upper and upperleft of the picture. Several persons are in the lowerleft of the picture.
+COCO_val2014_000000001779_traffic light.jpg#There are two traffic light. The two traffic lights is in the upper and upperleft of the picture.
+COCO_val2014_000000001799_person_truck_motorcycle_car.jpg#There are persons, truck and motorcycle and car. Truck is in the middle of the picture, a person is in the left of the picture, and the car is between the truck and the person. The motorcycle is between the person and the car. The car, motorcycle and person is in the left part of the picture.
+COCO_val2014_000000001803_toilet_bowl_sink.jpg#There are toilet,bowl,sink. Toilet is in the lowwerleft of the picture, the sink is above the toilet, the bowl is in the right of the picture.
+COCO_val2014_000000001818_zebra.jpg#There are zebra, zebra is in the middle of the picture
+COCO_val2014_000000001840_umbrella.jpg#There are umbrella,umbrellas are in the middle of the picture.
+COCO_val2014_000000001841_tie_person.jpg#There are tie,person. Person is the lowwerleft of the picture, the person is above the tie.
+COCO_val2014_000000001852_scissors.jpg#There are scissors,scissors is on the right of the picture.
+COCO_val2014_000000001856_person_surfboard.jpg#There are person,surfboard. the person is on the upperright of the picture. The surfboard if below the person
+COCO_val2014_000000001869_elephant.jpg#There are three elephants,elephant is on the right,middle and the left of the picture.
+COCO_val2014_000000001903_sandwich_bowl.jpg#There are sandwich,bowl.The sandwich is in the middle of the picture. The sandwich is inside the bowl.
+COCO_val2014_000000001948_person_bird.jpg#There are person,bird. Bird is the lowwerleft of the picture, the bird is under the person, the person is in the middle of the picture.
+COCO_val2014_000000001955_car_kite_person.jpg#There are car,kite,person. Car is on the lowwerleft of the picture, the person is in the lowerleft of the picture, the kite is on the right of the picture.
+COCO_val2014_000000001960_person_sports ball.jpg#There are person,sports ball. A person is lowwerleft of the picture, the sports ball is above the lower person, three person is above the sports ball and in the upperleft of the picture.
+COCO_val2014_000000001987_person_frisbee.jpg#There are person,frisbee.  The person is in the middle left of the picture, the frisbee is in the upperright of the person.
+COCO_val2014_000000001993_chair_bed_dining table.jpg#There are chair,bed,dining table. Chair is in the lowwerleft of the picture, the dining table is above the chair, the bed is in the right of the picture.
+COCO_val2014_000000002006_tie_bus_traffic light_person.jpg#A bus occupies the center most places of the picture. There a driver in the bus and a person behind the bus and a traffic light above the bus.
+COCO_val2014_000000002014_person_bicycle_skateboard_car.jpg#A person plays skateboard on the center of the picture, a person rides bicycle on left, four persons on bicycles chat near a car on the right.
+COCO_val2014_000000002061_toilet.jpg#There a toilet in the center of the picture.
+COCO_val2014_000000002124_person_horse_truck_cow.jpg#There is a long truck on the middle where three cows and a horse  stand. A crowd of persons gather near the truck.
+COCO_val2014_000000002139_umbrella_sports ball_bicycle_book_bed.jpg#There are a bed on the left, a bicycle on middle, and an umbrella on right.
+COCO_val2014_000000002142_car_bench_bird_person.jpg#On the center is a bench where old man sits. Many birds surround the bench, most of which gather on the bottom.A parks behind the bench.
+COCO_val2014_000000002149_bowl_apple.jpg# A bowl with many apples inside domains the picture.
+COCO_val2014_000000002153_person_baseball bat.jpg#Three baseball players are on the bottom. One of them hands a baseball bat. Another player stands on the center top.
+COCO_val2014_000000002154_car_bench_umbrella_person.jpg#there are three umbrellas with three persons blew on left top, a car on right top and a bench on the left bottom.
+COCO_val2014_000000002157_cake_wine glass_dining table_knife_cup.jpg#A dinning table domains the picture. A cake and a knife are on the left bottom of the picture and ten wine glasses on left top.
+COCO_val2014_000000002164_sheep.jpg#Many sheep are on the middle.
+COCO_val2014_000000002171_person_surfboard.jpg#A surfboard with three persons around is on the center.
+COCO_val2014_000000002179_person_chair_dining table_skateboard_bench.jpg#On the right top corner of the picture are a bench, a dining table, a bench and two skateboard. A person in red skirt sits on the bench. A person on a skateboard is on right.
+COCO_val2014_000000002191_person_surfboard.jpg#There are a person playing surfboard on center and another person playing surfboard on left.
+COCO_val2014_000000002212_dog_couch.jpg#A couch with two dogs on it occupies the picture.
+COCO_val2014_000000002225_person_chair_dining table_donut.jpg#A little girl eating donut are on the center and a dining table on left bottom, a chair on right bottom.
+COCO_val2014_000000002235_person_tennis racket.jpg#A person handing tennis racket is on the center.
+COCO_val2014_000000002239_person_sports ball_tennis racket.jpg#A little girl stands on left and holds a tennis racket  into right. A sport ball is on the right top.
+COCO_val2014_000000002240_teddy bear.jpg#Four teddy bears led on the center of the picture.
+COCO_val2014_000000002255_elephant.jpg#A elephant stands on the right part.
+COCO_val2014_000000002261_person_surfboard.jpg#A person on a surfboard swims in the center.
+COCO_val2014_000000002290_boat.jpg#There a board on the center, a board on the bottom, and a board on right top.
+COCO_val2014_000000002295_dining table_bowl_cat.jpg#A dining table domain the picture totally. There are a bowl on center and a cat on top.
+COCO_val2014_000000002299_tie_person.jpg#Many persons gather in the picture. Some of them wear tie.
+COCO_val2014_000000002302_person_horse_backpack.jpg#Two persons on horses are on left. One of them takes a backpack.Another horse is on bottom.
+COCO_val2014_000000002315_elephant.jpg#Thirteen elephants scatter on the middle of the picture.
+COCO_val2014_000000002346_dining table_vase.jpg#A dining table occupies the bottom half of the picture.Three vases are on the center.
+COCO_val2014_000000002388_toilet_sink.jpg#There a toilet on center and a sink on right.
+COCO_val2014_000000002431_dining table_cup_person_spoon_wine glass_knife.jpg#A dining table occupies the main place of the picture and a person sit on the top. A wine glass and a knife are on the top the table. A spoon and two cups are on the bottom of the table.
+COCO_val2014_000000002434_cell phone_chair_laptop.jpg#Two laptops is the center and a cell phone is placed on the right laptop. A chair is on the right of the picture.
+COCO_val2014_000000002453_boat_bench.jpg#A bench is on the left and four boats on the right top.
+COCO_val2014_000000002473_person_skis.jpg#A skier hang in the center of the picture three skiers stand on the bottom.
+COCO_val2014_000000002477_dining table_laptop_dog_couch_person_chair.jpg#A dining table is on the right top and a laptop on left bottom. In the middle is placed a couch on which sit a person and dog.There are many chairs on left top.
+COCO_val2014_000000002495_toilet.jpg#There is a toilet in the center.
+COCO_val2014_000000002521_bench.jpg#There is a bench on the right bottom.
+COCO_val2014_000000002525_cake_person.jpg#A beautiful girl surrounded by many cakes stands on the center of the picture.
+COCO_val2014_000000002529_car_clock.jpg#Three cars lie on the right bottom and a clock hangs on the left top.
+COCO_val2014_000000002532_person_skis.jpg#A skier on skis is on the center.
+COCO_val2014_000000002562_person_sports ball_tennis racket_bench.jpg#A player strikes a sports ball with a tennis racket on the center. There are three bench on left top and many persons around.
+COCO_val2014_000000002587_donut_banana.jpg#A donut and a banana lie on the center.
+COCO_val2014_000000002592_cup_knife_dining table.jpg#A cup and a knife are lying on the center of a dining table which occupies the picture.
+COCO_val2014_000000002613_person_surfboard.jpg#Two persons on surfboards are on right.
+COCO_val2014_000000002621_traffic light.jpg#Three traffic lights hang in right of the picture.
+COCO_val2014_000000002640_car_train.jpg# A train travels on the middle of the picture.
+COCO_val2014_000000002684_zebra.jpg#Ten zebras stand on the middle of the picture.
+COCO_val2014_000000002685_handbag_person_cup_bottle_wine glass.jpg#There are many persons in the picture. Many wine glasses and bottles and a cup are on the left.One girl on the right holds a cup and a handbag.
+COCO_val2014_000000002690_boat.jpg#Many boats scatter on the center of the picture.
+COCO_val2014_000000002753_frisbee_dog.jpg#A dog with a frisbee in mouth stands in center of the picture.
+COCO_val2014_000000002759_spoon_bowl_broccoli_dining table.jpg#A dining table domains the total picture. There a bowl of broccoli on left,  a bowl of broccoli on top, and two spoons on right bottom.
+COCO_val2014_000000002764_person_boat.jpg#A boat parks on left of the picture and many boats and persons scatter on top.
+COCO_val2014_000000002822_car_stop sign_bus.jpg#A car, a stop sign, and a bus are on left bottom of the picture.
+COCO_val2014_000000002839_person_teddy bear_bench.jpg#A pretty baby is on the center before a long bench. A teddy bear is on left.
+COCO_val2014_000000002867_person_backpack_skis.jpg#Four skiers standing on skies and carrying backpacks are in the picture.
+COCO_val2014_000000002881_person_airplane.jpg#A airplane and two persons are in the center.
+COCO_val2014_000000002890_handbag_car_skis_traffic light_person.jpg#A mother carrying a baby on back and a child are playing skis in center and a woman holding handbag walks on right. Seven cars and another two persons scatter on the middle.
+COCO_val2014_000000002894_train.jpg#A train travels on left and another train travels in center.
+COCO_val2014_000000002923_bird_boat.jpg#Three birds and six boats scatter on the middle.
+COCO_val2014_000000002972_train.jpg#A train travels in center and another train travels on the right.
+COCO_val2014_000000002985_car_truck_elephant.jpg#A truck with an elephant onside and two cars travel on right bottom.
+COCO_val2014_000000002988_chair_cat_potted plant.jpg#A chair with a cat onside lies in center and a potted plant is placed in left.
+COCO_val2014_000000003001_donut_person_chair_dining table.jpg#A dining table occupies the main part of the picture and a person sit on the chair above the table. On the table are placed four bags of donuts.
+COCO_val2014_000000003014_pizza_dining table.jpg#A dinning table domains the picture and a pizza covers the bottom half.
+COCO_val2014_000000003035_car_airplane_truck.jpg#There are a airplane in center, a truck in right, a car and two trucks in left.
+COCO_val2014_000000003067_sandwich_apple_cat.jpg#A cat, an apple and a sandwich are in center of the picture.
+COCO_val2014_000000003084_clock.jpg#A clock hangs in the center.
+COCO_val2014_000000003091_fork_cup_dining table_person_spoon_bottle_cake.jpg#A dining table occupies the whole picture. A person holding two spoons and a fork is in left bottom.Another person is in right top. In the center is a cake. A cup and two bottles are in left top.
+COCO_val2014_000000003093_bowl_banana_dining table.jpg#A dining table occupies the whole picture. A bowl with a banana is in right.
+COCO_val2014_000000003103_person_skateboard_clock.jpg#A person playing skateboard is in the center. Many persons behind are watching.
+COCO_val2014_000000003109_person_chair_umbrella.jpg#A person holding an umbrella stands in the center and two chair are in left.
+COCO_val2014_000000003125_person_truck.jpg#A truck parks in right top. There are a person inside the truck and a person in left top of the picture.
+COCO_val2014_000000003134_bus_traffic light_person_truck_parking meter_fire hydrant.jpg#A bus with a driver inside is in left.Two fire hydrants, two traffic lights, a truck are on right top and a parking meter in right bottom.
+COCO_val2014_000000003145_dining table_tv_couch_person_book_handbag_chair.jpg#On the bottom part of the picture are a couch, three chairs, a dining table, a tv, two handbags, some books and two persons.
+COCO_val2014_000000003149_clock.jpg#Two clocks hang in the bottom of the picture.
+COCO_val2014_000000003156_person_sink_toilet.jpg#A person squats in left. There are a sink in left and a toilet in right.
+COCO_val2014_000000003192_fork_dining table_cup_wine glass_knife_pizza.jpg#A dining table covers most of the picture. A pizza is placed in the center of the picture, and another piece of pizza is in the top.A fork and a knife are in right top. A cup and a wine glass are in left top.
+COCO_val2014_000000003209_person_horse.jpg#A person riding a horse is in the center of the picture and three persons are in left.
+COCO_val2014_000000003217_bench.jpg#A bench is in bottom.
+COCO_val2014_000000003244_tv_cell phone_mouse_laptop_keyboard.jpg#In the center of the picture are a laptop, a tv, a keyboard, and a cellphone.
+COCO_val2014_000000003255_person_skis_backpack.jpg#Seven persons carrying backpacks standing on skis are in bottom.
+COCO_val2014_000000003310_hot dog_person.jpg#A person eating hot dog domains the picture.
+COCO_val2014_000000003326_person_boat.jpg#A boat with two persons onside is in center and another three boats are in top.
+COCO_val2014_000000003335_toilet.jpg#A toilet is in center.
+COCO_val2014_000000003337_person_cell phone_car.jpg#A person holding an cell phone is on left and two cars are on top.
+COCO_val2014_000000003342_train.jpg#A train travels in the center.
+COCO_val2014_000000003378_person_skateboard.jpg#Many persons gather in the middle of the picture. One of them plays skateboard.
+COCO_val2014_000000003382_tie_chair_keyboard_laptop_person.jpg#Six persons wearing ties domain the main place of the picture.A chair, a keyboard, and a laptop are in left.
+COCO_val2014_000000003425_remote_tv_bed_book_bottle_handbag.jpg#In the center of the picture are a tv, two bottles, and many books. A bed is placed in left bottom, with a remote, two books, a handbag onside.
+COCO_val2014_000000003466_toilet_person.jpg#Two legs of one person show off in edge of the picture and a toilet is in bottom.
+COCO_val2014_000000003480_cow.jpg#Five cows walk in the center.
+COCO_val2014_000000003488_person_sports ball.jpg#A person play sports ball in the center.
+COCO_val2014_000000003501_bowl_broccoli.jpg#A bowl of broccoli domains the picture.
+COCO_val2014_000000003553_person_skateboard.jpg#A person stands on skateboard in the center of the picture.
+COCO_val2014_000000003580_person_chair_dining table_remote_couch.jpg#A person holding a remote sit on the couch in the right bottom of the picture. A dining with four chairs are on left top.
+COCO_val2014_000000003590_horse_umbrella_dining table_car_person_handbag_bicycle_chair.jpg#Five persons stand in left of the picture. The right four persons hold umbrella and another umbrella is in right edge of the picture .Two dining tables, five chairs, a bicycle, a handbag, a horse are in right and two cars travel on left top.
+COCO_val2014_000000003595_wine glass_cup_bottle_dining table.jpg#A dining table occupies the bottom half of the picture. Thirteen wine glass, three cups, seven bottles are on the table.
+COCO_val2014_000000003661_cup_banana_keyboard.jpg#There are bananas in center, a keyboard in left, a cup in right.
+COCO_val2014_000000003690_pizza.jpg#A pizza cover the main place of the picture.
+COCO_val2014_000000003693_person_cell phone.jpg#There are six persons in the picture.
+COCO_val2014_000000003694_person_skateboard.jpg#A person plays skateboard in center. And there are another two person in right.
+COCO_val2014_000000003703_cup_laptop_bowl_bottle_orange_mouse_banana.jpg#A laptop is in top, a banana in bottom, bowls in center, two bottles, a mouse, a cup in right top.An orange and a cup in left.
+COCO_val2014_000000003711_car_cat.jpg#A car with a cat onside occupies the picture.
+COCO_val2014_000000003716_remote_laptop_bed_couch_person_book_oven.jpg#A bed is placed in bottom and a person watches a laptop on it.Above the bed is a couch with a remote on its left side. An oven is in left and many books in top.
+COCO_val2014_000000003742_bowl_apple_vase.jpg#There are some apples, a bowl, and a vase in the center.
+COCO_val2014_000000003761_person_horse.jpg#A old woman stands in left and a horse in right.
+COCO_val2014_000000003771_cow.jpg#A cow sits in the center.
+COCO_val2014_000000003779_wine glass_person_bowl_dining table.jpg#A dining table cover the picture and several wine glasses scatter onside it.A bowl is in left top and a person in right top.
+COCO_val2014_000000003786_person_book_bench.jpg#A woman reading a book sits on the bench in right bottom.
+COCO_val2014_000000003793_bus_bench_person.jpg#A bus travel in the center of the picture, with two persons inside. A bench is in right.
+COCO_val2014_000000003794_sandwich.jpg#Two sandwich is in right.
+COCO_val2014_000000003799_.jpg#A sign hangs in top.
+COCO_val2014_000000003817_car_motorcycle_banana_person.jpg#A motorcycle carrying many bananas travels in bottom of the picture. A car and a motorcycle are in top.Some persons are in center.
+COCO_val2014_000000003832_boat.jpg#Three boats park in middle.
+COCO_val2014_000000003837_person_surfboard.jpg#Three persons and four surfboards are in bottom, and many persons in middle.
+COCO_val2014_000000003845_fork_cup_dining table_spoon_carrot_broccoli.jpg#A bowl of carrots and broccoli is placed in center of the dining table which domains the picture.A cup and two fork are in top.
+COCO_val2014_000000003849_car_truck.jpg#Many cars and trucks travel in center.
+COCO_val2014_000000003865_person_kite_boat_surfboard.jpg#A kite flies in left top of the picture. A boat and a person on a surfboard are in right bottom.
+COCO_val2014_000000003867_zebra.jpg#Two zebras stand in the picture.
+COCO_val2014_000000003926_sheep.jpg#Two sheep stand in the picture.
+COCO_val2014_000000003932_sheep.jpg#Five sheep stand in the picture.
+COCO_val2014_000000003934_wine glass_person_cup_remote_couch.jpg#Five persons stand in left and a person stands in right. There are two remotes in center, a couch and two cups in right.
+COCO_val2014_000000003938_tv_person_book_remote_bed.jpg#A woman holding a remote stands in center and another woman stands in left.A bed is placed in bottom with a remote and a book onside.
+COCO_val2014_000000003939_person_teddy bear.jpg#Three little girls carry two teddy bears in the picture.There many persons in top.
+COCO_val2014_000000003947_sheep.jpg#There are many sheep in bottom.
+COCO_val2014_000000003964_handbag_person_tennis racket.jpg#A person holding a tennis racket with a handbag stands in center.
+COCO_val2014_000000003983_bus_backpack_suitcase_skis_person.jpg#Thirteen persons stand in middle of the picture. A bus parks in left top.There are some backpacks, suitcases, skis in left bottom and right.
+COCO_val2014_000000004011_bowl_dog_person_spoon_bottle_cake.jpg#An old woman stands in left and a dog cake, some bowls, a bottle are in right bottom, and some spoons in right.
+COCO_val2014_000000004021_baseball bat_sports ball_person_baseball glove.jpg#Seven baseball players wearing baseball gloves are playing sport ball in the picture. The one player in left bottom holds a baseball bat.Many persons gather in top.
+COCO_val2014_000000004066_person_surfboard.jpg#A person plays a surfboard in center, another person in right.
+COCO_val2014_000000004069_handbag_person_backpack_bicycle.jpg#Two persons carrying handbags and backpacks ride bicycles in  center bottom.
+COCO_val2014_000000004079_vase.jpg#A vase is placed in right bottom.
+COCO_val2014_000000004092_person_chair_remote.jpg#A young woman holds two remotes and a chair is placed in right.
+COCO_val2014_000000004093_truck.jpg#A truck parks in right bottom.
+COCO_val2014_000000004108_fork_cup_hot dog_dining table_bowl_cake_spoon_person_handbag_chair.jpg#A dinning table occupies the main place of the picture. On the table are many hot dogs, cups, bowls, cakes, spoons. Two persons stand in right. Two chairs are placed in left and another two chairs are placed in right.
+COCO_val2014_000000004125_backpack_couch_bottle_handbag_wine glass_cell phone.jpg#There are a couch and a table in bottom.Two handbags and backpacks are placed in right part of the couch.A wine glass, a bottle, an cell phone are placed on the table.
+COCO_val2014_000000004134_tie_chair_dining table_wine glass_person.jpg#Many persons stand in the picture. Some of them wear ties.A dinning table is placed in left bottom and two chairs in center.
+COCO_val2014_000000004157_cup_bottle_clock.jpg#A clock hangs in top of the picture. Many cups and bottles are in bottom.
+COCO_val2014_000000004175_person_chair_sports ball_tennis racket.jpg# Two women play sports ball with tennis rackets in center ball park of the picture.Many chairs are placed in right side of the park and some persons sit on the chairs. Many persons gather  all around the ball park.
+COCO_val2014_000000004187_person_sports ball_tennis racket.jpg#A man plays sports ball with a tennis racket in center of the picture. Another person is behind the the man.
+COCO_val2014_000000004211_person_horse.jpg#A knight rides a horse in left and another knight rides a horse in right. A young woman stands in bottom. Many persons stand in middle of the picture.
+COCO_val2014_000000004212_car_truck_cat.jpg#A truck parks in bottom of the picture with a cat onside.
+COCO_val2014_000000004227_person_sports ball_tennis racket.jpg#A boy plays spots ball with a tennis racket in center.
+COCO_val2014_000000004229_elephant.jpg#Three elephants stand in center and another elephant stands in right top.
+COCO_val2014_000000004243_person_bench_suitcase.jpg#Many suitcases are placed in left and a boy sit on the suitcase. A person stands in top of the picture.A bench is in right.
+COCO_val2014_000000004246_truck_car_kite_motorcycle_person.jpg#Two boys stand in right bottom.A car, a motorcycle, and a person are in center. There are some cars and a truck in right.
+COCO_val2014_000000004256_fork_cup_dining table_bowl_broccoli_knife.jpg#A dining table occupies the picture.There are a bowl of broccoli, a knife, a fork in bottom.There are also a bowl of broccoli, a knife, a fork in left.Two cups are placed in upper half of the picture.
+COCO_val2014_000000004265_car_vase_cup_potted plant.jpg#Some cups and potted plants are placed in bottom. Several cars park in center.
+COCO_val2014_000000004266_person_skis.jpg#Eight persons play skis in left top of the picture.
+COCO_val2014_000000004275_car_skateboard_person.jpg#Several cars park in middle of the picture and a person plays skateboard in center.
+COCO_val2014_000000004283_bird.jpg#Two birds are in the center of the picture.
+COCO_val2014_000000004286_person_giraffe.jpg#A person stands in right bottom of the picture. A giraffe stands in left and a giraffe stands in right.
+COCO_val2014_000000004296_oven_cup_spoon_sink_bottle_handbag_refrigerator.jpg#An oven is placed in center of the picture. A refrigerator, two bottles, four cups are in right. A sink, a spoon, and two bottles are in left. A handbag is in bottom.
+COCO_val2014_000000004312_person_spoon_dining table_bowl_pizza.jpg#A dining table occupies the bottom half of the picture and a pizza, a spoon, a bowl are placed on it.Six persons sit in upper half of the picture.
+COCO_val2014_000000004338_bear.jpg#A bear in the center.
+COCO_val2014_000000004355_person_stop sign_backpack_motorcycle_car.jpg#A person with a backpack on back rides motorcycle is in left of the picture. A stop sign and a car are in left top. A person rides motorcycle in right.
+COCO_val2014_000000004359_handbag_person_cell phone_train.jpg#A train with many persons inside parks in upper part. An old woman taking many handbags and an cell phone stands in left.
+COCO_val2014_000000004375_person_skis.jpg#Many persons play skis in bottom of the picture.
+COCO_val2014_000000004386_fork_person_sandwich.jpg#A man eat sandwich with a fork.
+COCO_val2014_000000004392_dog_bed.jpg#A bed is placed in right and dog lies in left.
+COCO_val2014_000000004395_tie_person.jpg#A young man wearing tie is in the picture.
+COCO_val2014_000000004396_teddy bear.jpg#A teddy bear is in the center.
+COCO_val2014_000000004438_tie_person.jpg#A man wearing a tie jumps in the center of the picture.
+COCO_val2014_000000004495_tv_chair_couch.jpg#A couch is placed in right bottom of the picture, a chair in left and a tv in center.
+COCO_val2014_000000004497_truck.jpg#A truck travel in right.
+COCO_val2014_000000004498_person_skateboard_potted plant.jpg#A boy plays skateboard in center. Four potted plants are placed in upper part of the picture.
+COCO_val2014_000000004509_person_bed.jpg#A bed is in the bottom and a naked woman is on the bed.
+COCO_val2014_000000004551_car_truck_kite_person.jpg#Many cars, trucks and persons are in the bottom of the picture. Many kites fly in the upper parts of the picture.
+COCO_val2014_000000004554_person_skis_snowboard.jpg#Six persons play  snowboards in upper part of the picture.
+COCO_val2014_000000004576_umbrella_clock_bus_backpack_person_handbag_bicycle.jpg#In the bottom of the picture are many persons holding umbrellas and handbags, many bicycle, two clocks, a bus.
+COCO_val2014_000000004592_person_chair_sports ball_tennis racket_tie.jpg#A woman plays spots ball with a tennis racket in the center of the picture. Many persons gather in upper part of the picture.
+COCO_val2014_000000004620_car_parking meter.jpg#A parking meter is in the center and two cars are in left top.
+COCO_val2014_000000004665_tie_person_car.jpg#A young man wearing a tie and a young beautiful woman sit inside a car.
+COCO_val2014_000000004678_person_dog_bench.jpg#There four benches, two persons and a dog in bottom of the picture.
+COCO_val2014_000000004688_person_kite.jpg#A person is in right and a kite fly in left top.
+COCO_val2014_000000004700_car_sports ball_person.jpg#Many boys run in right and a football stops in center. Many cars park in top.
+COCO_val2014_000000004731_oven_cup_laptop_dining table_bowl_person_sink_bottle_orange_cell phone_refrigerator.jpg#A man and a baby sit on a chair in the center of the picture. A refrigerator is placed in right, an oven in left, a sink in center, a dining table in bottom. A laptop, several oranges, a cup and a bowl are placed on the table.
+COCO_val2014_000000004736_car_sports ball_baseball bat_baseball glove_person.jpg#Many men wearing baseball gloves play baseball in bottom. The middle man holds a baseball bat. Many cars park in upper part of the picture.
+COCO_val2014_000000004742_person_surfboard.jpg#A person stand on a surfboard in center of the picture.
+COCO_val2014_000000004749_bowl_banana_dining table.jpg#A dining table occupies the main part of the picture. A bowl with two bananas inside is placed on the table.
+COCO_val2014_000000004754_zebra.jpg#Four zebras stand in bottom and two zebras stand in right top.
+COCO_val2014_000000004760_fire hydrant_bench.jpg#There are a fire hydrant, two benches in middle.
+COCO_val2014_000000004764_person_chair_motorcycle_bottle_cup.jpg#A motorcycle occupies the main place of the picture. Many bottles and cups are in left top. A person and a chair are in right top.
+COCO_val2014_000000004765_person_surfboard.jpg#A person stand on a surfboard in center of the picture.
+COCO_val2014_000000004772_person.jpg#A person is  watching the sea in left bottom of the picture.
+COCO_val2014_000000004795_tv_laptop_cat.jpg#A tv is in upper part of the picture, a laptop in left and a cat in bottom.
+COCO_val2014_000000004840_person_skateboard.jpg#Two persons play skateboards in right.
+COCO_val2014_000000004916_person_chair_book_bed_potted plant.jpg#Two persons and a bed are in center. There a chair in left, a potted plant and a book in right.
+COCO_val2014_000000004936_spoon_carrot_bowl_broccoli.jpg#A bowl with many carrots and broccoli inside occupies the picture. A spoon is placed in right.
+COCO_val2014_000000004972_person_horse.jpg#A person sits in center of the picture and a horse stands in right of the picture.
+COCO_val2014_000000004975_person_umbrella.jpg#Six persons stand in bottom of the picture. The right two women hold umbrellas in right.
+COCO_val2014_000000004979_horse_chair.jpg#A chair with a horse onside is placed in bottom of the picture.
+COCO_val2014_000000004980_person_train_suitcase.jpg#A train domains the picture. A young woman taking a suitcase stand in the train.
+COCO_val2014_000000004988_car_person_bench_bus.jpg#A bus with several persons inside stop in center of the picture. Another bus is in left.A bench and some cars and persons are in right of the picture.
+COCO_val2014_000000005001_handbag_scissors_bicycle_person.jpg#Many persons gather in the picture.Two scissors are held in bottom.A bicycle and a handbag are in right.
+COCO_val2014_000000005032_person_skis.jpg#Two persons stand on skis in center of the picture.
+COCO_val2014_000000005033_person_train.jpg#A train travels in left bottom of the picture and a person is in left top.
+COCO_val2014_000000005037_bus_person_car.jpg#A bus with a driver parks in center. Some person stand in left and some cars and persons in right.
+COCO_val2014_000000005038_person_bed_bottle.jpg#A bed is placed in bottom and a woman sit on right side of the bed. A bottle is on left.
+COCO_val2014_000000005060_person_cell phone.jpg#A man holding an cell phone sits in center of the picture.
+COCO_val2014_000000005064_baseball bat_person_bench_baseball glove.jpg#Three men wearing baseball gloves play baseball in left. The right one holds a baseball bat. Many persons sit on top of the picture.
+COCO_val2014_000000005076_dining table_bench.jpg#A dining table and a bench is in left bottom.
+COCO_val2014_000000005105_surfboard_car_sports ball_dog_bench_person.jpg#A man stands on a surfboard in center. A person taking a sports ball is in bottom of the picture. Many cars and persons are in top.
+COCO_val2014_000000005107_bus_backpack_car_person.jpg#A bus and a car park in left. Many persons stand in right. The right person carries a backpack.
+COCO_val2014_000000005123_handbag_bus_person_bench.jpg#There a bench in bottom and a woman with a handbag on back sits on left side of the bench. A bus parks in right.
+COCO_val2014_000000005124_person_sports ball.jpg#Four men play football.
+COCO_val2014_000000005146_horse.jpg#Two horses stand in left.
+COCO_val2014_000000005154_bed.jpg#A bed is placed in right.
+COCO_val2014_000000005178_person_horse_cow.jpg#Two persons ride a horse in center of the picture. A horse and two cows stand in upper part of the picture.
+COCO_val2014_000000005184_bear.jpg#There are two bears in the picture.
+COCO_val2014_000000005193_person_surfboard_bottle.jpg#There are six persons in the picture and a surfboard in center and a surfboard in right and a bottle in upper part of the picture.
+COCO_val2014_000000005205_car_motorcycle_person.jpg#A man and a girl ride a motorcycle in bottom part of the picture. Two cars park in upper part of the picture.
+COCO_val2014_000000005213_motorcycle.jpg#A motorcycle parks in left bottom.
+COCO_val2014_000000005225_person_teddy bear.jpg#A baby is in center and a teddy bear in left.
+COCO_val2014_000000005245_person_elephant.jpg#A person ride an elephant in bottom of the picture. And another elephant with two persons onside is in center.
+COCO_val2014_000000005247_person_skis.jpg#An old man stand in left and a young person stands on a ski in center.
+COCO_val2014_000000005278_person_train.jpg#A train travels in right and three persons stand in right side.
+COCO_val2014_000000005282_car_boat_person.jpg#A car park in left side of the picture and a boat with one person onside parks in right part of the picture.
+COCO_val2014_000000005314_toilet_sink.jpg#A toilet and a sink are in right of the picture.
+COCO_val2014_000000005325_handbag_car_chair_umbrella_person.jpg#A chair is placed in left bottom of the picture. A woman sit on a chair in center and another woman holding an umbrella stands in the left side.Three cars park in right.
+COCO_val2014_000000005328_toilet_sink.jpg#There a toilet in left and a sink in right.
+COCO_val2014_000000005352_cup_pizza.jpg#A pizza is placed in bottom of the picture and two cups in right top.
+COCO_val2014_000000005356_person_airplane_bird.jpg#An airplane parks in center of the picture. A person stands in center  and another person stands in right.
+COCO_val2014_000000005385_person_baseball glove_baseball bat.jpg#Three persons wearing baseball gloves are in the picture. The left one holds a baseball bat.
+COCO_val2014_000000005388_baseball bat_person_baseball glove.jpg#Several persons wearing baseball gloves are in bottom part of the picture. The two persons in right bottom corner hold baseball bat. Many persons gather in upper part of the picture.
+COCO_val2014_000000005394_person_boat_car.jpg#A person steers a boat which likes a car in left of the picture.
+COCO_val2014_000000005412_toilet_sink.jpg#There are two toilets in left and a sink in right.
+COCO_val2014_000000005418_giraffe.jpg#Two giraffes stand in bottom part of the picture.
+COCO_val2014_000000005437_fire hydrant.jpg#There is a fire hydrant in bottom part of the picture.
+COCO_val2014_000000005443_person_skis.jpg#A person stands on a ski in right of the picture.
+COCO_val2014_000000005476_person_surfboard.jpg#Nine persons holding surfboard walk in left and four persons holding surfboards in right.
+COCO_val2014_000000005477_airplane.jpg#Two airplanes parks in the picture.
+COCO_val2014_000000005486_dining table_vase_bottle_potted plant_chair_couch.jpg#On bottom part of the picture are five chairs, a table, a couch, a potted plant, a vase,  and some bottles.
+COCO_val2014_000000005502_person_kite.jpg#Many kites scatter in the whole picture and some persons sit in the center.
+COCO_val2014_000000005503_toilet.jpg#There a toilet in the bottom part of the picture.
+COCO_val2014_000000005513_person_kite.jpg#A girl stands in left and a kite fly in right top of the picture.
+COCO_val2014_000000005529_person_skis.jpg#A person stands on skis in left.
+COCO_val2014_000000005535_bus_traffic light_person.jpg#A bus travels in left and a man walks in right. A traffic light hangs in right top.
+COCO_val2014_000000005540_sandwich.jpg#A sandwich is in right top.
+COCO_val2014_000000005569_tie_sink_person.jpg#A person wearing a tie stand in center of the picture and a sink is in the bottom of the picture.
+COCO_val2014_000000005577_backpack_cat.jpg#A backpack is placed in right and a cat sits in left.
+COCO_val2014_000000005586_person_tennis racket.jpg#A player holds a tennis racket in center. Three persons are in bottom and right of the picture. Many persons gather in top of the picture.
+COCO_val2014_000000005595_book_bird_potted plant.jpg#A book occupies the picture and a potted plant is placed in left.
+COCO_val2014_000000005599_truck_backpack_umbrella_kite_person.jpg#Many persons are on bottom part of the picture and many kites on top part  of the picture.Some umbrellas are placed in middle.
+COCO_val2014_000000005600_spoon_bowl.jpg#A two bowls are placed in center and a spoon in left.
+COCO_val2014_000000005601_person_boat_car.jpg#Three boat and many persons are in bottom of the picture. Some cars park in middle.
+COCO_val2014_000000005617_laptop_bed_cat.jpg#A bed occupies the picture. Two cats lie on the bed and a laptop is placed on left side of the bed.
+COCO_val2014_000000005635_stop sign.jpg#A stop sign is in the center of the picture.
+COCO_val2014_000000005644_person_skateboard_bench.jpg#A person plays skateboard in the center top part of the picture. A bench and some persons are in right.
+COCO_val2014_000000005652_person_cell phone.jpg#A baby is using an cell phone in the picture.
+COCO_val2014_000000005670_person_scissors.jpg#A young man is using scissors in the picture.
+COCO_val2014_000000005673_person_cell phone_cup.jpg#A man is using an cell phone with a cup on hand in left of the picture.
+COCO_val2014_000000005690_train.jpg#A train travels in bottom of the picture.
+COCO_val2014_000000005694_bird.jpg#A bird is in left.
+COCO_val2014_000000005706_bird.jpg#A bird is in center.
+COCO_val2014_000000005713_tv_person_mouse_keyboard.jpg#A tv and a keyboard are placed in center. A young sit on left and another young man sits on right.
+COCO_val2014_000000005723_horse.jpg#Six horses stand in center of the picture.
+COCO_val2014_000000005724_fork_cake_carrot_knife_dining table.jpg#A dining table domains the picture.There a knife in top, a knife in right, a fork in left, a cake in left, a cake and some carrots in bottom.
+COCO_val2014_000000005728_person_frisbee_bench.jpg#Four persons play frisbees in bottom. In the center of the picture is a bench.
+COCO_val2014_000000005754_donut.jpg#Ten donuts scatter in the picture.
+COCO_val2014_000000005758_clock.jpg#A clock hangs in center of the picture.
+COCO_val2014_000000005802_cup_backpack_bowl_person_bottle_knife.jpg#Some knives and bowls are in right. A backlog and some cups, bottles are in left.Two persons stand in center of the picture.
+COCO_val2014_000000005804_keyboard_chair_cat_laptop_potted plant.jpg#A chair and a potted plant are in left bottom part of the picture. A laptop and a keyboard are in center. A cat, a chair and a potted plant are in top.
+COCO_val2014_000000005816_remote_bottle_bed.jpg#A bed is in bottom. A bottle and a remote are in left.
+COCO_val2014_000000005820_bench.jpg#A bench is in left.
+COCO_val2014_000000005860_person_cell phone_umbrella_cup.jpg#Two cups and an cellphone are in center. An umbrella is placed in left and two persons sit under the umbrella. Another person sit on the right of the picture.

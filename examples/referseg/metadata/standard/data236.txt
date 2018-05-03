@@ -1,0 +1,1030 @@
+COCO_train2014_000000017481_toothbrush_sink_bottle.jpg#Toothbrush is on the right of the bottle. The bottle and toothbrush are both on the sink.
+COCO_train2014_000000017210_person_donut_dining table_chair_cup.jpg#The dining table is on the bottom of the image.The donut is on the dining table. The cup is also on the dining table. A person is sitting on the chair. There is another chair on the left of the person and on the top of the table.
+COCO_train2014_000000018670_dining table_bowl_spoon_cake_banana_knife.jpg#The dining table fills the whole image. A spoon is on the bowl. There are two knives around the bowl. A lot of bananas are on the top of the cake. The cake is in the center of the image.
+COCO_train2014_000000017181_person_sports ball_tennis racket.jpg# A person is holding the tennis racket.The ball is in front of the person. Another person is behind the one holding tennis racket.
+COCO_train2014_000000020987_person_tennis racket.jpg# A person is holding the tennis racket. She is in front of the image.
+COCO_train2014_000000021292_person_banana.jpg#A person is holding a banana. Another person is behind this person.
+COCO_train2014_000000015356_car_person_bus.jpg# A bus is in the center of the image. There are two people inside the bus. Another car is on the right of the bus.
+COCO_train2014_000000015653_orange_carrot_sink_bottle_dining table.jpg#Several carrots are on the dining table. Two oranges are also on the dining table.The sink is behind the dining table. The dining table is in the bottom of the image.
+COCO_train2014_000000018290_person_sports ball_baseball glove_baseball bat.jpg# There are many people in this image. A person is holding the baseball bat. The person with baseball glove is on the left-bottom of the person with baseball bat.
+COCO_train2014_000000016823_cup_dining table_bowl_cat_person_chair_knife.jpg#The dining table is in the bottom of the image. A bowl, a knife and a cup are on the dining table. A person is sitting in front of the table. A cat is on the right of the person.
+COCO_train2014_000000020651_person_spoon_bowl_microwave_pizza.jpg#Four people are standing together. The microwave is behind these people. A bowl and a spoon are on the right of the people. A pizza is surrounded by people.
+COCO_train2014_000000018389_person_backpack_bench.jpg#Two people are sitting on the bench. There is a backpack below the people. They are all on the right side of the image.
+COCO_train2014_000000019635_car_laptop_keyboard_wine glass.jpg#A laptop is on the left of the image. A wine glass is on the right of the image.Inside the laptop, there are several cars.A keyboard is in the bottom of the laptop
+COCO_train2014_000000017553_oven_bowl_refrigerator_bottle_sink.jpg#A refrigerator is on the left of the image. Several bowls are on the right side of the sink. A oven is in between of the refrigerator and the sink.
+COCO_train2014_000000020727_person_airplane.jpg#A plane is in front of the person.
+COCO_train2014_000000014740_person_fire hydrant_truck.jpg# Three people are in this picture. A truck is behind the people. A fire hydrant is on the right side of the people.
+COCO_train2014_000000020512_giraffe.jpg# A giraffe is in this picture.
+COCO_train2014_000000021183_person_bench_bicycle_tie.jpg# A person wears a tie is sitting on the bench.There are five people in total in the image. The person sitting on the bench is also holding the bicycle.
+COCO_train2014_000000014864_person_sports ball_tennis racket.jpg#Two same people are holding tennis racket. The sports ball is on the tennis racket.
+COCO_train2014_000000019698_person_baseball glove_baseball bat.jpg#Five people are in this picture. A person is holding the baseball bat.
+COCO_train2014_000000016758_person_horse_truck_tie.jpg#Some people are on the horses. There are two horses in this picture. There is a truck on the right of the image.
+COCO_train2014_000000015203_oven_pizza.jpg#A pizza in on the oven.
+COCO_train2014_000000016334_cake_knife_dining table.jpg# A cake is on the dining table. A knife is beside the cake.
+COCO_train2014_000000016408_bird.jpg# A bird is in the center of the image.
+COCO_train2014_000000017651_zebra.jpg# A zebra is in the image.
+COCO_train2014_000000017545_vase_couch.jpg#A base is in front of the couch. The couch is on the left side of the image.
+COCO_train2014_000000018441_airplane.jpg# An airplane is in the center of the image.
+COCO_train2014_000000019146_chair_book_clock_bed_potted plant.jpg#A chair is in the left bottom corner of the image.A clock and a potted plant is at either side of the bed. A book is also nearby the bed.
+COCO_train2014_000000014807_person_chair_tennis racket.jpg# A lot of people are sitting on the chair. A single person is holding the tennis racket.
+COCO_train2014_000000017154_mouse_keyboard.jpg# The keyboard is on the left bottom of the image. The mouse is on the right top of the keyboard.
+COCO_train2014_000000017914_person_laptop_bed_cat.jpg# a person is holding a cat.The laptop and the cat are all on the bed.
+COCO_train2014_000000015297_person_cat.jpg#A cat is by a person's feet.
+COCO_train2014_000000018748_kite.jpg# A kite is in the center of the image.
+COCO_train2014_000000017761_teddy bear.jpg# A teddy bear is in the center of the image.
+COCO_train2014_000000018183_clock.jpg# A clock is in the center of the image.
+COCO_train2014_000000017890_sheep.jpg# A sheep is in the center of the image.
+COCO_train2014_000000016805_car_fire hydrant.jpg#Some cars are on the top of the image.A fire hydrant is in front of the image.
+COCO_train2014_000000019906_person_motorcycle.jpg#A lot of people are behind the motorcycle. They are all in the top of the image.
+COCO_train2014_000000017316_toilet.jpg# In the center of the image there is a toilet.
+COCO_train2014_000000018377_person_chair_knife_pizza.jpg#A person is siting on a chair holding a knife cutting a pizza.
+COCO_train2014_000000020720_tv_laptop_mouse_cell phone.jpg# A TV is behind the laptop.A mouse is on the left of the laptop.
+COCO_train2014_000000018614_handbag_person_fire hydrant.jpg#Some people are in the further place, some people are near.The nearest person is holding a handbag. the fire hydrant is on the left.
+COCO_train2014_000000014862_zebra.jpg#A zebra is in the center of the image.
+COCO_train2014_000000014757_car_dog_person.jpg#A dog is on the left of the image. The dog is in the car. A person can be seen in the car.
+COCO_train2014_000000016468_person_chair_remote.jpg# Two people are in the center of the image.A person is holding a remote. A person is sitting on a chair.
+COCO_train2014_000000020747_giraffe.jpg#A giraffe is in the center of the image.
+COCO_train2014_000000017697_person_car_suitcase_dog_motorcycle.jpg# a person is inside the motorcycle.A suit case is behind the person, and also on the motorcycle.A car is in front of the motorcycle.
+COCO_train2014_000000020542_person_cell phone.jpg# A person is holding a cell phone.
+COCO_train2014_000000020031_toilet.jpg#A toilet is in the center of the image.
+COCO_train2014_000000017938_handbag_person_skateboard.jpg#There are three people in the image. The skateboard are each under a person. A person is also holding a handbag.
+COCO_train2014_000000017629_bird_apple.jpg# a bird is above an apple.
+COCO_train2014_000000020376_toothbrush_person_couch.jpg# Two people are above the couch.
+COCO_train2014_000000018093_person_chair_bowl_oven_dining table.jpg# A person is sitting on a chair. This person is holding a bowl. The oven is around the image. The bowl is on the dining table.
+COCO_train2014_000000020818_donut_cup.jpg# Two donuts are on the left bottom of the cup.
+COCO_train2014_000000015474_oven_cat.jpg# A cat is on the right of the oven.
+COCO_train2014_000000014768_person_umbrella_car.jpg#The umbrella is above the person.The car is on the right side of the left side of the person. There are 3 people in the image.
+COCO_train2014_000000017587_fork_cup_dining table_bowl_donut_person_book_chair.jpg#Two people are in the picture.Both of them are having a bowl.On the dining table there are 3 bowls, a folk and 3 donuts.There are also some chars between the people.
+COCO_train2014_000000019681_tie_car_person_truck_bus.jpg#The bus is in the center of the image. There are 3 people in the bus.A truck is on the left of the bus. 2 cars are on the right.
+COCO_train2014_000000018766_umbrella_bicycle.jpg#There is a bike behind the umbrella. They are in the bottom of the image.
+COCO_train2014_000000018265_person_skis.jpg#A person above the skis is in the right side of the image.
+COCO_train2014_000000016465_person_sports ball.jpg#Two people together in the center of the image. A sports ball is on a person.
+COCO_train2014_000000016526_person_bicycle_tie.jpg#A person with a tie is behind the bicycle.They are in the center of the building.
+COCO_train2014_000000014812_cup_dining table_bowl_bottle_chair_knife.jpg#A cup, 2 bowls, 2 bottles and a knife are on the dining table. a chair is under the dining table.
+COCO_train2014_000000015391_person_bear.jpg# A bear is in the center of the image. A person is on the right of the bear.
+COCO_train2014_000000016672_person_traffic light_truck_motorcycle_car.jpg# A lot of cars are in the picture.Among them there are a motorcycle ride by a person, two trucks and two traffic light.
+COCO_train2014_000000016273_fork_dining table_cup_scissors_vase_person_spoon_bottle_potted plant_cake_wine glass_chair_cell phone.jpg#Four people are in the image. 7 cups, a scissors, a vase, at least 2 spoons, 1 knife and a bottle are on the dining table
+COCO_train2014_000000020253_tie_laptop_book_chair_person.jpg#A lot of people are in the image. 2 of them are wearing ties.
+COCO_train2014_000000019375_person_frisbee.jpg#A lot of people are holding 4 frisbees.
+COCO_train2014_000000018801_wine glass_bottle.jpg#A lot of bottles are in the image. A wine glass is above them.
+COCO_train2014_000000016210_tie_cell phone_person.jpg#A person with a tie and a cell phone is in the center of the building.
+COCO_train2014_000000018072_dining table_mouse_cat.jpg#A mouse and a cat are both on the dining table.
+COCO_train2014_000000018011_fork_carrot_bowl_broccoli.jpg#A fork, some carrots and some broccoli are in the bowl.
+COCO_train2014_000000020315_person_dog_bench.jpg#Some people and 2 dogs are on the bench.
+COCO_train2014_000000018743_person_horse.jpg#A lot of people and a horse are in front of the building.
+COCO_train2014_000000016825_zebra.jpg# Two zebras are in the middle of the image.
+COCO_train2014_000000020613_car_dog.jpg# A car is full of the image. Inside the car, there is a dog.
+COCO_train2014_000000021175_car_traffic light_truck.jpg#Some cars and a truck are under the traffic light. They are in the bottom of the image.
+COCO_train2014_000000018395_vase_potted plant.jpg# A potted plant is on the top of the vase.
+COCO_train2014_000000017945_car_umbrella_person.jpg#Some people are in the middle of the image. One of the person is holding an umbrella.
+COCO_train2014_000000018704_person_sports ball_baseball glove.jpg# A person with a sports ball on his top and a baseball glove in the middle is in the image.
+COCO_train2014_000000018090_car_fire hydrant_skateboard_person.jpg# 5 people are in the image.The person on the right have a skateboard on the bottom. a fire hydrant is in the middle of the people.
+COCO_train2014_000000016573_giraffe.jpg# A giraffe is in the middle of the image.
+COCO_train2014_000000018641_tv_person_book_remote.jpg# Two people are in the left of the image. The people are holding two remotes. Some books are in the right of the image.
+COCO_train2014_000000017108_person_backpack_apple_banana.jpg# some people are in the right of the image. A person with backpack on his right is in the right of the building.
+COCO_train2014_000000015276_person_motorcycle_car.jpg#A person on the motorcycle is in the middle of the image. some cars are in the left of the image.
+COCO_train2014_000000021049_person_surfboard.jpg#A person on surfboard is in the center of the image.
+COCO_train2014_000000017703_person_surfboard.jpg#A person on surfboard is in the center of the image.
+COCO_train2014_000000018973_bottle_cup_dining table_bowl_spoon_oven_potted plant.jpg# Some bowls and a potted plant is on two dining tables. A oven is next to the dining table. Some spoons and a bottle is above the oven.
+COCO_train2014_000000018647_zebra.jpg#A zebra is in the center of the image.
+COCO_train2014_000000020087_cup_dining table_cat_sink_oven_vase_clock_knife.jpg#A cat is on the dining table. A oven is to the right of the dining table. A clock, a knife and a vase is above the oven.
+COCO_train2014_000000018917_bowl_broccoli.jpg# Some broccolis are in the bowl.
+COCO_train2014_000000018327_person_wine glass.jpg# A person with a wine glass is in the image.
+COCO_train2014_000000019374_person_pizza_bottle_dining table.jpg# Some person are above the dining table. There is a pizza and a bottle on the dining table.
+COCO_train2014_000000020398_car_fire hydrant.jpg# A fire hydrant is in the middle of the image. Two cars are on the top corners of the image.
+COCO_train2014_000000017004_dog_couch.jpg#A dog is in front of the couch.
+COCO_train2014_000000015269_handbag_person_chair_tennis racket_bottle.jpg#A person with a tennis racket is in the middle of the image. 3 people and 2 tennis rackets are in the image. 2 chars and a handbag and a bottle is also in the image.
+COCO_train2014_000000019546_bottle_cup_dining table_bowl_vase_sink_oven_chair.jpg# Some chairs are under the dining table. Some bottles and a vase is on the dining table. A sink and a oven is on the top of the dining table.
+COCO_train2014_000000014844_person_kite.jpg# A person is in the left of the image, and a kite is on the right.
+COCO_train2014_000000017174_person_stop sign.jpg# A person is under the stop sign.
+COCO_train2014_000000019994_remote_vase_person_potted plant_chair_couch.jpg# a person holding a remote is in the center of the image. Behind the person is a chair, a vase , a couch and a potted plant.
+COCO_train2014_000000021169_handbag_person_scissors.jpg# A person and a scissors is in the front of the image. behind them there are many handbags.
+COCO_train2014_000000016317_traffic light_bicycle_stop sign.jpg# A lot of traffic lights are among the image. Some bicycle and a stop sign are under the traffic lights.
+COCO_train2014_000000016314_person.jpg# There is a person in the center of the image.
+COCO_train2014_000000020857_banana.jpg# There are some bananas in the center of the image.
+COCO_train2014_000000014488_car_stop sign_truck.jpg# Some cars are under a stop sign. on the left of the image there is a truck.
+COCO_train2014_000000016814_handbag_bus_traffic light_umbrella_person.jpg# Some people are under two umbrellas with handbag.
+COCO_train2014_000000017870_clock.jpg#There is a clock on the left side of the image.
+COCO_train2014_000000019528_orange_chair_dog_apple.jpg# There is a dog on the right side of the image. A orange and a chair is on the top of the dog.
+COCO_train2014_000000015588_person_skateboard.jpg# A lot of people are in the image. Two of skateboards are in the image.
+COCO_train2014_000000014662_person_horse_backpack.jpg# Some people and some horses are in the middle of the image.
+COCO_train2014_000000016509_handbag_person_chair_tennis racket.jpg#A person is holding tennis racket. Two people are sitting on the chair.
+COCO_train2014_000000019949_person_elephant.jpg #a person is in the left bottom of the elephant.
+COCO_train2014_000000020039_car_truck.jpg# The truck is in the middle of the image.The car is on the right.
+COCO_train2014_000000020576_bottle_knife.jpg# A bottle is on the right side of the knife.
+COCO_train2014_000000019472_person_sports ball_baseball bat.jpg# A person with a baseball bat is in the center of the image.Two people is in the right bottom.
+COCO_train2014_000000019013_chair_dining table_vase.jpg# A vase is in the center of the dining table. The dining table is in the bottom of the image.The chair in on the top right of the dining table.
+COCO_train2014_000000018473_laptop_book_dog_chair_couch.jpg# The couch is in the left bottom of the image. Next to the couch is a dog , and then a chair, and a laptop.
+COCO_train2014_000000015346_car_traffic light.jpg#There are a lot of traffic lights in the image. A group of car is in the right ,and a group in the left.
+COCO_train2014_000000017096_person_skis.jpg# A person is in the center of the image. The skis is on the bottom of the person.
+COCO_train2014_000000015382_person_sports ball_tennis racket.jpg#A person is next to the tennis racket.
+COCO_train2014_000000019134_car_skateboard_truck_person.jpg# A person is left to the skateboard.The cars are behind.
+COCO_train2014_000000015174_toilet_sink.jpg# The toilet is on the left to the sink.
+COCO_train2014_000000018930_person_sports ball_baseball glove.jpg# Two people are wearing baseball glove, having one sports ball in the middle of the image.
+COCO_train2014_000000016080_person_backpack.jpg#A person in on the right side of the backpack.
+COCO_train2014_000000019558_bird.jpg# A bird is in the center the image.
+COCO_train2014_000000019145_sink.jpg# A sink is in the center the image.
+COCO_train2014_000000020509_person_skateboard.jpg# A person is on the skateboard.
+COCO_train2014_000000017936_couch_remote_book_cat.jpg#A remote, a cat and a book are on the couch.
+COCO_train2014_000000015652_person_giraffe_car.jpg#A giraffe is in the center of the image. Some people are on the left. A car is behind the giraffe.
+COCO_train2014_000000020677_bowl_bird.jpg#A bird is on the left top of the bowl.
+COCO_train2014_000000016673_giraffe.jpg# A giraffe is in the center of the image.
+COCO_train2014_000000014575_person_bed.jpg# A person is on the bed.
+COCO_train2014_000000014726_handbag_bus_backpack_person.jpg# Some people are on the left and right side of the bus. There are two buses in the image.
+COCO_train2014_000000020839_clock_car_traffic light_bench_truck_potted plant.jpg# A lot of the cars are in the image. Some traffic lights, a bench , some trucks and a potted plant are scattered in the image.
+COCO_train2014_000000019093_fork_sandwich_cup_dining table_bowl_spoon_bottle.jpg# A sandwich and a fork is on the bowl. The bottles and a cup are all on the dining table.
+COCO_train2014_000000014774_toilet_sink_potted plant.jpg#A potted plant is on the sink. A toilet is on the right of the sink.
+COCO_train2014_000000016253_person_kite.jpg# A person and a kite are in the image.
+COCO_train2014_000000019380_toothbrush_bowl_sink_bottle.jpg# Some bowls, two bottles and some toothbrush are in the image.
+COCO_train2014_000000019193_car_person_clock_bus.jpg# A bus is in the center of the image. Some cars are on the left and right side of the bus. two people are in the bus.
+COCO_train2014_000000015902_person_skateboard_car.jpg# Some people are on the top of the image.The skateboard is under the person.
+COCO_train2014_000000014759_donut.jpg#Some donuts are in the image.
+COCO_train2014_000000018425_giraffe_truck.jpg# Two giraffes are in the image.
+COCO_train2014_000000018155_couch_dog_cat.jpg# A dog and a cat are on the couch.
+COCO_train2014_000000016737_car_cell phone_person.jpg# A person with cell phone is in front of the car.
+COCO_train2014_000000017675_person_airplane_truck.jpg# A truck is under the airplane.
+COCO_train2014_000000014969_person_cell phone.jpg#A person with cell phone is in the image.
+COCO_train2014_000000016665_handbag_car_traffic light_person.jpg# Some cars are in the bottom of the image. A person with handbag is in the left of the image. Some traffic lights are above the cars.
+COCO_train2014_000000017873_zebra.jpg#A zebra is in the center of image.
+COCO_train2014_000000015151_tie_bottle_person.jpg# A person with a tie and a bottle is in the picture.
+COCO_train2014_000000020849_tie_car_chair_person.jpg# A lot of people are on the chairs. There are some cars on the top of the people.
+COCO_train2014_000000021276_person_cell phone_remote_backpack.jpg# A lot of people are in the image.Two remotes and a backpack are in the image.
+COCO_train2014_000000018276_spoon_sandwich_bowl_dining table.jpg#A bowl and a spoon and a sandwich are all on the dining table.
+COCO_train2014_000000017438_cat.jpg# A cat is in the image.
+COCO_train2014_000000016670_person.jpg# A person is in the image.
+COCO_train2014_000000018723_clock.jpg# # A clock is in the image.
+COCO_train2014_000000018194_person_skis.jpg# Some people are in the image. The skis is under the person.
+COCO_train2014_000000016955_clock.jpg# A clock is in the image.
+COCO_train2014_000000019932_car_truck.jpg#A car and a truck are in the image.
+COCO_train2014_000000018942_tv_person_clock_remote_couch.jpg#A man is on the couch. A TV is to the left. A remote is on the person.
+COCO_train2014_000000020540_person_snowboard.jpg#A person with a snowboard on him in in the middle top of the image.
+COCO_train2014_000000019096_person_skis.jpg#Four people with skis on top of them are in the image.
+COCO_train2014_000000016765_airplane.jpg#A plane is in the center of the image.
+COCO_train2014_000000019202_car.jpg# A car is in the bottom of the image.
+COCO_train2014_000000015008_dog_couch.jpg# A dog is on top of the couch.
+COCO_train2014_000000015302_baseball glove_baseball bat_backpack_bench_person_chair.jpg# A lot of people are in the image.A bench, a backpack and a baseball glove and a chair are in the image.
+COCO_train2014_000000014644_person_skateboard.jpg# A person and a skateboard are in the right side of the image.
+COCO_train2014_000000016544_carrot.jpg# Two carrots are in the middle bottom of the image.
+COCO_train2014_000000016486_tie_truck_person.jpg#A truck is in the top of the image. Two people are behind the truck.
+COCO_train2014_000000017583_person_kite.jpg# A lot people are in the bottom of the image.
+COCO_train2014_000000018866_person_traffic light_motorcycle_car.jpg# A lot of people are on the motorcycle. A TRAFFIC LIGHT and some cars are in the center of the image.
+COCO_train2014_000000015794_person_clock_cup_donut.jpg#Three people are on the left side of the clock and donuts.
+COCO_train2014_000000018211_bed_cat.jpg# Some cats are on the bed.
+COCO_train2014_000000016335_horse.jpg# Two horses are in the middle of the image.
+COCO_train2014_000000015930_teddy bear_book.jpg# A teddy bear is on a stack of books.
+COCO_train2014_000000014750_bicycle.jpg#A bicycle is on the bottom of the image.
+COCO_train2014_000000020133_cell phone_banana_dining table.jpg# A banana, some cell phones are on the dining table.
+COCO_train2014_000000018333_handbag_dining table_bottle_pizza.jpg# A pizza ,a bottle and a handbag are on the dining table.
+COCO_train2014_000000015239_tie_bottle_person.jpg# A person with a tie and a bottle is in the middle of the image.
+COCO_train2014_000000014622_train.jpg# A train is in the center of the image.
+COCO_train2014_000000018217_person_skis.jpg#A person with skis is in the middle of the image.
+COCO_train2014_000000016040_traffic light.jpg# Some traffic light are scattered around the image.
+COCO_train2014_000000018564_person_truck_bottle.jpg# A person is in the bottom of the image.A truck carrying a lot of bottles is in the top right of the image.
+COCO_train2014_000000021260_orange_bowl_banana_apple.jpg#Alot of oranges and apples are on the bowl.
+COCO_train2014_000000020308_person_train.jpg#A lot of people are on the train.
+COCO_train2014_000000016099_person_surfboard.jpg# A person is above the surfboard.
+COCO_train2014_000000016119_bowl_bear.jpg# A bear is above the bowl.
+COCO_train2014_000000016980_cake_person_spoon_chair_dining table.jpg#Two people are on the left top of the dining table. A spoon, a chair and a cake is on the dining table.
+COCO_train2014_000000020145_clock.jpg#A clock is on the top of the image.
+COCO_train2014_000000017320_sports ball_dog.jpg# A dog and a sports ball is in the center of the image.
+COCO_train2014_000000020213_vase_potted plant.jpg# A vase is under the potted plant.
+COCO_train2014_000000016173_dining table_person_spoon_cake_tie_knife.jpg# A person with a tie is above the dining table. On the table is a cake, a knife and a spoon.
+COCO_train2014_000000018312_apple.jpg# A lot of apples are scattered in the image.
+COCO_train2014_000000019769_person_potted plant_elephant.jpg# A person is under the elephant. A potted plant is on the right of the elephant.
+COCO_train2014_000000020640_handbag_car_parking meter_person.jpg#A handbag is in the car. A lot of cars are in the image.
+COCO_train2014_000000016757_orange_chair_cup_bowl_dining table.jpg#A orange,  some bowls and a cup are on the dining table.A chair is behind the table.
+COCO_train2014_000000021197_dining table_cup_bowl_person_bottle_pizza.jpg#A pizza a bottle and a cup are on the dining table. The hand of a person is on the dining table.
+COCO_train2014_000000015678_dining table_bowl_person_oven_tie_chair.jpg#Several people are in the picture. Among them are a bowl, a oven and a chair.
+COCO_train2014_000000019023_sink_bottle_cup.jpg# A bottle and a cup are on the sink.
+COCO_train2014_000000014876_person_sports ball_car_baseball bat.jpg# A person and a baseball bat are in the bottom of the image.
+COCO_train2014_000000015122_person_sports ball_baseball glove.jpg#A person and a baseball glove are in the center of the image.
+COCO_train2014_000000018041_person_sports ball_tennis racket_bottle.jpg#A person and a tennis racket are in the right side of the building.
+COCO_train2014_000000016060_umbrella_car_traffic light_bench_person_handbag.jpg#A group of people are in the right side of the building. Some people with an umbrella, and a handbag and some cars are along two sides.
+COCO_train2014_000000015394_person_chair_baseball bat.jpg# A group of people are sitting in chairs on the top of the image.
+COCO_train2014_000000014985_car_truck_surfboard_person.jpg# There are three cars, one truck, three people in the image.
+COCO_train2014_000000019987_tv_cat.jpg#A tv is on the left side of the cat.
+COCO_train2014_000000020711_person_skis.jpg#A person is on the skis.
+COCO_train2014_000000015944_sandwich_cup_dining table_bowl_spoon_cake_knife.jpg#A bunch of sandwiches, three cups and a bowl, some cakes and a knife are on the dining table.
+COCO_train2014_000000017474_handbag_car_umbrella_bird_person.jpg#A lot of people are on the left and right side of the image. Four cars and one umbrella are in the image.
+COCO_train2014_000000019665_remote.jpg#A remote is in the image.
+COCO_train2014_000000016890_vase_potted plant.jpg#A potted plant is on the vase.
+COCO_train2014_000000018006_bus_person.jpg#Three buses are in the image.
+COCO_train2014_000000019131_handbag_chair_suitcase_microwave_cat.jpg# A cat, a chair a suitcase and a microwave are in the image.
+COCO_train2014_000000021281_person_clock.jpg#A person is in the left side of the image. Five clocks are on the right side of the image.
+COCO_train2014_000000019707_person_backpack_umbrella_skateboard.jpg#Some people are in the image. One skate board is under a person.
+COCO_train2014_000000020517_car_traffic light_clock.jpg#Two cars, 2 clocks and some traffic lights are in the image.
+COCO_train2014_000000021136_bus_truck.jpg# Two buses and a truck is in the image.
+COCO_train2014_000000015354_handbag_person_book_bench.jpg# A person ,a handbag and a book are on the bench.
+COCO_train2014_000000018250_person_skateboard.jpg#A person with a skateboard is in the image.
+COCO_train2014_000000020184_person_skis.jpg#A person with ski is in the image.
+COCO_train2014_000000019838_person_pizza_oven_dining table.jpg# Two people, an oven, a pizza and a dining table is in the image.
+COCO_train2014_000000014783_bowl_apple.jpg# Four apples are in the bowl.
+COCO_train2014_000000018885_person_traffic light.jpg#Some people and two traffic lights are in the image.
+COCO_train2014_000000020768_person_horse_car.jpg#Three horses and four people are in the image.
+COCO_train2014_000000019015_clock.jpg#A clock is in the image.
+COCO_train2014_000000015179_giraffe.jpg# A giraffe is in the center of the image.
+COCO_train2014_000000019766_person_skateboard_car_bus.jpg# Two people and a car and a bus are in the image.
+COCO_train2014_000000017559_handbag_person_book_bench.jpg# A person and a book and a handbag are in the image.
+COCO_train2014_000000018467_carrot_bowl_broccoli_dining table.jpg#Some carrots and some broccoli are on the bowl. The bowl is on the dining table.
+COCO_train2014_000000018466_handbag_person_cup_bench.jpg# Some people with one cup and two handbags are on the bench.
+COCO_train2014_000000018691_person_chair.jpg# Four people are on some chairs.
+COCO_train2014_000000014709_person_baseball bat_bench_baseball glove.jpg#Some people and one baseball glove and one bat and a bench are in the image.
+COCO_train2014_000000020291_person_dining table_bottle_wine glass.jpg# One person and three wine glasses and two bottles are in the image.
+COCO_train2014_000000019609_person_banana.jpg# Some people and a lot of bananas are in the image.
+COCO_train2014_000000016412_car_person_umbrella_bus.jpg#Three people are in the left of the cars. Two umbrellas are above the people.A bus is behind the umbrella.
+COCO_train2014_000000020795_toilet_sink.jpg#A toilet is on the right side of the sink.
+COCO_train2014_000000021089_train_truck.jpg# A train is on the left of the truck.
+COCO_train2014_000000017799_sheep_person.jpg# Alot of people are among the sheeps.
+COCO_train2014_000000019905_person_tennis racket.jpg# A people is on the right bottom of the tennis racket.
+COCO_train2014_000000016669_tv_laptop_mouse_keyboard.jpg# Two TVs are on the top of the keyboard. A mouse is on the left of the keyboard.
+COCO_train2014_000000017625_stop sign.jpg#A stop sign is in the image.
+COCO_train2014_000000015809_teddy bear.jpg# A teddy bear is in the center of the image.
+COCO_train2014_000000015219_fork_cup_dining table_bowl_person_bottle_chair_knife_pizza.jpg#A lot of people and some bottles, two forks and a knife are in the image.
+COCO_train2014_000000018916_person_bicycle.jpg#A A bicycle is on the left to the person.
+COCO_train2014_000000020556_handbag_person_cell phone.jpg#A handbag and a cell phone are on a person.
+COCO_train2014_000000018956_person_motorcycle.jpg#A person is to the left of the motorcycle.
+COCO_train2014_000000018775_person_snowboard.jpg#A person is on the right of the snowboard.
+COCO_train2014_000000015451_handbag_car_bicycle_motorcycle_person.jpg#A lot of motorcycle, three bicycle and a lot of people are in the image.
+COCO_train2014_000000015919_car_skateboard_person.jpg#Five people are in front of a car. A skate board is under a person.
+COCO_train2014_000000016898_clock.jpg#Two clocks are in the image.
+COCO_train2014_000000020527_bus_truck.jpg#A bus is in the image.
+COCO_train2014_000000020436_wine glass_carrot_dining table.jpg#A carrot is on the wine glass. the wine glass is on the dining table.
+COCO_train2014_000000016513_handbag_bus_car_person.jpg#The bus is in front of the image. two people are in the bus. A person and a car are in the right of the image.
+COCO_train2014_000000019581_toilet.jpg#A toilet is in the image.
+COCO_train2014_000000014960_person_skateboard.jpg#A person and a skateboard are coherent in the image.
+COCO_train2014_000000015524_tv_laptop_keyboard.jpg#A laptop is under the TV and next to the keyboard.
+COCO_train2014_000000020063_wine glass_chair_knife_vase.jpg#A wine glass is above the chairs and vases.
+COCO_train2014_000000019929_backpack_book_remote_bed_clock.jpg#Two beds are in the image.A backpack, a book and a remote is on the left bed. A clock is between beds.
+COCO_train2014_000000016343_tv_backpack.jpg#A TV is on the right of the backpack.
+COCO_train2014_000000018633_dog_potted plant.jpg#Two dogs are under one potted plant. Another potted plant is in the right.
+COCO_train2014_000000018359_person_teddy bear_couch.jpg#A teddybear and a person is on the couch.The teddy bear is on the left of the person.
+COCO_train2014_000000016295_clock.jpg#A clock is in the center of the image.
+COCO_train2014_000000020202_person_oven_bowl_refrigerator_bottle.jpg#A person is on the left side of the building. The refrigerator is on top of the a bowl and a oven.
+COCO_train2014_000000018873_cake_train.jpg# A train is on the cake.
+COCO_train2014_000000018994_person_teddy bear_chair.jpg# A teddy bear is on the right of two people. People are sitting on a chair.
+COCO_train2014_000000019501_person_surfboard.jpg# A person is on a surfboard. Another person in on the right.
+COCO_train2014_000000014873_bicycle_traffic light_skateboard_person_handbag_backpack.jpg#A lot of people are in the center of the image.Some skateboard, traffic lights, bicycles and and handbags are among them.
+COCO_train2014_000000015392_person_horse.jpg# Three horses and a person is in the image.
+COCO_train2014_000000021151_person_motorcycle.jpg# A person is on the motorcycle.
+COCO_train2014_000000017975_person_airplane_truck_suitcase.jpg#A car, an umbrella and a lot of people are in the image.
+COCO_train2014_000000020475_book_bed.jpg# A book is on the bed.
+COCO_train2014_000000017856_scissors.jpg# A scissors is in the image.
+COCO_train2014_000000015236_airplane_traffic light.jpg# An airplane is above a traffic light.
+COCO_train2014_000000020853_person_horse.jpg# A lot of people is around a horse.
+COCO_train2014_000000016344_person_snowboard.jpg# A person is on the snow board.
+COCO_train2014_000000016683_airplane.jpg# An airplane is in the center of the image.
+COCO_train2014_000000016418_person_airplane_truck.jpg# An airplane and 3 trucks and a person is in the image.
+COCO_train2014_000000018627_person_traffic light_bicycle_car.jpg# Two traffic lights, some people and some bicycles and cars are in the image.
+COCO_train2014_000000020698_person_sports ball_tennis racket.jpg# A person is to the right of the tennis racket. A sports ball is on the tennis racket.
+COCO_train2014_000000015117_person_chair_dining table_remote_potted plant.jpg#Four people are one by one standing together in the image, with four remotes on their hand.A dining table is on the right side of the person, and the chair is between two people.
+COCO_train2014_000000016950_dog.jpg#A lot of dogs are in the image.
+COCO_train2014_000000020389_person_sports ball_tennis racket.jpg# A person is on the left side of the tennis racket.
+COCO_train2014_000000014493_handbag_person_teddy bear.jpg# A teddy bear is on the left side of the person, and the handbag is on the right side of the person.
+COCO_train2014_000000017578_hot dog_person.jpg#A lot of people are above several hot dogs.
+COCO_train2014_000000017766_person_skateboard.jpg#Many people and two skateboards are in the image.
+COCO_train2014_000000014543_person_snowboard.jpg#Seven people are in the image. Four snowboards are around them.
+COCO_train2014_000000018460_handbag_backpack_bed_bottle_suitcase.jpg# A suitcase is between two beds.a backpack is on the bed on the right side.Two bottles are above the suitcase.
+COCO_train2014_000000016796_sandwich_cup_dining table_bowl_person_carrot_broccoli.jpg#Two sandwiches, two cups, a bowl and some carrot and broccoli are on the dining table. A person is behind the dining table.
+COCO_train2014_000000017751_car_traffic light_stop sign.jpg#A traffic light, a car and a stop sign are in the image.
+COCO_train2014_000000020355_person_elephant.jpg# A person is between two elephants.
+COCO_train2014_000000020929_car_teddy bear.jpg# A car is nearby two teddy bears.
+COCO_train2014_000000019320_person_sports ball_baseball bat.jpg# A person with a baseball bat is on the left side of the sports ball.
+COCO_train2014_000000016383_oven_dining table_cup_toaster_microwave_sink_bottle_potted plant_wine glass_refrigerator.jpg#A potted plant and a cup is on the dining table. Some toasters are on the top of the image.A oven and a microwave is on either side of the dining table.
+COCO_train2014_000000017604_giraffe_zebra.jpg#A giraffe is among a lot of zebras.
+COCO_train2014_000000014988_bus_book_clock.jpg# A clock is on the right side of five books. Under them is a bus.
+COCO_train2014_000000018252_person_motorcycle.jpg# a person is on a motorcycle.
+COCO_train2014_000000016735_giraffe.jpg# Two giraffes are in the image.
+COCO_train2014_000000019552_person_chair_tennis racket.jpg#Two people, one chair and one tennis racket are in the image.
+COCO_train2014_000000014653_person_laptop_teddy bear_bed_keyboard.jpg#Two people, a teddy bear, two laptops are on a bed.
+COCO_train2014_000000016038_bicycle_clock_backpack_person_train_handbag.jpg# Four people with one bicycle, one handbag and one backpack are in front of the train.
+COCO_train2014_000000019794_person_surfboard_clock.jpg# A person is on the right of the surfboard.
+COCO_train2014_000000015744_donut_person.jpg# Some donuts are surrounded by a person.
+COCO_train2014_000000019927_clock.jpg# A clock is in the top of the image.
+COCO_train2014_000000019818_toilet_sink_bottle.jpg# A sink is under two bottles.
+COCO_train2014_000000021268_spoon_carrot_bowl_dining table.jpg# A lot of carrots are scattered on the bowl. A spoon is on the dining table.
+COCO_train2014_000000019918_person_skateboard.jpg# A person is on the skateboard.
+COCO_train2014_000000016470_person_bicycle_motorcycle_suitcase.jpg# A lot of people and many bicycles, a suitcase and a motorcycle are in the image.
+COCO_train2014_000000021075_person_surfboard.jpg# Two people and a surfboard are in the image.
+COCO_train2014_000000017476_tie_person.jpg# Two people and a tie are in the image.
+COCO_train2014_000000015544_person_frisbee.jpg# A girl with a frisbee is in the center of the image.
+COCO_train2014_000000016677_sheep_dog.jpg# A dog is on top of a lot of sheeps.
+COCO_train2014_000000020392_giraffe.jpg# Three giraffes are in the image.
+COCO_train2014_000000015750_toilet.jpg# A lot of toilets are straightly placed in the image.
+COCO_train2014_000000018256_tv_chair_book_remote_couch.jpg# A couch is to the left of a remote.Some books are on the couch, and there is a tv on the right side of the image.
+COCO_train2014_000000015963_truck.jpg#A truck is in the image.
+COCO_train2014_000000018938_tv_chair_couch_vase_potted plant.jpg# Some couches are in the bottom of the image.A vase with a potted plant is on the Tv. Two other bases are on the right of the tv.
+COCO_train2014_000000020579_person_suitcase.jpg#A person with a suitcase in the middle of the image.
+COCO_train2014_000000015927_skateboard.jpg# A skateboard is in the image.
+COCO_train2014_000000014483_orange.jpg#Some oranges fill the image.
+COCO_train2014_000000020434_person_truck_cow.jpg#A person on two cows is in front of the truck.
+COCO_train2014_000000017147_airplane.jpg# An airplane is in the image.
+COCO_train2014_000000017487_person_laptop_cat.jpg#A person on a cat is under a laptop on the right.
+COCO_train2014_000000020168_person_bowl_refrigerator_donut.jpg#A person is in the left of the toilet and refrigerator. He is above a bowl and a donut.
+COCO_train2014_000000015197_tv_remote_laptop_mouse_keyboard.jpg# A TV is to the left of the laptop. A mouse and two keyboards are under the TV and laptop. And there is a remote under the tv
+COCO_train2014_000000018908_person_kite.jpg#A lot of kites and people are in the image.
+COCO_train2014_000000017570_person_boat.jpg#Two people are on a boat.
+COCO_train2014_000000021097_fork_bowl_knife.jpg#A knife and a fork are on a bowl.
+COCO_train2014_000000021048_frisbee_dog.jpg# A dog have a frisbee in its mouth.
+COCO_train2014_000000015658_person_tennis racket.jpg# Two people are in the image. Each of them has a tennis racket.
+COCO_train2014_000000018414_carrot_bowl_broccoli.jpg# Some carrots and some broccolis are in the bowl.
+COCO_train2014_000000019160_giraffe.jpg#A giraffe is in the image.
+COCO_train2014_000000014986_car_cell phone_person.jpg# A cell phone is in a car. Outside the car there is a person.
+COCO_train2014_000000021316_cow.jpg#Two cows are in the middle of the image.
+COCO_train2014_000000021320_chair_microwave_refrigerator.jpg#A refrigerator is in the center of the picture, there is a microwave on the refrigerator. In the right of the image is a chair.
+COCO_train2014_000000021329_tie_person.jpg#A person is in the right of the image, and he wears a tie.
+COCO_train2014_000000021330_car_stop sign_bicycle_fire hydrant_person.jpg#A stop sign is in the middle of the image, and there is a bicycle above the sign. Several cars are at the bottom of the picture, and some people are around the cars. At the right bottom of the image, there is a fire hydrant.
+COCO_train2014_000000021343_car_traffic light_truck_parking meter_bus.jpg#Several traffic lights are in both the left and right side of the picture. Some parking meters are in the left part of the image, while several cars are in the right part of the image. Among the cars, there are some trucks. In the middle of the picture,there is a bus in the distance.
+COCO_train2014_000000021345_chair_cat.jpg#There is a cat in the middle of the image. Behind the cat, there is a chair.
+COCO_train2014_000000021346_giraffe.jpg#A giraffe is in the middle of the picture.
+COCO_train2014_000000021353_tv_couch_remote_dining table_potted plant.jpg#There is a couch in the left part of the picture. There is a potted plant on the left of the couch, while on the right of the couch, there is a dining table. On the dining table, there is a remote. A tv is in the right of the picture.
+COCO_train2014_000000021364_hot dog_bottle.jpg#Some hot dogs are in the middle of the image. In the left of the image, there is a bottle.
+COCO_train2014_000000021374_bus.jpg#A bus is in the middle of the image.
+COCO_train2014_000000021383_person_skis_backpack.jpg#A person is in the middle of the image. He is gliding on skis with a backpack on his back. 
+COCO_train2014_000000021384_clock.jpg#A clock is in the left of the image.
+COCO_train2014_000000021387_sheep.jpg#Several sheep are walking from the right side of the picture.
+COCO_train2014_000000021404_person_clock.jpg#A clock is in the upper half of the picture. Several people are in the bottom of the image. Most of them are in the left bottom.
+COCO_train2014_000000021408_bird.jpg#A bird is in the middle of the image.
+COCO_train2014_000000021417_horse_cow_car_person_truck_suitcase_handbag.jpg#Several cows are in the bottom half of the image. A person is riding a horse in the middle of the picture, with a handbag on the horseback. Behind the person, there are two cars and two trucks. A suitcase is on the top of the car between the two trucks.
+COCO_train2014_000000021419_person_skateboard.jpg#A person is playing a skateboard in the middle of the picture.
+COCO_train2014_000000021423_car_person_umbrella_bench_potted plant.jpg#There are two cars in the image, one of them close to the screen is in the left part of the picture while the other one is in the right. Some people are near the car. One of the people is holding an umbrella. Behind the people, there is a long bench. Some potted plants are in both the left and right side of the picture.
+COCO_train2014_000000021443_giraffe.jpg#Five giraffes are in the middle of the image.
+COCO_train2014_000000021447_chair_dining table_banana_apple.jpg#A dining table is in the picture. On the table, there are some apples in the left and some bananas in the middle. In the right of the picture, there is a chair.
+COCO_train2014_000000021451_dining table_sandwich_bottle_pizza.jpg#A dining table is in the picture. On the table, there are three sandwiches and pieces of pizza. In the right top of the image, there is a bottle.
+COCO_train2014_000000021459_bus_person.jpg#There is a bus in the center of the picture. Some people is in the bus.
+COCO_train2014_000000021462_dining table_clock_person_bottle_handbag_wine glass_chair.jpg#A dining table is in the middle of the image. On the table, there are some wine glasses. Four people are around the dining table. A person in the right has a handbag. In the left side of the person in the middle, there is a chair. In the upper half of the picture between two people, there is a clock. Several bottles are in the right top of the image.
+COCO_train2014_000000021469_cup_laptop_dining table_person_book_chair.jpg#There are some dining tables in the right side of the picture. Some people are sitting at the tables on chairs, while another three people are standing in the left part of the picture. The person close to the screen is talking with her book open. Some others are working with their laptops. Several cups are on their tables. 
+COCO_train2014_000000021475_toilet.jpg#A toilet is in the middle of the picture.
+COCO_train2014_000000021497_fork_dining table_bowl_pizza.jpg#In the middle of the picture, there is a pizza in the bowl on the big dining table. In the right top of the picture, there is a fork.
+COCO_train2014_000000021500_donut_person.jpg#A person is handing a donut to another person.
+COCO_train2014_000000021504_person_spoon_carrot_bowl.jpg#A person is standing in the middle of the picture. In the right of the picture, there are two big bowls. A spoon is in the bowl with carrots in it.
+COCO_train2014_000000021510_horse.jpg#A horse is in the right bottom of the image.
+COCO_train2014_000000021514_dog.jpg#A dog is in the center of the picture.
+COCO_train2014_000000021528_car_backpack_bicycle_person.jpg#Two people are riding bicycles in the picture. The person close to the screen is passing a car. And the one in the left part of the image is shouldering a backpack.
+COCO_train2014_000000021531_fork_dining table_bowl_person_carrot_bottle_pizza.jpg#There is a dining table in the picture. On the table, there is a pizza close to the screen, a bowl with carrot in it in the left, a bottle and a fork in the middle. Two people are sitting at the table.
+COCO_train2014_000000021534_person_cup_donut.jpg#A person is in the middle of the picture. On his right, there is a big donuts. On his left, there are several small donuts. In the left top of the picture, there are two cups. 
+COCO_train2014_000000021535_toilet.jpg#A toilet is in the center of the image.
+COCO_train2014_000000021544_fork_person_carrot_broccoli_pizza.jpg#In the picture, a fork is between two pieces of pizza. Some carrots and broccoli are on the pizzas. In the left top of the picture, there is a person.
+COCO_train2014_000000021553_person_frisbee.jpg#Three people are playing frisbee in the picture. And the frisbee is in the center of the picture.
+COCO_train2014_000000021564_person_snowboard.jpg#A person is playing snowboard in the upper half of the image.
+COCO_train2014_000000021566_dog.jpg#A dog is swimming in the middle of the picture.
+COCO_train2014_000000021569_truck.jpg#Two trucks are in the image. One close to the screen is in the middle, and the other is in the left.
+COCO_train2014_000000021571_car_dog.jpg#A dog is in the center of the picture, looking at a car in the right of the picture.
+COCO_train2014_000000021587_person_skateboard.jpg#A person's feet are on a skateboard in the picture.
+COCO_train2014_000000021595_fork_cup_dining table_bottle_wine glass_knife_pizza.jpg#There is a pizza on a dining table in the middle of the picture, with a fork on its left and a knife on its right. There are also two wine glasses and a bottle in the right top of the picture, a cup and a bottle in the left top of the picture. In the top middle of the picture, there is a knife and a fork.
+COCO_train2014_000000021599_bird_clock.jpg#A clock is in the center of the image. Several birds are flying passing the clock.
+COCO_train2014_000000021622_toilet_cup_vase_sink_bottle_potted plant.jpg#A toilet is in the middle of the picture. And a sink is in the left of the picture. Above the sink, there are two bottles, two cups and a vase with potted plants in it.
+COCO_train2014_000000021632_car_fire hydrant_potted plant_person.jpg#There is a fire hydrant in the middle of the image. Around the fire hydrant, there are two people. Several cars are in the middle far from the screen. In the left of the image, there are some potted plants.
+COCO_train2014_000000021647_car_bicycle_person.jpg#In the left of the picture, there is a person pushing his bicycle. In the right of the picture, there is a car.
+COCO_train2014_000000021650_car_backpack_skateboard_person.jpg#There are several people in the image. The one close to the center of the image is playing a skateboard. In the middle of the image, there is a car far from the screen. In the right of the picture, there is a backpack.
+COCO_train2014_000000021662_person_skateboard.jpg#A person is playing skateboard in the middle of the image.
+COCO_train2014_000000021674_tie_person.jpg#A person is in the left part of the picture. And he wears a tie.
+COCO_train2014_000000021676_car_backpack_suitcase_cell phone_person.jpg#Two people are opening the trunk of a car in the picture. A cell phone is in the pocket of one person. In the trunk, there are two suitcases and a backpack.
+COCO_train2014_000000021678_airplane.jpg#There are some airplanes in the middle of the image.
+COCO_train2014_000000021685_handbag_car_motorcycle_person.jpg#Some motorcycles are in the center of the picture. In the top of the picture, there are some cars. And in the right top of the picture, two people are walking pass the row of motorcycles. One of the people has a handbag.
+COCO_train2014_000000021693_train.jpg#A train is coming from the left to the middle of the picture.
+COCO_train2014_000000021698_carrot_cup.jpg#There are some carrots in the middle of the picture. A cup is in the left of the carrots.
+COCO_train2014_000000021717_cake_person_cell phone_dining table.jpg#There are two people in the image. The person playing his cell phone in the middle of the image has a cake on his head. And in the right of the image, there is also a cake on a dining table.
+COCO_train2014_000000021718_spoon_carrot_bowl_broccoli.jpg#There is a bowl in the center of the picture. Some carrots and broccoli are in the bowl. In the top of the image, a spoon is placed on the bowl.
+COCO_train2014_000000021740_bottle_dining table_clock_bowl_spoon_sink_oven_chair_knife_apple.jpg#There is one dining table in the middle of the image and one dining table in the right of the image. Between the two tables, there are two chairs. On the dining table in the middle, there are two apples, a bottle and a knife. In the left top of the picture, there is a clock. On the left of the clock, there are some bowls. Below the clock, there is a sink. And in the left of the sink, there are some spoons, a knife and an oven. 
+COCO_train2014_000000021747_person_chair_dining table_pizza.jpg#A person is eating a piece of pizza in the middle of the image. He is sitting on a chair at a dining table.
+COCO_train2014_000000021750_fork_cup_dining table_donut_person_spoon_handbag_wine glass_chair.jpg#There are many people in the picture. The little girl sitting in the left of the picture is eating a donut. Behind the old man sitting in the right of the picture, there is a dining table and some chairs. In the bottom half of the picture, there is a dining table with two wine glasses, some cups and spoons on it. In the middle of the picture, a handbag is hanging on a chair and a person is carrying a handbag.
+COCO_train2014_000000021751_person_motorcycle_tie.jpg#There are two motorcycles in the image. A person is sitting on the motorcycle in the middle of the image and he wears a tie.
+COCO_train2014_000000021772_sheep.jpg#Several sheep are in the middle of the picture.
+COCO_train2014_000000021780_person_bench_baseball glove_baseball bat.jpg#Three people are close to the screen in the picture. Two of the three people wears baseball gloves, and one of them is holding a baseball bat. In the top of the picture, there are two benches. Some people are sitting on the benches, while others are standing. 
+COCO_train2014_000000021782_car_fire hydrant_truck.jpg#A fire hydrant is in the left of the image. In the right of the image, there are some cars. Among the cars, there is a truck. And in the left of image, there is a truck, too.
+COCO_train2014_000000021786_car_cell phone_person.jpg#There are three people in the middle of the picture. The person in the right is holding her cell phone. Behind the people, there is a car.
+COCO_train2014_000000021795_scissors_sink.jpg#There is a sink in the center of the image. And a pair of scissors is placed on the sink in the right of the image.
+COCO_train2014_000000021796_person_oven.jpg#An oven is in the middle of the picture. And a person is pushing the oven in the right of the picture.
+COCO_train2014_000000021801_toaster_microwave_refrigerator_oven_knife_sink.jpg#There is a refrigerator in the right of the image. On the left of the refrigerator, there is an oven. A toaster is in the left of the oven and some knives are in the right of the oven. Above the oven, there is a microwave. In the bottom of the picture, there is a sink.
+COCO_train2014_000000021811_car_bus.jpg#Several buses are in the left part of the picture. And some cars are in the left top of the scene.
+COCO_train2014_000000021826_person.jpg#There are two people in the screen. One is close to the screen and the other is far from the screen.
+COCO_train2014_000000021830_backpack_bench_person_train_suitcase_handbag.jpg#There is a person walking pass a row of benches in the middle of the picture. She is carrying a backpack, two suitcases and two handbags. A girl is following her in the right of the picture. There is also a train in the right part of the picture.
+COCO_train2014_000000021846_person_pizza.jpg#There is a pizza in the bottom half of the picture. A person is in the upper half of the picture with his face upturned.
+COCO_train2014_000000021868_chair_dining table_umbrella_cup.jpg#There are several chairs in the image. In the middle of the image, there is an umbrella. In the right of the image, there is a dining table with two cups on it.
+COCO_train2014_000000021872_tv_chair_dining table_remote_couch.jpg#There are two couches in the middle of the picture. Behind the couch, there are some chairs, a TV and a dining table. In the right of the picture, there are three remotes.
+COCO_train2014_000000021883_person_cell phone.jpg#A person is in the middle of the picture. And he is using his cell phone.
+COCO_train2014_000000021895_tie_person.jpg#The image is a portrait of a girl who wears a tie.
+COCO_train2014_000000021902_train.jpg#A train is in the left of the picture.
+COCO_train2014_000000021915_clock.jpg#There is a clock in the right of the image.
+COCO_train2014_000000021921_banana.jpg#There are some bananas in the middle of the picture.
+COCO_train2014_000000021926_person_airplane.jpg#There are many people in the bottom of the picture. And an airplane is in the middle of the picture.
+COCO_train2014_000000021931_dog.jpg#A dog is looking at himself in the mirror in the picture. It is in the center of the picture.
+COCO_train2014_000000021942_person_train_bench.jpg#A train is in the middle of the image. There are many people in the train. In the right of the image, there are some benches.
+COCO_train2014_000000021945_clock.jpg#A clock is in the center of the picture.
+COCO_train2014_000000021963_person_bear.jpg#A bear is in the left half of the image. And a person is in the right of the picture.
+COCO_train2014_000000021964_truck.jpg#A truck is in the right of the picture.
+COCO_train2014_000000021968_hot dog_person_cup.jpg#A person is holding a hot dog in the image. And there are some cups in the left top of the image.
+COCO_train2014_000000021969_clock.jpg#There is a clock in the center of the picture.
+COCO_train2014_000000021972_airplane.jpg#An airplane is in the middle of the image.
+COCO_train2014_000000021981_stop sign_truck_motorcycle.jpg#A truck is in the middle of the picture. And in the upper half of the picture, there is a stop sign. In the bottom right of the picture, there is a motorcycle.
+COCO_train2014_000000021983_person_sports ball.jpg#There are eight people in the image. And the person in the right is holding a sports ball.
+COCO_train2014_000000021991_person_bed.jpg#A person's feet is in the center of the picture. Behind the person, there is a bed.
+COCO_train2014_000000022008_car_traffic light_dog_person_handbag_backpack.jpg#In the center of the image, there is a traffic light. Below the traffic light, there is a dog. There are many people in the image. Four of these people are carrying handbags and the person close to the center is carrying a backpack. In the left of the image, there are some cars.
+COCO_train2014_000000022012_handbag_person_chair_couch.jpg#A couch is placed in the middle of the picture. In the left of the picture, there is a chair with a handbag on it. In the right of the picture, there is a person.
+COCO_train2014_000000022014_chair_couch_clock_vase_potted plant.jpg#There are three couches and chairs in the image. In the middle of the image, there is a vase with potted plant in it. In the left of the picture, there is a clock.
+COCO_train2014_000000022026_person_sink_bottle.jpg#A person is taking photos in the middle of the picture. In the bottom of the picture, there is a sink. On the sink, there is a bottle.
+COCO_train2014_000000022032_car_truck.jpg#There is a car in the left of the image and a truck in the right of the image.
+COCO_train2014_000000022041_spoon_cup_sink_knife_cat.jpg#There is a sink with a spoon, a knife and a cup in it in the center of the image. And a cat is stepping on the sink.
+COCO_train2014_000000022044_person_snowboard_skis.jpg#A person is skiing on a snowboard or skis.
+COCO_train2014_000000022048_person_teddy bear_bed.jpg#A person is sitting on a bed. And there is a teddy bear in the right of the picture.
+COCO_train2014_000000022056_bus_clock_bicycle_motorcycle_person.jpg#A person is riding a bicycle near the center of the image. And a bus is in the left of the image with a person in it. In the center of the image, there is a row of motorcycles. Some people are in the right of the image. In the top, there is a clock.
+COCO_train2014_000000022059_person_kite.jpg#A person is flying a kite in the middle of the picture. And the kite is flying in the right top of the picture.
+COCO_train2014_000000022071_person_backpack_umbrella_motorcycle.jpg#There are many people in the image, some of which are carrying backpacks. Those who are close to the screen are driving motorcycles. There is also one umbrella in the middle, one umbrella in the left.
+COCO_train2014_000000022080_donut_dining table_cup.jpg#The picture shows the surface of a dining table. There are two donuts in the middle of the picture and one donut in the left top of the picture. And in the upper half of the picture, there is a cup.
+COCO_train2014_000000022086_person_teddy bear.jpg#There are two people in the middle of the image. Some teddy bears are around them. 
+COCO_train2014_000000022087_cake.jpg#A cake is in the center of the picture.
+COCO_train2014_000000022097_vase.jpg#There is a vase in the middle of the image.
+COCO_train2014_000000022102_fork_dining table_person_bottle_chair_knife_pizza.jpg#There are three dining tables in the picture. Several people are sitting at the tables. The man in the middle is holding a knife. On the table close to the screen, there are two pizzas, a fork, a knife and several bottles. There are also some bottles on the table in the upper half of the image.
+COCO_train2014_000000022104_fork_cup_carrot_dining table.jpg#The picture shows the surface of a dining table. There are some carrots in the middle of the picture. In the left top of the picture, there is a cup. And there is a fork in the top,too. 
+COCO_train2014_000000022116_person_skis.jpg#A person is standing on skis in the center of the image.
+COCO_train2014_000000022123_person_surfboard.jpg#A person is lying on her stomach on a surfboard in the image.
+COCO_train2014_000000022135_person_skateboard.jpg#There are many people in the picture. The three people close to the screen are skateboarding.
+COCO_train2014_000000022142_bird_apple.jpg#There are two birds in the apple trees in the middle of the image. 
+COCO_train2014_000000022145_fork_cup_dining table_bowl_spoon_carrot_knife.jpg#The picture shows the surface of a dining table. There are several spoons, knives and forks on the table. In the right top of the picture, there is a bowl. And near the bowl, there are some carrots. There is also a cup in the top.
+COCO_train2014_000000022149_dining table_vase_person_zebra_cake_chair.jpg#A person is in the center of the picture. She is sitting on a dining table with one vase on her left and the other on her right. A cake is placed on the table,too. There are two chairs in the picture. On the chair that is in the middle of the picture, there is a toy zebra.
+COCO_train2014_000000022150_spoon_cup_bowl_laptop_dining table.jpg#In the image, a laptop and a cup of coffee are placed on a dining table. The cup is placed in a bowl. And there is a spoon in the bowl,too.
+COCO_train2014_000000022154_tie_car_umbrella_person.jpg#There are several people in the picture. The two main people are in the middle of the scene. The man in the center wears a tie and is sitting on a car, holding an umbrella.
+COCO_train2014_000000022164_bench_clock_potted plant.jpg#There is a clock in the middle of the image. In the bottom of the clock, there are many potted plants. And several benches are in the bottom of the image.
+COCO_train2014_000000022166_sheep.jpg#Many sheep are in the picture. Most of them are in the center, while there is a sheep in the right top of the picture.
+COCO_train2014_000000022174_kite_bird.jpg#There is one kite in the center of the picture and one kite in the right top of the picture. Both kites shape like a bird.
+COCO_train2014_000000022178_giraffe.jpg#A giraffe is in the center of the image.
+COCO_train2014_000000022180_teddy bear_bicycle_laptop_couch_person_handbag.jpg#A teddy bear is put on a bicycle in the left of the picture. Four people are in the right top of the picture. Three of them are sitting on an couch. There exists a laptop near these people,too. In the right of the picture, a handbag is lying on the ground. 
+COCO_train2014_000000022193_bottle_clock_bowl_person_spoon_book_sink_oven.jpg#There is a person in the middle of the image. On her left, there is an oven. In front of the person, there are two bowls, with a spoon in the bowl in the middle. In the left bottom of the image, there is a book. And in the right of the image, there is a sink. A bottle is near the sink. In the top, there is a clock.
+COCO_train2014_000000022194_hair drier_sink_cup.jpg#In the middle of the picture, there is a sink. There is one cup in the left of the sink and one cup in the right of the sink. In the left bottom of the picture, there is a hair drier.
+COCO_train2014_000000022195_person_traffic light_train.jpg#There are four traffic lights in the picture. And two trains are in the left of the picture. In the right of the picture, there is a person in the distance.
+COCO_train2014_000000022198_person_laptop_chair.jpg#There are two people in the middle of the picture. The girl close to the screen is sitting on a chair. In front of her, there is a laptop.
+COCO_train2014_000000022218_airplane_truck.jpg#An airplane is in the center of the image. In the bottom of the image, there is a truck.
+COCO_train2014_000000022222_umbrella_car_backpack_person_handbag_tie.jpg#There are many people in the picture. Some of them are holding umbrellas. The two people in the center are carrying backpacks. The people in the left are carrying some handbags, and one of them wears a tie. There are also several cars in the picture. One car is in the right, and others are in the left of the picture.
+COCO_train2014_000000022223_cow.jpg#Four cows are in the picture. Two of them are in the center and others are in the left top of the picture.
+COCO_train2014_000000022224_traffic light_train.jpg#A train is in the middle of the image and its locomotive is in the right half of the scene. There is also a traffic light in the right half of the image.
+COCO_train2014_000000022226_fork_sandwich_cup_dining table_bowl_spoon_wine glass_knife.jpg#The picture shows the surface of a dining table. There are several spoons in the picture. One spoon is in the left and others are in the right top. There are two forks in the scene. One fork is near the spoon in the left and the other fork is in the right. Near the fork in the right, there is a knife. In the left half of the picture, there is a big sandwich. And in the top of the picture, there exists a bowl, a wine glass and two cups. 
+COCO_train2014_000000022228_handbag_person_backpack_bicycle_motorcycle.jpg#Many people are in the image. Most of them are riding bicycles. And there is a man in the left driving a motorcycle. Two people in the middle are carrying backpacks.
+COCO_train2014_000000022229_car_person_bus.jpg#There is a bus in the center of the picture. Several people are in the car. In the right of the picture, there are some cars.
+COCO_train2014_000000022230_clock.jpg#There are nine clocks in the picture. The biggest one is in the left part of the picture. And the eight small ones are in the right.
+COCO_train2014_000000022240_umbrella_backpack_person_suitcase_handbag_tie.jpg#There are four backpacks, three suitcases and some handbags in the middle of the image. Many people are in the left and right of the picture. Three of them are carrying handbags. One person in the right has a backpack. One person close to the screen is carrying an umbrella. And one person in the left is carrying a suitcase and wears a tie. 
+COCO_train2014_000000022256_apple_dining table_clock_bowl_handbag_bottle_orange_chair.jpg#There is a dining table in the center of the picture. Near the table and close to the screen, there is a handbag. On the table, there are two bottles. Above the table, there is a clock. There are two bowls in the picture. One is on the table, containing some apples and oranges and one is in the left of the picture. In the right of the picture, there are two chairs.
+COCO_train2014_000000022265_person_frisbee_bench.jpg#There are three people in the image. The boy in the middle is throwing a frisbee. In the left half of the image, there is a bench in the distance.
+COCO_train2014_000000022268_tv_clock.jpg#A tv is in the right half of the picture and a small clock is on the left of the tv.
+COCO_train2014_000000022270_scissors.jpg#A pair of scissors is in the left top of the picture.
+COCO_train2014_000000022274_bus.jpg#There is a bus in the center of the image.
+COCO_train2014_000000022275_fork_dining table_cup_bowl_cat_person_bottle_potted plant_handbag_chair_cell phone_knife.jpg#There is a person in the left half of the picture and a dining table in the right half of the picture. On the table, there is a fork, two cups, three bowls, four bottles, a knife and a cell phone. In the right top of the picture, a cat is stepping on the table. Behind the cat, there is a potted plant. And on the left of the cat, there is a handbag. There are three chairs in the picture, one in the right and two in the left.
+COCO_train2014_000000022278_bird.jpg#There is a bird in the left top of the image.
+COCO_train2014_000000022281_person_chair_dog.jpg#Three people are in the scene. One person is in the center and two others are in the left. Four dogs are in the scene. Three of them are around the man in the center and one dog is in the left. There is also a chair in the left of the scene.
+COCO_train2014_000000022287_giraffe_zebra.jpg#There are two zebras in the bottom half of the image and a giraffe in the right half of the image.
+COCO_train2014_000000022291_person_chair_tennis racket.jpg#Many people are in the picture. In the right bottom of the picture, there is a tennis racket. And in the left of the picture, there are two chairs.
+COCO_train2014_000000022298_bus_backpack_bird_person.jpg#A bus is in the middle of the image. Many people are in the bus. The person in the left is carrying a backpack. And a bird is above the bus.
+COCO_train2014_000000022309_traffic light_fire hydrant.jpg#There are six traffic lights in the picture. In the left bottom of the picture, there is a fire hydrant.
+COCO_train2014_000000022326_dog_bed_cat.jpg#The image shows a part of a bed. On the bed, there is a cat and a dog. Both animals are in the middle of the image.
+COCO_train2014_000000022340_knife_pizza.jpg#A pizza is in the middle of the picture. There are two knives in the picture. One is in the top and one is in the right.
+COCO_train2014_000000022355_car_fire hydrant_truck_parking meter_person.jpg#A person is in the left of the picture. On his right, there is a fire hydrant. And in the right of the picture, there is one fire hydrant, too. In the middle of the picture, there is a car. On its left, there is a truck and on its right, there is a parking meter.
+COCO_train2014_000000022360_person_cup_bowl_bottle_potted plant.jpg#There are two people in the middle of the picture. Between the people, there are four potted plants. Near the person in the right, there is a cup. In the left of the picture, there is a bottle and a bowl.
+COCO_train2014_000000022367_person_chair_remote_teddy bear_dining table.jpg#A person is in the center of the image. She is holding two remotes. There are several chairs in the image. One is in the right and the others are in the left. A dining table is in the left of the image, too. And a teddy bear is lying near the person's feet.
+COCO_train2014_000000022374_apple_cup_laptop_dining table_bowl_cat_book_orange.jpg#A cat is standing on a dining table in the middle of the picture. Under the cat's feet, there is a laptop. Behind the cat, there are two cups. On its left, there is a book. There are four bowls in the picture. In the bowl in the left top, there are some oranges and apples.
+COCO_train2014_000000022377_skis.jpg#A skis is in the left half of the scene.
+COCO_train2014_000000022409_umbrella.jpg#An umbrella is in the center of the image.
+COCO_train2014_000000022411_dining table_tv_person_book_bottle_chair_pizza.jpg#There are many people, books and chairs in the image. These people are eating pizzas and there are several bottles near them. Two dining tables are in the picture. One is in the left bottom and one is in the right. A tv is in the right of the image. 
+COCO_train2014_000000022415_chair_cat_vase_potted plant.jpg#There is a cat in the center of the picture. On its left, there is a chair. On its right, there is a vase with a potted plant in it.
+COCO_train2014_000000022427_person_backpack_skateboard_dog.jpg#A person is standing on a skateboard in the left of the image. He is carrying a backpack and a dog is following him.
+COCO_train2014_000000022429_cake_person_train.jpg#There is a cake in the center of the picture. On the cake, there is a train. A person is sitting on the train.
+COCO_train2014_000000022440_bus_car_person.jpg#A bus is in the middle of the image. Several people are in the bus. In the right of the picture, there is another person. And on the left and right of the bus, there are many cars.
+COCO_train2014_000000022447_tv_cell phone_cup_keyboard.jpg#Two tvs occupy most of the scene. Below the tv in the right, there is a cell phone and two cups. In the middle bottom of the picture, there is a keyboard.
+COCO_train2014_000000022448_bowl_vase.jpg#There is a vase in the left half of the picture. In the right half of the picture, there are three bowls.
+COCO_train2014_000000022451_person_couch_remote_cat.jpg#A cat is in a person's arms in the center of the image. The person is on a couch. In the right half of the image, there is a remote.
+COCO_train2014_000000022462_person_dog_couch.jpg#A couch occupies most of the scene. A dog is sitting on the couch in the middle of the image. In the right top of the image, there is a person.
+COCO_train2014_000000022478_tv_backpack_remote_bed_couch.jpg#There is a couch in the right half of the image. On the couch, there are two remotes. In the left of the image, there is a tv. And in the left bottom, there is a bed with a backpack on it.
+COCO_train2014_000000022482_person_sports ball_baseball glove.jpg#The picture can be divided into five parts vertically. In each part, there is a person wearing a baseball glove. He is throwing a sports ball.
+COCO_train2014_000000022484_orange_person_carrot_broccoli_apple.jpg#Many carrots are in the middle of the image. In the right bottom of the image, there are some broccoli. In the left bottom, there is a person. And in the middle, there are many people, oranges and apples far from the screen.
+COCO_train2014_000000022487_person_motorcycle.jpg#There are many people both in the left and right half of the picture. And the people in the left half are driving motorcycles.
+COCO_train2014_000000022500_person_umbrella.jpg#There are several people in the bottom of the picture. On their left, there is an umbrella.
+COCO_train2014_000000022501_person_refrigerator_oven_pizza.jpg#A person is in the middle of the image. On her left, there is an oven. A pizza is in the oven. On her right, there is a refrigerator.
+COCO_train2014_000000022518_cake_fork_dining table.jpg#The picture shows the surface of a dining table. In the center, there is a cake. Above the cake, there is a fork.
+COCO_train2014_000000022525_traffic light_train.jpg#There is a train in the center of the image. In the bottom half of the image, there are six traffic lights.
+COCO_train2014_000000022526_person_chair_remote_dining table.jpg#There are three people in the picture. Several chairs are in the picture. And the people in the left and in the right both are sitting on a chair. The person in the middle is holding a remote. In the right half of the image, there is a dining table. 
+COCO_train2014_000000022529_cell phone_person_backpack_handbag_kite.jpg#There are many people in the picture. And in the upper half of the picture, there are many kites. In the right half, there is a handbag. In the left half, there are two backpacks.
+COCO_train2014_000000022530_person_oven_refrigerator.jpg#In the middle of the image, there is a refrigerator. On its right, there is an oven. In the top of the image, there is a sticker shaped like a person.
+COCO_train2014_000000022536_person_cell phone_backpack.jpg#A person is in the center of the picture. He is carrying a backpack and is using a cell phone.
+COCO_train2014_000000022545_chair_sandwich_bowl_cup.jpg#In the bottom half of the image, there are several sandwiches. In the upper half of the image, there are four bowls. In the right, there is a cup. And in the top, there are several chairs.
+COCO_train2014_000000022564_cake_wine glass_spoon_bowl.jpg#There are four bowls in the picture. In the bowls close to the screen, there are two cakes. In the top of the picture, there is a wine glass and a spoon.
+COCO_train2014_000000022575_car_backpack_suitcase_person.jpg#There is a car in the middle of the picture. In its trunk, there is a backpack and three suitcases. There are two people in the picture. One person is in the left and one person is in the right.
+COCO_train2014_000000022578_sheep.jpg#There are several sheep in the image. The biggest one is close to the screen in the middle.
+COCO_train2014_000000022582_traffic light.jpg#Four traffic lights are in the picture. Two is in the left, one is in the middle bottom and one is in the right.
+COCO_train2014_000000022593_cup_clock_person_bottle_keyboard_mouse_pizza.jpg#There is a person in the left half of the image. He is eating a piece of pizza. Close to his hand, there is a cup and a bottle. In the right of the picture, there is a clock. In the left bottom of the picture, there is a keyboard and a mouse.
+COCO_train2014_000000022612_fork_sandwich_cup_dining table_person_spoon_carrot_bottle_knife.jpg#The picture shows the surface of a dining table. In the middle, there are two sandwiches. Near the sandwich close to the screen, there are some carrots. On its left, there is a fork and a bottle. On its right, there is a spoon. Behind it, there are several cups. And two people are having sandwiches in the background. There are two knives near them.
+COCO_train2014_000000022624_person_skis.jpg#A person is standing on a pair of skis in the middle of the scene.
+COCO_train2014_000000022627_bed_cat.jpg#A cat is lying on a bed in the center of the image.
+COCO_train2014_000000022636_oven_cup_microwave_vase_sink_bottle_refrigerator.jpg#There are many bottles and a cup in the middle of the image. In the left of the picture, there is an oven, a microwave and a vase. In the right of the picture, there is a refrigerator and a sink.
+COCO_train2014_000000022650_person_chair_refrigerator.jpg#There are several people in the picture. Behind the person in the middle, there is a chair. In the right of the picture, there is a refrigerator.
+COCO_train2014_000000022651_wine glass_bottle.jpg#Three wine glasses are in the center of the image. In the right of the image, there is a bottle.
+COCO_train2014_000000022652_handbag_person_skis.jpg#There are many people carrying several skis in the middle of the picture. Two of them are carrying handbags.
+COCO_train2014_000000022658_handbag_person_kite_bench.jpg#A bench is in the center of the image. A person is sitting on the bench. She is unfolding a kite and she has a handbag.
+COCO_train2014_000000022675_person_sports ball_tennis racket.jpg#There is a person in the middle of the image. She is holding a tennis racket. And on her right, there is a sports ball.
+COCO_train2014_000000022683_handbag_person_backpack_umbrella_motorcycle.jpg#There are many people in the picture. The person close to the screen is driving a motorcycle. In the left half of the picture, there are two umbrellas and three handbags or backpacks.
+COCO_train2014_000000022689_person_chair_vase_dining table_toilet.jpg#Three toilets are in the middle of the image. There are two vases. One is on the toilet in the left and one is on the toilet in the right. In the left half of the picture, there are two people and some chairs.
+COCO_train2014_000000022691_person_bowl_microwave_oven.jpg#An oven is in the center of the image. On its right, there is a person. And on its left, there is a microwave. On the microwave, there is a bowl.
+COCO_train2014_000000022696_fork_cup_dining table_person_potted plant_chair_knife_pizza.jpg#There are several people and several dining tables in the picture. Near these dining tables, there are chairs. On the dining table close to the screen, there are seven cups, two pizzas, two knives and a fork. In the right of the picture, there are two potted plants.
+COCO_train2014_000000022704_scissors.jpg#A pair of scissors is in the center of the image.
+COCO_train2014_000000022708_sandwich_cup_hot dog_dining table_person_bottle.jpg#The picture shows the surface of a dining table. In the middle of the picture, there is a hot dog or sandwich. In the right top, there is a cup and a bottle. In the right top, there are two people.
+COCO_train2014_000000022710_stop sign_fire hydrant.jpg#In the right of the image, there is a fire hydrant and a stop sign.
+COCO_train2014_000000022719_person_baseball bat.jpg#A person is in the center of the picture. He is holding a baseball bat.
+COCO_train2014_000000022726_person_airplane_tie.jpg#An airplane is in the middle of the scene. Some people are in the right half of the picture. A tie is in the bottom.
+COCO_train2014_000000022729_horse.jpg#There are four horses in the picture. Two of them are in the middle and the others are in the right top.
+COCO_train2014_000000022740_person_kite.jpg#There are four people and a kite in the middle of the image.
+COCO_train2014_000000022741_bicycle_car_person_truck_motorcycle_bus.jpg#There are four cars in the picture. In the left of the picture, there is a truck and a bus. Many people are in the scene. Most of them are driving motorcycles. The person in the right is riding a bicycle.
+COCO_train2014_000000022757_dining table_laptop_dog_person_keyboard_chair_mouse.jpg#There are two dining tables in the image. Between the two tables, there stands a dog. On the table close to the screen, there is a laptop, a keyboard and a mouse. A person is sitting at the table. And in the left top of the picture, there are some chairs.
+COCO_train2014_000000022767_suitcase.jpg#A suitcase is in the center of the image.
+COCO_train2014_000000022777_backpack_bench_person_book_tie_laptop.jpg#Two people are sitting on a bench in the middle of the picture. They both wears a tie. On the knees of the person close to the screen, there is a backpack and a laptop. In the right bottom of the picture, there is a book.
+COCO_train2014_000000022796_person_skateboard_dog.jpg#There are two people in the image. The person in the middle of the scene is standing on a skateboard. And a dog is on the skateboard, too.
+COCO_train2014_000000022799_person_tennis racket.jpg#There are many people in the center and the top of the image. The person in the center is holding a tennis racket.
+COCO_train2014_000000022806_car_bench_truck_person.jpg#Two people are in the scene. One person is in the left and one person is in the right. In the middle of the scene, there are some cars and a truck. In the left of the scene, there is a bench.
+COCO_train2014_000000022811_person_sports ball_tennis racket.jpg#A person is in the left half of the picture. She is holding a tennis racket. In the right of the picture, there is a sports ball.
+COCO_train2014_000000022815_zebra.jpg#A zebra is in the center of the image.
+COCO_train2014_000000022827_clock.jpg#There are two clocks in the center of the picture.
+COCO_train2014_000000022837_chair_knife_pizza.jpg#A pizza is in the center of the image. In the right bottom, there is a knife. And a chair is in the top of the image.
+COCO_train2014_000000022838_clock.jpg#A clock is in the right bottom of the picture.
+COCO_train2014_000000022854_person_cell phone_mouse.jpg#A cell phone is in the center of the image. A person's hand is holding the cell phone. In the top of the image, there is a mouse.
+COCO_train2014_000000022857_person_bowl_oven_refrigerator_sink.jpg#Two people are in the left half of the picture. Near the person close to the screen, there is an oven and a sink. Near the other person, there is a refrigerator. In the top of the scene, there are some bowls.
+COCO_train2014_000000022863_remote_dining table_cup_couch_person_sink_bottle_cake_chair_vase_cell phone_refrigerator.jpg#A dining table is in the center of the image. Three people are around the table. The people in the left and the right are holding cell phones. On the table, there are two remotes, four cups and two cakes. In the left of the picture, there is a couch. And in the right,there is a chair ,a sink and a refrigerator. In the top, there are some bottles and a vase.
+COCO_train2014_000000022871_person_sports ball_tennis racket.jpg#There are eight people in the picture. Five tennis rackets are in the picture. Two of them is in the right and others are in the left. Several sports balls are in the middle of the picture.
+COCO_train2014_000000022879_book_dog.jpg#Two dogs are in the middle of the image. On the right of the dog close to the screen, there is a book.
+COCO_train2014_000000022880_clock.jpg#Two clocks are in the image. One clock is in the middle and the other is in the right bottom of the scene.
+COCO_train2014_000000022882_person_chair_potted plant_wine glass_dining table.jpg#A person is in the middle of the image. Behind her, there is a potted plant. In the right bottom of the scene, there is a dining table and a wine glass. A chair is in the right, too.
+COCO_train2014_000000022890_chair_bed.jpg#There are two beds in the left half of the picture. In the right bottom, there is a chair.
+COCO_train2014_000000022894_frisbee_dog.jpg#A dog is in the upper half of the image and a frisbee is in the bottom.
+COCO_train2014_000000022899_kite.jpg#There are three kites in the image. One kite is in the left top and two kites are in the center.
+COCO_train2014_000000022907_bird_cat.jpg#There are three birds and a cat in the middle of the image. The cat is close to the screen and the birds are far from the screen.
+COCO_train2014_000000022924_bowl_person_spoon_sink_oven_refrigerator.jpg#Two people are in the scene. One woman is in the center and the other woman is in the right of image. Near the woman in the right, there is an oven, a spoon and a bowl. In the middle of the image, a sink is far from the screen. In the left, there stands a refrigerator.
+COCO_train2014_000000022926_umbrella_boat.jpg#There are two boats in the image. One boat is in the center and the other boat is in the right. Above the boat in the center, there is an umbrella.
+COCO_train2014_000000022928_tv_dog.jpg#Two dogs are in the center of the picture. Far from the screen, a tv is in the middle.
+COCO_train2014_000000022940_person_truck_motorcycle_car.jpg#A person is in the center of the picture. He is riding on a motorcycle. In the upper half of the picture, there are some trucks and cars. In the right, there are another two people.
+COCO_train2014_000000022949_tv_person_remote_potted plant.jpg#A person is in the left bottom of the image. She is holding a remote. In the right half of the image, there is a tv and another two remotes. On the left of the tv, there is a potted plant.
+COCO_train2014_000000022951_oven_cup_bowl_spoon_knife_bottle_refrigerator.jpg#There is an oven in the left of the image and a refrigerator in the right of the image. On the refrigerator, there is a cup, a bowl, a spoon, a knife and a bottle.
+COCO_train2014_000000022953_apple_cup_car_laptop_dining table_bowl_person_book_chair_backpack_pizza.jpg#There are three people and two dining tables in the picture. Several chairs are near the two tables. On the table close to the screen, there is a book, a car, a cup and a laptop. On the laptop, there is a piece of pizza. A backpack is in the left of the picture. On the table in the right, there is a bowl and two cups. Some apples are in the bowl.
+COCO_train2014_000000022954_cow_bowl_oven_bottle.jpg#An oven is in the right bottom of the image. In the left half of the image, there are some bottles and a bowl. In the upper half, there is a cow.
+COCO_train2014_000000022958_clock.jpg#A clock occupies most of the scene.
+COCO_train2014_000000022962_laptop_cat.jpg#A cat is on a laptop in the center of image.
+COCO_train2014_000000022964_person_sports ball_tennis racket.jpg#Two people are in the right half of the picture. The person close to the screen is holding a tennis racket. A sports ball is in the left of the picture.
+COCO_train2014_000000022974_sandwich_cup_couch_person_potted plant_chair.jpg#A person is sitting on a chair in the middle of the image. He is eating a sandwich. In the left of the scene, there is a cup, two couches and a potted plant.
+COCO_train2014_000000022987_person_couch.jpg#A person is sitting on a couch in the center of the picture.
+COCO_train2014_000000023000_person_tennis racket.jpg#A person is holding a tennis racket in the middle of the scene.
+COCO_train2014_000000023004_person_horse.jpg#There are two horses in the middle of the picture. Two people are on the horses and in the right top of the picture, there is another person.
+COCO_train2014_000000023014_giraffe.jpg#Two giraffes are in the center of the image.
+COCO_train2014_000000023015_person_chair_tennis racket.jpg#Many people are in the picture. Most of them are sitting on chairs. The person standing in the middle of the scene is holding a tennis racket.
+COCO_train2014_000000023024_car.jpg#There are several cars in the image from right to left.
+COCO_train2014_000000023025_keyboard_person_laptop_frisbee_cup.jpg#There are four people in the image. Two laptops with keyboard are in the image. One is in the middle and the other is in the left bottom. A cup is in the left, too. In the right of the image, there is a frisbee.
+COCO_train2014_000000023035_boat.jpg#A boat is in the middle of the image.
+COCO_train2014_000000023038_bear.jpg#Two bears are in the left half of the picture. 
+COCO_train2014_000000023047_person_chair_bowl_spoon_cup.jpg#A person is in the right half of the picture. Near him, there is a spoon, a bowl, a bottle and two chairs. The other bottle is in the right of the picture. Close to the screen, there are another two bowls.
+COCO_train2014_000000023050_person_skateboard.jpg#A person is in the center of the image. In the right, there is a skateboard.
+COCO_train2014_000000023054_person_banana.jpg#A person is kissing some bananas in the middle of the image.
+COCO_train2014_000000023066_car_truck_person.jpg#A truck is in the center of the picture. On the truck, there is a person. Several cars are in the left and right of the picture.
+COCO_train2014_000000023072_handbag_person_umbrella.jpg#A person carrying a handbag is in the middle of the scene. She is holding an umbrella. In the left of the picture, there are another two people.
+COCO_train2014_000000023089_car_traffic light_motorcycle_person.jpg#Many people are in the middle of the picture. They all riding on motorcycles. Many traffic lights are in the upper half of the picture. And several cars are in the left and right of the scene.
+COCO_train2014_000000023093_hot dog_scissors_sandwich.jpg#A sandwich containing a hot dog is in the right half of the image. In the left of the scene, there is a pair of scissors.
+COCO_train2014_000000023094_person_horse_bicycle.jpg#Two horses are in the middle of the image. There are several people in the scene. Most of them are in the middle. And the one in the left of the picture is riding on a bicycle.
+COCO_train2014_000000023096_car_parking meter.jpg#There is a parking meter in the middle of the picture and two cars in the upper half of the picture.
+COCO_train2014_000000023098_person_sports ball_tennis racket.jpg#Two people are in the center of the image. The girl close to the screen is holding a tennis racket. In the right of the picture, there is a sports ball.
+COCO_train2014_000000023100_chair_cat.jpg#A cat is on a chair in the center of the image.
+COCO_train2014_000000023102_tv_person.jpg#A person is in the middle of the scene. On his right, there is a tv.
+COCO_train2014_000000023107_bus.jpg#There are two buses in the middle of the image.
+COCO_train2014_000000023108_cup_vase_potted plant.jpg#There is a cup and a vase with a potted plant in it in the middle of the image.
+COCO_train2014_000000023127_person_sandwich.jpg#A sandwich is in the center of the image. Two people is in the scene, too.
+COCO_train2014_000000023134_remote_tv_couch_person_book_keyboard_handbag_chair_mouse.jpg#A person is sitting on a couch in the middle of the picture. She is holding a mouse. In the left of the picture, there are many books. Behind the person, there is a remote, a tv, a keyboard, a handbag and a mouse.
+COCO_train2014_000000023137_car_truck_cat.jpg#A car occupies most of the scene. Under the car, there is a cat.
+COCO_train2014_000000023140_baseball bat_baseball glove_person.jpg#Three people are in the middle of the image. In the upper half, there are many other people. A pair of baseball gloves is in the center and a baseball bat is in the left of the picture.
+COCO_train2014_000000023141_fork_wine glass_dining table_bottle_pizza.jpg#The picture shows the surface of a dining table. Two pizzas are in the image. One pizza is in the middle and the other is in the top. Between the two pizzas, there are two bottles. In the left of the scene, there is a fork and a wine glass.
+COCO_train2014_000000023158_fork_cup_pizza_knife_dining table.jpg#A dining table is in the middle of the image. In the left bottom, there is a pizza, a knife and a fork. In the upper half of the image, there are three cups.
+COCO_train2014_000000023162_sheep_dog.jpg#A dog is in the center of the image. On its right, there are several sheep.
+COCO_train2014_000000023163_chair_cat.jpg#A cat is sleeping on a chair in the center of the picture.
+COCO_train2014_000000023173_boat.jpg#A part of a boat is in the middle of the image.
+COCO_train2014_000000023176_bottle_dining table_bowl_microwave_person_oven_chair.jpg#A person is sitting on a chair in the middle of the image. Several bottles are in the left and right of the image. An oven with several bowls on it is in the center. There are two microwaves. One is in the right and one is in the top of the picture.
+COCO_train2014_000000023177_vase_potted plant.jpg#A vase with a potted plant in it is in the center of the image.
+COCO_train2014_000000023194_horse.jpg#Three horses are in the image from the left to the middle.
+COCO_train2014_000000023199_giraffe.jpg#Two giraffes are in the middle of the image.
+COCO_train2014_000000023203_bus_boat_person.jpg#A bus is in the center of the picture. In the left, there is a boat in the distance. Two people are in the right of the picture.
+COCO_train2014_000000023218_person_donut.jpg#A person is eating a donut in the center of the image.
+COCO_train2014_000000023219_person_baseball glove.jpg#There are three people in the picture. The people in the middle and in the right both are wearing a baseball glove.
+COCO_train2014_000000023245_person_bottle_wine glass.jpg#There are three people in the image. Two of them are in the middle and one is in the right. A wine glass is in the top of the image. And some bottles are in the right of the scene.
+COCO_train2014_000000023249_motorcycle.jpg#A motorcycle is in the bottom of the picture.
+COCO_train2014_000000023250_baseball bat_person.jpg#A person is holding a baseball bat in the center of the scene.
+COCO_train2014_000000023253_person_motorcycle.jpg#A person is on a motorcycle in the center of the picture.
+COCO_train2014_000000023255_person_fire hydrant_bird.jpg#A bird is in the left of the scene and a fire hydrant is in the right. In the right top of the picture, there are some people.
+COCO_train2014_000000023258_dining table_person_book_bottle_handbag_wine glass.jpg#A dining table is in the center of the image. Two people are sitting at the table. Both of them are holding a wine glass. On the table, there are two handbags, a wine glass and a book. In the upper half of the image, there are many bottles. Most of them are in the middle top.
+COCO_train2014_000000023270_person_horse.jpg#Five horses are in the image from left to right. A person is in the left of the scene.
+COCO_train2014_000000023274_bus_car.jpg#A bus is in the center of the image. There are two cars in it, too. One car is in the left and the other is in the right top of the picture.
+COCO_train2014_000000023275_person_sports ball_tennis racket_bench_car.jpg#There are three people in the image. The person in the center is holding a tennis racket. In the top of the image, there is a sports ball. The person in the right is sitting on a bench. In the background, there are three cars.
+COCO_train2014_000000023280_person_sink_oven_bottle_cup.jpg#Three people are in the left half of the picture. On their right, there is an oven, two cups and several bottles. In the left of the picture, there is another cup. In the right bottom, there is a sink.
+COCO_train2014_000000023283_suitcase.jpg#A suitcase is in the right half of the image.
+COCO_train2014_000000023287_person_backpack_frisbee_umbrella.jpg#Many people are in the image. The person close to the screen is holding a frisbee. There are another three frisbees in the right half of the picture. An umbrella is in the center of the scene. And there are two backpacks. One backpack is in the left and the other is in the right.
+COCO_train2014_000000023298_bicycle_dining table_cup_person_bottle_handbag_banana.jpg#There are many people in the picture. The person close to the screen is on a bicycle. On the left of the bicycle, there is a bottle. A dining table is in the right half of the picture. On the table, there are some cups and bananas. On the left of the table, there is a handbag.
+COCO_train2014_000000023301_boat.jpg#Seven boats are in the picture from left to right.
+COCO_train2014_000000023311_cup_clock_microwave_vase_person_potted plant.jpg#A person is in the center of the image. Under the person, there is a microwave with a clock on it. In the left of the picture, there is a vase and a potted plant. Behind the person, there are some cups. In the top of the picture, there are another three potted plants.
+COCO_train2014_000000023315_dining table_cup_bowl_microwave_person_bottle_chair_pizza.jpg#Two people are in the picture. The boy in the center is sitting on a chair near a dining table. On the table, there is a bottle and two pieces of pizza. In the right of the picture, there is a bowl. And a microwave is in the left of the scene.
+COCO_train2014_000000023343_cat.jpg#A cat is in the center of the picture.
+COCO_train2014_000000023355_tv_person_broccoli_pizza.jpg# A person is slinging hash of three plates of pizza, two are close to the screen and the other is away from the screen with broccoli over it. There is also a person in the left and a TV in the right of the image.
+COCO_train2014_000000023357_person_elephant_bench.jpg# There is an elephant standing on the bench in the middle of image with several person looking at it.
+COCO_train2014_000000023361_car_traffic light_truck.jpg# In the top of the image are three traffic lights. There is a truck and two cars in the right of the image with two cars in the left of the image.
+COCO_train2014_000000023363_orange_apple.jpg# Several oranges and apples are displayed in the image.
+COCO_train2014_000000023368_giraffe.jpg# There are several giraffes in the image, five in the left, five in the right and one in the center.
+COCO_train2014_000000023378_zebra_elephant.jpg# There is a line of zebras at the lower part of the image with four elephants showing up in the top.
+COCO_train2014_000000023387_person_kite.jpg# There is a person at the right bottom of the image and a kite on the left top.
+COCO_train2014_000000023392_handbag_person_cellphone_umbrella_bench.jpg# In the center of the image, there is a person playing her cell phone on the bench with a bag over her shoulder and an umbrella next to her.
+COCO_train2014_000000023395_person_skis.jpg# There is a person in the center of the image wearing her skis.
+COCO_train2014_000000023400_orange.jpg# There are several oranges in the net.
+COCO_train2014_000000023405_person_stop sign_bicycle.jpg# There is a huge stop sign in the center of the image. In the right of it are three persons pushing the bicycle.
+COCO_train2014_000000023413_person_frisbee.jpg# There are several persons playing frisbee. At the bottom of the picture is an orange-colored frisbee.
+COCO_train2014_000000023415_person_teddy bear_bed.jpg# At the right of the picture is a person sleeping with his little teddy bear on the bed.
+COCO_train2014_000000023419_bird.jpg# A bird stands in the right of the picture.
+COCO_train2014_000000023420_person_baseball bat.jpg# In the center of the image is a person who is going to strike with his baseball bat. On his left is a person who is sitting.
+COCO_train2014_000000023424_handbag_person_motorcycle_cow.jpg# In the center of the image is a cow. In the right of the picture is several persons and one of them is sitting on a motorcycle. Besides, there is also a person with a handbag over his shoulder and there is a motorcycle between this person and the cow.
+COCO_train2014_000000023429_car_truck_surfboard_person.jpg# There are several cars on the image. A person is sitting in the trunk of his truck with his surfboard on the floor.
+COCO_train2014_000000023433_bear.jpg# A bear in the middle of the image.
+COCO_train2014_000000023434_fork_dining table_bowl_carrot_cake_knife.jpg# On the dining table, there are three bowls. On the left is a cake with a fork. At the bottom is a dish made of carrot and other vegetable. In the left top of it is a knife.
+COCO_train2014_000000023440_vase.jpg# In the left of the image is a vase.
+COCO_train2014_000000023444_remote_microwave_oven.jpg#In the image, there is a microwave oven and a remote control.
+COCO_train2014_000000023447_person_car.jpg# There is a person playing with his car.
+COCO_train2014_000000023450_person_knife.jpg# In the image, there are two persons, one in the left top part and another in the center of the image. Besides, there are two knives in the left of the image.
+COCO_train2014_000000023451_fork_cake_spoon_cup_dining table.jpg# There is a cup of coffee and a plate of cake on the dining table. Besides, there is also a fork and spoon next to the coffee.
+COCO_train2014_000000023479_tv_car_suitcase.jpg# In the center of the image the are two suitcases. There is a car in the left and another one in the right of the image. Besides, there is also a TV located between the suitcase and the car in the right.
+COCO_train2014_000000023480_person_sports ball_tennis racket.jpg# There are several persons in the image looking a sports ball game. In the center of the image is a player with his tennis racket.
+COCO_train2014_000000023487_person_horse.jpg# There are several persons and one horse in the image.
+COCO_train2014_000000023501_fire hydrant.jpg# The image displays fire hydrants.
+COCO_train2014_000000023511_bicycle_cat.jpg# There is a bicycle in the left of the image and a cat in the center part.
+COCO_train2014_000000023538_fork_cup_dining table_carrot_bottle_knife.jpg# A bottle of drink is in the left top. A fork and a knife lie on the top part of the image. There are two cups in the dining table, one filled with sauce, another one filled with salad made of carrot.
+COCO_train2014_000000023539_person_skis.jpg# There are three persons with their skis displayed in the image.
+COCO_train2014_000000023541_toaster.jpg# There are five toasters displayed in the center of the image.
+COCO_train2014_000000023542_stop sign.jpg# There is a stop sign at the bottom of the image.
+COCO_train2014_000000023544_bird_bed.jpg# There is a bed at the bottom of the image. Besides, there are three birds displayed in the center and right.
+COCO_train2014_000000023546_person_cell phone_bottle.jpg# In the left of the image is a person, holding his cell phone which lies in the middle part. There is also a bottle right to the cell phone.
+COCO_train2014_000000023548_person_boat.jpg# There are two persons sitting on the boat displayed in the image.
+COCO_train2014_000000023551_fork_dining table_person_carrot_wine glass_chair_knife.jpg# Two person are sitting on chair in the middle of the image. At the bottom, there is a dining table on which there are two wine glasses and a fork and a knife and a dish made of carrot. Right to the person there are also several chairs.
+COCO_train2014_000000023569_car_traffic light_person_bus_handbag_cell phone.jpg# At the bottom of the image there are cars, persons, buses. Some persons are carrying their handbags over their shoulder and the person close to the screen is making a call with his cell phone.
+COCO_train2014_000000023570_cup_pizza_dining table.jpg# A dining table is displayed in the image with a cup of drink in the left top and a piece of pizza in the center.
+COCO_train2014_000000023588_pizza.jpg# There is a pizza in the center of the image.
+COCO_train2014_000000023591_bottle_bed.jpg# There are two beds displayed in the middle of the image. Between the two beds there are two bottles.
+COCO_train2014_000000023594_person_backpack_dog.jpg# There is a backpack in the center of the image with a dog left to it and another dog on the right of it. In the right of the image there is a person.
+COCO_train2014_000000023603_person_sports ball.jpg# There are several persons playing sports ball.
+COCO_train2014_000000023630_zebra.jpg# There are several zebras displayed in the image.
+COCO_train2014_000000023631_person_motorcycle.jpg# In the center of image, there is a person riding his motorcycle. In addition to him, there are also lots of person and a motorcycle lying in the right of the image.
+COCO_train2014_000000023639_person_sports ball_baseball glove.jpg# in the center of the image there is a pitcher holding his baseball glove who is going to cast the ball. In the right of the image there is a person who comes to watch this sports ball game.
+COCO_train2014_000000023641_vase.jpg# There is a vase in the image.
+COCO_train2014_000000023673_person_kite.jpg# There are several kites in the image. And at the bottom of the image there are three persons.
+COCO_train2014_000000023676_person_sports ball_baseball bat.jpg# In the center of the image there is a person who is going to strike the ball with her baseball bat. There are lots of person who are watching at this sports ball game.
+COCO_train2014_000000023677_giraffe.jpg# There are some giraffes in the right part of the image.
+COCO_train2014_000000023679_sandwich_carrot.jpg# There is a sandwich displayed in the picture which is made with carrot.
+COCO_train2014_000000023686_train.jpg# There are two trains in the left part of the image and one another in the right part of the image.
+COCO_train2014_000000023687_person_surfboard.jpg# In the right of the image, a person is surfing with his surfboard.
+COCO_train2014_000000023695_car_traffic light_potted plant_dog_person.jpg# In the right top there is a traffic light. There is a person, a dog and some potted plants in the left part of the image. And on the right part there is a person and several cars.
+COCO_train2014_000000023699_giraffe.jpg# There are two giraffes in the picture.
+COCO_train2014_000000023702_person_horse.jpg# In the right of the image there are two persons riding their horses. In the left side there are two persons who are running.
+COCO_train2014_000000023703_person_dog.jpg# In the image, there are lots of person swimming. Interestingly, in the center of the image there is also a dog swimming. 
+COCO_train2014_000000023718_bus_person_car_clock.jpg# In the center of the image there is a clock. In the right half of the picture there are buses and several persons and two cars.
+COCO_train2014_000000023723_tv_person_laptop_chair_potted plant.jpg# In the left top there is a TV. Right to the TV are a potted plant and a chair. In the right of the picture there is a person using his laptop on the chair.
+COCO_train2014_000000023729_banana.jpg# There are several bananas in the picture.
+COCO_train2014_000000023735_fork_dining table_cup_spoon_orange_knife.jpg# A dining table is displayed in the image. On the table there is a cup in the top, a fork and a knife in the right, and three pieces of orange in the left with a fork right to them.
+COCO_train2014_000000023737_person_skateboard_dog.jpg# In the left of image there is a person who lifts his dog with his arms and has a skateboard beneath his foot. In addition to him, there are also several other people in the image.
+COCO_train2014_000000023743_handbag_person_tennis racket.jpg# There are two persons playing sports game with their tennis rackets. In the left of the picture there are two persons and one of them carries a handbag over her shoulder.
+COCO_train2014_000000023746_person_teddy bear.jpg# There is a person at the bottom of the picture and a teddy bear at the top of the picture.
+COCO_train2014_000000023759_clock.jpg# There is a clock lying at the bottom of the picture.
+COCO_train2014_000000023760_person_backpack_skis.jpg# There are two persons wearing their skis in the center of the image, and one of them carries his backpack. In addition to the two persons, there are also several persons in the image.
+COCO_train2014_000000023779_person_tennis racket.jpg# There are several persons playing tennis with their tennis rackets.
+COCO_train2014_000000023786_tie_person.jpg# There are two persons in the left of the picture, and one of them wears a tie.
+COCO_train2014_000000023793_horse_bus_backpack_person_car_tie.jpg# There is a horse and a car in the left and two buses and a car in the right of the picture. In the center of the image there are several persons, some of them carry their backpacks and one of them wears a tie. In addition, on the bus there are also some persons. 
+COCO_train2014_000000023797_truck.jpg# There is a truck in the center and another one in the right of the image.
+COCO_train2014_000000023803_fork_cake.jpg# There is a piece of cake and a fork in the top of the picture.
+COCO_train2014_000000023811_person_dog_boat.jpg# There is a boat in the center of the image. On the boat there are two persons and a dog.
+COCO_train2014_000000023812_person_umbrella_bottle.jpg# There is a person holding his umbrella in the center of the image, and a bottle lies right to him. At the right bottom there is also a person holding his umbrella and at the right top there is also a person.
+COCO_train2014_000000023815_toilet_sink_cat.jpg# In the center of the image there is a cat standing on a toilet. In the left there is a sink.
+COCO_train2014_000000023874_car_stop sign_person.jpg# There is a car and a stop sign in the left of the image. And another two cars appear in the right half along with a person.
+COCO_train2014_000000023875_couch_sink_bottle_potted plant_vase_banana.jpg# In the left half there is a banana and a bottle and a potted plant. In the center of the image there is a sink and a vase. In the right half there is a couch.
+COCO_train2014_000000023906_wine glass_bottle_dining table.jpg# A dining table is displayed in the image. In the right of the picture there is a bottle and a wine glass.
+COCO_train2014_000000023908_cow.jpg# There is a cow displayed in the image.
+COCO_train2014_000000023917_chair_bowl_dog_cat.jpg# There are three dogs and a cat in the middle of the image. At the top, there is a chair and a bowl which lie next to the dogs and cat.
+COCO_train2014_000000023919_person_kite.jpg# There is a person at the right bottom and a kite at the top of the image.
+COCO_train2014_000000023927_tie_bench_person.jpg# In the center part of the image, there is a person wearing a tie lying on the bench.
+COCO_train2014_000000023929_clock.jpg# There are two clocks displayed in the image. One is facing right at us in the center part. The other one is facing at another direction in the left half of the picture.
+COCO_train2014_000000023935_person_backpack_boat.jpg# A person wearing her backpack is displayed in the left half of the picture. In the right half there are several boats.
+COCO_train2014_000000023949_handbag_person_tennis racket_tie.jpg# There are several persons displayed in the image, some of them hold a tennis racket. The leftmost lady wears a tie and a handbag lies left to her. In the right half, the rightmost lady carries a handbag and the rightmost gentlemen also wears a tie.
+COCO_train2014_000000023951_person_kite.jpg# There is a person at the bottom of the image. And a kite appears in the center part.
+COCO_train2014_000000023957_sheep_person_train.jpg# In the center of the image, there are three trains. There are two persons on the train and a person standing next to the train. In the right half there is a person and a group of sheep.
+COCO_train2014_000000023967_tie_person.jpg# There are two person dressing with tie in the image.
+COCO_train2014_000000023976_elephant.jpg# There are there elephants displayed in the image.
+COCO_train2014_000000023982_person_skis.jpg# There is a person wearing his skis in the center of the image.
+COCO_train2014_000000023984_cake_person_chair_dining table_cup.jpg# At the bottom of the image there is a dining table with a cake and a cup on it. There is a person in the center and other two persons in the right, both sitting on a chair.
+COCO_train2014_000000023986_person_baseball glove_baseball bat.jpg# There is a person carrying his baseball glove and his baseball bat in the image.
+COCO_train2014_000000023988_person_skateboard.jpg# In the center of the image there is a person with a skateboard beneath him.
+COCO_train2014_000000023996_dining table_potted plant_couch_suitcase_handbag_chair.jpg# There is a potted plant in the left and a couch in the right of the picture. In the center, there is a suitcase, two handbags and a dining table and a chair.
+COCO_train2014_000000023998_person_skateboard.jpg# There is a person in the center of the image with a skateboard beneath him.
+COCO_train2014_000000024002_toothbrush_person_dog.jpg#A dog is in the center of the image. It is on a person's knees. And a toothbrush is in the right half of the scene.
+COCO_train2014_000000024019_clock.jpg#Two clocks are in the left of the upper half of the picture.
+COCO_train2014_000000024020_airplane.jpg#An airplane is in the middle of the picture.
+COCO_train2014_000000024023_oven_refrigerator_bottle_microwave.jpg#Two refrigerators are in the picture. One is in the left and one is in the right. Between the refrigerators, there are three microwaves. And above the refrigerator in the left, there is another microwave. There are two bottles in the picture. One bottle is in the bottom and the other is on the refrigerator in the right.
+COCO_train2014_000000024026_person_chair_pizza_bottle_dining table.jpg#There are many people sitting near some dining tables in the picture. On the dining table close to the screen, there are three bottles and a pizza. Several chairs are in the picture.
+COCO_train2014_000000024030_person_book_couch.jpg#Three people are in the middle of the image. In the left of the scene, there are several couches. And in the right of the scene, there are some books.
+COCO_train2014_000000024032_person_skis.jpg#A person and a pair of skis are in the right bottom of the picture.
+COCO_train2014_000000024036_fire hydrant.jpg#A fire hydrant is in the right bottom of the image.
+COCO_train2014_000000024038_person_cell phone_book_bed.jpg#There is a person holding a cell phone in the middle of the image. On his left, there is a book. And he is sitting on a bed.
+COCO_train2014_000000024042_car_truck_person.jpg#There are two cars in the picture. One close to the screen is in the left and the other far from the screen is in the right. Three trucks are in the middle of the picture. And a person is in one truck.
+COCO_train2014_000000024072_person_bottle_cat.jpg#A cat is in the arms of a person in the middle of the image. In the left bottom of the scene, there is a bottle.
+COCO_train2014_000000024073_person_surfboard.jpg#Four people are in the picture. Two of them are in the left and the others are in the right. There are two surfboards. One is in the left and the other is in the right.
+COCO_train2014_000000024076_scissors_chair.jpg#There are four pairs of scissors in the picture. A chair is in the left bottom of the picture. 
+COCO_train2014_000000024081_dining table_cup_toaster_bowl_vase_person_spoon_book_sink_bottle_potted plant_cake_chair_cell phone_knife.jpg#A person is holding a spoon in the middle of the image. A dining table is in the right bottom of the picture. On the table, there are several books, a bottle and a cake. On the left of the table, there is a chair. In the left of the picture, there is a cell phone on a book. And a sink, a bottle, a bowl, a toaster, several knives, four potted plants and two vases are in the right of the picture.
+COCO_train2014_000000024086_cup_dining table_couch_person_book_handbag_cake.jpg#There are some cakes in the middle of the image. Two people are in the left and right of the cakes. The little girl in the right is holding a cup. In the left bottom of the picture, there is a dining table. Two couches are in the scene. One couch is in the left and the other is in the right. In the background, there are many books. And a handbag is in the middle of the image.
+COCO_train2014_000000024091_car_bicycle_clock.jpg#A car is in the center of the image. Above the car, there are several bicycles. In the right top of the image, there is a clock.
+COCO_train2014_000000024095_giraffe.jpg#Two giraffes are in the center of the image.
+COCO_train2014_000000024100_person_skateboard_car.jpg#A person is on a skateboard in the left half of the scene. On his left, there is a car far from the screen.
+COCO_train2014_000000024103_person_skateboard.jpg#A person is on a skateboard in the middle of the image.
+COCO_train2014_000000024105_fork_remote_cup_laptop_bowl_couch_person_spoon_book_bottle_potted plant_handbag_wine glass_cell phone.jpg#There are three people in the picture. Three laptops are in the scene. One is in the left and the others are in the right. A remote is in the right, too. In the right top of the image, there is a potted plant. And close to the screen, there is a bowl and a cup. Behind the cup, there is a fork and a spoon. In the middle of the image, there are some books, a handbag and a wine glass. A cell phone is on the books.
+COCO_train2014_000000024107_person_backpack_skis.jpg#A person is on a pair of skis in the center of the scene. He has a backpack.
+COCO_train2014_000000024125_fork_spoon_cup_bowl_dining table.jpg#The picture shows the surface of a dining table. In the left of the scene, there is a fork and a bowl. And in the right of the scene, there is a spoon. Part of a cup is in the top of the picture.
+COCO_train2014_000000024129_sandwich.jpg#Two sandwiches are in the middle of the picture.
+COCO_train2014_000000024132_umbrella_backpack_person_handbag_chair_mouse_laptop.jpg#Three people and three laptops occupy most of the scene. Each person is using a laptop. Two chairs are in the scene. And in the center of the image, there is a mouse. A handbag is in the right of the upper half of the picture. A backpack and an umbrella are in the bottom of the scene.
+COCO_train2014_000000024136_toilet_sink.jpg#There is a sink in the center of the image. In the right of the image, there is a toilet.
+COCO_train2014_000000024149_wine glass_cell phone_chair_laptop_dining table.jpg#A dining table is in the center of the picture. On the dining table. there is a laptop in the left and a wine glass and a cell phone in the right. In the right of the picture, there is a chair. 
+COCO_train2014_000000024150_person_bird_surfboard.jpg#A person is on a surfboard in the middle of the image. In the left half of the image, there is a bird.
+COCO_train2014_000000024154_tv_chair.jpg#Two chairs are in the picture. Behind the chair in the middle of the scene, there is a tv.
+COCO_train2014_000000024159_cake_person_dog_microwave_dining table.jpg#A person is in the left half of the image. In the right bottom of the image, there is a dining table. On the table, there is a cake. In the right half of the picture, there is a microwave. And between the microwave and the table, there is a dog.
+COCO_train2014_000000024169_handbag_car_truck_person.jpg#A truck is in the center of the image. Many people are in the truck. In the left and right of the truck. There are several people, too. Three handbags are in the picture. And a car is in the right of the truck.
+COCO_train2014_000000024175_person_chair_cup_vase_dining table.jpg#A person is sitting on a chair in the middle of the image. On his left, there is a chair, too. Close to the screen, there is a dining table in the bottom. On the table, there is a cup and a vase.
+COCO_train2014_000000024189_sheep.jpg#Four sheep are in the image. One of them is in the center and the others are in the right.
+COCO_train2014_000000024193_train.jpg#A train is in the middle of the picture.
+COCO_train2014_000000024204_remote_dog_vase_potted plant_chair_couch.jpg#A couch is in the middle of the image. A remote is on the couch. Behind the couch, there is a potted plant. And on the left of the couch, there is a vase. In the left bottom of the image, there is a chair. In the right bottom of the image. there is a dog.
+COCO_train2014_000000024215_tv_person_boat_toilet.jpg#Four people are in the middle of the scene. Many toilets are around them. Behind them, there is a boat. And in the left of the picture, there is a tv.
+COCO_train2014_000000024221_motorcycle.jpg#Two motorcycles are in the center of the picture.
+COCO_train2014_000000024231_fork_spoon_knife_dining table.jpg#The image shows the surface of a dining table. In the left of the scene, there is a fork. And a spoon and a knife are in the right.
+COCO_train2014_000000024234_bottle_refrigerator.jpg#There is a refrigerator in the middle of the picture. Many bottles are in the refrigerator.
+COCO_train2014_000000024238_pizza.jpg#A pizza is in the center of the image.
+COCO_train2014_000000024239_person_backpack_sports ball_motorcycle_bench.jpg#Many people are in the image. In the middle of the scene, a motorcycle is in the distance. A sports ball is in the upper half of the image. And in the left of picture, there are some benches and a backpack.
+COCO_train2014_000000024242_person_skateboard.jpg#A person is on a skateboard in the left half of the image.
+COCO_train2014_000000024253_bottle_bed_clock.jpg#A bed is in the center of the picture. On the right of the bed, there is a clock and a bottle.
+COCO_train2014_000000024257_tv_person_train_bench.jpg#A train is coming in the left of the image. In the right, there are several people and  bench. Above the people, there are two tvs.
+COCO_train2014_000000024259_car_traffic light_bicycle_truck_person.jpg#There are two trucks in the left of the picture and two cars in the right of the picture. Above the cars, there are four traffic lights. Close to the center, a person is on a bicycle. And one person is in the right, too.
+COCO_train2014_000000024264_horse.jpg#Two horses are in the center of the image.
+COCO_train2014_000000024266_cat.jpg#There is a cat in the middle of the picture.
+COCO_train2014_000000024287_giraffe.jpg#The head of a giraffe is in the center of the scene.
+COCO_train2014_000000024289_car_dog.jpg#The review mirror of a car is in the center of the image. In the mirror, there is a dog.
+COCO_train2014_000000024290_elephant.jpg#Two elephants are in the center of the image.
+COCO_train2014_000000024294_sink.jpg#Two sinks are in the right of the scene.
+COCO_train2014_000000024296_person_baseball glove.jpg#A person and a baseball glove is in the center of the image.
+COCO_train2014_000000024299_chair_cat.jpg#A cat is lying on a chair in the middle of the scene.
+COCO_train2014_000000024305_dining table_person_bottle_cake_wine glass_chair_knife.jpg#Four people are in the picture. One person only has her one leg in the right of the picture. And in the right bottom of the picture, there is a dining table and a chair. On the table, there is a bottle, a cake, a wine glass and a knife.
+COCO_train2014_000000024307_tie_cell phone_person_chair_couch.jpg#A person is in the center of the image. He wears a tie and is holding a cell phone. There are two chairs in the picture. One chair is on the left of the man and the other one is on the man's right. And a couch is in the right of the picture. 
+COCO_train2014_000000024310_person_remote_bottle_couch.jpg#Two people are in the middle of the picture. They are holding three remotes. In the left of the picture, there is a couch. And a bottle is in the right bottom of the image.
+COCO_train2014_000000024319_giraffe.jpg#Two giraffes are in the center of the image.
+COCO_train2014_000000024351_bear.jpg#Two bears are in the middle of the picture.
+COCO_train2014_000000024352_person_sports ball_tennis racket.jpg#Two people are in the right half of the image. The girl close to the center is holding a tennis racket. Near the girl's feet, there is a sports ball.
+COCO_train2014_000000024368_handbag_car_traffic light_person_bus.jpg#A bus is in the middle of the scene. On the right of the bus, there is a car and three traffic lights. There is another traffic light on the bus's left. Several people are around the bus and in the bus, there is one person. And one person in the left is carrying a handbag.
+COCO_train2014_000000024371_fork_cup_knife_pizza.jpg#Some pizzas are in the center of the image. A fork is on the left of the pizzas. There are two cups in the image. One is in the right top of the image and the other is in the left top. Under the cup in the left top, there is a knife.
+COCO_train2014_000000024372_person_elephant.jpg#An elephant is in the center of the image. And a person is in the let half of the scene.
+COCO_train2014_000000024375_person_snowboard.jpg#There are three people in the image. One is in the middle and the others are in the right. Near the man in the middle, there is a snowboard.
+COCO_train2014_000000024380_bicycle_car_backpack_person_bus_handbag.jpg#There are several people in the middle of the picture. In the bottom of the picture, there is a bicycle, two backpacks and a handbag in the middle and a car in the left. In the right of the picture, there is a bus.
+COCO_train2014_000000024393_handbag_backpack_suitcase.jpg#Many suitcases are in the image. In the left half of the picture, there are several backpacks. And there are three handbags in the scene. Two of them are in the right and one of them is in the left.
+COCO_train2014_000000024401_person_backpack_kite_boat.jpg#A kite is in the center of the picture. There are four people in the scene. One of them is under the kite, two of them are in the left bottom and the left one is in the right bottom. Near the man in the right bottom, there is a backpack. On the right of the kite, there is a boat. 
+COCO_train2014_000000024404_zebra.jpg#Two zebras are in the middle of the picture.
+COCO_train2014_000000024411_fork_cup_dining table_bowl_person_tie_knife_pizza.jpg#There are over six pizzas in the picture. Many people are in the picture. In the bottom half of the image, there is a dining table. On the table, there are five cups, a fork, a knife and two bowls. A tie is in the left top of the picture.
+COCO_train2014_000000024414_person_teddy bear_dog.jpg#A boy is lying in the center of the picture. On his left, there is a teddy bear or a dog
+COCO_train2014_000000024416_traffic light.jpg#Three traffic lights are in the picture. One is in the bottom, one is in the left and one is in the right of the picture.
+COCO_train2014_000000024428_person_truck_banana_car.jpg#A person and a banana is in the middle of the image. On his right, there are three trucks and cars. On his left, there is one man, too.
+COCO_train2014_000000024433_cake_dining table.jpg#A cake is on a dining table in the middle of the picture.
+COCO_train2014_000000024434_motorcycle.jpg#A row of motorcycles are in the image.
+COCO_train2014_000000024436_dining table_tv_cup_couch_person_bottle_potted plant_chair_vase_cell phone.jpg#A dining table is in the middle of the image. There are five people on both sides of the table. On the table, there are two bottles, a cell phone and a cup. Several chairs are in the image. In the middle of the picture, a tv is far from the screen. On its left, there are two vases and a potted plant. On its right, there is a couch.
+COCO_train2014_000000024446_car_skateboard_person.jpg#A person is on a skateboard in the left of the image. There are three cars in the middle of the scene from right to left.
+COCO_train2014_000000024450_toilet.jpg#A toilet is in the center of the image.
+COCO_train2014_000000024454_person_surfboard.jpg#A person is on a surfboard in the middle of the picture.
+COCO_train2014_000000024457_person_book_bed.jpg#A bed occupies most of the scene. In the right of the picture, there is a person reading a book.
+COCO_train2014_000000024489_bus_bicycle_person.jpg#A bus is in the right of the picture. A person is in the bus. And there is a bicycle in the left of the scene.
+COCO_train2014_000000024497_truck_cat.jpg#A cat is in the center of the image. In the right of the scene, there is a truck.
+COCO_train2014_000000024498_toothbrush_toilet_sink_cup.jpg#There are two sinks in the picture. One sink is in the right wit a toothbrush on it. The other one is in the left with a toilet under it and a cup on its right.
+COCO_train2014_000000024507_bottle_cup_dining table_sink_oven_chair_refrigerator.jpg#In the right of the image, there is a refrigerator. On the left of the refrigerator, there are several cups and a sink. In the middle of the image, there is an oven with three bottles around it. In the left bottom of the image, there is a dining table. And a chair is near the table.
+COCO_train2014_000000024515_person_cow.jpg#Two cows are fighting in the center of the image. In the upper half of the image, there are some people.
+COCO_train2014_000000024516_person_banana.jpg#A person's hand is holding a banana in the center of the image.
+COCO_train2014_000000024518_tv_person_chair_remote.jpg#A person is holding a remote in the middle of the picture. Behind him, there is a chair. And a tv is on his right.
+COCO_train2014_000000024520_sandwich_clock_refrigerator_dining table_bowl_person_carrot_sink_wine glass_banana_knife.jpg#Three people are in the image. In the bottom of the image, there is a dining table. On the table, there are several sandwiches, two bowls, two knives and some carrots. In the left of the picture, there is a wine glass and a refrigerator. In the right, there is a sink and a knife. Above the sink, there is a clock.
+COCO_train2014_000000024547_pizza.jpg#A pizza is in the center of the image.
+COCO_train2014_000000024551_person_baseball glove_baseball bat.jpg#Four people are in the picture. Between the people in the center, there is a baseball bat. And four baseball gloves are in the picture near these people.
+COCO_train2014_000000024552_fork_cake_bowl_knife_dining table.jpg#The picture shows the surface of a dining table. In the center, there is a cake. On the right of the cake, there is a knife and a fork. In the right top of the image, there is a bowl.
+COCO_train2014_000000024554_fork_cup_dining table_person_chair_pizza.jpg#Many people are sitting on chairs in the picture. There are two dining tables visible in the picture. On the dining table close to the screen, there are five cups, a pizza and a fork.
+COCO_train2014_000000024563_tie_person.jpg#There are two people in the image. The man in the right is wearing a tie.
+COCO_train2014_000000024571_person_sports ball_baseball glove_baseball bat.jpg#Three people are in the picture. Two of them are in the right half and the left one is in the middle. The man in the middle is holding a baseball bat and wearing a pair of baseball gloves. Under the man, there is a sports ball.
+COCO_train2014_000000024577_donut.jpg#Two donuts are in the center of the picture.
+COCO_train2014_000000024582_clock.jpg#Two clocks are in the image. One is in the bottom and one is in the top.
+COCO_train2014_000000024585_person_airplane_truck_car.jpg#An airplane is in the middle of the scene. Above the plane, there is a car. Below the plane, there are two people and a truck.
+COCO_train2014_000000024591_person_skis.jpg#There are four people in the picture. Three of them are in the distance. The person close to the screen is on a pair of skis.
+COCO_train2014_000000024600_car_person_bus.jpg#A bus is in the middle of the image. Several people are on the left of the bus and in the bus. Three cars are in the picture. Two of them are in the right of the image and the left one is on the left of the bus.
+COCO_train2014_000000024608_car_bench_motorcycle_person.jpg#A motorcycle is in the center of the image. Behind the motorcycle, there are several people and a bench. In the left half of the picture, there are three cars.
+COCO_train2014_000000024621_person_bicycle_skateboard.jpg#Three people are in the picture. The one close to the screen is on a skateboard. The one in the left is riding on a bicycle.
+COCO_train2014_000000024625_remote_tv_backpack_couch_person_chair_vase_laptop.jpg#A woman and a baby are in the center of the image. On the left of the people, there is a laptop and a backpack. Two couches are in the picture. One is close to the people and the other is in the bottom with a vase near it. In the right top of the image, there is a tv with a remote under it. And a chair is below the remote.
+COCO_train2014_000000024637_teddy bear.jpg#A teddy bear is in the right half of the image.
+COCO_train2014_000000024657_person_bowl_sink_oven_cup.jpg#There is a person in the left half of the picture and an oven in the right half of the picture. On the oven, there is a bowl, a sink and a cup.
+COCO_train2014_000000024664_person_dog.jpg#Several people are catching a dog in the middle of the image.
+COCO_train2014_000000024671_teddy bear.jpg#A teddy bear is in the center of the image.
+COCO_train2014_000000024672_chair_vase_couch.jpg#A chair is in the middle of the image. A couch is in the left of the image. Above the chair, there are seven vases.
+COCO_train2014_000000024674_fork_cup_dining table_person_spoon_chair_cell phone_knife.jpg#Many people are sitting on chairs in the picture. Three dining tables are visible in the scene. On the dining table close to the screen, there is a fork and a knife in the left and a spoon, a cup and a cell phone in the right.
+COCO_train2014_000000024682_train.jpg#A train is in the left half of the image.
+COCO_train2014_000000024689_fork_cup_dining table_bench_person_chair_knife_pizza.jpg#A dining table is in the center of the image. Three people are sitting around the table. On the table, there are three bottles, some pizzas, two forks and two knives. Around these people, there are some benches. And the woman in left is holding a fork and a knife.
+COCO_train2014_000000024699_stop sign_bird.jpg#A stop sign is in the right of the picture. And many birds are in the upper half of the image.
+COCO_train2014_000000024702_fork_hot dog.jpg#Two hot dogs are in the left of the picture, while a fork is in the right.
+COCO_train2014_000000024706_person_tennis racket_car.jpg#The picture can be equally divided into two parts vertically. In each part, there are two people in the center. Each people is holding a tennis racket. And in the right of the scene, there is car.
+COCO_train2014_000000024712_person_sports ball_tennis racket.jpg#Two people are in the center of the picture. Each of them is holding a tennis racket. On the left of these two men, there are another two men, one of which has a sports ball in hand. 
+COCO_train2014_000000024714_apple_orange_dining table_bowl_person_bottle_potted plant_handbag_banana.jpg#Three people are in the right half of the picture. The woman in the right is carrying a handbag. And there is another one handbag in the right half of the picture. A dining table is in the right of the scene with a bowl and several bottles on it. In the center, there are some apples and bananas. On the left of these bananas, there are some oranges and a potted plant.
+COCO_train2014_000000024716_person_cup_pizza.jpg#A big pizza is in the center of the scene. In the right of the picture, there are two people. And in the left of the picture, there is a cup.
+COCO_train2014_000000024723_person_baseball bat_baseball glove.jpg#There are many people in the picture. One is close to the screen in the center and others are in the background. The man in the center is wearing a pair of baseball gloves and holding a baseball bat.
+COCO_train2014_000000042196_airplane_traffic light.jpg#There's an airplane in the middle of the image and an airplane light near the bottom of the image.The light is under the airplane in the image.
+COCO_train2014_000000042209_person_bowl_knife_oven.jpg#Many people  intersperse among the image and there are some bowls and knives near the center.There are two ovens,one is on the right of the image and the other is above the people in the image.
+COCO_train2014_000000042222_teddy bear.jpg#Some teddy bears intersperse in the image with a semicircle shape.
+COCO_train2014_000000042228_clock.jpg#A clock is above the center of the image
+COCO_train2014_000000042245_tie_person.jpg#A person with a tie on his neck is in the middle of the image
+COCO_train2014_000000042254_sheep_car_person.jpg#A car is near the center of the image and there are two persons in the car.A sheep is under the car in the image and part of the sheep overlaps the car.
+COCO_train2014_000000042277_oven_cup_refrigerator_bottle_microwave.jpg#In the image,there is an oven in the left bottom , two cups on the top left corner,a refrigerator on the top right corner.near the center is a microwave.4 bottles are in this picture ,one is on the top of the refrigerator ,one is on the top left corner and two overlap the microwave.
+COCO_train2014_000000042278_person_surfboard.jpg#There are some persons in image.The person in the middle of the image is holding a surfboard on his hands.
+COCO_train2014_000000042285_bowl_bird.jpg#There are many birds in the image.Near the middle of the image is a bowl among birds.
+COCO_train2014_000000042293_tie_person.jpg#There is a person in the center of the image with a tie on his neck.
+COCO_train2014_000000042297_cake_person_chair_bowl_dining table.jpg#There are three persons in the image. The person behind the dining table is sitting in a chair trying to fetch the cake on the bottom of the picture.
+COCO_train2014_000000042308_person_snowboard.jpg#A person with a snow board in his hand is in the middle of the image.
+COCO_train2014_000000042312_person_donut.jpg#A person with several donuts in his hands is in the center of the image.
+COCO_train2014_000000042314_vase_dining table.jpg#There is a dining table on the lower middle of the picture and a vase on the table.
+COCO_train2014_000000042320_cup_dining table_bowl_microwave_person_knife_bottle_cell phone_refrigerator.jpg#There are some people in the image,the one in the middle is using a cell phone on his left hand.Behind this person is a microwave ,and a refrigerator on the right of the microwave.A dining table is on the bottom of the picture with two cups , some bowls and some knives on it.
+COCO_train2014_000000042321_toilet.jpg#A toilet is in the center of the image.
+COCO_train2014_000000042333_fire hydrant.jpg#A fire hydrant is near the middle of the picture.
+COCO_train2014_000000042336_person_horse.jpg#There are two people riding horses in the center of the image.
+COCO_train2014_000000042339_person_skis.jpg#There are four people in the center.The three on the right wear skis.
+COCO_train2014_000000042341_dog_boat.jpg#In the lower middle is a boat.A dog is lying on the boat.
+COCO_train2014_000000042342_person_traffic light_backpack_car_suitcase.jpg#There are some people in the image,and the one in the lower middle has a suitcase on the left and a backpack on the right.Among the people are some cars.
+COCO_train2014_000000042347_bus_person.jpg#There are some buses in the picture and some people in these buses.
+COCO_train2014_000000042349_person_surfboard.jpg#There are some people in the image ,the one in the middle has a surfboard near his legs.
+COCO_train2014_000000042355_tv_dog_keyboard_cell phone_mouse_chair.jpg#There is a dog in the lower middle ,a chair in the right bottom ,a phone on the left and two tvs with mouse and keyboard in the upper middle.
+COCO_train2014_000000042366_fire hydrant.jpg#A fire hydrant is in the upper left.
+COCO_train2014_000000042371_person_horse_broccoli_backpack_clock.jpg#There are some persons in the image.In the upper right is a clock and in the lower left is a broccoli.Two horses are in the lower right.The person on the right is wearing a backpack.
+COCO_train2014_000000042384_fork_carrot_bowl_broccoli_dining table.jpg#A bowl with a piece of fork and carrot in it is in the middle.The outer space beyond the bowl is a dinning table.A fork is on the right of the bowl.
+COCO_train2014_000000042385_person_skis_backpack.jpg#A man wearing ski and backpack is in the lower middle of the image.
+COCO_train2014_000000042404_person_skateboard_bench.jpg#There is a person on the upper left and a bench on the lower right.Between these two things is a skateboard.
+COCO_train2014_000000042407_person_truck_bird.jpg#A trunk is in the middle of the image and a person is on the right of the trunk.There is a bird on the trunk.
+COCO_train2014_000000042415_person_train.jpg#There is a train in the middle and a person is on it.
+COCO_train2014_000000042416_donut_cup_pizza_dining table.jpg#There is a dining table on the lower middle with a cup on the left and some pizza and donuts in the middle.
+COCO_train2014_000000042418_umbrella_car_tennis racket_bench_person_chair.jpg#A person with a tennis racket on his hand is in the middle.On the right of the person is an umbrella ,a bench and a chair.
+COCO_train2014_000000042422_suitcase.jpg#Three suitcases are in the middle.
+COCO_train2014_000000042427_bowl_refrigerator_bottle_apple.jpg#There is a refrigerator in the middle and it has some bowls ,bottles and apples in it.
+COCO_train2014_000000042429_person_sports ball_tennis racket.jpg#There are two people in the middle.The left one has a tennis racket in her hand.
+COCO_train2014_000000042439_sheep.jpg#There are two sheeps in the lower middle of the picture.
+COCO_train2014_000000042441_car_horse_bicycle_truck_person.jpg#There is a horse in the lower middle of the image and some people and cars in the upper middle.A trunk and a bicycle is on the top left corner of the picture.
+COCO_train2014_000000042453_giraffe.jpg#There is a giraffe in the middle of the image.
+COCO_train2014_000000042458_person_train.jpg#There is a train in the middle of the image and in the right of the image is a person.
+COCO_train2014_000000042463_cup_dining table_person_spoon_potted plant_cake_chair.jpg#There is a person sitting on a chair in the middle of the image. In the left of the image is a potted plant. At the bottom of the image is a dining table and there are several cups, a cake and a spoon on the dining table.
+COCO_train2014_000000042469_toilet.jpg#In the left of the image is a toilet.
+COCO_train2014_000000042472_person_horse_umbrella_chair_potted plant.jpg#There is a horse in the middle of the image and a person is riding the horse. There are some potted plant under the horse. There is an umbrella in the right of the image and some people watching the horse in the image.
+COCO_train2014_000000042476_cow.jpg#In the middle of the image is a cow. 
+COCO_train2014_000000042479_person_motorcycle.jpg#There are several motorcycle in the middle of the image with some people riding on the motorcycles. 
+COCO_train2014_000000042481_handbag_person_cup.jpg#There are many people in the image. There is a handbag in the middle of the image and on the bottom of the image are some cups.
+COCO_train2014_000000042493_person_backpack_bicycle.jpg#There are two people in the middle of the image. They are riding on their bicycles and wearing two backpacks on their back. 
+COCO_train2014_000000042513_hair drier_sink_bottle.jpg#There is a sink in the middle of the image. In the left of the image are some bottles and in the right top of the image is a hair drier. 
+COCO_train2014_000000042516_person_backpack_umbrella_car.jpg#There is a person in the middle of the image and he is carrying an umbrella and a backpack. On the left bottom of the image is a car.
+COCO_train2014_000000042519_sandwich.jpg#In the middle of the image is a sandwich.
+COCO_train2014_000000042529_car_traffic light_clock_person_bus.jpg#There are several cars and several people in the image. On the top of the image is a clock. On the right of the image is a bus and on the left of the image is a traffic light.
+COCO_train2014_000000042540_sandwich_banana_cup.jpg#THere are three sandwiches in the image. On the top left of the image is a cup. 
+COCO_train2014_000000042553_tie_person_clock.jpg#There are several people in the image. The people on the left of the image is wearing a clock.
+COCO_train2014_000000042570_handbag_bus_kite_person.jpg#There are several people in the image. There are some buses in the image. The people in the middle of the image has a kite in his hand and there are two handbags in the image.
+COCO_train2014_000000042578_traffic light.jpg#There are several traffic lights in the middle of the image.
+COCO_train2014_000000042584_person_backpack_chair_clock.jpg#There are several people in the image. A person on the left of the image is wearing a backpack. There are several chairs in the middle of the image. On the top of the image is a clock.
+COCO_train2014_000000042585_fork_apple_cup_dining table_bowl_bottle_knife.jpg#There is a table in the middle of the image. On the right of the image is a cup.
+COCO_train2014_000000042591_person_cell phone_traffic light_umbrella_backpack.jpg#There are several people in the image. The person in the middle of the image is holding an umbrella. The person on the left of the image is using cell phone and a person behind him is taking a backpack. On the upper left of the image are some traffic lights.
+COCO_train2014_000000042614_elephant.jpg#There are two elephants in the middle of the image. 
+COCO_train2014_000000042619_handbag_car_traffic light_bicycle_person.jpg#There are many people walking in the image. Several cars are among the people. A person in the middle of the image is riding a bicycle. Above the people are some traffic lights.
+COCO_train2014_000000042621_bird_boat.jpg#In the middle of the image is a bird.
+COCO_train2014_000000042634_person_backpack_bottle_suitcase.jpg#There are some people in the middle of the image. In the right of the image are some backpacks and suitcases. On the bottom the image are some bottles.
+COCO_train2014_000000042644_car_fire hydrant.jpg#There is a car in the middle of the image and behind the car is a fire hydrant.
+COCO_train2014_000000042658_toilet_bed.jpg#There are several beds in the image and on the lower left of the image is a toilet.
+COCO_train2014_000000042659_car.jpg#In the left bottom corner of the image is a car.
+COCO_train2014_000000042671_person_horse.jpg#There is a horse in the middle of the image and on the right of the horse is a person.
+COCO_train2014_000000042675_cow.jpg#In the middle of the image is a cow.
+COCO_train2014_000000042680_person.jpg#There are several people in the left side and the right side of the image.
+COCO_train2014_000000042682_tv_car_traffic light_truck_person.jpg#There are several tv in the upper part of the image and some cars in the middle of the image and several cars and trunks in the lower part of the image. There are two traffic lights above the people.
+COCO_train2014_000000042683_hot dog_car_person_train_bus_boat.jpg#There is a hot dog in the middle of the image. There is a person holding the hot dog with his hand in the left bottom of the image. There are some trains behind the hot dog. On the upper left of the image is a plane. Above the trains are some buses. Above the buses is a boat.
+COCO_train2014_000000042690_car_motorcycle.jpg#There are two motorcycles in the middle of the image and on the right of the motorcycles is a car.
+COCO_train2014_000000042696_elephant.jpg#There are several elephants in the middle of the image.
+COCO_train2014_000000042698_tv_person_laptop.jpg#There are three people in the left of the image. The right person in looking at a laptop and the other two are in a tv.
+COCO_train2014_000000042700_cat.jpg#In the middle of the image is a cat.
+COCO_train2014_000000042701_cow.jpg#There are some cows in the middle of the image and in the right of the image.
+COCO_train2014_000000042704_person_chair_umbrella.jpg#There is a person sitting on a chair in the middle of the image and there is an umbrella on the left side of the person.
+COCO_train2014_000000042705_bus_truck_person.jpg#There is a person in the left of the image. There is a trunk in the right of the image with a bus behind the trunk.
+COCO_train2014_000000042707_person_cell phone_mouse_keyboard.jpg#There is a person holding a mouse in the middle of the image. Behind the person is a keyboard. On the right of the image is a cell phone. 
+COCO_train2014_000000042725_cup_bowl_person_sink_bottle_potted plant_refrigerator.jpg#There are several people in the image. The person close to the screen is washing a bowl in the sink. In the middle of the image are some bottles and a cup. The person behind the bottles is holding a potted plant. Behind the person in the left of the image is a refrigerator.
+COCO_train2014_000000042731_person_bowl_sink_knife.jpg#There are two people in the image, one in the middle and the other in the left side. The people in the middle of the image is washing a bowl in the sink. There are several knives in the middle of the image.
+COCO_train2014_000000042735_cup_keyboard.jpg#There is a cup in the left part of the image and a keyboard on the right part of the image.
+COCO_train2014_000000042740_carrot_bowl_broccoli.jpg#There is a bowl in the right of the image. In the bowl, there are many broccoli and three pieces of carrots.
+COCO_train2014_000000042741_tie_person_couch_cat.jpg#There is a person wearing a tie in the right of the image. On the right of the person is a cat. The person and the car are sitting on a couch.
+COCO_train2014_000000042748_tv_backpack_remote_bed.jpg#There is a tv on the left of the image, with a remote under the tv. On the bottom of the image is a bed with a backpack on it. 
+COCO_train2014_000000042750_tie_person.jpg#There is a person wearing a tie in the left of the image.
+COCO_train2014_000000042751_book_clock.jpg#There is a clock in the middle of the image. There are some books on the right side and left side of the clock. 
+COCO_train2014_000000042756_person_frisbee.jpg#A person is playing a frisbee in her hand in the middle of the image.
+COCO_train2014_000000042760_person_snowboard.jpg#There is a person standing on a snowboard in the middle of the image.
+COCO_train2014_000000042763_car_fire hydrant_person.jpg#There is a person standing on the right of a fire hydrant in the middle of the image and above them there are some cars.
+COCO_train2014_000000042785_fork_wine glass_dining table_cup_pizza.jpg#There are three pizza on a dining table in the image. On the top of the image are some wine glass and a cup on the right side of the wine glass. There are some folks among the pizza.
+COCO_train2014_000000042799_person_backpack_cow.jpg#There are several people in the image. Two people closest to the screen are wearing backpacks. Above those two people and on the upper left of the image are some cows.
+COCO_train2014_000000042800_bus.jpg#There is a bus in the middle of the image.
+COCO_train2014_000000042804_handbag_person_cell phone_backpack_cup.jpg#There are many people in the middle of the image. On the left of the image is a handbag. On the bottom of the image and on the left side of the handbag are two backpacks. The person in the upper left of the image is playing a cell phone.
+COCO_train2014_000000042808_person_carrot_bottle_cup.jpg#There is a person on the left of the image, with a carrot in his hand. Behind the carrot, on the left is a bottle and on the right is a cup.
+COCO_train2014_000000042818_handbag_person_kite.jpg#There are many people in the lower part of the image and above the people there are many kites. A person on the lower left of the image is wearing a handbag. 
+COCO_train2014_000000042819_handbag_person_backpack_train_suitcase.jpg#In the left of the image is a train and there are many people on the right of the train. A person near the train is taking a handbag.
+COCO_train2014_000000042820_person_skis_backpack.jpg#There is a person in the lower middle of the image with a backpack on the person's back. Under the person are two skis.
+COCO_train2014_000000042828_orange_bowl_apple.jpg#There are some orange in the middle of the image and a part of apple on the upper middle of the image.
+COCO_train2014_000000042844_giraffe.jpg#There is a giraffe in the middle of the image.
+COCO_train2014_000000042849_kite_car_truck_bird_person.jpg#There are many cars in the left side and the right side of the image. In the middle of the image is a trunk and there are several people among the cars. Above the cars on the right side, there are many kites. Under the cars are some birds. 
+COCO_train2014_000000042853_cake_dining table.jpg#There is a dinning table with a cake on it in the middle of the picture.
+COCO_train2014_000000042855_backpack_person_train_suitcase_handbag_tie.jpg#There is a train on the left and some persons ,ties,backpacks ties handbags and suitcases on the right.
+COCO_train2014_000000042858_person_umbrella_kite.jpg#There are some people in the picture.Some on the right bottom has an umbrella with them.And on the upper middle are some birds.
+COCO_train2014_000000042860_person_kite.jpg#There are two kids and two kites on the lower middle of the image.
+COCO_train2014_000000042861_person_horse_bird_clock.jpg#There is a person riding horse in the upper right of the image.A bird is in the upper left and a clock is under the bird.Under the clock are some persons.
+COCO_train2014_000000042862_handbag_person_cup_car_bench.jpg#There is a bench in the middle and two persons on the left.Between two people is a handbag.Above the people are some parts of cars.
+COCO_train2014_000000042865_book_cat.jpg#There is a cat on the right and some books on the left of the image.
+COCO_train2014_000000042867_tv_chair_clock_mouse_keyboard.jpg#There is a chair in the bottom left and some tvs and some mouse in the middle of the picture. Some keyboards are on the lower middle of the image.A cup is in the right of the image.
+COCO_train2014_000000042868_carrot_broccoli.jpg#There are some carrots and broccoli in the middle of the picture.
+COCO_train2014_000000042870_person_kite_bird.jpg#There is a bird in the middle of the picture with a kite on its right and a person on its left.
+COCO_train2014_000000042871_sink.jpg#There is a sink in the bottom of the image.
+COCO_train2014_000000042876_airplane.jpg#An airplane is in the middle of the picture.
+COCO_train2014_000000042919_car_truck.jpg#There is a trunk and a car on the left of the picture.
+COCO_train2014_000000042921_dining table_tv_bowl_cake_person_bottle_orange_wine glass_chair.jpg#A dining table with a cake ,an orange and a bowl on it is in the lower middle of the image.In the upper middle are some persons.THere is a tv on the right of the persons and some wine glasses on the left of the persons.
+COCO_train2014_000000042929_elephant.jpg#There is an elephant in the middle of the image.
+COCO_train2014_000000042931_giraffe.jpg#There are two giraffes in the center of the image.
+COCO_train2014_000000042947_person_kite.jpg#There are some people on the lower middle and there is a kite on the upper middle of the picture.
+COCO_train2014_000000042960_car_stop sign_potted plant.jpg#There are some potted plant in the lower left and some cars in the middle of the picture.There are two stop signs above cars,one is on the left and the other is on the right.
+COCO_train2014_000000042967_person_frisbee.jpg#There is a person on the right and a frisbee on the left of the image.
+COCO_train2014_000000042972_remote_cup_tv_dining table_vase_book_chair_couch.jpg#There is a tv on the left ,some books in the upper left ,a couch and  in the lower right of the image.Above the couch are some chairs ,a table ,a glass and a vase.
+COCO_train2014_000000042975_tv_cat.jpg#There is a cat on the left and a tv on the right of the image.
+COCO_train2014_000000042977_person_chair_airplane.jpg#There is an airplane in the middle of the picture,there are some people and chairs under the plane.
+COCO_train2014_000000043001_car_traffic light_person_truck_motorcycle_bus.jpg#There are some bus on the upper left , some cars in the middle,some people and motorcycle and a traffic light on the right of the picture. 
+COCO_train2014_000000043007_toilet_sink_vase.jpg#There is a toilet on the left end of the picture.Three vases are on the right of the picture.Under them are two sinks.
+COCO_train2014_000000043011_toilet_sink.jpg#There is a toilet on the left of the image and a sink overlap it.
+COCO_train2014_000000043016_airplane.jpg#There is an airplane in the center of the image.
+COCO_train2014_000000043024_person_kite.jpg#There is a kid on the lower left of the image.Above the kid ,near the top left corner is a kite.
+COCO_train2014_000000043029_cake_person_bottle_dining table.jpg#There are some kids on the top of the image.Under them is a dinning table with two bottles and a cake on it. The bottles are on the left and the cake is on the right.
+COCO_train2014_000000043033_person_surfboard.jpg#There is a person with a surfboard in her hand.
+COCO_train2014_000000043049_cow.jpg#There are two cows on the lower left of the image.
+COCO_train2014_000000043071_person_snowboard.jpg#There is a person with a snowboard under her feet in the middle.
+COCO_train2014_000000043077_person_truck_boat.jpg#There are some boats in the middle of the image.Above them are some people and a trunk.
+COCO_train2014_000000043093_spoon_bowl_banana_dining table.jpg#There is a dinning table with a spoon ,a bowl and a banana on it.The banana is above the spoon and the bowl.The bowl is on the left of the spoon.
+COCO_train2014_000000043099_toilet.jpg#A toilet is on the right bottom of the picture.
+COCO_train2014_000000043110_person_snowboard_skis.jpg#There are some people in the middle of the image.There are some snowboards and skis under the people.
+COCO_train2014_000000043150_car_person_bicycle_clock.jpg#There is a clock on the top and some people on the bottom of the picture.Near the people in the middle is a car and the people on the right has bicycles with them.
+COCO_train2014_000000043161_person_skateboard.jpg#There is a person with a skateboard under his feet in the middle of the picture.
+COCO_train2014_000000043163_person_sports ball_tennis racket.jpg#There are two people with tennis rackets on their hands .There is a ball on each racket.
+COCO_train2014_000000043171_chair_cup_bowl_dog_dining table.jpg#There  is a dinning table with some chairs around it and some bowls on it in the right of the image.Under the table is a dog.
+COCO_train2014_000000043176_clock.jpg#There is a clock in the middle of the image.
+COCO_train2014_000000043190_oven_refrigerator_bottle.jpg#There is a refrigerator in the middle of the image.Some bottles are on the top of the refrigerator and a part of an oven is on the left of the refrigerator. 
+COCO_train2014_000000043191_person_train_book.jpg#There is a train in the middle of the image and a book partly overlap it.There is a people's hand in the left bottom of the picture.
+COCO_train2014_000000043193_dog_bed_couch_person_potted plant_cell phone.jpg##There is a person in the middle and a potted plant on the right of the image.Under the people is a couch and a bed.A cell phone is on the couch and a dog is on the bed.
+COCO_train2014_000000043203_giraffe.jpg#There are two giraffes in the picture ,one is on the left and the other is on the right.
+COCO_train2014_000000043206_frisbee_umbrella_car_backpack_person_truck_chair.jpg#There are some cars on the upper middle of the image.A trunk is on the right of cars and there are some people under the cars. Among people is a frisbee and a backpack and an umbrella.
+COCO_train2014_000000043210_cake.jpg#There is a cake in the center of the image.
+COCO_train2014_000000043220_zebra.jpg#There is a zebra in the middle of the image.
+COCO_train2014_000000043226_person_frisbee.jpg#There are some people in the picture.On the left of the picture ,there is a frisbee.
+COCO_train2014_000000043227_tv_book_mouse_keyboard.jpg#There is a tv on the top left corner , some books on the top right corner.Under them are a mouse and a keyboard.
+COCO_train2014_000000043232_handbag_person_kite.jpg#There are some people in the lower bottom of the picture.Among people are some handbags.And there is a kite above the people.
+COCO_train2014_000000043248_person_skateboard.jpg#There are two people with skateboard on the upper left of the image.
+COCO_train2014_000000043251_dining table_bowl_banana_bottle_apple.jpg#There is a dining table with bananas,apples on the left and a bowl on the right of the image.
+COCO_train2014_000000043256_chair_dining table_refrigerator_bottle_potted plant.jpg#There is a refrigerator with some bottles on the top of it on the left,some bottles on the right of the image.Under them are a dining table with two chairs around it.There is a potted plant on the table in the middle of the image.
+COCO_train2014_000000043264_person_bed.jpg#There is a bed with two people on it in the middle of the picture.
+COCO_train2014_000000043269_car_traffic light_truck_person.jpg#There is a trunk and some cars in the middle of the image,the trunk is on the left.On the left of the trunk are some persons.Above cars is a traffic light.
+COCO_train2014_000000043270_tv_person_backpack.jpg#There are several tvs in the middle of the image.On the lower right of the image are some persons.
+COCO_train2014_000000043279_car_horse_bicycle_person.jpg#There is a car and a horse on the left of the image, the car is on the left of the horse.Above the horse are two bicycles.Between the bicycles are some people.
+COCO_train2014_000000043291_dining table_bowl_book_refrigerator_cat.jpg#There is a refrigerator on the top and a dining table on the bottom of the image.And there is a cat and a book on the table,the book is above the cat.A bowl is on the top right corner of the image.
+COCO_train2014_000000043306_tv_book_bottle_keyboard.jpg#There is a tv on the top right corner of the image.Under the tv is a keyboard.On the left of them is  a bottle.There are two books on the top left corner of the image.
+COCO_train2014_000000043308_elephant.jpg#There are two elephants in the middle of the image.
+COCO_train2014_000000043319_skateboard.jpg#There is a skateboard in the center of the picture.
+COCO_train2014_000000043333_cow.jpg#There are some cows in the middle of the image.
+COCO_train2014_000000043338_orange_sink_banana_dining table.jpg#There is a sink on the top and a dining table on the bottom of the image.Some bananas and oranges are on the table,the bananas are on the left of the orange. 
+COCO_train2014_000000043340_toilet_sink_potted plant.jpg#There is a toilet on the lower right and a potted plant on the middle and a sink on the left of the image.
+COCO_train2014_000000043347_boat.jpg#There are several boats in the center of the image.
+COCO_train2014_000000043350_donut_person.jpg#There are some donuts on the right of the image.A person is on the top left corner of the image.
+COCO_train2014_000000043353_stop sign_truck_fire hydrant.jpg#On the upper middle of image is a stop sign.There is a car and fire hydrant on the lower left of the picture.
+COCO_train2014_000000043354_sheep_cow.jpg#There are some cows and sheeps in the middle of the image.
+COCO_train2014_000000043367_teddy bear.jpg#There is a teddy bear in the center of the picture.
+COCO_train2014_000000043369_bicycle.jpg#A bicycle is in the middle of the image.
+COCO_train2014_000000043371_cow.jpg#Two cows are in the center of the picture.
+COCO_train2014_000000043383_sheep.jpg#Several sheeps are on the lower right of the image.
+COCO_train2014_000000043388_carrot_knife.jpg#There is a knife on the right of the image.On the upper middle are some carrots.
+COCO_train2014_000000043392_clock.jpg#There is a clock int the middle of the image.
+COCO_train2014_000000043393_sheep.jpg#There is a group of sheep int he middle of the picture.
+COCO_train2014_000000043407_person_surfboard.jpg#There is a person with a surfboard under his feet on the left of the image.
+COCO_train2014_000000043411_dining table_car_backpack_person_cake_cell phone_traffic light.jpg#There is a dining table with cakes on the bottom of the image.Above the table is a person and a backpack.A traffic light is on the left of the people.
+COCO_train2014_000000043425_dog.jpg#There is a dog in the center of the picture.
+COCO_train2014_000000043431_person_chair_sports ball_tennis racket.jpg#There are many people in the picture.The one on the right has a tennis racket in his hand.
+COCO_train2014_000000043438_bench.jpg#There is a bench in the center of the image.
+COCO_train2014_000000043439_bird.jpg#There is a bird in the center of the picture.
+COCO_train2014_000000043444_person_skis.jpg#There is a person with skis under his feet on the bottom of the image.
+COCO_train2014_000000043451_person_skateboard.jpg#There is a skateboard in the center of the picture.Under the skateboard is a person.
+COCO_train2014_000000043455_person_cow.jpg#There are cows on the top of the image and under cows is a kid.
+COCO_train2014_000000043464_stop sign.jpg#There is a stop sign on the upper middle of the image.
+COCO_train2014_000000043477_person_kite.jpg#There are some kites in the middle of the image,and under them are some people.
+COCO_train2014_000000043479_person_kite.jpg#There is a person on the lower left and a kite on the upper right of the picture.
+COCO_train2014_000000043500_person_train.jpg#There is a train on the top of the image.On the left of the image ,two people overlap the train.
+COCO_train2014_000000043506_traffic light_train.jpg#There is a traffic light on the upper left and a train on the lower right of the image.
+COCO_train2014_000000043510_baseball bat_chair_person_baseball glove.jpg#There are many people in the picture.Among them are some chairs.
+COCO_train2014_000000043511_traffic light_train_bird.jpg#A train is in the center of the image.A traffic light is on the right of the image.Under them is a bird.
+COCO_train2014_000000043513_person_bicycle_motorcycle.jpg#There are some motorcycles and persons in the center of the image.On the left of the picture are some bicycles.
+COCO_train2014_000000043522_train_bicycle.jpg#There is a train in the center of the image.On the left of the train are some bicycles.
+COCO_train2014_000000043543_person_snowboard.jpg#There is a person standing on a snowboard in the middle of the image.
+COCO_train2014_000000043545_giraffe.jpg#A giraffe is in the middle of the image.
+COCO_train2014_000000043546_handbag_person_train.jpg#There is a train in the middle of the image.A person with a handbag is on the right of the image.
+COCO_train2014_000000043558_truck.jpg#There is a trunk in the middle of the image.
+COCO_train2014_000000043560_fork_apple_dining table_cup_person_spoon.jpg#There is a dining table with a knife,some cups and some apples on it on the bottom and some people on the top of the image.The right two cups have spoon in it.
+COCO_train2014_000000043566_traffic light.jpg#There are some traffic lights on the lower right of the picture.
+COCO_train2014_000000043576_bird.jpg#There is a bird in the middle of the image.
