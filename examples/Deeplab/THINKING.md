@@ -51,6 +51,7 @@ Convolutions for Semantic Segmentation](https://github.com/sacmehta/ESPNet) to h
 * clipnet drawback? tensor decompose?
 * progressive DUC
 * gcn+pose estimation
+* incremental seg [https://zhuanlan.zhihu.com/p/29196822](https://zhuanlan.zhihu.com/p/29196822)
 
 ## similar
 
