@@ -6,7 +6,7 @@ val_path = "/Users/ht/Desktop/annotation_result/ypw.txt"
 import os
 from collections import Counter
 
-def _build_vocab(caption_list, threshold=1):
+def _build_vocab(caption_list, threshold=2):
     counter = Counter()
     max_len = 0
     for i, caption in enumerate(caption_list):
@@ -69,5 +69,5 @@ def clean_dir(train_path):
     pass
 
 
-clean_dir(train_path)
+clean_dir(val_path)
 

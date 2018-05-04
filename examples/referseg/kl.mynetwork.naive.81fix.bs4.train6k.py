@@ -42,7 +42,7 @@ init_lr = 2.5e-4
 lr_schedule = [(3, 1e-4), (7, 1e-5)]
 VOCAB_SIZE = len(DataLoader(name = "train", max_length=MAX_LENGTH, img_size=IMG_SIZE, train_img_num=train_img_num,test_img_num=test_img_num,quick_eval=quick_eval, regenerate_json=regenerate_json).word_to_idx.keys())#3224#28645#24022  # careful about the VOCAB SIZE
 
-WARMUP_STEP = 1000
+WARMUP_STEP = 100
 STRONG_WEAK_RATE = 5
 
 def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
@@ -163,7 +163,7 @@ class CustomedTrainer(TowerTrainer):
             if delta%STRONG_WEAK_RATE == 0:
                 self.hooked_sess.run(self.strong_cost_min)
             else:
-                self.hooked_sess.run(self.weak_cost)
+                self.hooked_sess.run(self.weak_cost_min)
 
 
 
@@ -221,7 +221,7 @@ class CalculateMIoU(Callback):
 
     def _setup_graph(self):
         self.pred = self.trainer.get_predictor(
-            ['image','caption'], ['prob'])
+            ['image',], ['img_prob'])
 
     def _before_train(self):
         pass
@@ -240,10 +240,9 @@ class CalculateMIoU(Callback):
             def mypredictor(input_img):
                 # input image: 1*H*W*3
                 # output : H*W*C
-                output = self.pred(input_img[np.newaxis, :, :, :], caption)
+                output = self.pred(input_img[np.newaxis, :, :, :])
                 return output[0][0]
             prediction = mypredictor(image)
-            #prediction = predict_scaler(image, mypredictor, scales=[1], classes=CLASS_NUM, tile_size=IMG_SIZE, is_densecrf = False)
             prediction = np.argmax(prediction, axis=2)
             self.stat.feed(prediction, label)
 
@@ -255,7 +254,7 @@ class CalculateMIoU(Callback):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', default='2', help='comma separated list of GPU(s) to use.')
+    parser.add_argument('--gpu', default='3', help='comma separated list of GPU(s) to use.')
     parser.add_argument('--load', default="deeplab_resnet_init.ckpt" ,help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
