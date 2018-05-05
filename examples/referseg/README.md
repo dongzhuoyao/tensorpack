@@ -38,6 +38,7 @@ mynetwork.naive.81fix.bs4.train6k||33.64|
 mynetwork.naive.81fix.bs4.train10k||37.29|
 mynetwork.naive.81fix.bs4.train20k||41.8|
 mynetwork.naive.81fix.bs4.train40k||44.7(epoch8),stucked|
+distill.mynetwork.naive.81fix.bs4.train0.5k||12.4|
 distill.mynetwork.naive.81fix.bs4.train1k||18.5|
 distill.mynetwork.naive.81fix.bs4.train3k||22.1|
 |---|----|----|
