@@ -6,7 +6,7 @@ import gzip
 import numpy as np
 import cv2
 from tqdm import tqdm
-
+import tensorflow as tf
 from tensorpack.utils import logger
 from tensorpack.dataflow.base import RNGDataFlow
 from tensorpack.utils.segmentation.segmentation import visualize_label
@@ -205,12 +205,12 @@ class DataLoader(RNGDataFlow):
 
     def size(self):
         if "train" in self.name:
-            return len(self.img_dict.keys())
+            return len(self.img_ids)
         elif "test" in self.name:
             if self.quick_eval:
                 return 1000
             else:
-                return len(self.img_dict.keys())
+                return len(self.img_ids)
         else:
             raise
 

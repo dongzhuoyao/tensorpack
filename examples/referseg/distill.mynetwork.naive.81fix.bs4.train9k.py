@@ -12,31 +12,28 @@ import numpy as np
 
 os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
 from tensorpack import *
+from tensorpack.dataflow import dataset
 from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler
 from tensorpack.utils.stats import MIoUStatistics
 from tensorpack.utils import logger
 from tensorpack.tfutils import optimizer
+from RMI_model_onlydeeplab import RMI_model_onlydeeplab
+from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
 from tqdm import tqdm
 from RMI_model import RMI_model
-from data_loader_test import DataLoader
-from tensorpack.tfutils.tower import TowerContext, TowerFuncWrapper
-from RMI_model_onlydeeplab import RMI_model_onlydeeplab
-from tensorpack.gist.kl_loss import kl_loss_compute
+from data_loader import DataLoader
+
 CLASS_NUM = DataLoader.class_num()
 IMG_SIZE = 320
 IGNORE_LABEL = 255
 MAX_LENGTH = 15
-train_img_num=6000
-test_img_num=1000
-epoch_scale = 2
+train_img_num= 9000
+test_img_num= 1000
 quick_eval=True
-regenerate_json = False
-BATCH_SIZE = 1
+regenerate_json = True
 
-
-STRONG_WEAK_RATE = 5
-STRONGIMG_RATE = 0.1
+BATCH_SIZE = 3
 
 # maximum length of caption(number of word). if caption is longer than max_length, deleted.
 STEP_NUM = MAX_LENGTH+2 # equal Max Length
@@ -44,8 +41,7 @@ evaluate_every_n_epoch = 1
 max_epoch = 10
 init_lr = 2.5e-4
 lr_schedule = [(3, 1e-4), (7, 1e-5)]
-VOCAB_SIZE = len(DataLoader(name = "train", strong_weak_rate=STRONG_WEAK_RATE, strongimg_rate=STRONGIMG_RATE, max_length=MAX_LENGTH, img_size=IMG_SIZE, train_img_num=train_img_num,test_img_num=test_img_num,quick_eval=quick_eval, regenerate_json=regenerate_json).word_to_idx.keys())#3224#28645#24022  # careful about the VOCAB SIZE
-
+VOCAB_SIZE = len(DataLoader(name = "train", max_length=MAX_LENGTH, img_size=IMG_SIZE, train_img_num=train_img_num,test_img_num=test_img_num,quick_eval=quick_eval, regenerate_json=regenerate_json).word_to_idx.keys())#3224#28645#24022  # careful about the VOCAB SIZE
 
 
 def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
@@ -69,44 +65,44 @@ def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
         loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=prediction, labels=gt)
     return loss
 
-class Model(ModelDescBase):
+class Model(ModelDesc):
 
-    def get_inputs(self):
+    def _get_inputs(self):
         return [InputDesc(tf.float32, [None, IMG_SIZE, IMG_SIZE, 3], 'image'),
                 InputDesc(tf.int32, [None, IMG_SIZE, IMG_SIZE, 1], 'gt'),
                 InputDesc(tf.int32, [None, STEP_NUM], 'caption'),]
 
-    def build_graph(self, image, label, caption):
+    def _build_graph(self, inputs):
+        image, label, caption = inputs
 
         image = image - tf.constant([104, 116, 122], dtype='float32')
         mode = "train" if get_current_tower_context().is_training else "val"
         current_batch_size = args.batch_size if get_current_tower_context().is_training else 1
         with tf.variable_scope("image"):
-            img_model = RMI_model_onlydeeplab(image, class_num=CLASS_NUM, batch_size=current_batch_size,  mode=mode,weights="deeplab")
+            img_model = RMI_model_onlydeeplab(image, class_num=CLASS_NUM, batch_size=current_batch_size, mode=mode,
+                                              weights="deeplab")
             img_predict = img_model.up
 
         label = tf.identity(label, name="label")
         img_costs = []
 
-        img_prob = tf.identity(img_predict, name='img_prob')
+        img_prob = tf.identity(img_predict, name='prob')
         img_prediction = tf.argmax(img_prob, axis=-1, name="img_prediction")
         cost = softmax_cross_entropy_with_ignore_label(logits=img_prob, label=label,
                                                        class_num=CLASS_NUM)
         cost = tf.reduce_mean(cost, name='img_cross_entropy_loss')  # the average cross-entropy loss
         img_costs.append(cost)
 
-
-
         with tf.variable_scope("multimodal"):
-            model = RMI_model(image, caption, class_num=CLASS_NUM, batch_size=current_batch_size, num_steps= STEP_NUM, mode=mode, vocab_size=VOCAB_SIZE, weights="deeplab")
+            model = RMI_model(image, caption, class_num=CLASS_NUM, batch_size=current_batch_size, num_steps=STEP_NUM,
+                              mode=mode, vocab_size=VOCAB_SIZE, weights="deeplab")
             predict = model.up
 
-
         costs = []
-        multimodal_prob = tf.identity(predict, name='prob')
+        multimodal_prob = tf.identity(predict, name='multimodal_prob')
         prediction = tf.argmax(multimodal_prob, axis=-1, name="prediction")
         cost = softmax_cross_entropy_with_ignore_label(logits=multimodal_prob, label=label,
-                                                             class_num=CLASS_NUM)
+                                                       class_num=CLASS_NUM)
         cost = tf.reduce_mean(cost, name='multimodal_cross_entropy_loss')  # the average cross-entropy loss
         costs.append(cost)
 
@@ -114,65 +110,27 @@ class Model(ModelDescBase):
             ##img+desc training
             wd_w = tf.train.exponential_decay(2e-4, get_global_step_var(),
                                               80000, 0.7, True)
-            wd_cost = tf.multiply(wd_w, regularize_cost('.*/Waaaaaa', tf.nn.l2_loss), name='wd_cost') #TODO
-            #wd_cost = 0.0
+            wd_cost = tf.multiply(wd_w, regularize_cost('.*/Waaaaaa', tf.nn.l2_loss), name='wd_cost')  # TODO
+            # wd_cost = 0.0
             costs.append(wd_cost)
             self.multimodal_cost = tf.add_n(costs, name='multimodal_cost')
 
             self.img_cost = tf.add_n(img_costs, name='img_cost')
+            self.cost = self.multimodal_cost + self.img_cost
 
-            self.strong_cost = self.multimodal_cost + self.img_cost
-            self.weak_cost = kl_loss_compute(img_prob, multimodal_prob)
 
-            ## img
-
-    def get_optimizer(self):
+    def _get_optimizer(self):
         lr = tf.get_variable('learning_rate', initializer=init_lr, trainable=False)
         opt = tf.train.AdamOptimizer(lr, epsilon=1e-3)
-        return opt
-
-
-class CustomedTrainer(TowerTrainer):
-    """ A GAN trainer which runs two optimization ops with a certain ratio."""
-    def __init__(self, input, model):
-        """
-        Args:
-            d_period(int): period of each d_opt run
-            g_period(int): period of each g_opt run
-        """
-        super(CustomedTrainer, self).__init__()
-        # Setup input
-        cbs = input.setup(model.get_inputs())
-        self.register_callback(cbs)
-
-        # Build the graph
-        self.tower_func = TowerFuncWrapper(model.build_graph, model.get_inputs())
-        with TowerContext('', is_training=True):
-            self.tower_func(*input.get_input_tensors())
-
-        opt = model.get_optimizer()
-        with tf.name_scope('optimize'):
-            self.strong_cost_min = opt.minimize(
-                model.strong_cost, name='strong_cost_min')
-            self.weak_cost_min = opt.minimize(
-                model.weak_cost,  name='weak_cost_min')
-
-    def run_step(self):
-        # Define the training iteration
-        #if self.global_step < WARMUP_STEP:
-        #    self.hooked_sess.run(self.strong_cost_min)
-        #else:
-            delta = self.global_step
-            if delta%STRONG_WEAK_RATE == 0:
-                self.hooked_sess.run(self.strong_cost_min)
-            else:
-                self.hooked_sess.run(self.weak_cost_min)
+        return optimizer.apply_grad_processors(
+            opt, [gradproc.ScaleGradient(
+                [('aspp.*_conv.*/Wnnnnnn', 10),('aspp.*_conv.*/bnnnnn', 20), ('conv.*/bnnnnn', 2)])]) #TODO
 
 
 
 def get_data(name, batch_size):
     isTrain = True if 'train' in name else False
-    ds = DataLoader(name = name, strong_weak_rate=STRONG_WEAK_RATE, strongimg_rate=STRONGIMG_RATE, max_length=MAX_LENGTH, img_size=IMG_SIZE,train_img_num=train_img_num,test_img_num=test_img_num,quick_eval=quick_eval, regenerate_json=regenerate_json)
+    ds = DataLoader(name = name, max_length=MAX_LENGTH, img_size=IMG_SIZE,train_img_num=train_img_num,test_img_num=test_img_num,quick_eval=quick_eval, regenerate_json=regenerate_json)
 
     if isTrain:
         ds = BatchData(ds, batch_size)
@@ -204,7 +162,7 @@ def get_config(batch_size):
         EstimatedTimeLeft(),
         ScheduledHyperParamSetter('learning_rate', lr_schedule),
         PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
-        ProgressBar(["cross_entropy_loss", "cost", "wd_cost"]),  # uncomment it to debug for every step
+        ProgressBar(["multimodal_cost", "img_cost"]),  # uncomment it to debug for every step
         # RunOp(lambda: tf.add_check_numerics_ops(), run_before=False, run_as_trigger=True, run_step=True)
     ]
 
@@ -224,7 +182,7 @@ class CalculateMIoU(Callback):
 
     def _setup_graph(self):
         self.pred = self.trainer.get_predictor(
-            ['image',], ['img_prob'])
+            ['image'], ['prob'])
 
     def _before_train(self):
         pass
@@ -272,29 +230,8 @@ if __name__ == '__main__':
         view_data()
     else:
         config = get_config(args.batch_size)
-
-        if False:
-            config.session_init = get_model_loader(args.load)
-
-        callbacks = [
-            ModelSaver(),
-            GPUUtilizationTracker(),
-            EstimatedTimeLeft(),
-            ScheduledHyperParamSetter('learning_rate', lr_schedule),
-            PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
-            ProgressBar(["multimodal_cost", "img_cost"]),  # uncomment it to debug for every step
-            # RunOp(lambda: tf.add_check_numerics_ops(), run_before=False, run_as_trigger=True, run_step=True)
-        ]
-
-
-        dataset_train = get_data('train', args.batch_size)
-        steps_per_epoch = dataset_train.size() * epoch_scale
-        loader = ChainInit([SaverRestore(args.load,prefix='multimodal'),SaverRestore(args.load,prefix='image')])
-        CustomedTrainer(
-            input = QueueInput(dataset_train),
-                    model = Model(),).train_with_defaults(
-            callbacks=callbacks,
-            steps_per_epoch=steps_per_epoch,
-            max_epoch=max_epoch,
-            session_init=loader if args.load else None
-        )
+        if args.load:
+            config.session_init = ChainInit([SaverRestore(args.load,prefix='multimodal'),SaverRestore(args.load,prefix='image')])
+        launch_train_with_config(
+            config,
+            SyncMultiGPUTrainer(max(get_nr_gpu(), 1)))

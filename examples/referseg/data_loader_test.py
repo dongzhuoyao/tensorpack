@@ -10,7 +10,7 @@ import tensorflow as tf
 from tensorpack.utils import logger
 from tensorpack.dataflow.base import RNGDataFlow
 from tensorpack.utils.segmentation.segmentation import visualize_label
-from tensorpack.utils.segmentation.coco_util import generate_id2trainid, generate_image_mask
+from tensorpack.utils.segmentation.coco_util import generate_id2trainid, generate_image_mask,_build_vocab
 
 __all__ = ['DataLoader']
 
@@ -23,13 +23,9 @@ coco_train_dir = "/data2/dataset/coco/train2014"
 coco_val_dir = "/data2/dataset/coco/val2014"
 class_num = 81
 
-train_txt = "metadata/standard/data236.txt"
-test_txt = "metadata/standard/test.txt"
-
 
 # if word occurs less than word_count_threshold in training dataset, the word index is special unknown token.
 word_count_threshold = 1
-MAX_LENGTH = 40
 
 from collections import Counter
 import numpy as np
@@ -62,36 +58,34 @@ def resize_and_pad(im, input_h, input_w, interp):
 
     return new_im
 
-def _process_caption_data(txt_path, max_length, max_image_num = -1):
-    with open(txt_path, "r") as f:
-        lines = f.readlines()
-    id2desc = {}
-    for line in lines:
-        line = line.strip("\n")
-        line_list = line.split("#")
-        file_name = line_list[0]
-        id = int(file_name.split("_")[2])
-        desc = line_list[1]
-        id2desc[id] = desc
+def _process_caption_data(caption_file, max_length, max_image_num = -1):
+    coco = COCO(caption_file)
+    caption_data = coco.dataset
+    img_to_caption = {}
+    img_ids = [tmp['id'] for tmp in caption_data['images']]
+    for img_id in img_ids:
+        annIds = coco.getAnnIds(imgIds=img_id)
+        # only consider one caption
+        img_to_caption[img_id] = coco.loadAnns(annIds[0])[0]['caption']
 
     delete_keys = []
-    for img_id, caption in tqdm(id2desc.items()):
-        caption = caption.replace('.', ' . ').replace(',', ' , ').replace("'", "").replace('"', '')
+    for img_id, caption in tqdm(img_to_caption.items()):
+        caption = caption.replace('.', '').replace(',', '').replace("'", "").replace('"', '')
         caption = caption.replace('&', 'and').replace('(', '').replace(")", "").replace('-', ' ')
         caption = " ".join(caption.split())  # replace multiple spaces
         caption = caption.lower()
         if len(caption.split(" ")) > max_length:
             delete_keys.append(img_id)
-            id2desc[img_id] = caption
+        img_to_caption[img_id] = caption
 
     # delete captions if size is larger than max_length
-    logger.info("The number of captions before deletion: %d" % len(id2desc.keys()))
+    logger.info("The number of captions before deletion: %d" % len(img_to_caption.keys()))
     for dk in delete_keys:
-        del id2desc[dk]
-    logger.info("The number of captions after deletion: %d" % len(id2desc.keys()))
+        del img_to_caption[dk]
+    logger.info("The number of captions after deletion: %d" % len(img_to_caption.keys()))
 
     final_img_to_caption = {}
-    for id,data in tqdm(enumerate(id2desc.items())):
+    for id,data in tqdm(enumerate(img_to_caption.items())):
         img_id, caption = data
         final_img_to_caption[img_id] = caption
         if max_image_num > -1:# if =-1, just use all data!
@@ -99,7 +93,7 @@ def _process_caption_data(txt_path, max_length, max_image_num = -1):
                 break
 
     logger.info("final : {}".format( len(final_img_to_caption.keys())))
-    return final_img_to_caption
+    return final_img_to_caption, coco
 
 
 
@@ -136,45 +130,32 @@ def generate_mask(_coco,catId_to_ascendorder, img_id):
     return img_file_name, img_mask
 
 
-def _build_vocab(caption_list, threshold=1):
-    counter = Counter()
-    max_len = 0
-    for i, caption in enumerate(caption_list):
-        words = caption.split(' ')  # caption contrains only lower-case words
-        for w in words:
-            counter[w] += 1
-
-        if len(caption.split(" ")) > max_len:
-            max_len = len(caption.split(" "))
-
-    vocab = [word for word in counter if counter[word] >= threshold]
-    print ('Filtered %d words to %d words with word count threshold %d.' % (len(counter), len(vocab), threshold))
-
-    word_to_idx = {u'<NULL>': 0, u'<START>': 1, u'<END>': 2}
-    idx = 3
-    for word in vocab:
-        word_to_idx[word] = idx
-        idx += 1
-    print "Max length of caption: ", max_len
-    return word_to_idx
 
 class DataLoader(RNGDataFlow):
-    def __init__(self, name, img_size, max_length=MAX_LENGTH,
-                 train_img_num = -1, test_img_num = -1, use_caption = True, quick_eval = True,
+    def __init__(self, name, max_length, img_size, strong_weak_rate, strongimg_rate,
+                 train_img_num = 4000, test_img_num = 1000, quick_eval = True,
                  regenerate_json = True):
+
+        self.global_step = 0
+        self.strong_weak_rate = strong_weak_rate
+        self.strongimg_rate = strongimg_rate
+        self.strong_number = int(train_img_num*strongimg_rate)
+        self.weak_number = train_img_num - self.strong_number
 
         self.max_length = max_length
         self.img_size = img_size
         self.name = name
         self.shuffle = False
-        self.use_caption = use_caption
-        self.vocab_name = "DESC_word_to_idx_max{}_train{}_test{}.json".format(max_length, train_img_num,test_img_num)
+        self.vocab_name = "word_to_idx_max{}_train{}_test{}.json".format(max_length, train_img_num,test_img_num)
         self.quick_eval = quick_eval
         self.regenerate_json = regenerate_json
+        self.strong_idx = 0
+        self.weak_idx = 0
 
         if "train" in self.name:
             self.image_dir = coco_train_dir
-            img_dict_train = _process_caption_data(train_txt,max_length=self.max_length, max_image_num = train_img_num)
+            img_dict_train, coco_caption = _process_caption_data(caption_file=caption_train_json,
+                                                                          max_length=self.max_length, max_image_num = train_img_num)
 
             if not regenerate_json:
                 logger.info("load vocab from {}".format(self.vocab_name))
@@ -185,7 +166,8 @@ class DataLoader(RNGDataFlow):
             else:
                 #generate word_to_idx vocab file both from train and test data(because in the test, we also need caption as input).
                 logger.info("generating {}.....".format(self.vocab_name))
-                img_dict_val = _process_caption_data(test_txt,max_length=self.max_length, max_image_num=test_img_num)
+                img_dict_val, _ = _process_caption_data(caption_file=caption_val_json,
+                                                                              max_length=self.max_length, max_image_num=test_img_num)
                 caption_list = img_dict_train.values()
                 caption_list.extend(img_dict_val.values())
                 word_to_idx = _build_vocab(caption_list=caption_list, threshold=word_count_threshold)
@@ -197,20 +179,27 @@ class DataLoader(RNGDataFlow):
 
             self.shuffle = True
             self.img_ids = img_dict_train.keys()
+            self.strong_img_ids = self.img_ids[:self.strong_number]
+            self.weak_img_ids = self.img_ids[self.strong_number:]
+
             self.img_dict = img_dict_train
+            self.coco_caption = coco_caption
             self.coco_instance = COCO(instance_train_json)
 
 
 
         elif "test" in self.name:
             self.image_dir = coco_val_dir
-            img_dict = _process_caption_data(test_txt,max_length=self.max_length, max_image_num = test_img_num)
+            img_dict, coco_caption = _process_caption_data(caption_file=caption_val_json,
+                                                                          max_length=self.max_length, max_image_num = test_img_num)
 
             with open(self.vocab_name, 'r') as load_f:
                 self.word_to_idx = json.load(load_f)
 
             self.img_ids = img_dict.keys()
             self.img_dict = img_dict
+            self.coco_caption = coco_caption
+            self.coco_caption = coco_caption
             self.coco_instance = COCO(instance_val_json)
 
         else:
@@ -240,55 +229,76 @@ class DataLoader(RNGDataFlow):
     def class_num():
         return class_num #Coco
 
-    def get_data(self): # only for one-shot learning
-        if self.shuffle:
-            self.rng.shuffle(self.img_ids)
+    def get_data(self):
+
+        def fetch_data_by_id(img_id):
+            caption = self.img_dict[img_id]  # only consider one caption
+            img_file_name, gt = generate_mask(self.coco_instance, self.catId_to_ascendorder, img_id)
+            img = cv2.imread(os.path.join(self.image_dir, img_file_name))
+            caption_ids = _build_caption_vector(caption, self.word_to_idx, max_length=self.max_length)
+
+            img = resize_and_pad(img, self.img_size, self.img_size, interp=cv2.INTER_LINEAR)
+            gt = resize_and_pad(gt, self.img_size, self.img_size, interp=cv2.INTER_NEAREST)
+            return img,gt,caption_ids
+
+        def generate_sample():
+            is_strong = True
+            if self.global_step%self.strong_weak_rate == 0:
+                result = self.strong_img_ids[self.strong_idx%len(self.strong_img_ids)]
+                self.strong_idx += 1
+                return result,is_strong
+            else:
+                result = self.weak_img_ids[self.weak_idx%len(self.weak_img_ids)]
+                self.weak_idx += 1
+                return result, not is_strong
+
+
+        if "train" in self.name:
+            self.strong_idx = 0
+            self.weak_idx = 0
+            if self.shuffle:
+                self.rng.shuffle(self.strong_img_ids)
+                self.rng.shuffle(self.weak_img_ids)
+        elif "test" in self.name:
+            if self.shuffle:
+                self.rng.shuffle(self.img_ids)
+        else:
+            raise
+
+
+
 
         for i in range(self.size()):
             if "train" in self.name:
-                img_id = self.img_ids[i]
-                caption = self.img_dict[img_id]# only consider one caption
-                img_file_name, gt = generate_mask(self.coco_instance,self.catId_to_ascendorder, img_id)
-                img = cv2.imread(os.path.join(self.image_dir,img_file_name))
-                caption_ids = _build_caption_vector(caption, self.word_to_idx,max_length=self.max_length)
-
-                img = resize_and_pad(img, self.img_size, self.img_size,interp=cv2.INTER_LINEAR)
-                gt = resize_and_pad(gt, self.img_size, self.img_size, interp=cv2.INTER_NEAREST)
-                print "from data_loader {}".format(tf.train.get_or_create_global_step())
-                if self.use_caption:
+                img_id, is_strong = generate_sample()
+                img, gt, caption_ids = fetch_data_by_id(img_id)
+                if is_strong:
                     yield [img, gt, caption_ids]
                 else:
-                    yield [img, gt]
+                    yield [img, gt, caption_ids]
+
             else:
                 img_id = self.img_ids[i]
-                caption = self.img_dict[img_id]  # only consider one caption
-                img_file_name, gt = generate_mask(self.coco_instance, self.catId_to_ascendorder, img_id)
-                img = cv2.imread(os.path.join(self.image_dir, img_file_name))
+                img, gt, caption_ids = fetch_data_by_id(img_id)
+                yield [img, gt]
 
-                caption_ids = _build_caption_vector(caption, self.word_to_idx, max_length=self.max_length)
-
-                img = resize_and_pad(img, self.img_size, self.img_size, interp=cv2.INTER_LINEAR)
-                gt = resize_and_pad(gt, self.img_size, self.img_size, interp=cv2.INTER_NEAREST)
-
-                if self.use_caption:
-                    yield [img, gt, caption_ids]
-                else:
-                    yield [img, gt]
+            self.global_step += 1
 
 
 
 
 
 if __name__ == '__main__':
-    ds = DataLoader("train",img_size=320,train_img_num=-1,test_img_num=-1,regenerate_json=True)
+    ds = DataLoader("train", strong_weak_rate=5, strongimg_rate=0.1, max_length=15, img_size=320,train_img_num=4000,test_img_num=1000,regenerate_json=True)
     ds.reset_state()
     for idx, data in enumerate(ds.get_data()):
         img, gt, caption = data[0],data[1],data[2]
         print("caption str: {}".format(caption))
+        #print("caption id: {}".format(data[3]))
         #cv2.imshow("img", img)
         #cv2.imshow("label", visualize_label(gt,class_num=class_num))
-        print(np.max(gt))
-        print(np.unique(gt))
-       # cv2.waitKey(50000)
+        #print(np.max(gt))
+        #print(np.unique(gt))
+        #cv2.waitKey(50000)
 
 
