@@ -41,7 +41,7 @@ evaluate_every_n_epoch = 1
 max_epoch = 10
 init_lr = 2.5e-4
 lr_schedule = [(3, 1e-4), (7, 1e-5)]
-VOCAB_SIZE = len(DataLoaderDistill(name = "train", max_length=MAX_LENGTH, img_size=IMG_SIZE, train_img_num=train_img_num,test_img_num=test_img_num,quick_eval=quick_eval, regenerate_json=regenerate_json).word_to_idx.keys())#3224#28645#24022  # careful about the VOCAB SIZE
+VOCAB_SIZE = 13297#len(DataLoaderDistill(name = "train", max_length=MAX_LENGTH, img_size=IMG_SIZE, train_img_num=-1,test_img_num=-1,quick_eval=quick_eval, regenerate_json=regenerate_json).word_to_idx.keys())#3224#28645#24022  # careful about the VOCAB SIZE
 
 
 def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
@@ -106,6 +106,8 @@ class Model(ModelDesc):
         cost = tf.reduce_mean(cost, name='multimodal_cross_entropy_loss')  # the average cross-entropy loss
         costs.append(cost)
 
+
+
         if get_current_tower_context().is_training:
             ##img+desc training
             wd_w = tf.train.exponential_decay(2e-4, get_global_step_var(),
@@ -116,7 +118,9 @@ class Model(ModelDesc):
             self.multimodal_cost = tf.add_n(costs, name='multimodal_cost')
 
             self.img_cost = tf.add_n(img_costs, name='img_cost')
-            self.cost = self.multimodal_cost
+            #self.cost = self.multimodal_cost + self.img_cost
+            from tensorpack.gist.kl_loss import kl_loss_compute
+            self.cost = kl_loss_compute(img_prob, multimodal_prob,name="distill_loss")
 
 
     def _get_optimizer(self):
@@ -124,7 +128,7 @@ class Model(ModelDesc):
         opt = tf.train.AdamOptimizer(lr, epsilon=1e-3)
         return optimizer.apply_grad_processors(
             opt, [gradproc.ScaleGradient(
-                [('aspp.*_conv.*/Wnnnnnn', 10),('aspp.*_conv.*/bnnnnn', 20), ('conv.*/bnnnnn', 2)])]) #TODO
+                [('multimodal/.*', 0)])]) #TODO
 
 
 
@@ -162,7 +166,7 @@ def get_config(batch_size):
         EstimatedTimeLeft(),
         ScheduledHyperParamSetter('learning_rate', lr_schedule),
         PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
-        ProgressBar(["multimodal_cost", "img_cost"]),  # uncomment it to debug for every step
+        ProgressBar(["multimodal_cost", "img_cost","distill_loss"]),  # uncomment it to debug for every step
         # RunOp(lambda: tf.add_check_numerics_ops(), run_before=False, run_as_trigger=True, run_step=True)
     ]
 
@@ -182,7 +186,7 @@ class CalculateMIoU(Callback):
 
     def _setup_graph(self):
         self.pred = self.trainer.get_predictor(
-            ['image','caption'], ['multimodal_prob'])
+            ['image'], ['prob'])
 
     def _before_train(self):
         pass
@@ -201,7 +205,7 @@ class CalculateMIoU(Callback):
             def mypredictor(input_img):
                 # input image: 1*H*W*3
                 # output : H*W*C
-                output = self.pred(input_img[np.newaxis, :, :, :], caption)
+                output = self.pred(input_img[np.newaxis, :, :, :])
                 return output[0][0]
             prediction = mypredictor(image)
             prediction = np.argmax(prediction, axis=2)
@@ -212,57 +216,15 @@ class CalculateMIoU(Callback):
         self.trainer.monitors.put_scalar("accuracy", self.stat.accuracy)
 
 
-def proceed_validation(args, is_save = False, is_densecrf = False):
-    import cv2
-
-    ds = get_data('test', batch_size=args.batch_size)
-    ds.reset_state()
-
-    pred_config = PredictConfig(
-        model=Model(),
-        session_init=get_model_loader(args.load),
-        input_names=['image','caption'],
-        output_names=['multimodal_prob'])
-    predictor = OfflinePredictor(pred_config)
-
-    i = 0
-    stat = MIoUStatistics(CLASS_NUM)
-    logger.info("start validation....")
-
-
-
-    for image, label, caption in tqdm(ds.get_data()):
-        def mypredictor(input_img):
-            # input image: 1*H*W*3
-            # output : H*W*C
-            output = predictor(input_img[np.newaxis, :, :, :], caption)
-            return output[0][0]
-
-        label = np.squeeze(label)
-        image = np.squeeze(image)
-        prediction = mypredictor(image)
-        prediction = np.argmax(prediction, axis=2)
-        stat.feed(prediction, label)
-
-        if is_save:
-            cv2.imwrite("result/{}.png".format(i), np.concatenate((image, visualize_label(label), visualize_label(prediction)), axis=1))
-
-        i += 1
-
-    logger.info("mIoU: {}".format(stat.mIoU))
-    logger.info("mean_accuracy: {}".format(stat.mean_accuracy))
-    logger.info("accuracy: {}".format(stat.accuracy))
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu', default='5', help='comma separated list of GPU(s) to use.')
-    parser.add_argument('--load', default="deeplab_resnet_init.ckpt" ,help='load model')
+    parser.add_argument('--load', default="train_log/distill.mynetwork.naive.81fix.bs4.train0.5k.fullvocal/model-3320" ,help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
     parser.add_argument('--batch_size', type=int, default = BATCH_SIZE, help='batch_size')
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
-    parser.add_argument('--validation', action='store_true', help='validate model on validation images')
     args = parser.parse_args()
     if args.gpu:
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
@@ -270,12 +232,10 @@ if __name__ == '__main__':
 
     if args.view:
         view_data()
-    elif args.validation:
-        proceed_validation(args)
     else:
         config = get_config(args.batch_size)
         if args.load:
-            config.session_init = ChainInit([SaverRestore(args.load,prefix='multimodal'),SaverRestore(args.load,prefix='image')])
+            config.session_init = ChainInit([SaverRestore(args.load)])
         launch_train_with_config(
             config,
             SyncMultiGPUTrainer(max(get_nr_gpu(), 1)))

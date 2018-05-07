@@ -14,13 +14,14 @@ __all__ = ['PascalVOC12']
 
 class PascalVOC12(RNGDataFlow):
     def __init__(self, dir, meta_dir, name,
-                 shuffle=None, dir_structure=None):
+                 shuffle=None, dir_structure=None, partial_data = -1):
 
         assert name in ['train_aug', 'train', 'val'], name
         assert os.path.isdir(dir), dir
         self.reset_state()
         self.dir = dir
         self.name = name
+        self.partial_data = partial_data
 
         if shuffle is None:
             shuffle = (name == 'train' or name == 'train_aug')
@@ -34,11 +35,24 @@ class PascalVOC12(RNGDataFlow):
         else:
             f = open(os.path.join(meta_dir, "val.txt"), "r")
 
+
         for line in f.readlines():
             self.imglist.append(line.strip("\n").split(" "))
         f.close()
 
-        #self.imglist = self.imglist[:20]
+        """
+        if name=="train_aug":
+            self.imglist = self.imglist[:20]
+        elif name == "val":
+            self.imglist = self.imglist[:self.partial_data]
+        else:
+            pass
+        """
+
+
+
+
+
 
     def size(self):
         return len(self.imglist)

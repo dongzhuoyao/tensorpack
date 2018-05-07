@@ -1,6 +1,6 @@
 # Author: Tao Hu <taohu620@gmail.com>
 
-train_path = "/Users/ht/Desktop/annotation_result/data236.txt"
+train_path = "/Users/ht/Desktop/annotation_result/data2356.txt"
 val_path = "/Users/ht/Desktop/annotation_result/ypw.txt"
 
 import os
@@ -69,5 +69,5 @@ def clean_dir(train_path):
     pass
 
 
-clean_dir(val_path)
+clean_dir(train_path)
 

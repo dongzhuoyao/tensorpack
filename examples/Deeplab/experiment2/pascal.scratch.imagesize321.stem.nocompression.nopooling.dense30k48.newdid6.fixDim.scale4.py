@@ -12,15 +12,14 @@ import numpy as np
 
 os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
 from tensorpack import *
-from tensorpack.dataflow.dataset import Camvid, CamvidFiles
-import multiprocessing
+from tensorpack.dataflow.dataset.pascalvoc12 import PascalVOC12
 from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler
 from tensorpack.utils.stats import MIoUStatistics
 from tensorpack.utils import logger
 from tensorpack.tfutils import optimizer
 from tensorpack.tfutils.summary import add_moving_summary, add_param_summary
-from densenet_v1 import densenet
+from densenet_v1_deepsupervision import densenet
 slim = tf.contrib.slim
 
 from tqdm import tqdm
@@ -28,71 +27,50 @@ from seg_utils import RandomCropWithPadding, softmax_cross_entropy_with_ignore_l
 
 
 
-CLASS_NUM = Camvid.class_num()
-CROP_SIZE = [360,480]
-batch_size = 16
+CLASS_NUM = PascalVOC12.class_num()
+CROP_SIZE = 473
+batch_size = 10
 
 IGNORE_LABEL = 255
 
 GROWTH_RATE = 48
-first_batch_lr = 0.5e-3
-lr_schedule = [(5, 0.5e-4), (8, 0.5e-5)]
-epoch_scale = 2#110 #1000
+first_batch_lr = 1e-3
+lr_schedule = [(4, 1e-4), (8, 1e-5)]
+epoch_scale = 4 #640
 max_epoch = 10
 lr_multi_schedule = [('nothing', 5),('nothing',10)]
 evaluate_every_n_epoch = 1
 
-def imgread(ds):
-    img, label = ds
-    img = cv2.imread(img, cv2.IMREAD_COLOR)
-    label = cv2.imread(label, cv2.IMREAD_GRAYSCALE)
-    return img, label
-
-
-def get_data(name, data_dir, meta_dir, batch_size):
+def get_data(name, data_dir, meta_dir, batch_size,partial_data=-1):
     isTrain = True if 'train' in name else False
+    ds = PascalVOC12(data_dir, meta_dir, name, shuffle=True,partial_data=partial_data)
 
     if isTrain:#special augmentation
-        ds = CamvidFiles(data_dir, meta_dir, name, shuffle=True)
-        parallel = min(3, multiprocessing.cpu_count())
         shape_aug = [imgaug.RandomResize(xrange=(0.7, 1.5), yrange=(0.7, 1.5),
                             aspect_ratio_thres=0.15),
-                     RandomCropWithPadding(CROP_SIZE,IGNORE_LABEL),
+                     RandomCropWithPadding(CROP_SIZE, IGNORE_LABEL),
                      imgaug.Flip(horiz=True),
                      ]
-        aug = imgaug.AugmentorList(shape_aug)
-        def mapf(ds):
-            img, label = ds
-            img = cv2.imread(img, cv2.IMREAD_COLOR)
-            label = cv2.imread(label, cv2.IMREAD_GRAYSCALE)
-            img, params = aug.augment_return_params(img)
-            label = aug._augment(label, params)
-            return img, label
-
-        ds = MultiThreadMapData(ds, parallel, mapf, buffer_size=200, strict=True)
-        ds = BatchData(ds, batch_size)
-        #ds = PrefetchDataZMQ(ds, 4)
     else:
-        ds = CamvidFiles(data_dir, meta_dir, name, shuffle=False)
-        def imgread(ds):
-            img, label = ds
-            img = cv2.imread(img, cv2.IMREAD_COLOR)
-            label = cv2.imread(label, cv2.IMREAD_GRAYSCALE)
-            return [img, label]
+        shape_aug = []
 
-        ds = MapData(ds, imgread)
+    ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False)
+
+
+    #ds = FakeData([[CROP_SIZE, CROP_SIZE, 3], [CROP_SIZE, CROP_SIZE]], 5000, random=False, dtype='uint8')
+    if isTrain:
+        ds = BatchData(ds, batch_size)
+        ds = PrefetchDataZMQ(ds, 1)
+    else:
         ds = BatchData(ds, 1)
-
     return ds
-    #ds = FakeData([[CROP_SIZE[0], CROP_SIZE[1], 3], [CROP_SIZE[0], CROP_SIZE[1]]], 5000, random=False, dtype='uint8')
-
 
 class Model(ModelDesc):
 
     def _get_inputs(self):
         ## Set static shape so that tensorflow knows shape at compile time.
-        return [InputDesc(tf.float32, [None, CROP_SIZE[0], CROP_SIZE[1], 3], 'image'),
-                InputDesc(tf.int32, [None, CROP_SIZE[0], CROP_SIZE[1]], 'gt')]
+        return [InputDesc(tf.float32, [None, CROP_SIZE, CROP_SIZE, 3], 'image'),
+                InputDesc(tf.int32, [None, CROP_SIZE, CROP_SIZE], 'gt')]
 
     def _build_graph(self, inputs):
         def mydensenet(image):
@@ -120,6 +98,7 @@ class Model(ModelDesc):
                                        num_classes=CLASS_NUM,
                                        compress = 1,
                                        stem = 1,
+                                       denseindense=6,
                                        remove_latter_pooling=True,
                                        data_name='imagenet',
                                        is_training=ctx.is_training,
@@ -132,8 +111,11 @@ class Model(ModelDesc):
         image = image - tf.constant([104, 116, 122], dtype='float32')
         label = tf.identity(label, name="label")
 
-        predict = mydensenet(image)
+        predict_list = mydensenet(image)
+        for ii, p in enumerate(predict_list):
+            predict_list[ii] = tf.image.resize_bilinear(predict_list[ii], image.shape[1:3])
 
+        predict = predict_list[-1]
         costs = []
         prob = tf.nn.softmax(predict, name='prob')
 
@@ -141,8 +123,13 @@ class Model(ModelDesc):
         new_size = prob.get_shape()[1:3]
         # label_resized = tf.image.resize_nearest_neighbor(label4d, new_size)
 
-        cost = softmax_cross_entropy_with_ignore_label(logits=predict, label=label4d,
+        cost = 0
+        for jj,p in enumerate(predict_list):
+            current_predict = predict_list[jj]
+            cost += softmax_cross_entropy_with_ignore_label(logits=current_predict, label=label4d,
                                                        class_num=CLASS_NUM)
+        cost = cost/len(predict_list)
+
         prediction = tf.argmax(prob, axis=-1, name="prediction")
         cost = tf.reduce_mean(cost, name='cross_entropy_loss')  # the average cross-entropy loss
         costs.append(cost)
@@ -155,7 +142,7 @@ class Model(ModelDesc):
             costs.append(wd_cost)
 
             self.cost = tf.add_n(costs, name='cost')
-            add_moving_summary(costs + [self.cost])
+
 
     def _get_optimizer(self):
         lr = tf.get_variable('learning_rate', initializer=first_batch_lr, trainable=False)
@@ -168,7 +155,7 @@ class Model(ModelDesc):
 
 
 def view_data(data_dir, meta_dir, batch_size):
-    ds = RepeatedData(get_data('train',data_dir, meta_dir, batch_size), -1)
+    ds = RepeatedData(get_data('train_aug',data_dir, meta_dir, batch_size), -1)
     ds.reset_state()
     for ims, labels in ds.get_data():
         for im, label in zip(ims, labels):
@@ -183,7 +170,7 @@ def view_data(data_dir, meta_dir, batch_size):
 def get_config(data_dir, meta_dir, batch_size):
     logger.auto_set_dir()
     nr_tower = max(get_nr_gpu(), 1)
-    dataset_train = get_data('train_val', data_dir, meta_dir, batch_size)
+    dataset_train = get_data('train_aug', data_dir, meta_dir, batch_size)
     steps_per_epoch = dataset_train.size() * epoch_scale
 
     return TrainConfig(
@@ -226,7 +213,7 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = False, is_densecrf = False):
     import cv2
-    ds = Camvid(args.data_dir, args.meta_dir, "test")
+    ds = PascalVOC12(args.data_dir, args.meta_dir, "val")
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
@@ -243,13 +230,13 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
     def mypredictor(input_img):
         # input image: 1*H*W*3
         # output : H*W*C
-        output = predictor(input_img)
+        output = predictor(input_img[np.newaxis, :, :, :])
         return output[0][0]
 
     for image, label in tqdm(ds.get_data()):
         label = np.squeeze(label)
         image = np.squeeze(image)
-        prediction = predict_scaler(image, mypredictor, scales=[0.5,0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
+        prediction = predict_scaler(image, mypredictor, scales=[0.5, 0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
         prediction = np.argmax(prediction, axis=2)
         stat.feed(prediction, label)
 
@@ -263,6 +250,55 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
     logger.info("accuracy: {}".format(stat.accuracy))
 
 
+def proceed_test(args, is_save=True, is_densecrf=False):
+    import cv2
+    ds = PascalVOC12(args.data_dir, args.meta_dir, "test")
+    imglist = ds.imglist
+    ds = BatchData(ds, 1)
+
+    names = [os.path.basename(tmp[0]).split(".")[0] for tmp in imglist]
+
+    pred_config = PredictConfig(
+        model=Model(),
+        session_init=get_model_loader(args.load),
+        input_names=['image'],
+        output_names=['prob'])
+    predictor = OfflinePredictor(pred_config)
+
+    from tensorpack.utils.fs import mkdir_p
+    import shutil
+    result_dir = "test-{}".format(os.path.basename(__file__).rstrip(".py"))
+    standard_dir = os.path.join(result_dir, "upload")
+    vis_dir = os.path.join(result_dir, "vis")
+    # shutil.rmtree(result_dir)
+    mkdir_p(result_dir)
+    mkdir_p(standard_dir)
+    mkdir_p(vis_dir)
+
+    i = 0
+    logger.info("start test....")
+    from tensorpack.utils.segmentation.cs_helper import trainId2label
+    getlabel = lambda trainid: trainId2label[trainid].id
+    vgetlabel = np.vectorize(getlabel)
+
+    def mypredictor(input_img):
+        # input image: 1*H*W*3
+        # output : H*W*C
+        output = predictor(input_img[np.newaxis, :, :, :])
+        return output[0][0]
+
+    for image, label in tqdm(ds.get_data()):
+        label = np.squeeze(label)
+        image = np.squeeze(image)
+        prediction = predict_scaler(image, mypredictor, scales=[0.5, 0.75, 1, 1.25, 1.5], classes=CLASS_NUM,
+                                    tile_size=CROP_SIZE, is_densecrf=is_densecrf)
+        prediction = np.argmax(prediction, axis=2)
+
+        if is_save:
+            cv2.imwrite(os.path.join(standard_dir, "{}.png".format(names[i])), vgetlabel(prediction))
+            cv2.imwrite(os.path.join(vis_dir, "{}.png".format(names[i])),
+                        np.concatenate((image, visualize_label(label), visualize_label(prediction)), axis=1))
+        i += 1
 
 
 
@@ -279,7 +315,7 @@ class CalculateMIoU(Callback):
 
     def _trigger(self):
         global args
-        self.val_ds = get_data('test', args.data_dir, args.meta_dir, args.batch_size)
+        self.val_ds = get_data('val', args.data_dir, args.meta_dir, args.batch_size, partial_data = 100)
         self.val_ds.reset_state()
 
         self.stat = MIoUStatistics(self.nb_class)
@@ -287,7 +323,7 @@ class CalculateMIoU(Callback):
         def mypredictor(input_img):
             # input image: 1*H*W*3
             # output : H*W*C
-            output = self.pred(input_img[np.newaxis,:,:,:])
+            output = self.pred(input_img[np.newaxis, :, :, :])
             return output[0][0]
 
         for image, label in tqdm(self.val_ds.get_data()):
@@ -307,9 +343,9 @@ class CalculateMIoU(Callback):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu', default="0", help='comma separated list of GPU(s) to use.')
-    parser.add_argument('--data_dir', default="/data1/dataset/SegNet-Tutorial",
+    parser.add_argument('--data_dir', default="/data2/dataset/pascalvoc2012/VOC2012trainval/VOCdevkit/VOC2012",
                         help='dataset dir')
-    parser.add_argument('--meta_dir', default="metadata/camvid", help='meta dir')
+    parser.add_argument('--meta_dir', default="./metadata/pascalvoc12", help='meta dir')
     #parser.add_argument('--load', default="../resnet101.npz", help='load model')
     parser.add_argument('--growth_rate', default= GROWTH_RATE, help='growth_rate')
     parser.add_argument('--num_layers', default=121, help='num_layers')
@@ -319,6 +355,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, default = batch_size, help='batch_size')
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     parser.add_argument('--validation', action='store_true', help='validate model on validation images')
+    parser.add_argument('--test', action='store_true', help='test model on test images')
     args = parser.parse_args()
     if args.gpu:
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
@@ -330,6 +367,8 @@ if __name__ == '__main__':
         run(args.load, args.run, args.output)
     elif args.validation:
         proceed_validation(args)
+    elif args.test:
+        proceed_test(args)
     else:
         config = get_config(args.data_dir,args.meta_dir,args.batch_size)
         if args.load:

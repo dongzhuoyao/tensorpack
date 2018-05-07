@@ -12,7 +12,7 @@ import numpy as np
 
 os.environ['TENSORPACK_TRAIN_API'] = 'v2'   # will become default soon
 from tensorpack import *
-from tensorpack.dataflow.dataset.cityscapes import Cityscapes
+from tensorpack.dataflow.dataset.pascalvoc12 import PascalVOC12
 from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler
 from tensorpack.utils.stats import MIoUStatistics
@@ -27,7 +27,7 @@ from seg_utils import RandomCropWithPadding, softmax_cross_entropy_with_ignore_l
 
 
 
-CLASS_NUM = Cityscapes.class_num()
+CLASS_NUM = PascalVOC12.class_num()
 CROP_SIZE = 1024
 batch_size = 2
 

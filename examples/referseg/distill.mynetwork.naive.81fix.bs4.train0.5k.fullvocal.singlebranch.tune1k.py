@@ -116,7 +116,9 @@ class Model(ModelDesc):
             self.multimodal_cost = tf.add_n(costs, name='multimodal_cost')
 
             self.img_cost = tf.add_n(img_costs, name='img_cost')
-            self.cost = self.multimodal_cost
+            #self.cost = self.multimodal_cost
+            from tensorpack.gist.kl_loss import kl_loss_compute
+            self.cost = kl_loss_compute(img_prob, multimodal_prob,name="distill_loss")
 
 
     def _get_optimizer(self):
@@ -124,7 +126,7 @@ class Model(ModelDesc):
         opt = tf.train.AdamOptimizer(lr, epsilon=1e-3)
         return optimizer.apply_grad_processors(
             opt, [gradproc.ScaleGradient(
-                [('aspp.*_conv.*/Wnnnnnn', 10),('aspp.*_conv.*/bnnnnn', 20), ('conv.*/bnnnnn', 2)])]) #TODO
+                [('multimodal/.*', 0)])])  # TODO
 
 
 
@@ -162,7 +164,7 @@ def get_config(batch_size):
         EstimatedTimeLeft(),
         ScheduledHyperParamSetter('learning_rate', lr_schedule),
         PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
-        ProgressBar(["multimodal_cost", "img_cost"]),  # uncomment it to debug for every step
+        ProgressBar(["distill_loss"]),  # uncomment it to debug for every step
         # RunOp(lambda: tf.add_check_numerics_ops(), run_before=False, run_as_trigger=True, run_step=True)
     ]
 
@@ -182,7 +184,7 @@ class CalculateMIoU(Callback):
 
     def _setup_graph(self):
         self.pred = self.trainer.get_predictor(
-            ['image','caption'], ['multimodal_prob'])
+            ['image'], ['prob'])
 
     def _before_train(self):
         pass
@@ -201,7 +203,7 @@ class CalculateMIoU(Callback):
             def mypredictor(input_img):
                 # input image: 1*H*W*3
                 # output : H*W*C
-                output = self.pred(input_img[np.newaxis, :, :, :], caption)
+                output = self.pred(input_img[np.newaxis, :, :, :])
                 return output[0][0]
             prediction = mypredictor(image)
             prediction = np.argmax(prediction, axis=2)
@@ -257,7 +259,7 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu', default='5', help='comma separated list of GPU(s) to use.')
-    parser.add_argument('--load', default="deeplab_resnet_init.ckpt" ,help='load model')
+    parser.add_argument('--load', default="train_log/distill.mynetwork.naive.81fix.bs4.train0.5k.fullvocal.singlebranch/model-3320" ,help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--run', help='run model on images')
     parser.add_argument('--batch_size', type=int, default = BATCH_SIZE, help='batch_size')
@@ -275,7 +277,7 @@ if __name__ == '__main__':
     else:
         config = get_config(args.batch_size)
         if args.load:
-            config.session_init = ChainInit([SaverRestore(args.load,prefix='multimodal'),SaverRestore(args.load,prefix='image')])
+            config.session_init = ChainInit([SaverRestore(args.load)])
         launch_train_with_config(
             config,
             SyncMultiGPUTrainer(max(get_nr_gpu(), 1)))

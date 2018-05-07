@@ -192,7 +192,7 @@ def get_config():
         model=Model(),
         dataflow=dataset_train,
         callbacks=callbacks,
-        steps_per_epoch=  images_per_epoch// total_batch,
+        steps_per_epoch=  images_per_epoch*1e10// total_batch,
         max_epoch=max_epoch,
     )
 
