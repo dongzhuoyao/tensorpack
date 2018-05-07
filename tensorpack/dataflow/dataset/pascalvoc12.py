@@ -40,6 +40,8 @@ class PascalVOC12(RNGDataFlow):
             self.imglist.append(line.strip("\n").split(" "))
         f.close()
 
+        self.imglist = self.imglist[:self.partial_data]
+
         """
         if name=="train_aug":
             self.imglist = self.imglist[:20]

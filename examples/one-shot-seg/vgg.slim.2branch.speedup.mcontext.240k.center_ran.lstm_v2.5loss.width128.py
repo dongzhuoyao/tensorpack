@@ -15,7 +15,6 @@ from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.utils.stats import MIoUStatistics
 from tensorpack.utils import logger
 import OneShotDatasetTwoBranch
-from deeplabv2_dilation6_new_mtscale import deeplabv2
 import tensorflow as tf
 image_size = (320, 320)
 slim = tf.contrib.slim
@@ -149,7 +148,10 @@ def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
         loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=prediction, labels=gt)
     return loss
 
-
+def my_vgg16(img):
+    from slim_vgg import vgg_16
+    result = vgg_16(img)
+    return result
 
 class Model(ModelDesc):
     def inputs(self):
@@ -178,9 +180,9 @@ class Model(ModelDesc):
 
         first_image_masked = first_image_masked - tf.constant([104, 116, 122], dtype='float32')
         with tf.variable_scope("support"):
-             support_context_list = deeplabv2(first_image_masked,CLASS_NUM,is_training=ctx.is_training)
+             support_context_list = my_vgg16(first_image_masked, CLASS_NUM, is_training=ctx.is_training)
         with tf.variable_scope("query"):
-            query_context_list = deeplabv2(second_image,CLASS_NUM,is_training=ctx.is_training)
+            query_context_list = my_vgg16(second_image, CLASS_NUM, is_training=ctx.is_training)
 
         def smooth(inp, conv_width, name, stride=1,output_num=fusion_width):
             with tf.variable_scope(name):
