@@ -45,6 +45,10 @@ distill.mynetwork.naive.81fix.bs4.train6k||26.7|
 distill.mynetwork.naive.81fix.bs4.train0.5k.fullvocal||13.47|
 distill.mynetwork.naive.81fix.bs4.train1k.fullvocal||18.1|
 distill.mynetwork.naive.81fix.bs4.train0.5k.fullvocal.soft.fixteacher.tune1k||2.7|
+distill.mynetwork.naive.81fix.bs4.train0.5k.fullvocal.singlebranch||4.13
+distill.mynetwork.naive.81fix.bs4.train1k.fullvocal.singlebranch||10.54
+distill.mynetwork.naive.81fix.bs4.train0.5k.fullvocal.singlebranch.tune1k||3.97|
+distill.mynetwork.naive.81fix.bs4.train0.5k.fullvocal.singlebranch.tune6k||4.08|
 |---|----|----|
 mynetwork.naive666.81fix.bs10.train6k||13.29|
 mynetwork.naive666.81fix.bs4.train6k||21.2|
