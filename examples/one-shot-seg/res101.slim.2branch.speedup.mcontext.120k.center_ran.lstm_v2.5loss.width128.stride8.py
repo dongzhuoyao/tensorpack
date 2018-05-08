@@ -32,7 +32,7 @@ images_per_epoch = 20000#40000
 fusion_width = 256
 lstm_mid_channel = 128
 
-batch_size = 2
+batch_size = 1
 k_shot = 5
 
 from cell import ConvLSTMCell_carlthome

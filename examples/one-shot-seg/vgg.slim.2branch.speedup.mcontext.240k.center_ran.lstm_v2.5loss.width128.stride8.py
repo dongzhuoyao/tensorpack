@@ -27,7 +27,7 @@ CLASS_NUM = 2
 evaluate_every_n_epoch = 1
 support_image_size =image_size
 query_image_size = image_size
-images_per_epoch = 40000
+images_per_epoch = 40#40000
 fusion_width = 256
 lstm_mid_channel = 128
 
@@ -329,7 +329,7 @@ class CalculateMIoU(Callback):
             def mypredictor(input_img):
                 # input image: 1*H*W*3
                 # output : H*W*C
-                output = self.pred(first_image_masks[np.newaxis,:, :, :, :], input_img)
+                output = self.pred(first_image_masks[np.newaxis,:, :, :, :], input_img[np.newaxis,:, :, :])
                 return output[0][0]
 
             prediction = predict_scaler(second_image, mypredictor, scales=[0.5, 0.75, 1, 1.25, 1.5],
