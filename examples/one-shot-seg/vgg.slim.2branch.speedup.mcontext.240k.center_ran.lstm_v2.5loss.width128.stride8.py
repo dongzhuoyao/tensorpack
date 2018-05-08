@@ -31,7 +31,7 @@ images_per_epoch = 40000
 fusion_width = 256
 lstm_mid_channel = 128
 
-batch_size = 5
+batch_size = 4
 k_shot = 5
 
 from cell import ConvLSTMCell_carlthome
@@ -418,7 +418,7 @@ def view(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu', default='1',help='comma separated list of GPU(s) to use.')
-    parser.add_argument('--load',default="slim_resnet_v2_101.ckpt", help='load model')
+    parser.add_argument('--load',default="vgg_16.ckpt", help='load model')
     parser.add_argument('--view', help='view dataset', action='store_true')
     parser.add_argument('--test_data', default="fold0_5shot_test", help='test data')
     parser.add_argument('--train_data', default="fold0_5shot_train", help='train data')
