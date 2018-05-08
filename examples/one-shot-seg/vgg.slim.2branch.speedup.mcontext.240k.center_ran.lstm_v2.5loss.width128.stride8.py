@@ -148,7 +148,7 @@ def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
         loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=prediction, labels=gt)
     return loss
 
-def my_vgg16(img):
+def my_vgg16(img, CLASS_NUM, is_training):
     from slim_vgg import vgg_16
     result = vgg_16(img)
     return result
@@ -172,7 +172,7 @@ class Model(ModelDesc):
         logger.info("current ctx.is_training: {}".format(ctx.is_training))
 
 
-        cell = ConvLSTMCell_carlthome([20, 20], filters=lstm_mid_channel, kernel = [3, 3],reuse=tf.AUTO_REUSE)
+        cell = ConvLSTMCell_carlthome([40, 40], filters=lstm_mid_channel, kernel = [3, 3],reuse=tf.AUTO_REUSE)
 
 
 
@@ -414,9 +414,6 @@ def view(args):
         cv2.imshow("second_img", (inputs[1][0]).astype(np.uint8))
         cv2.imshow("second_label", visualize_label(inputs[2][0]))
         cv2.waitKey(10000)
-        ##"""
-        print "ssss"
-        pass
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
