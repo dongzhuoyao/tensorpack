@@ -96,5 +96,5 @@ res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.width64:fold0_5shot
 ##5.9 
 
 vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.stride8:fold0_5shot_test|60.8
-
+res101.slim.2branch.speedup.mcontext.120k.center_ran.lstm_v2.5loss.width128.stride8:fold0_5shot_test|62.8
 
