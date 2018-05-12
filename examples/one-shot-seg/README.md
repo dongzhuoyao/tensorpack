@@ -95,8 +95,11 @@ res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.width64:fold0_5shot
 
 ##5.9 
 
+|----|----|
 vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.stride8:fold0_5shot_test|60.8
 vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold0_5shot_test|61.3
 vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold1_5shot_test|63.5
+vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold2_5shot_test|51.6
+vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold3_5shot_test|53.0
 res101.slim.2branch.speedup.mcontext.120k.center_ran.lstm_v2.5loss.width128.stride8:fold0_5shot_test|62.8
 
