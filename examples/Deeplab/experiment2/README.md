@@ -117,7 +117,7 @@ camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.scale50||88.8
 camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.newdid4||89.1|
 camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.newdid4_1||89.0|
 camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.newdid6.4gpu_bugfix||90.0
-
+camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.newdid6||89
 
 
 ### Cityscapes(5.2)
