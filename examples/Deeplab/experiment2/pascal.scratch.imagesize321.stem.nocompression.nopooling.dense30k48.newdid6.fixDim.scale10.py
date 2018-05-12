@@ -213,7 +213,7 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = False, is_densecrf = False):
     import cv2
-    ds = PascalVOC12(args.data_dir, args.meta_dir, "val")
+    ds = PascalVOC12(args.data_dir, args.meta_dir, "val",partial_data=-1)
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
