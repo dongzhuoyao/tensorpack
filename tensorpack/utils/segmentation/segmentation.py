@@ -273,7 +273,14 @@ def edge_predict_scaler(full_image, edge, predictor, scales, classes, tile_size,
 
 def predict_slider(full_image, predictor, classes, tile_size, overlap = 1.0/3):
     if isinstance(tile_size, int):
+        #assert tile_size <= full_image.shape[0]
         tile_size = (tile_size, tile_size)
+    #else:
+    #    assert tile_size[0] <= full_image.shape[0],\
+    #        "tile size {} should be <= full image size{}".format(tile_size[0],full_image.shape[0])
+    #    assert tile_size[1] <= full_image.shape[1],\
+    #        "tile size {} should be <= full image size{}".format(tile_size[1],full_image.shape[1])
+
     stride = ceil(tile_size[0] * (1 - overlap))
     tile_rows = int(ceil((full_image.shape[0] - tile_size[0]) / stride) + 1)  # strided convolution formula
     tile_cols = int(ceil((full_image.shape[1] - tile_size[1]) / stride) + 1)
@@ -291,8 +298,7 @@ def predict_slider(full_image, predictor, classes, tile_size, overlap = 1.0/3):
             img = full_image[y1:y2, x1:x2]
             padded_img, padding_index = pad_image(img, tile_size) #only happen in validation or test when the original image size is already smaller than tile_size
             tile_counter += 1
-            #padded_img = padded_img[None, :, :, :].astype('float32') # extend one dimension，must remove it, maybe influence other function.
-            padded_prediction = predictor(padded_img)# TODO dongzhuoyao, may be influence other function.
+            padded_prediction = predictor(padded_img)
             prediction_no_padding = padded_prediction[padding_index[0]:padding_index[1],padding_index[2]:padding_index[3],:]
             count_predictions[y1:y2, x1:x2] += 1
             full_probs[y1:y2, x1:x2] += prediction_no_padding  # accumulate the predictions also in the overlapping regions

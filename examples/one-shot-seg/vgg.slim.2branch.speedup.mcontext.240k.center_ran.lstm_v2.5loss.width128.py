@@ -149,7 +149,7 @@ def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
     return loss
 
 def my_vgg16(img, CLASS_NUM, is_training):
-    from slim_vgg import vgg_16
+    from slim_vgg_stride16 import vgg_16
     result = vgg_16(img)
     return result
 
@@ -172,7 +172,7 @@ class Model(ModelDesc):
         logger.info("current ctx.is_training: {}".format(ctx.is_training))
 
 
-        cell = ConvLSTMCell_carlthome([40, 40], filters=lstm_mid_channel, kernel = [3, 3],reuse=tf.AUTO_REUSE)
+        cell = ConvLSTMCell_carlthome([20, 20], filters=lstm_mid_channel, kernel = [3, 3],reuse=tf.AUTO_REUSE)#dongzhuoyao, notice!!!
 
 
 
@@ -213,7 +213,7 @@ class Model(ModelDesc):
 
                 fusion_branch = AttentionModule(fusion_branch, fusion_width, "center1_ran")
 
-                fusion_branch = smooth(fusion_branch, 1, "context_fusion1", stride=1)
+                fusion_branch = smooth(fusion_branch, 1, "context_fusion1", stride=2)
 
 
 

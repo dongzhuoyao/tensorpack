@@ -327,7 +327,7 @@ class CalculateMIoU(Callback):
             def mypredictor(input_img):
                 # input image: 1*H*W*3
                 # output : H*W*C
-                output = self.pred(first_image_masks[np.newaxis,:, :, :, :], input_img)
+                output = self.pred(first_image_masks[np.newaxis,:, :, :, :], input_img[np.newaxis,:, :, :])
                 return output[0][0]
 
             prediction = predict_scaler(second_image, mypredictor, scales=[0.5, 0.75, 1, 1.25, 1.5],

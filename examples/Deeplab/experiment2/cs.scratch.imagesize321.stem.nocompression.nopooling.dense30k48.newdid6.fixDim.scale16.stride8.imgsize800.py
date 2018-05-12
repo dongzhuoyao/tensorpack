@@ -26,16 +26,17 @@ from tqdm import tqdm
 from seg_utils import RandomCropWithPadding, softmax_cross_entropy_with_ignore_label
 
 
-VAL_PARTIAL_DATA = 30
+
 CLASS_NUM = Cityscapes.class_num()
-CROP_SIZE = (1024,2048)
+CROP_SIZE = 800
 batch_size = 2
 
 IGNORE_LABEL = 255
+
 GROWTH_RATE = 48
 first_batch_lr = 1e-3
 lr_schedule = [(4, 1e-4), (8, 1e-5)]
-epoch_scale = 20 #640
+epoch_scale = 16 #640
 max_epoch = 10
 lr_multi_schedule = [('nothing', 5),('nothing',10)]
 evaluate_every_n_epoch = 1
@@ -56,7 +57,7 @@ def get_data(name, data_dir, meta_dir, batch_size,partial_data=-1):
     ds = AugmentImageComponents(ds, shape_aug, (0, 1), copy=False)
 
 
-    #ds = FakeData([[CROP_SIZE[0], CROP_SIZE[1], 3], [CROP_SIZE[0], CROP_SIZE[1]]], 5000, random=False, dtype='uint8')
+    #ds = FakeData([[CROP_SIZE, CROP_SIZE, 3], [CROP_SIZE, CROP_SIZE]], 5000, random=False, dtype='uint8')
     if isTrain:
         ds = BatchData(ds, batch_size)
         ds = PrefetchDataZMQ(ds, 1)
@@ -68,8 +69,8 @@ class Model(ModelDesc):
 
     def _get_inputs(self):
         ## Set static shape so that tensorflow knows shape at compile time.
-        return [InputDesc(tf.float32, [None, CROP_SIZE[0], CROP_SIZE[1], 3], 'image'),
-                InputDesc(tf.int32, [None, CROP_SIZE[0], CROP_SIZE[1]], 'gt')]
+        return [InputDesc(tf.float32, [None, CROP_SIZE, CROP_SIZE, 3], 'image'),
+                InputDesc(tf.int32, [None, CROP_SIZE, CROP_SIZE], 'gt')]
 
     def _build_graph(self, inputs):
         def mydensenet(image):
@@ -81,7 +82,7 @@ class Model(ModelDesc):
             # blocks = [6, 12, 48, 32]
             # blocks = [6, 12, 64, 48]
             rate = [1, 1, 2, 4]
-            stride = [2, 2, 1, 1]
+            stride = [2, 1, 1, 1]
 
             ctx = get_current_tower_context()
             logger.info("current ctx.is_training: {}".format(ctx.is_training))
@@ -212,7 +213,7 @@ def run(model_path, image_path, output):
 
 def proceed_validation(args, is_save = False, is_densecrf = False):
     import cv2
-    ds = Cityscapes(args.data_dir, args.meta_dir, "val",partial_data=VAL_PARTIAL_DATA)
+    ds = Cityscapes(args.data_dir, args.meta_dir, "val")
     ds = BatchData(ds, 1)
 
     pred_config = PredictConfig(
@@ -229,13 +230,13 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
     def mypredictor(input_img):
         # input image: 1*H*W*3
         # output : H*W*C
-        output = predictor(input_img[np.newaxis, :, :, :])
+        output = predictor(input_img)
         return output[0][0]
 
     for image, label in tqdm(ds.get_data()):
         label = np.squeeze(label)
         image = np.squeeze(image)
-        prediction = predict_scaler(image, mypredictor, scales=[0.5, 0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
+        prediction = predict_scaler(image, mypredictor, scales=[0.5,0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
         prediction = np.argmax(prediction, axis=2)
         stat.feed(prediction, label)
 
@@ -243,7 +244,6 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
             cv2.imwrite("result/{}.png".format(i), np.concatenate((image, visualize_label(label), visualize_label(prediction)), axis=1))
 
         i += 1
-
 
     logger.info("mIoU: {}".format(stat.mIoU))
     logger.info("mean_accuracy: {}".format(stat.mean_accuracy))
@@ -266,7 +266,7 @@ class CalculateMIoU(Callback):
 
     def _trigger(self):
         global args
-        self.val_ds = get_data('val', args.data_dir, args.meta_dir, args.batch_size, partial_data = VAL_PARTIAL_DATA)
+        self.val_ds = get_data('val', args.data_dir, args.meta_dir, args.batch_size, partial_data = 30)
         self.val_ds.reset_state()
 
         self.stat = MIoUStatistics(self.nb_class)
@@ -288,7 +288,6 @@ class CalculateMIoU(Callback):
         self.trainer.monitors.put_scalar("mIoU", self.stat.mIoU)
         self.trainer.monitors.put_scalar("mean_accuracy", self.stat.mean_accuracy)
         self.trainer.monitors.put_scalar("accuracy", self.stat.accuracy)
-
 
 def proceed_test(args, is_save = True, is_densecrf = False):
     import cv2
