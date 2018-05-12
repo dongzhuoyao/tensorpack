@@ -25,13 +25,16 @@ Convolutions for Semantic Segmentation](https://github.com/sacmehta/ESPNet) to h
 * [Efficient Interactive Annotation of Segmentation Datasets with Polygon-RNN++](http://www.cs.toronto.edu/polyrnn/) with one-shot
 * Learning Pixel-level Semantic Affinity with Image-level Supervision for Weakly Supervised Semantic Segmentation
 *  Image Generation from Scene Graphs,  StackGAN
-
-## current focus
 * [Adversarial Learning for Semi-supervised Semantic Segmentation](https://github.com/hfslyc/AdvSemiSeg)
 * [Seed, Expand and Constrain: Three Principles for Weakly-Supervised Image Segmentation](https://github.com/ascust/SEC-MXNet)
-* [Prototypical Networks for Few-shot Learning]()
 * Hourglass
 * RGB-D seg
+
+## current focus
+* activity stuff
+* domain adaption seg
+* few-shot classification
+
 
 
 
