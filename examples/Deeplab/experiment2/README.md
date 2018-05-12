@@ -117,7 +117,7 @@ camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.scale50||88.8
 camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.newdid4||89.1|
 camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.newdid4_1||89.0|
 camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.newdid6.4gpu_bugfix||90.0
-
+camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.newdid6||89
 
 
 ### Cityscapes(5.2)
@@ -138,7 +138,7 @@ camvid.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.stri
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.newdid6.sublinear.lr1p5||57.88
 pascal.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale4||47|
 pascal.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale8||54|
-pascal.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale10||54.9|
+pascal.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale10||54.9,(official:56.7)|
 
 ### Pascal in Slim
 Params | Val mIoU
