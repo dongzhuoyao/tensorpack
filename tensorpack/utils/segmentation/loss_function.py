@@ -92,19 +92,18 @@ def online_bootstrapping(logits, label, class_num, pixels=1024):
     with tf.name_scope('softmax_cross_entropy_with_ignore_label'):
         #tf.assert_equal(logits.shape[1], label.shape[1])  # shape assert
         #TODO need assert here
-        raw_prediction = tf.reshape(logits, [-1, class_num])
-        label = tf.reshape(label,[-1,])
+        prediction = tf.reshape(logits, [-1, class_num])
+        gt = tf.reshape(label,[-1,])
 
-
-        indices = tf.squeeze(tf.where(tf.less(label, class_num)), axis=1)
-        gt = tf.gather(label, indices)
-        prediction = tf.gather(raw_prediction, indices)
-
-        hardness = tf.reduce_sum(tf.one_hot(gt, depth=class_num)*tf.nn.softmax(prediction),axis=1)# Nx1
-
+        hardness = tf.reduce_sum(tf.one_hot(gt, depth=class_num) * tf.nn.softmax(prediction), axis=1)  # Nx1
         top_values, top_indices = tf.nn.top_k(hardness, sorted=False, k=pixels)
         gt = tf.gather(gt, top_indices)
         prediction = tf.gather(prediction, top_indices)
+
+
+        indices = tf.squeeze(tf.where(tf.less(gt, class_num)), axis=1)
+        gt = tf.gather(gt, indices)
+        prediction = tf.gather(prediction, indices)
 
 
         # Pixel-wise softmax loss.

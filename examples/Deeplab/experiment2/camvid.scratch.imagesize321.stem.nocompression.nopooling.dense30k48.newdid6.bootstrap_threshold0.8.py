@@ -123,11 +123,14 @@ class Model(ModelDesc):
         new_size = prob.get_shape()[1:3]
         # label_resized = tf.image.resize_nearest_neighbor(label4d, new_size)
 
+
+        from tensorpack.utils.segmentation.loss_function import online_bootstrapping_by_threshold
+
         cost = 0
         for jj,p in enumerate(predict_list):
             current_predict = predict_list[jj]
-            cost += softmax_cross_entropy_with_ignore_label(logits=current_predict, label=label4d,
-                                                       class_num=CLASS_NUM)
+            cost += online_bootstrapping_by_threshold(logits=current_predict, label=label4d, threshold=0.8,
+                                                      class_num=CLASS_NUM)
         cost = cost/len(predict_list)
 
         prediction = tf.argmax(prob, axis=-1, name="prediction")

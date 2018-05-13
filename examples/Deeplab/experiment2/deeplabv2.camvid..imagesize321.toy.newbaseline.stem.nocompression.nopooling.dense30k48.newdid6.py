@@ -142,7 +142,7 @@ class Model(ModelDesc):
             costs.append(wd_cost)
 
             self.cost = tf.add_n(costs, name='cost')
-            add_moving_summary(costs + [self.cost])
+
 
     def _get_optimizer(self):
         lr = tf.get_variable('learning_rate', initializer=first_batch_lr, trainable=False)
@@ -230,7 +230,7 @@ def proceed_validation(args, is_save = False, is_densecrf = False):
     def mypredictor(input_img):
         # input image: 1*H*W*3
         # output : H*W*C
-        output = predictor(input_img)
+        output = predictor(input_img[np.newaxis,:,:,:])
         return output[0][0]
 
     for image, label in tqdm(ds.get_data()):
@@ -274,7 +274,7 @@ class CalculateMIoU(Callback):
         def mypredictor(input_img):
             # input image: 1*H*W*3
             # output : H*W*C
-            output = self.pred(input_img)
+            output = self.pred(input_img[np.newaxis,:,:,:])
             return output[0][0]
 
         for image, label in tqdm(self.val_ds.get_data()):
