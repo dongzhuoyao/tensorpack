@@ -125,10 +125,10 @@ class Model(ModelDesc):
         # label_resized = tf.image.resize_nearest_neighbor(label4d, new_size)
 
         cost = 0
-        from tensorpack.utils.segmentation.loss_function import online_bootstrapping_by_threshold
+        from tensorpack.utils.segmentation.loss_function import online_bootstrapping
         for jj,p in enumerate(predict_list):
             current_predict = predict_list[jj]
-            cost += online_bootstrapping_by_threshold(logits=current_predict, label=label4d,threshold=0.4,
+            cost += online_bootstrapping(logits=current_predict, label=label4d,pixels=int(batch_size*CROP_SIZE*CROP_SIZE*0.1),
                                                        class_num=CLASS_NUM)
         cost = cost/len(predict_list)
 

@@ -52,6 +52,35 @@ def soft_target_softmax_cross_entropy_with_ignore_label(logits, label, class_num
         #TODO reduce_mean
     return loss
 
+def online_bootstrapping_by_threshold(logits, label, class_num, threshold=0.4):
+    """
+    This function accepts logits rather than predictions, and is more numerically stable than
+    :func:`class_balanced_cross_entropy`.
+    logits: NxWxHxC
+    labels: NxWxH
+    """
+    with tf.name_scope('softmax_cross_entropy_with_ignore_label'):
+        #tf.assert_equal(logits.shape[1], label.shape[1])  # shape assert
+        #TODO need assert here
+        raw_prediction = tf.reshape(logits, [-1, class_num])
+        label = tf.reshape(label,[-1,])
+
+
+
+        indices = tf.squeeze(tf.where(tf.less(label, class_num)), axis=1)
+        gt = tf.gather(label, indices)
+        prediction = tf.gather(raw_prediction, indices)
+
+
+        predict_prob = tf.reduce_sum(tf.one_hot(gt, depth=class_num)*tf.nn.softmax(prediction),axis=1)# Nx1
+        threshold_ndices = tf.squeeze(tf.where(tf.less(predict_prob, threshold)), axis=1)
+        gt = tf.gather(gt, threshold_ndices)
+        prediction = tf.gather(prediction, threshold_ndices)
+
+        # Pixel-wise softmax loss.
+        loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=prediction, labels=gt)
+        loss = tf.reduce_mean(loss)
+    return loss
 
 def online_bootstrapping(logits, label, class_num, pixels=1024):
     """
