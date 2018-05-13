@@ -1,12 +1,11 @@
 
-##How TO
+##How TO use Gensim
 
-[http://nbviewer.jupyter.org/github/danielfrg/word2vec/blob/master/examples/word2vec.ipynb](http://nbviewer.jupyter.org/github/danielfrg/word2vec/blob/master/examples/word2vec.ipynb)
+[https://radimrehurek.com/gensim/models/word2vec.html](https://radimrehurek.com/gensim/models/word2vec.html)
 
 ## Download 
 
+[https://github.com/RaRe-Technologies/gensim-data](https://github.com/RaRe-Technologies/gensim-data)
 
-[https://code.google.com/archive/p/word2vec/](https://code.google.com/archive/p/word2vec/)
 
-[https://github.com/stanfordnlp/GloVe](https://github.com/stanfordnlp/GloVe)
 
