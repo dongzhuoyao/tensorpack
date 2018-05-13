@@ -138,6 +138,7 @@ cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.s
 cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale1.bootstrap_threshold0.4||33.3
 cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale1.bootstrap_threshold0.6||35.4
 cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale1.bootstrap_threshold0.8||37.49
+cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale1.bootstrap_threshold0.9||37.22
 ------------ | -------------| -------------
 camvid.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.scale1000.fixDim||66.1|
 camvid.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.scale800.fixDim.sublinear||62.6(epoch9)
@@ -145,6 +146,7 @@ camvid.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.stri
 camvid.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.stride8.scale480|66.3|
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.newdid6.softarget||59
 deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.newdid6.sublinear.lr1p5||57.88
+deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dense30k48.newdid6.bootstrap_threshold0.8||60.75
 pascal.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale4||47|
 pascal.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale8||54|
 pascal.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale10||54.9,(official:56.7)|
