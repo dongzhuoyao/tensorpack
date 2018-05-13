@@ -70,7 +70,7 @@ Arch |n-shot|fold0| fold1|fold2|fold3|Mean
 |res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.width128 |5-shot|67.5|68.8|53.6|60.8|62.67|
 |res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128|1-shot|66.1|69.39|52.6|56.70|61.20|
 |res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128|5-shot|67.9|70.5|52.4|57.8|62.15|
-|vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128|61.3|63.5|51.6|53.0|57.35|
+|vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128|5-shot|61.3|63.5|51.6|53.0|57.35|
 oracle all class:  
 res101.slim.2branch.speedup.mcontext.240k.width512.oracle:foldall_1shot_test, 67.0
 res101.slim.2branch.speedup.mcontext.240k.width512.oracle:foldall_train, 72.5
