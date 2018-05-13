@@ -131,7 +131,8 @@ cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.s
 cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale16.stride8.imgsize800||68.7|
 cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale8.stride8.imgsize1024||57.9|
 cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale1.bootstrap_top0.1||epoch4:2,terminated|
-cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale1.bootstrap_top0.4||epoch5:5,terminated|
+cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale1.bootstrap_top0.4||epoch5:5,terminated,bugfixed, epoch2:8,terminated|
+cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale1.bootstrap_top0.8||:question:
 cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale1||**33.9**|
 cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale1.bootstrap_threshold0.4||33.3
 cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale1.bootstrap_threshold0.2||29.62
