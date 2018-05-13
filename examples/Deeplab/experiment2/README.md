@@ -130,6 +130,7 @@ cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.s
 cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale20||72.3(test:70.6)
 cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale16.stride8.imgsize800||68.7|
 cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale8.stride8.imgsize1024||57.9|
+cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale1.bootstrap_top0.1||epoch4:2,terminated|
 ------------ | -------------| -------------
 camvid.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.scale1000.fixDim||66.1|
 camvid.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.scale800.fixDim.sublinear||62.6(epoch9)
