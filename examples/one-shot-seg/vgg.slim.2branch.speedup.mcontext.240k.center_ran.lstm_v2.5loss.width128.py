@@ -44,14 +44,13 @@ python  vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128
 
 
 
-python vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.py --test_load train_log/vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold0_5shot_test/model-60000 --k_shot 2 --test --test_data fold0_2shot_test --gpu 5
-python vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.py --test_load train_log/vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold0_5shot_test/model-60000 --k_shot 3 --test --test_data fold0_3shot_test --gpu 5
-python vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.py --test_load train_log/vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold0_5shot_test/model-60000 --k_shot 4 --test --test_data fold0_4shot_test --gpu 5
-
-python vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.py --test_load train_log/vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold0_5shot_test/model-60000 --k_shot 6 --test --test_data fold0_6shot_test --gpu 5
-python vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.py --test_load train_log/vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold0_5shot_test/model-60000 --k_shot 7 --test --test_data fold0_7shot_test --gpu 5
-python vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.py --test_load train_log/vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold0_5shot_test/model-60000 --k_shot 8 --test --test_data fold0_8shot_test --gpu 5
-python vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.py --test_load train_log/vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold0_5shot_test/model-60000 --k_shot 9 --test --test_data fold0_9shot_test --gpu 5
+python vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.py --test_load train_log/vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold0_5shot_test/model-60000 --k_shot 2 --test --test_data fold0_2shot_test --gpu 5 &&
+python vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.py --test_load train_log/vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold0_5shot_test/model-60000 --k_shot 3 --test --test_data fold0_3shot_test --gpu 5 &&
+python vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.py --test_load train_log/vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold0_5shot_test/model-60000 --k_shot 4 --test --test_data fold0_4shot_test --gpu 5 &&
+python vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.py --test_load train_log/vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold0_5shot_test/model-60000 --k_shot 6 --test --test_data fold0_6shot_test --gpu 5 &&
+python vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.py --test_load train_log/vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold0_5shot_test/model-60000 --k_shot 7 --test --test_data fold0_7shot_test --gpu 5 &&
+python vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.py --test_load train_log/vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold0_5shot_test/model-60000 --k_shot 8 --test --test_data fold0_8shot_test --gpu 5 &&
+python vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.py --test_load train_log/vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold0_5shot_test/model-60000 --k_shot 9 --test --test_data fold0_9shot_test --gpu 5 &&
 python vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.py --test_load train_log/vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold0_5shot_test/model-60000 --k_shot 10 --test --test_data fold0_10shot_test --gpu 5
 
 """
