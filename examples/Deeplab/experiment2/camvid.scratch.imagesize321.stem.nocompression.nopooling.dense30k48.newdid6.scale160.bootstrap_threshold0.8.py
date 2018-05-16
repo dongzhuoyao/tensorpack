@@ -36,7 +36,7 @@ IGNORE_LABEL = 255
 GROWTH_RATE = 48
 first_batch_lr = 1e-3
 lr_schedule = [(4, 1e-4), (8, 1e-5)]
-epoch_scale = 320 #640
+epoch_scale = 160 #640
 max_epoch = 10
 lr_multi_schedule = [('nothing', 5),('nothing',10)]
 evaluate_every_n_epoch = 1
@@ -125,9 +125,8 @@ class Model(ModelDesc):
 
 
         from tensorpack.utils.segmentation.loss_function import online_bootstrapping_by_threshold
-
         cost = 0
-        for jj,p in enumerate(predict_list):
+        for jj, p in enumerate(predict_list):
             current_predict = predict_list[jj]
             cost += online_bootstrapping_by_threshold(logits=current_predict, label=label4d, threshold=0.8,
                                                       class_num=CLASS_NUM)
