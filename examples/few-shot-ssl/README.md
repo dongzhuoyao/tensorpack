@@ -1,3 +1,10 @@
+# Dongzhuoyao
+
+* the baseline is well prepared.
+* the mini-imagenet is well prepared.
+* it seems that don't include Prototype Network implementation.
+
+
 # few-shot-ssl-public
 Code for paper
 *Meta-Learning for Semi-Supervised Few-Shot Classification.* [[arxiv](https://arxiv.org/abs/1803.00676)]

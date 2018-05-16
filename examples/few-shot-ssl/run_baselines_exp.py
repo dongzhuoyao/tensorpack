@@ -771,5 +771,7 @@ if __name__ == '__main__':
   flags.DEFINE_string("dataset", "mini-imagenet", "Dataset name")
   os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
+  #data_root flag is in factory!
+
 
   main()
