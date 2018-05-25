@@ -128,7 +128,7 @@ cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.s
 cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale12||70.7,(val500:70.57,test:68.75)
 cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale16||72.1(epoch9)
 cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale20||72.3(test:70.6)
-cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale20.bootstrap_threshold0.8||74.5(test:question:)|
+cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale20.bootstrap_threshold0.8||74.5(test:73.8)|
 cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale16.stride8.imgsize800||68.7|
 cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale8.stride8.imgsize1024||57.9|
 cs.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale1.bootstrap_top0.1||epoch4:2,terminated|
