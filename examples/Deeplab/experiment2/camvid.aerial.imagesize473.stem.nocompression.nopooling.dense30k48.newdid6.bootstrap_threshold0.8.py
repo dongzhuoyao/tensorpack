@@ -292,6 +292,51 @@ class CalculateMIoU(Callback):
         self.trainer.monitors.put_scalar("accuracy", self.stat.accuracy)
 
 
+def proceed_test(args,is_densecrf = False):
+    import cv2
+    ds = dataset.Aerial( args.meta_dir, "test")
+    imglist = ds.imglist
+    ds = BatchData(ds, 1)
+
+    args.load = 'train_log/camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.newdid6.bootstrap_threshold0.8/model-129600'
+
+    pred_config = PredictConfig(
+        model=Model(),
+        session_init=get_model_loader(args.load),
+        input_names=['image'],
+        output_names=['prob'])
+    predictor = OfflinePredictor(pred_config)
+
+    from tensorpack.utils.fs import mkdir_p
+    result_dir = "test-{}".format(os.path.basename(__file__).rstrip(".py"))
+    import shutil
+    shutil.rmtree(result_dir, ignore_errors=True)
+    mkdir_p(result_dir)
+    mkdir_p(os.path.join(result_dir,"compressed"))
+
+    import subprocess
+
+    def mypredictor(input_img):
+        # input image: 1*H*W*3
+        # output : H*W*C
+        output = predictor(input_img[np.newaxis, :, :, :])
+        return output[0][0]
+
+    logger.info("start validation....")
+    _itr = ds.get_data()
+    for i in tqdm(range(len(imglist))):
+        image = next(_itr)
+        name = os.path.basename(imglist[i]).rstrip(".tif")
+        image = np.squeeze(image)
+        prediction = predict_scaler(image, mypredictor, scales=[0.5,0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=CROP_SIZE, is_densecrf = is_densecrf)
+        prediction = np.argmax(prediction, axis=2)
+        prediction = prediction*255 # to 0-255
+        file_path = os.path.join(result_dir,"{}.tif".format(name))
+        compressed_file_path = os.path.join(result_dir, "compressed","{}.tif".format(name))
+        cv2.imwrite(file_path, prediction)
+        command = "gdal_translate --config GDAL_PAM_ENABLED NO -co COMPRESS=CCITTFAX4 -co NBITS=1 " + file_path + " " + compressed_file_path
+        print command
+        subprocess.call(command, shell=True)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -308,6 +353,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, default = batch_size, help='batch_size')
     parser.add_argument('--output', help='fused output filename. default to out-fused.png')
     parser.add_argument('--validation', action='store_true', help='validate model on validation images')
+    parser.add_argument('--test', action='store_true', help='generate test result')
     args = parser.parse_args()
     if args.gpu:
         os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
@@ -319,6 +365,8 @@ if __name__ == '__main__':
         run(args.load, args.run, args.output)
     elif args.validation:
         proceed_validation(args)
+    elif args.test:
+        proceed_test(args)
     else:
         config = get_config(args.data_dir,args.meta_dir,args.batch_size)
         if args.load:
