@@ -118,7 +118,7 @@ camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.newdid4||89.1
 camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.newdid4_1||89.0|
 camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.newdid6.4gpu_bugfix||90.0
 camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.newdid6||89
-
+test-camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.newdid6.bootstrap_threshold0.8||89.048
 
 ### Cityscapes(5.2)
 Arch |#Params| Val mIoU(target: 69.45, 71.8)
