@@ -24,6 +24,7 @@ max_epoch = 6
 weight_decay = 5e-4
 
 LR = 1e-4
+lr_schedule = [(4, 1e-5, )]
 CLASS_NUM = 2
 evaluate_every_n_epoch = 1
 support_image_size =image_size
@@ -281,6 +282,7 @@ def get_config():
     callbacks = [
         ModelSaver(),
         GPUUtilizationTracker(),
+        ScheduledHyperParamSetter('learning_rate', lr_schedule),
         EstimatedTimeLeft(),
         PeriodicTrigger(CalculateMIoU(CLASS_NUM), every_k_epochs=evaluate_every_n_epoch),
         ProgressBar(["cross_entropy_loss", "cost", "learning_rate"]),  # uncomment it to debug for every step

@@ -74,7 +74,7 @@ class COCO:
         clusters = {}
 
         import json
-        result_file = "cluster.jon"
+        result_file = "cluster.json-6.4"
 
         if is_debug==0 and os.path.isfile(result_file):
             cprint("recoverring from json file", bcolors.OKBLUE)
@@ -104,7 +104,7 @@ class COCO:
                         clusters[catId] = [item]
                     else:
                         clusters[catId].append(item)
-                cprint('Class:{}, totally {} items, filtered {} items(whose area is smaller than {} pixels)'.format(catid2catstr[catId], len(image_ids), filtered, area_limit), bcolors.OKBLUE)
+                cprint('Class:{}, totally {} items, filtered {} items(whose area is smaller than {} pixels)'.format(catid2catstr[catId], len(clusters[catId]), filtered, area_limit), bcolors.OKBLUE)
 
             with open(result_file,"w") as f:
                 json.dump(clusters, f)
