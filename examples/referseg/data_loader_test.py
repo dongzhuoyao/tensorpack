@@ -125,6 +125,7 @@ def generate_mask(_coco,catId_to_ascendorder, img_id):
 
     for annId in annIds:
         ann = _coco.loadAnns(annId)[0]
+
         img_mask, ann = generate_image_mask(_coco, img_mask, annId, catId_to_ascendorder)
 
     return img_file_name, img_mask
@@ -203,7 +204,7 @@ class DataLoader(RNGDataFlow):
             self.coco_instance = COCO(instance_val_json)
 
         else:
-            raise
+            raise ValueError
 
         self.catId_to_ascendorder = generate_id2trainid(self.coco_instance)
         logger.info("catId_to_ascendorder length: {}".format(len(self.catId_to_ascendorder)))
@@ -222,7 +223,7 @@ class DataLoader(RNGDataFlow):
             else:
                 return len(self.img_dict.keys())
         else:
-            raise
+            raise ValueError
 
 
     @staticmethod
@@ -263,7 +264,7 @@ class DataLoader(RNGDataFlow):
             if self.shuffle:
                 self.rng.shuffle(self.img_ids)
         else:
-            raise
+            raise ValueError
 
 
 

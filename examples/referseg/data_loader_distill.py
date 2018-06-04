@@ -269,7 +269,7 @@ class DataLoaderDistill(RNGDataFlow):
 
 
 if __name__ == '__main__':
-    ds = DataLoader("test", max_length=15, img_size=320,train_img_num=-1,test_img_num=-1,regenerate_json=True)
+    ds = DataLoaderDistill("test", max_length=15, img_size=320,train_img_num=-1,test_img_num=-1,regenerate_json=True)
     ds.reset_state()
     for idx, data in enumerate(ds.get_data()):
         img, gt, caption = data[0],data[1],data[2]

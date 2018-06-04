@@ -515,34 +515,7 @@ class ImagePlayer:
 
 ########################################################################### Read DBs into DBItems ################################################################################
 
-class COCO:
-    def __init__(self, db_path, dataType):
-        self.pycocotools = __import__('pycocotools.coco')
-        if dataType == 'training':
-            dataType = 'train2014'
-        elif dataType == 'test':
-            dataType = 'val2014'
-        else:
-            raise Exception('split \'' + dataType + '\' is not valid! Valid splits: training/test')
 
-        self.db_path = db_path
-        self.dataType = dataType
-
-    def getItems(self, cats=[], areaRng=[], iscrowd=False):
-
-        annFile='%s/annotations/instances_%s.json' % (self.db_path, self.dataType)
-
-        coco = self.pycocotools.coco.COCO(annFile)
-        catIds = coco.getCatIds(catNms=cats);
-        anns = coco.getAnnIds(catIds=catIds, areaRng=areaRng, iscrowd=iscrowd)
-        cprint(str(len(anns)) + ' annotations read from coco', bcolors.OKGREEN)
-
-        items = []
-        for i in range(len(anns)):
-            ann = anns[i]
-            item = DBCOCOItem('coco-'  + self.dataType + str(i), self.db_path, self.dataType, ann, coco, self.pycocotools)
-            items.append(item)
-        return items
         
 class PASCAL_READ_MODES:
     #Returns list of DBImageItem each has the image and one object instance in the mask
@@ -672,6 +645,8 @@ class PASCAL:
             item = DBPascalItem('pascal-'  + self.dataType + '_' + ann['image_name'] + '_' + str(i), img_path, mask_path, ann['class_ids'], ids_map)
             items.append(item)
         return items
+
+
     @staticmethod
     def cluster_items(items):
         clusters = {}
@@ -718,15 +693,9 @@ class DBImageItem:
     def read_img(self):
         pass
 
-class DBCOCOItem(DBImageItem):
-    def __init__(self, name, db_path, dataType, ann_info, coco_db, pycocotools):
-        DBImageItem.__init__(self, name)
-        self.ann_info = ann_info
-        self.db_path = db_path
-        self.dataType = dataType
-        self.coco_db = coco_db
-        self.pycocotools = pycocotools
 
+
+    """
     def read_mask(self):
         ann = self.coco_db.loadAnns(self.ann_info)[0]
         img_cur = self.coco_db.loadImgs(ann['image_id'])[0]
@@ -741,6 +710,7 @@ class DBCOCOItem(DBImageItem):
         img_cur = self.coco_db.loadImgs(ann['image_id'])[0]
         img_path = '%s/images/%s/%s' % (self.db_path, self.dataType, img_cur['file_name'])
         return read_img(img_path)
+    """
 
     
 class DBPascalItem(DBImageItem):
