@@ -85,9 +85,8 @@ if __name__ == '__main__':
     ds = OneShotDatasetTwoBranchCoco("fold0_5shot_test")
     from tensorpack.utils.segmentation.segmentation import visualize_label
     for idx,data in enumerate(ds.get_data()):
-        first_imgs,first_masks, second_img, second_mask, metadata = data
-        cv2.imwrite("first_image.jpg", first_imgs[0])
-        cv2.imwrite("first_mask.jpg", visualize_label(first_masks[0]))
+        first_img_masks, second_img, second_mask = data
+        cv2.imwrite("first_image_mask.jpg", first_img_masks[0])
         cv2.imwrite("second_image.jpg", second_img)
         cv2.imwrite("second_mask.jpg", visualize_label(second_mask))
-        print metadata
+        pass

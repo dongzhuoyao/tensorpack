@@ -16,6 +16,8 @@ from tqdm import tqdm
 coco_path = '/data2/dataset/coco/train2014'
 is_debug = 0
 
+area_limit = 1600
+
 def generate_mask(coco, img_id, cat_id, is_read_image = True):
     img = coco.loadImgs(img_id)[0]
     img_file_name = img['file_name']
@@ -92,18 +94,18 @@ class COCO:
             with open(result_file,'r') as f:
                 clusters_json = json.load(f)
                 for catId in catIds:
-                    clusters[catId] = clusters_json[catId]
+                    clusters[str(catId)] = clusters_json[catId]
         else:
 
             for catId in [value['id'] for key,value in self.coco.cats.items()]:
                 image_ids = self.coco.getImgIds(catIds=[catId])
                 filtered = 0
                 for idx, image_id in tqdm(enumerate(image_ids), total=len(image_ids),desc="catId={}".format(catId)):
-                    if is_debug==1 and idx>100:break
+                    if is_debug==1 and idx>10:break
                     item = {"image_id":image_id, "cat_id":catId,
                             "image_path": os.path.join(coco_path, "COCO_train2014_{}.jpg".format(str(image_id).zfill(12)))}
                     mask = generate_mask(self.coco, image_id, catId, is_read_image=False)
-                    if mask.sum() < 900:# too small object
+                    if mask.sum() < area_limit:# too small object
                         filtered += 1
                         continue
 
@@ -111,21 +113,21 @@ class COCO:
                         clusters[catId] = [item]
                     else:
                         clusters[catId].append(item)
-                cprint('catId:{}, totally {} items, filtered {} items(whose area is smaller than 900 pixels)'.format(catId, len(image_ids), filtered), bcolors.OKBLUE)
+                cprint('catId:{}, totally {} items, filtered {} items(whose area is smaller than {} pixels)'.format(catId, len(image_ids), filtered, area_limit), bcolors.OKBLUE)
 
             with open(result_file,"w") as f:
                 cprint("recoverring from json file", bcolors.OKBLUE)
                 json.dump(clusters, f)
                 for key,value in clusters.items():
                     cprint(
-                        'catId:{}, totally {} items, filtered items(whose area is smaller than 900 pixels)'.format(
-                            key, len(value)), bcolors.OKBLUE)
+                        'catId:{}, totally {} items, filtered items(whose area is smaller than {} pixels)'.format(
+                            key, len(value), area_limit), bcolors.OKBLUE)
 
 
         cprint('Total of ' + str(len(clusters)) + ' classes!', bcolors.OKBLUE)
         items = []
         for catId in catIds:
-            items.extend([(clusters[catId], idx) for idx,tmp  in  enumerate(clusters[catId])])
+            items.extend([(clusters[str(catId)], idx) for idx,tmp  in  enumerate(clusters[str(catId)])])
         cprint(str(len(items)) + ' annotations read from coco', bcolors.OKGREEN)
         return items
 
