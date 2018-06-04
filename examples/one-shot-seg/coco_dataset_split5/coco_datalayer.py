@@ -120,7 +120,7 @@ class COCO:
                 json.dump(clusters, f)
                 for key,value in clusters.items():
                     cprint(
-                        'catId:{}, totally {} items, filtered items(whose area is smaller than {} pixels)'.format(
+                        'catId:{}, totally {} items after filtering items(whose area is smaller than {} pixels)'.format(
                             key, len(value), area_limit), bcolors.OKBLUE)
 
 
