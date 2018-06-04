@@ -28,7 +28,7 @@ CLASS_NUM = 2
 evaluate_every_n_epoch = 1
 support_image_size =image_size
 query_image_size = image_size
-images_per_epoch = 400#40000
+images_per_epoch =100#40000
 fusion_width = 256
 lstm_mid_channel = 128
 
@@ -81,6 +81,7 @@ def get_data(name,batch_size=1):
         ds = PrefetchDataZMQ(ds, 1)
     else:
         ds = BatchData(ds, 1)
+        ds = PrefetchDataZMQ(ds, 1)
     return ds
 
 
@@ -286,7 +287,7 @@ class CalculateMIoU(Callback):
                 output = self.pred(first_image_masks[np.newaxis,:, :, :, :], input_img[np.newaxis,:, :, :])
                 return output[0][0]
 
-            prediction = predict_scaler(second_image, mypredictor, scales=[0.5, 0.75, 1, 1.25, 1.5],
+            prediction = predict_scaler(second_image, mypredictor, scales=[1],
                                         classes=CLASS_NUM, tile_size=support_image_size, is_densecrf=False)
             prediction_fused += prediction
 
@@ -337,7 +338,7 @@ def proceed_test(args, is_save = False):
             output = predictor(first_image_masks[np.newaxis, :, :, :, :], input_img[np.newaxis,:, :, :])
             return output[0][0]
 
-        prediction = predict_scaler(second_image, mypredictor, scales=[0.5, 0.75, 1, 1.25, 1.5],
+        prediction = predict_scaler(second_image, mypredictor, scales=[1],
                                     classes=CLASS_NUM, tile_size=support_image_size, is_densecrf=False)
         prediction_fused += prediction
 

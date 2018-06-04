@@ -11,7 +11,6 @@ from skimage.transform import resize
 import copy,cv2
 from pycocotools.coco import COCO
 from pycocotools import mask
-from ss_settings import coco_cat2trainid, coco_trainid2cat
 from tensorpack.utils.segmentation.coco_util import generate_id2trainid, generate_image_mask
 from tqdm import tqdm
 from tensorpack.utils.segmentation.coco_util import catid2trainid, catid2catstr
@@ -77,7 +76,7 @@ class COCO:
         import json
         result_file = "cluster.jon"
 
-        if is_debug==0 and os.path.isfile(result_file):
+        if False:#is_debug==0 and os.path.isfile(result_file):
             cprint("recoverring from json file", bcolors.OKBLUE)
             with open(result_file,'r') as f:
                 clusters_json = json.load(f)
