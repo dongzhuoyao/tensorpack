@@ -118,7 +118,7 @@ camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.newdid4||89.1
 camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.newdid4_1||89.0|
 camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.newdid6.4gpu_bugfix||90.0
 camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.newdid6||89
-
+test-camvid.aerial.imagesize473.stem.nocompression.nopooling.dense30k48.newdid6.bootstrap_threshold0.8||89.048
 
 ### Cityscapes(5.2)
 Arch |#Params| Val mIoU(target: 69.45, 71.8)
@@ -157,7 +157,7 @@ deeplabv2.camvid..imagesize321.toy.newbaseline.stem.nocompression.nopooling.dens
 pascal.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale4||47|
 pascal.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale8||54|
 pascal.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale10||54.9,(official:56.7)|
-
+pascal.scratch.imagesize321.stem.nocompression.nopooling.dense30k48.newdid6.fixDim.scale10.bootstrap_threshold0.8|54.9, bootstrap is no use!!!|
 ### Pascal in Slim
 Params | Val mIoU
 ------------ | -------------

@@ -31,8 +31,10 @@ Convolutions for Semantic Segmentation](https://github.com/sacmehta/ESPNet) to h
 * RGB-D seg
 
 ## current focus
-* activity stuff
 * domain adaption seg
+* domain adaption detection
+* incremental learning for seg
+* graph+pose
 * few-shot classification
 
 
