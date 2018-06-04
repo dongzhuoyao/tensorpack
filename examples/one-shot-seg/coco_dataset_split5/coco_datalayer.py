@@ -90,18 +90,20 @@ class COCO:
         import json
         result_file = "cluster.jon"
 
-        if False:#os.path.isfile(result_file):
+        if is_debug==0 and os.path.isfile(result_file):
+            cprint("recoverring from json file", bcolors.OKBLUE)
             with open(result_file,'r') as f:
                 clusters_json = json.load(f)
                 for catId in catIds:
-                    clusters[str(catId)] = clusters_json[catId]
-        else:
+                    clusters[str(catId)] = clusters_json[str(catId)]
 
+        else:
+            cprint("generating json file....", bcolors.OKBLUE)
             for catId in [value['id'] for key,value in self.coco.cats.items()]:
                 image_ids = self.coco.getImgIds(catIds=[catId])
                 filtered = 0
                 for idx, image_id in tqdm(enumerate(image_ids), total=len(image_ids),desc="catId={}".format(catId)):
-                    if is_debug==1 and idx>10:break
+                    if is_debug==1 and idx>100:break
                     item = {"image_id":image_id, "cat_id":catId,
                             "image_path": os.path.join(coco_path, "COCO_train2014_{}.jpg".format(str(image_id).zfill(12)))}
                     mask = generate_mask(self.coco, image_id, catId, is_read_image=False)
@@ -116,7 +118,6 @@ class COCO:
                 cprint('catId:{}, totally {} items, filtered {} items(whose area is smaller than {} pixels)'.format(catId, len(image_ids), filtered, area_limit), bcolors.OKBLUE)
 
             with open(result_file,"w") as f:
-                cprint("recoverring from json file", bcolors.OKBLUE)
                 json.dump(clusters, f)
                 for key,value in clusters.items():
                     cprint(

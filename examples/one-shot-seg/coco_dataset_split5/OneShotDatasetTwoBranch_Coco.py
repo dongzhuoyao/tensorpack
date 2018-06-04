@@ -34,6 +34,8 @@ class OneShotDatasetTwoBranchCoco(RNGDataFlow):
     def size(self):
         if is_debug == 1:
             return 50
+        if "test" in self.name:
+            return 1000
         else:
             return self.data_size
 
