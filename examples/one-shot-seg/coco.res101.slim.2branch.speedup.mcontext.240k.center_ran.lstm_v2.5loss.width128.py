@@ -28,7 +28,7 @@ CLASS_NUM = 2
 evaluate_every_n_epoch = 1
 support_image_size =image_size
 query_image_size = image_size
-images_per_epoch =100#40000
+images_per_epoch =40000
 fusion_width = 256
 lstm_mid_channel = 128
 
