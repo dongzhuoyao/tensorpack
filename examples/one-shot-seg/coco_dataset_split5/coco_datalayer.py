@@ -12,8 +12,12 @@ import copy,cv2
 from pycocotools.coco import COCO
 from pycocotools import mask
 from ss_settings import coco_cat2trainid, coco_trainid2cat
+from tensorpack.utils.segmentation.coco_util import generate_id2trainid, generate_image_mask
 from tqdm import tqdm
+from tensorpack.utils.segmentation.coco_util import catid2trainid, catid2catstr
 coco_path = '/data2/dataset/coco/train2014'
+coco_seglabel_path = "/data2/dataset/coco/train2014_seg_label"
+
 is_debug = 0
 
 area_limit = 1600
@@ -21,29 +25,12 @@ area_limit = 1600
 def generate_mask(coco, img_id, cat_id, is_read_image = True):
     img = coco.loadImgs(img_id)[0]
     img_file_name = img['file_name']
-    img_mask = np.zeros((img['height'], img['width'], 1), dtype=np.uint8)
-
-    height, width, _ = img_mask.shape
-    annIds = coco.getAnnIds(imgIds=img_id)
-
-    for annId in annIds:
-        ann = coco.loadAnns(annId)[0]
-        if ann['category_id'] == cat_id:
-            # polygon
-            if type(ann['segmentation']) == list:
-                for _instance in ann['segmentation']:
-                    rle = mask.frPyObjects([_instance], height, width)
-                    m = mask.decode(rle)
-                    img_mask[np.where(m == 1)] = 1
-
-            # mask
-            else:  # mostly is aeroplane
-                if type(ann['segmentation']['counts']) == list:
-                    rle = mask.frPyObjects([ann['segmentation']], height, width)
-                else:
-                    rle = [ann['segmentation']]
-                m = mask.decode(rle)
-                img_mask[np.where(m == 1)] = 1
+    img_mask = cv2.imread(os.path.join(coco_seglabel_path, img_file_name),cv2.IMREAD_GRAYSCALE)
+    catId_to_ascendorder = generate_id2trainid(coco)
+    train_id = catId_to_ascendorder[cat_id]
+    img_mask_copy = np.copy(img_mask)
+    img_mask[np.where(img_mask_copy == train_id)] = 1
+    img_mask[np.where(img_mask_copy != train_id)] = 0
 
     if is_read_image:
         image = os.path.join(coco_path, "COCO_train2014_{}.jpg".format(str(img_id).zfill(12)))
@@ -96,6 +83,8 @@ class COCO:
                 clusters_json = json.load(f)
                 for catId in catIds:
                     clusters[str(catId)] = clusters_json[str(catId)]
+                    cprint('Class:{}, totally {} items, filtered  items(whose area is smaller than {} pixels)'.format(
+                        catid2catstr[catId], len(clusters[str(catId)]), area_limit), bcolors.OKBLUE)
 
         else:
             cprint("generating json file....", bcolors.OKBLUE)

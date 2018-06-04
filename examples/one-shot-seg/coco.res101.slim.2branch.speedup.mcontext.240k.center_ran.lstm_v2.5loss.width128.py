@@ -73,7 +73,7 @@ def my_squeeze_excitation_layer(input_x, out_dim, layer_name,ratio=4):
 
 def get_data(name,batch_size=1):
     isTrain = True if 'train' in name else False
-    ds = OneShotDatasetTwoBranchCoco("fold0_5shot_train", image_size=support_image_size)
+    ds = OneShotDatasetTwoBranchCoco(name, image_size=support_image_size)
 
 
     if isTrain:
@@ -271,7 +271,7 @@ class CalculateMIoU(Callback):
 
         self.stat = MIoUStatistics(self.nb_class)
 
-        for first_image_masks, second_image, second_label in tqdm(self.val_ds.get_data()):
+        for first_image_masks, second_image, second_label in tqdm(self.val_ds.get_data(), total=self.val_ds.size()):
             second_image = np.squeeze(second_image)
             second_label = np.squeeze(second_label)
             first_image_masks = np.squeeze(first_image_masks)
@@ -321,7 +321,7 @@ def proceed_test(args, is_save = False):
     i = 0
     stat = MIoUStatistics(CLASS_NUM)
     logger.info("start validation....")
-    for first_image_masks, second_image, second_label  in tqdm(ds.get_data()):
+    for first_image_masks, second_image, second_label  in tqdm(ds.get_data(),total=ds.size()):
         second_image = np.squeeze(second_image)
         second_label = np.squeeze(second_label)
         first_image_masks = np.squeeze(first_image_masks)

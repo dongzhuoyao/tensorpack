@@ -9,7 +9,7 @@ import cv2
 from tensorpack.utils import logger
 from tensorpack.dataflow.base import RNGDataFlow
 import  coco_datalayer, coco_settings
-
+from tensorpack.utils.segmentation.coco_util import catid2trainid, catid2catstr
 
 __all__ = ['OneShotDatasetTwoBranchCoco']
 
@@ -46,7 +46,8 @@ class OneShotDatasetTwoBranchCoco(RNGDataFlow):
     def get_data(self): # only for one-shot learning
         for i in range(self.data_size):
             first_image_list,first_label_list,second_image, second_label, metadata = self.dbi.next_pair()
-
+            #print metadata['class_id']
+            #print catid2catstr[metadata['class_id']]
             if "train" in self.name:
                 k_shots = len(first_image_list)
                 class_id = metadata['class_id']
@@ -84,7 +85,7 @@ class OneShotDatasetTwoBranchCoco(RNGDataFlow):
 
 
 if __name__ == '__main__':
-    ds = OneShotDatasetTwoBranchCoco("fold0_5shot_test")
+    ds = OneShotDatasetTwoBranchCoco("fold0_5shot_train")
     from tensorpack.utils.segmentation.segmentation import visualize_label
     for idx,data in enumerate(ds.get_data()):
         first_img_masks, second_img, second_mask = data

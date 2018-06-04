@@ -17,3 +17,9 @@ for key,value in name2trainid.items():
     print("'{}':{},".format(key,value))
 
 print("catId_to_ascendorder length: {}".format(len(catId_to_ascendorder)))
+
+for key,value in catId_to_ascendorder.items():
+    print("{}:{},".format(key,value))
+
+pass
+
