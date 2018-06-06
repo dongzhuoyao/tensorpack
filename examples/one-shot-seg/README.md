@@ -72,6 +72,11 @@ Arch |n-shot|fold0| fold1|fold2|fold3|Mean
 |res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128|5-shot|67.9|70.5|52.4|57.8|62.15|
 |vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128|1-shot|59.8|61.9|51.49|51.1|56.07|
 |vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128|5-shot|61.3|63.5|51.6|53.0|57.35|
+coco.res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128|1-shot|54.68|62.52|46.73|49.31|53.31|
+coco.res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128|5-shot|56.67|64.14|48.2|49.85|54.71|
+coco.res101.slim.2branch.speedup.240k.forbash|1-shot|51.9|55.98|45|47.04|49.98|
+coco.res101.slim.2branch.speedup.240k.forbash|5-shot|--|--|--|--|
+
 oracle all class:  
 res101.slim.2branch.speedup.mcontext.240k.width512.oracle:foldall_1shot_test, 67.0
 res101.slim.2branch.speedup.mcontext.240k.width512.oracle:foldall_train, 72.5
@@ -105,4 +110,9 @@ res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.width64:fold0_5shot
 |vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold2_5shot_test|51.6
 |vgg.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold3_5shot_test|53.0
 |res101.slim.2branch.speedup.mcontext.120k.center_ran.lstm_v2.5loss.width128.stride8:fold0_5shot_test|62.8
+coco.res101.slim.2branch.speedup.240k.forbash:fold0_1shot_test|51.9|
+coco.res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold0_5shot_test|56.67|
+coco.res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold1_5shot_test|64.14|
+coco.res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold2_5shot_test|48.2|
+coco.res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold3_5shot_test|49.85|
 
