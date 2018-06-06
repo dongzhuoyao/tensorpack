@@ -45,7 +45,24 @@ class OneShotDatasetTwoBranch(RNGDataFlow):
 
 if __name__ == '__main__':
     ds = OneShotDatasetTwoBranch("fold0_5shot_test")
-
+    from tensorpack.utils.segmentation.segmentation import apply_mask, visualize_binary_mask
+    cur_dir = "fold0_5shot_test_support_masked_images"
+    #os.mkdir(cur_dir)
+    support_image_size = (320, 320)
     for idx,data in enumerate(ds.get_data()):
+        first_images = data[0]
+        first_masks = data[1]
+        second_images = data[2]
+        second_masks = data[3]
         metadata = data[4]
+        class_id = metadata['class_id']
+        for kk in range(5):
+            first_image = cv2.imread(first_images[kk], cv2.IMREAD_COLOR)
+            first_label = cv2.imread(first_masks[kk], cv2.IMREAD_GRAYSCALE)
+            first_label = np.equal(first_label, class_id).astype(np.uint8)
+            first_image = cv2.resize(first_image, support_image_size)
+            first_label = cv2.resize(first_label, support_image_size, interpolation=cv2.INTER_NEAREST)
+            first_image_masked = visualize_binary_mask(first_image, first_label, color=(255, 0, 0),class_num=2)
+            cv2.imwrite(os.path.join(cur_dir,"{}_shot{}.jpg".format(idx,kk)), first_image_masked)
+
         print "{} {}   {}".format(idx, ','.join(metadata['image1_name']),metadata['image2_name'])

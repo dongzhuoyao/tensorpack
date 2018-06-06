@@ -118,7 +118,7 @@ def apply_mask(image, mask, color, alpha=0.5):
 
 
 #https://github.com/matterport/Mask_RCNN/blob/master/visualize.py
-def visualize_binary_mask(image, label,color, class_num, alpha=0.5):
+def visualize_binary_mask(image, label, color, class_num, alpha=0.5):
     """Color classes a good distance away from each other."""
 
     image = np.copy(image)
@@ -129,6 +129,16 @@ def visualize_binary_mask(image, label,color, class_num, alpha=0.5):
                                       (1 - alpha) + alpha * color[c],
                                       image[:, :, c])
     return image
+
+def visualize_binary(mask):
+    """Color classes a good distance away from each other."""
+    #mask = np.squeeze(mask)
+    mask_copy = np.copy(mask)
+    mask[np.where(mask_copy==1)] = 0#black
+    mask[np.where(mask_copy==0)] = 255#white
+
+    mask = np.stack((mask,)*3, -1)#one channel to three channels
+    return mask
 
 
 def crop_saliency(img, label):
@@ -162,6 +172,19 @@ def visualize_label(label, class_num=21, ignore_label = 255):
 
 
     img_color[label==ignore_label] = ignore_color#highlight ignore label
+
+    return img_color
+
+
+def visualize_tp_nontp(label,predict):
+    assert label.shape == predict.shape
+
+    h, w = label.shape
+    img_color = np.ones((h, w)).astype('uint8')*255
+
+    img_color[np.where(label!=predict)] = 0
+
+    img_color[np.where(label==255)] = 123
 
     return img_color
 
@@ -442,6 +465,7 @@ def predict_from_dir(mypredictor,image_dir,target_dir,CLASS_NUM,CROP_SIZE,is_den
 
 
 if __name__ == '__main__':
+    """
     label = np.array([1,1,1,0,0,0,0])
     pred = np.array([0,0,0,0,0,0,0])
     cm = np.array([[0,0],[0,0]])
@@ -456,6 +480,13 @@ if __name__ == '__main__':
     idx = np.vstack((gt_idx,gt))
     tmp = prob[list(idx)]
     t = prob[[1,2,3],[2,0,0]]
+    """
+
+    gt = np.array([[1, 0],[1, 1]])
+    predict = np.array([[4, 0],[1, 6]])
+
+    result = visualize_tp_nontp(gt,predict)
+
     pass
 
 

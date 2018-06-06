@@ -26,10 +26,13 @@ class OneShotDatasetTwoBranchCoco(RNGDataFlow):
         self.dbi = coco_datalayer.DBInterface(profile)
         self.image_size = image_size
 
+        self.shuffle = True
 
         self.data_size = len(self.dbi.db_items)
         if "test" in self.name:
             self.data_size = 1000
+
+
 
     def size(self):
         if is_debug == 1:

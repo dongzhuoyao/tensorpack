@@ -36,12 +36,13 @@ batch_size = 5
 k_shot = 5
 
 from cell import ConvLSTMCell_carlthome
+"""
+python coco.res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.py --test_load train_log/coco.res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold0_5shot_test/model-24000 --k_shot 1 --test --test_data fold0_1shot_test --gpu 4 &&
+python  coco.res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.py --test_load   train_log/coco.res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold1_5shot_test/model-24000 --k_shot 1 --test --test_data fold1_1shot_test --gpu 4 &&
+python  coco.res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.py --test_load   train_log/coco.res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold2_5shot_test/model-8000 --k_shot 1 --test --test_data fold2_1shot_test --gpu 4 &&
+python  coco.res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.py --test_load   train_log/coco.res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold3_5shot_test/model-16000 --k_shot 1 --test --test_data fold3_1shot_test --gpu 4 
 
-#python res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.py --test_load train_log/res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold0_5shot_test/model-48000 --k_shot 1 --test --test_data fold0_1shot_test --gpu 2
-#python  res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.py --test_load   train_log/res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold1_5shot_test/model-48000 --k_shot 1 --test --test_data fold1_1shot_test --gpu 1
-#python  res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.py --test_load   train_log/res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold2_5shot_test/model-48000 --k_shot 1 --test --test_data fold2_1shot_test --gpu 1
-#python  res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.py --test_load   train_log/res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold3_5shot_test/model-32000 --k_shot 1 --test --test_data fold3_1shot_test --gpu 1
-
+"""
 
 
 #  python res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128.py --test_load train_log/res101.slim.2branch.speedup.mcontext.240k.center_ran.lstm_v2.5loss.width128:fold0_5shot_test/model-48000 --k_shot 2 --test --test_data fold0_2shot_test --gpu 2
@@ -81,7 +82,7 @@ def get_data(name,batch_size=1):
         ds = PrefetchDataZMQ(ds, 1)
     else:
         ds = BatchData(ds, 1)
-        ds = PrefetchDataZMQ(ds, 1)
+        #ds = PrefetchDataZMQ(ds, 1)
     return ds
 
 

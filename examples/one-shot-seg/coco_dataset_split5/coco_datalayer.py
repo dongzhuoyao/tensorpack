@@ -130,6 +130,8 @@ class DBInterface():
         # initialize the random generator
         self.init_randget(params['read_mode'])
         self.cycle = 0
+        #self.rand_gen.shuffle(self.db_items)
+        #cprint('db reset and reshuffled!', bcolors.OKBLUE)
 
     def load_items(self):
         image_set = self.params['image_sets'][0]
@@ -151,9 +153,11 @@ class DBInterface():
     
     def update_seq_index(self):
         self.seq_index += 1
+
         if self.seq_index >= len(self.db_items):# reset status when full
             self.db_items = copy.copy(self.orig_db_items)
             self.rand_gen.shuffle(self.db_items)
+            cprint('db reset and reshuffled!', bcolors.OKBLUE)
             self.seq_index = 0
     
     def next_pair(self):

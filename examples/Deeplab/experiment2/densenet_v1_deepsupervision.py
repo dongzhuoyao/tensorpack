@@ -523,7 +523,7 @@ def densenet(inputs,
               net = slim.max_pool2d(net, [2, 2], padding='SAME', stride=2,
                                     scope='pool1')
             else:
-              raise
+              raise ValueError
           else:
             net = slim.conv2d(net, growth*2, kernel_size=[3, 3], stride=2, 
               scope='conv1')

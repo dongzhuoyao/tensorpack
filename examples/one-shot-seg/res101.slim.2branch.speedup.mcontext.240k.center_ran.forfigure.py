@@ -317,7 +317,7 @@ def proceed_test(args, is_save = False):
             def mypredictor(input_img):
                 # input image: 1*H*W*3
                 # output : H*W*C
-                output = predictor(first_image_masks[kk][np.newaxis, :, :, :], input_img)
+                output = predictor(first_image_masks[kk][np.newaxis, :, :, :], input_img[np.newaxis, :, :, :])
                 return output[0][0]
 
             prediction = predict_scaler(second_image, mypredictor, scales=[0.5,0.75, 1, 1.25, 1.5], classes=CLASS_NUM, tile_size=support_image_size, is_densecrf = False)

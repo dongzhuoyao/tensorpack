@@ -1,5 +1,3 @@
-# Author: Tao Hu <taohu620@gmail.com>
-
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 # File: vgg16.py
@@ -11,7 +9,7 @@ import numpy as np
 from tqdm import tqdm
 from tensorpack import *
 from tensorpack.tfutils import argscope, get_model_loader
-from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler
+from tensorpack.utils.segmentation.segmentation import predict_slider, visualize_label, predict_scaler, visualize_binary
 from tensorpack.tfutils.summary import *
 from tensorpack.utils.gpu import get_nr_gpu
 from tensorpack.utils.stats import MIoUStatistics
@@ -156,7 +154,7 @@ def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
 class Model(ModelDesc):
     def inputs(self):
         global args
-        return [tf.placeholder(tf.float32, [None,args.k_shot, support_image_size[0], support_image_size[1], 3], 'first_image_masked'),
+        return [tf.placeholder(tf.float32, [None, args.k_shot, support_image_size[0], support_image_size[1], 3], 'first_image_masked'),
                 #tf.placeholder(tf.float32, [None, support_image_size[0], support_image_size[1]], 'first_label'),
                 tf.placeholder(tf.float32, [None, query_image_size[0], query_image_size[1], 3], 'second_image'),
                 tf.placeholder(tf.int32, [None, query_image_size[0], query_image_size[1]], 'second_label')
@@ -237,6 +235,17 @@ class Model(ModelDesc):
             fusion_branch = tf.transpose(fusion_branch,(1, 0, 2, 3, 4))# batch_size, time_step, w, h, c
 
             fusion_branch, state = tf.nn.dynamic_rnn(cell, fusion_branch, dtype=fusion_branch.dtype)
+            _, state4 = tf.nn.dynamic_rnn(cell, fusion_branch[:,:-1,:,:,:], dtype=fusion_branch.dtype)
+            _, state3 = tf.nn.dynamic_rnn(cell, fusion_branch[:,:-2,:,:,:], dtype=fusion_branch.dtype)
+            _, state2 = tf.nn.dynamic_rnn(cell, fusion_branch[:,:-3,:,:,:], dtype=fusion_branch.dtype)
+            _, state1 = tf.nn.dynamic_rnn(cell, fusion_branch[:,:-4,:,:,:], dtype=fusion_branch.dtype)
+
+            state = tf.identity(state,name="state5")
+            state4 = tf.identity(state4, name="state4")
+            state3 = tf.identity(state3, name="state3")
+            state2 = tf.identity(state2, name="state2")
+            state1 = tf.identity(state1, name="state1")
+
 
             fusion_branch = tf.split(fusion_branch,axis=1,num_or_size_splits=args.k_shot)
 
@@ -250,6 +259,18 @@ class Model(ModelDesc):
         costs = []
         logits = tf.image.resize_bilinear(final_list[-1], second_image.shape[1:3],name="upsample")
         prob = tf.nn.softmax(logits, name='prob')
+
+        logits_tmp = tf.image.resize_bilinear(final_list[-2], second_image.shape[1:3], name="upsample2")
+        prob = tf.nn.softmax(logits_tmp, name='prob2')
+
+        logits = tf.image.resize_bilinear(final_list[-3], second_image.shape[1:3], name="upsample3")
+        prob = tf.nn.softmax(logits_tmp, name='prob3')
+
+        logits_tmp = tf.image.resize_bilinear(final_list[-4], second_image.shape[1:3], name="upsample4")
+        prob = tf.nn.softmax(logits_tmp, name='prob4')
+
+        logits_tmp = tf.image.resize_bilinear(final_list[-5], second_image.shape[1:3], name="upsample5")
+        prob = tf.nn.softmax(logits_tmp, name='prob5')
 
         if get_current_tower_context().is_training:
             for jjj in range(args.k_shot):
@@ -347,12 +368,12 @@ class CalculateMIoU(Callback):
         logger.info("mIoU beautify: {}".format(self.stat.mIoU_beautify))
         logger.info("matrix beatify: {}".format(self.stat.confusion_matrix_beautify))
 
-def proceed_test(args, is_save = False):
+def proceed_test(args, is_save = True):
     import cv2
     ds = get_data(args.test_data)
 
 
-    result_dir = "result22"
+    result_dir = "result_acm_rebuttal"
     from tensorpack.utils.fs import mkdir_p
     mkdir_p(result_dir)
 
@@ -361,13 +382,16 @@ def proceed_test(args, is_save = False):
         model=Model(),
         session_init=get_model_loader(args.test_load),
         input_names=['first_image_masked','second_image'],
-        output_names=['prob'])
+        output_names=['prob','prob2','prob3', 'prob4', 'prob5','state1','state2','state3','state4','state5',])
     predictor = OfflinePredictor(pred_config)
 
-    i = 0
+    i = -1
     stat = MIoUStatistics(CLASS_NUM)
     logger.info("start validation....")
     for first_image_masks, second_image, second_label  in tqdm(ds.get_data()):
+        i += 1
+        if i != 26 and i != 126:
+            continue
         second_image = np.squeeze(second_image)
         second_label = np.squeeze(second_label)
         first_image_masks = np.squeeze(first_image_masks)
@@ -380,20 +404,135 @@ def proceed_test(args, is_save = False):
         def mypredictor(input_img):
             # input image: 1*H*W*3
             # output : H*W*C
-            output = predictor(first_image_masks[np.newaxis, :, :, :, :], input_img)
+            output = predictor(first_image_masks[np.newaxis, :, :, :, :], input_img[np.newaxis, :, :, :])
             return output[0][0]
+
+        def mypredictor2(input_img):
+            # input image: 1*H*W*3
+            # output : H*W*C
+            output = predictor(first_image_masks[np.newaxis, :, :, :, :], input_img[np.newaxis, :, :, :])
+            return output[1][0]
+
+        def mypredictor3(input_img):
+            # input image: 1*H*W*3
+            # output : H*W*C
+            output = predictor(first_image_masks[np.newaxis, :, :, :, :], input_img[np.newaxis, :, :, :])
+            return output[2][0]
+
+        def mypredictor4(input_img):
+            # input image: 1*H*W*3
+            # output : H*W*C
+            output = predictor(first_image_masks[np.newaxis, :, :, :, :], input_img[np.newaxis, :, :, :])
+            return output[3][0]
+
+        def mypredictor5(input_img):
+            # input image: 1*H*W*3
+            # output : H*W*C
+            output = predictor(first_image_masks[np.newaxis, :, :, :, :], input_img[np.newaxis, :, :, :])
+            return output[4][0]
+
+
+
+        """
+        output = predictor(first_image_masks[np.newaxis, :, :, :, :], cv2.resize(second_image,support_image_size)[np.newaxis, :, :, :])
+
+
+
+        cell_state1 =output[5][1] #[1,20,20,128]
+        cell_state2 = output[6][1]
+        cell_state3 = output[7][1]
+        cell_state4 = output[8][1]
+        cell_state5 = output[9][1]
+
+        cell_state1 = np.abs(np.squeeze(cell_state1))
+        cell_state2 = np.abs(np.squeeze(cell_state2))
+        cell_state3 = np.abs(np.squeeze(cell_state3))
+        cell_state4 = np.abs(np.squeeze(cell_state4))
+        cell_state5 = np.abs(np.squeeze(cell_state5))
+
+        cell_state1 = np.mean(cell_state1, axis=2, keepdims=False)
+        cell_state2 = np.mean(cell_state2, axis=2, keepdims=False)
+        cell_state3 = np.mean(cell_state3, axis=2, keepdims=False)
+        cell_state4 = np.mean(cell_state4, axis=2, keepdims=False)
+        cell_state5 = np.mean(cell_state5, axis=2, keepdims=False)
+
+        mmmax = np.max(cell_state5)
+
+
+        cell_state1 = (cell_state1*255/mmmax).astype(np.uint8)
+        cell_state2 = (cell_state2*255/mmmax).astype(np.uint8)
+        cell_state3 = (cell_state3*255/mmmax).astype(np.uint8)
+        cell_state4 = (cell_state4*255/mmmax).astype(np.uint8)
+        cell_state5 = (cell_state5*255/mmmax).astype(np.uint8)
+
+
+        cv2.imwrite("{}/cell_vis_img{}_state1.png".format(result_dir,i),cv2.resize(cv2.applyColorMap(cell_state1, cv2.COLORMAP_JET),support_image_size))
+
+        cv2.imwrite("{}/cell_vis_img{}_state2.png".format(result_dir, i),
+                    cv2.resize(cv2.applyColorMap(cell_state2, cv2.COLORMAP_JET),support_image_size))
+
+        cv2.imwrite("{}/cell_vis_img{}_state3.png".format(result_dir, i),
+                    cv2.resize(cv2.applyColorMap(cell_state3, cv2.COLORMAP_JET),support_image_size))
+
+        cv2.imwrite("{}/cell_vis_img{}_state4.png".format(result_dir, i),
+                    cv2.resize(cv2.applyColorMap(cell_state4, cv2.COLORMAP_JET),support_image_size))
+
+        cv2.imwrite("{}/cell_vis_img{}_state5.png".format(result_dir, i),
+                    cv2.resize(cv2.applyColorMap(cell_state5, cv2.COLORMAP_JET),support_image_size))
+
+        #maximum 5.1
+
+
+
+        """
 
         prediction = predict_scaler(second_image, mypredictor, scales=[0.5, 0.75, 1, 1.25, 1.5],
                                     classes=CLASS_NUM, tile_size=support_image_size, is_densecrf=False)
-        prediction_fused += prediction
 
-        prediction_fused = np.argmax(prediction_fused, axis=2)
-        stat.feed(prediction_fused, second_label)
+        prediction2 = predict_scaler(second_image, mypredictor2, scales=[0.5, 0.75, 1, 1.25, 1.5],
+                                    classes=CLASS_NUM, tile_size=support_image_size, is_densecrf=False)
+
+        prediction3 = predict_scaler(second_image, mypredictor3, scales=[0.5, 0.75, 1, 1.25, 1.5],
+                                    classes=CLASS_NUM, tile_size=support_image_size, is_densecrf=False)
+
+        prediction4 = predict_scaler(second_image, mypredictor4, scales=[0.5, 0.75, 1, 1.25, 1.5],
+                                    classes=CLASS_NUM, tile_size=support_image_size, is_densecrf=False)
+
+        prediction5 = predict_scaler(second_image, mypredictor5, scales=[0.5, 0.75, 1, 1.25, 1.5],
+                                    classes=CLASS_NUM, tile_size=support_image_size, is_densecrf=False)
+
+        prediction = np.argmax(prediction, axis=2)
+        prediction2 = np.argmax(prediction2, axis=2)
+        prediction3 = np.argmax(prediction3, axis=2)
+        prediction4 = np.argmax(prediction4, axis=2)
+        prediction5 = np.argmax(prediction5, axis=2)
+
+        stat.feed(prediction, second_label)
 
         if is_save:
-            cv2.imwrite("{}/{}.png".format(result_dir,i), np.concatenate((cv2.resize(first_image_masks[0],(second_image.shape[1],second_image.shape[0])),second_image, visualize_label(second_label), visualize_label(prediction_fused)), axis=1))
+            cv2.imwrite("{}/{}_1shot_binary.png".format(result_dir, i),visualize_binary(prediction5.astype(np.uint8)))
+            cv2.imwrite("{}/{}_2shot_binary.png".format(result_dir, i), visualize_binary(prediction4.astype(np.uint8)))
+            cv2.imwrite("{}/{}_3shot_binary.png".format(result_dir, i), visualize_binary(prediction3.astype(np.uint8)))
+            cv2.imwrite("{}/{}_4shot_binary.png".format(result_dir, i), visualize_binary(prediction2.astype(np.uint8)))
+            cv2.imwrite("{}/{}_5shot_binary.png".format(result_dir, i), visualize_binary(prediction.astype(np.uint8)))
 
-        i += 1
+            cv2.imwrite("{}/{}.png".format(result_dir,i), np.concatenate((cv2.resize(first_image_masks[0],(second_image.shape[1],second_image.shape[0])),
+                                                                          cv2.resize(first_image_masks[1], (
+                                                                          second_image.shape[1],
+                                                                          second_image.shape[0])),
+                                                                          cv2.resize(first_image_masks[2], (
+                                                                          second_image.shape[1],
+                                                                          second_image.shape[0])),
+                                                                          cv2.resize(first_image_masks[3], (
+                                                                          second_image.shape[1],
+                                                                          second_image.shape[0])),
+                                                                          cv2.resize(first_image_masks[4], (
+                                                                          second_image.shape[1],
+                                                                          second_image.shape[0])),
+             second_image, visualize_binary(second_label),
+              visualize_binary(prediction5),visualize_binary(prediction4),visualize_binary(prediction3),visualize_binary(prediction2),visualize_binary(prediction)), axis=1))
+
+
 
     logger.info("mIoU: {}".format(stat.mIoU))
     logger.info("mean_accuracy: {}".format(stat.mean_accuracy))

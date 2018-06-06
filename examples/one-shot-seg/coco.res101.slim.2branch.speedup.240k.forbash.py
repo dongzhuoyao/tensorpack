@@ -27,9 +27,9 @@ batch_size = 12
 LR = 1e-4
 CLASS_NUM = 2
 evaluate_every_n_epoch = 1
-support_image_size =(321, 321)
-query_image_size = (321, 321)
-images_per_epoch = 400#40000
+support_image_size =(320, 320)
+query_image_size = (320, 320)
+images_per_epoch = 40000
 
 def get_data(name,batch_size=1):
     isTrain = True if 'train' in name else False
@@ -70,8 +70,7 @@ def softmax_cross_entropy_with_ignore_label(logits, label, class_num):
 
 class Model(ModelDesc):
     def inputs(self):
-        return [tf.placeholder(tf.float32, [None, support_image_size[0], support_image_size[1], 3], 'first_image_masked'),
-                #tf.placeholder(tf.float32, [None, support_image_size[0], support_image_size[1]], 'first_label'),
+        return [tf.placeholder(tf.float32, [None, 1, support_image_size[0], support_image_size[1], 3], 'first_image_masked'),
                 tf.placeholder(tf.float32, [None, query_image_size[0], query_image_size[1], 3], 'second_image'),
                 tf.placeholder(tf.int32, [None, query_image_size[0], query_image_size[1]], 'second_label')
                 ]
@@ -79,6 +78,7 @@ class Model(ModelDesc):
 
 
     def build_graph(self, first_image_masked, second_image, second_label):
+        first_image_masked = tf.squeeze(first_image_masked, axis=1)
         first_image_masked = first_image_masked - tf.constant([104, 116, 122], dtype='float32')
         second_image = second_image - tf.constant([104, 116, 122], dtype='float32')
 

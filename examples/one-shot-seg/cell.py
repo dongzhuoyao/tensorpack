@@ -17,6 +17,7 @@ class ConvLSTMCell_carlthome(tf.nn.rnn_cell.RNNCell):
     self._activation = activation
     self._normalize = normalize
     self._peephole = peephole
+
     if data_format == 'channels_last':
         self._size = tf.TensorShape(shape + [self._filters])
         self._feature_axis = self._size.ndims
