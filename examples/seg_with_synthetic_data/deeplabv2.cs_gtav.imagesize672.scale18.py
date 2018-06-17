@@ -190,7 +190,7 @@ def get_config(meta_dir, batch_size):
     nr_tower = max(get_nr_gpu(), 1)
 
     dataset_train = get_data('train', meta_dir, batch_size)
-    steps_per_epoch = 10
+    steps_per_epoch = dataset_train.size() * epoch_scale
     dataset_val = get_data('val',  meta_dir, batch_size)
 
     return TrainConfig(
@@ -203,8 +203,8 @@ def get_config(meta_dir, batch_size):
             ProgressBar(["cross_entropy_loss","cost","wd_cost"])#uncomment it to debug for every step
         ],
         model=Model(),
-        steps_per_epoch=steps_per_epoch,
-        max_epoch=10 if is_debug else dataset_train.size() * epoch_scale,
+        steps_per_epoch=10 if is_debug else  steps_per_epoch,
+        max_epoch = dataset_train.size() * epoch_scale,
         nr_tower = nr_tower
     )
 
