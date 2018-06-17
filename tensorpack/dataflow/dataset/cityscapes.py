@@ -33,7 +33,7 @@ class CityscapesFiles(RNGDataFlow):
         elif name=="test":
             f = open(os.path.join(meta_dir, "test.txt"), "r")
         else:
-            raise
+            raise ValueError
 
         for line in f.readlines():
             self.imglist.append(line.strip("\n").split(" "))
@@ -84,7 +84,7 @@ class Cityscapes(RNGDataFlow):
             #assert self.shuffle == False
             f = open(os.path.join(meta_dir, "test.txt"), "r")
         else:
-            raise
+            raise ValueError
 
         for line in f.readlines():
             tmp_list = line.strip("\n").split(" ")

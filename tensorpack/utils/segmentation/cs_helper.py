@@ -105,7 +105,6 @@ labels = [
 #--------------------------------------------------------------------------------
 
 # Please refer to the main method below for example usages!
-
 # name to label object
 name2label      = { label.name    : label for label in labels           }
 # id to label object
